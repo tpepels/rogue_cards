@@ -25,7 +25,7 @@ function cardMarkup(card, opts={}) {
     ? 'IDENTIFIED: '+esc(opts.effect.name.toUpperCase())+'<br>'+esc(opts.effect.drink)
     : esc(card.rule || "");
   return '<article class="game-card game-card--'+esc(card.type)+'" aria-label="'+esc(card.title)+' card">'+
-   '<div class="game-card__meta"><span>RC / '+labelFor(card)+'</span><span>NO. '+esc(card.number ?? String(CATALOGUE.indexOf(card)+1).padStart(2,"0"))+'</span></div>'+
+   '<div class="game-card__meta"><span>RC / '+labelFor(card)+'</span><span>NO. '+esc(card.number ?? String(CATALOGUE.findIndex(item => item.type===card.type && item.id===card.id)+1).padStart(2,"0"))+'</span></div>'+
    '<h3 class="game-card__title">'+esc(card.title)+'</h3>'+
    '<div class="game-card__picture">'+illustration(card.art)+'<span class="picture-index">'+esc(card.type==='monster'?'!':card.type==='room'?'#':card.type==='potion'?'?':'*')+'</span></div>'+
    stats + tag +
