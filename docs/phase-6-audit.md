@@ -51,3 +51,16 @@ This phase extends **the existing physical-first, two-action, d6-combat game** r
 ## Physical acceptance items
 
 Before printing the production kit, record elapsed setup, teaching time, session duration, turns/actions, explored optional rooms, frequent card handling and memory/tracking burden; inspect actual 90 × 140 mm cards and A4 sheets at 100% scale. The browser tests check geometric clipping, not pencil legibility, social pacing, table footprint or strategy quality.
+
+## Measured deterministic benchmark (CI run 38162124878)
+
+The Phase 6 heuristic policy completed **320 seeded expeditions** (80 per hero, zero timeouts). Every run terminates as win or death. It uses class techniques, basic inventory management, optional side exploration, and sometimes chooses caches or bargains; it is not optimal and does not read players' minds or emulate physical time.
+
+| Hero | Wins / 80 | Win rate | Mean turns | Mean actions | Mean maximum depth | Mean caches | Mean bargains |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Delver | 14 | 17.5% | 20.24 | 40.35 | 8.49 | 0.73 | 0.16 |
+| Knight | 36 | 45.0% | 27.06 | 53.90 | 9.75 | 0.74 | 0.19 |
+| Wizard | 18 | 22.5% | 19.40 | 38.67 | 9.05 | 0.56 | 0.11 |
+| Rogue | 40 | 50.0% | 27.10 | 53.93 | 9.70 | 0.75 | 0.21 |
+
+**Interpretation:** a roughly 2–3x difference in heuristic success probability between hero classes, especially for Knight/Rogue versus Delver/Wizard. This needs a targeted balance pass before a production print run, but should not drive a blind statistical nerf: the benchmark does not explore optimal use of unknown magic, prayer, Wand charges, or every risk option. Average simulated turn counts are about 19–27 and actions about 39–54; **they cannot substantiate a 90–120-minute tabletop session**. Recording real setup, reading, card manipulation and decision duration is essential.
