@@ -1,3 +1,4 @@
+import { MAGICAL_CARDS, MAGIC_IDENTITIES, MAGIC_PRINT_COPIES } from "./magic-data.js";
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
 export const HEROES = [
@@ -86,8 +87,8 @@ export const EQUIPMENT = [
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
-export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS];
-export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event"];
+export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES];
+export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity"];
 
 // Print quantities describe a playable physical supply, not simply specimens.
 // Distinct decks are printed separately and shuffled at setup.
@@ -99,7 +100,11 @@ export const PRINT_COPIES = {
   potion: { smoky:3, milky:3, bubbling:3, black:3, cloudy:3 },
   item: { ration:12, key:6, amulet:1, dog:1, sword:3, mail:3, charm:4 },
   behaviour: Object.fromEntries(BEHAVIOURS.map(x=>[x.id,x.copies])),
-  event: { unease:2, bones:2, whisper:2, wind:2 }
+  event: { unease:2, bones:2, whisper:2, wind:2 },
+  scroll:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="scroll").map(x=>[x.id,3])),
+  wand:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="wand").map(x=>[x.id,3])),
+  ring:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="ring").map(x=>[x.id,3])),
+  identity:Object.fromEntries(MAGIC_IDENTITIES.map(x=>[x.id,1]))
 };
 export const printDeck = types => {
   const chosen = Array.isArray(types) ? types : [types];

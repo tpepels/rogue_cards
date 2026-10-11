@@ -2,8 +2,10 @@ import {
   HEROES, MONSTERS, ROOMS, APPEARANCES, EFFECTS, ITEMS, EQUIPMENT,
   BEHAVIOURS, EVENTS, ENTRANCE, VAULT, PRINT_COPIES
 } from "./data.js";
+import { MAGIC_TYPES } from "./magic-data.js";
+import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName } from "./magic.js";
 
-export const VERSION = 2;
+export const VERSION = 3;
 export const LAST_FLOOR = 10;
 export const MAX_ACTIONS = 2;
 export const MAX_HUNGER = 24;
@@ -55,18 +57,19 @@ function stock(type, ids) {
   ));
 }
 function lootStock() {
-  return [...stock("potion", APPEARANCES).map(id=>potion(id)),
+  return [...magicStock(),...stock("potion", APPEARANCES).map(id=>potion(id)),
     ...stock("item", [...ITEMS, ...EQUIPMENT].filter(x=>!["amulet"].includes(x.id)))
       .map(id=>item(id))];
 }
 export const currentRoom = state => state.rooms[state.position];
 export const currentMonster = state => currentRoom(state)?.monster?.hp > 0 ? currentRoom(state).monster : null;
 export const heroAttack = state => state.attack + (state.equipped.weapon ? 1 : 0);
-export const heroDefense = state => state.defense + (state.equipped.armour ? 1 : 0);
+export const heroDefense = state => state.defense + (state.equipped.armour ? 1 : 0) + magicModifier(state,"defense");
 export const appearanceTitle = id => find(APPEARANCES, id)?.title || "Unknown potion";
 export function itemTitle(thing) {
   if (!thing) return "Nothing";
   if (thing.kind === "potion") return appearanceTitle(thing.id);
+  if (MAGIC_TYPES.includes(thing.kind)) return magicName(thing);
   return find([...ITEMS, ...EQUIPMENT], thing.id)?.title || thing.id;
 }
 export function knownIdentity(state, appearanceId) {
@@ -101,6 +104,7 @@ export function startRun(heroId = "delver", seed = Date.now()) {
     used:false, monster:null, loot:null, visited:true};
   const effects=shuffle(s, EFFECTS.map(card=>card.id));
   APPEARANCES.forEach((card,i)=>{s.assignments[card.id]=effects[i];});
+  setupMagic(s,shuffle);
   s.decks.rooms = deck(s, stock("room", ROOMS));
   s.decks.monsters = deck(s, stock("monster", MONSTERS.filter(x=>x.id!=="sentinel")));
   s.decks.loot = deck(s, lootStock());
@@ -205,10 +209,11 @@ function monsterAttack(state, monster, modifier=0) {
   const attack=rollAttack(state,monster.attack,heroDefense(state),monster.title,modifier);
   if(!attack.hit) return;
   let damage=attack.damage;
+  if(state.status.ward>0){state.status.ward--;damage=Math.max(0,damage-2);log(state,"Ward absorbs 2 damage.");}
   if(monster.id==="goblin" && !monster.ambushed) { damage++;monster.ambushed=true; }
   state.hp-=damage;
   if(monster.id==="rust") { state.defense=Math.max(0,state.defense-1);log(state,"Rust corrodes your defence."); }
-  if(monster.id==="wraith") { state.hunger=Math.max(0,state.hunger-1);log(state,"The shade steals 1 hunger."); }
+  if(monster.id==="wraith"&&!resistsPoison(state)) { state.hunger=Math.max(0,state.hunger-1);log(state,"The shade steals 1 hunger."); }
   log(state,"You suffer "+damage+" damage.");
 }
 function monsterTurn(state) {
@@ -236,7 +241,7 @@ function monsterTurn(state) {
 }
 function finishTurn(state) {
   if(state.phase==="dead"||state.phase==="won") return;
-  state.hunger=Math.max(0,state.hunger-1);
+  state.hunger=Math.max(0,state.hunger-(ignoresHunger(state)?0:1));
   if(state.hunger===0) {state.hp--;log(state,"Starvation costs 1 HP.");}
   checkDeath(state);
   if(state.phase==="dead") return;
@@ -312,6 +317,7 @@ export function availableActions(state) {
       actions.push({id:"explore",target,label:"Explore "+nodeLabel(target)});
     }
   }
+  actions.push(...actionList(state,monster));
   state.inventory.forEach((thing,index)=>{
     if(thing.kind==="potion") {
       actions.push({id:"drink",index,label:"Drink "+itemTitle(thing)});
@@ -344,7 +350,8 @@ export function act(previous, id, argument=null) {
     }
   }
   if(id==="attack" && mon) {
-    const hit=rollAttack(state,heroAttack(state),mon.defense+mon.guard,"Hero");
+    const darkPenalty=currentRoom(state).terrain==="DARK"&&!ignoresDark(state)?-1:0;
+    const hit=rollAttack(state,heroAttack(state)+darkPenalty,mon.defense+mon.guard,"Hero");
     if(hit.hit) {
       const petBonus=state.equipped.companion && !mon.petUsed ? 1 : 0;
       if(petBonus) {mon.petUsed=true; log(state,"Your companion assists (+1).");}
@@ -368,6 +375,15 @@ export function act(previous, id, argument=null) {
         log(state,"Fountain: gain a mystery potion from the Object supply.");
       } else log(state,"Fountain: no potion remains in the Object supply.");
     }
+  }
+  if(["read","zap","wear"].includes(id)) {
+    magicAction(state,id,argument,{
+      monster:()=>currentMonster(state),room:()=>currentRoom(state),
+      neighbours:()=>connectedLocations(state.position),
+      roomTitle:roomId=>find(ROOMS,roomId)?.title,
+      log:line=>log(state,line),
+      hurt:(mon,damage,property)=>{mon.hp-=damage;log(state,property+" deals "+damage+" damage.");if(mon.hp<=0)releaseMonster(state,mon);}
+    });
   }
   if(["drink","throw","eat","consume","equip"].includes(id)) {
     const thing=state.inventory[argument];
@@ -406,7 +422,7 @@ export function validateSave(s) {
       !["descending","ascending","won","dead"].includes(s.phase)) return false;
   if (!s.rooms || !s.rooms[s.position] || !Array.isArray(s.inventory) ||
       !s.equipped || !s.decks?.behaviour || !s.decks?.loot ||
-      !s.assignments || !s.known) return false;
+      !s.assignments || !s.known || !s.magicAssignments || !s.magicKnown || s.equipped.ring===undefined) return false;
   if (!Number.isInteger(s.actionsLeft) || s.actionsLeft<1 || s.actionsLeft>MAX_ACTIONS) return false;
   if (!Array.isArray(s.log) || !Number.isInteger(s.turn)) return false;
   return true;
