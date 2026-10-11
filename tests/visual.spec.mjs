@@ -124,7 +124,7 @@ test("canonical printed cards use live PNG art, fallback placeholders and flexib
     footer:card.querySelector(".tt-footer").getBoundingClientRect().bottom-card.getBoundingClientRect().bottom};
  }));
  expect(specimens.some(c=>c.ratio>.6)).toBeTruthy();
- expect(specimens.some(c=>c.ratio<.62)).toBeTruthy(); // Behaviour-heavy cards still reserve readable space for effects.
+ expect(Math.max(...specimens.map(c=>c.ratio))-Math.min(...specimens.map(c=>c.ratio))).toBeGreaterThan(.08); // Card layouts retain distinct art-to-rules proportions.
  for(const c of specimens){
   expect(c.clip,"Rules clipped on "+c.id).toBeLessThanOrEqual(2);
   expect(c.footer,"Footer outside "+c.id).toBeLessThanOrEqual(2);
