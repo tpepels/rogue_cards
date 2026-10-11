@@ -42,7 +42,7 @@ export const EFFECTS = [
   { id:"healing", name:"Healing", drink:"Restore 5 HP.", thrown:"Deal 2 damage." },
   { id:"poison", name:"Poison", drink:"Lose 3 HP.", thrown:"Deal 5 damage." },
   { id:"invisibility", name:"Invisibility", drink:"Ignore monster attacks for 3 turns.", thrown:"Blind the monster for 2 turns." },
-  { id:"frost", name:"Frost", drink:"Restore 3 hunger.", thrown:"Deal 3 damage, +2 in water. Freeze the monster for 1 turn." },
+  { id:"frost", name:"Frost", drink:"Restore 4 hunger.", thrown:"Deal 3 damage, +2 in water. Freeze the monster for 1 turn." },
   { id:"polymorph", name:"Polymorph", drink:"Permanently change attack by -1, 0 or +1.", thrown:"Turn the monster into a different random monster." }
 ];
 
