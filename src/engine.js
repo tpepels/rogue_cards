@@ -261,7 +261,7 @@ function consumePotion(state, appearanceId, thrown) {
   const mon=currentMonster(state);
   if(thrown && mon) {
     if(effect==="healing") mon.hp-=2;
-    if(effect==="poison") mon.hp-=5;
+    if(effect==="poison") mon.hp+=-5-(["rat","goblin","troll"].includes(mon.id)?2:0);
     if(effect==="invisibility") mon.blinded=2;
     if(effect==="frost") {mon.hp-=(currentRoom(state).terrain==="WATER"?5:3);mon.frozen=1;}
     if(effect==="polymorph") {
