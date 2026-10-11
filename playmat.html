@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROGUE CARDS — DUNGEON SHEETS / VOL 02</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+:root{font-family:"Courier New",monospace;background:#e9e6dd;color:#111}
+*{box-sizing:border-box}body{margin:0}
+.sitebar{max-width:900px;margin:auto;display:flex;justify-content:space-between;gap:10px;padding:16px}
+.sitebar a{font-weight:900;color:inherit;font-size:12px}
+.paper{background:#fff;border:3px solid #111;box-shadow:6px 6px 0 #111;width:min(95%,190mm);min-height:276mm;margin:12px auto 30px;padding:13mm}
+.issue{border-bottom:5px solid #111;padding-bottom:8px;font-weight:900;font-size:10px}
+h1{font:900 35px/1 Impact,"Arial Black",sans-serif;margin:11px 0}
+h2{font:900 20px/1 Impact,"Arial Black",sans-serif;margin:20px 0 9px;border-bottom:2px solid #111}
+p,small{font-size:10px;line-height:1.6}
+.sheet-table{border-collapse:collapse;width:100%;table-layout:fixed}
+.sheet-table th,.sheet-table td{border:1.5px solid #111;padding:5px 6px;vertical-align:middle;text-align:left;font-size:10px}
+.sheet-table th{background:#e8e8e8;font-weight:900}
+.map-table td{height:15.8mm}
+.map-table td:first-child{width:13mm;text-align:center;font-weight:900}
+.map-table td:nth-child(2),.map-table td:nth-child(3){width:40%}
+.map-table .sanctum{background:#dedede;font-weight:900}
+.step{display:block;height:8px;border-bottom:1px dotted #444;margin-top:6px}
+.record-line{display:block;width:100%;height:14px;border-bottom:1px dotted #777}
+.note{font-size:10px;font-weight:900;border:2px solid #111;padding:9px;margin:11px 0}
+.identity-table td{height:17mm}
+.identity-table td:first-child{font-weight:900;width:30%}
+.resources{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.track{border:2px solid #111;padding:8px}
+.track b{font-size:11px}
+.track .boxes{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.track .boxes span{border:1px solid #111;display:inline-flex;align-items:center;justify-content:center;width:17px;height:16px;font-size:9px}
+.ledger{width:100%;border-collapse:collapse;margin-top:9px}
+.ledger th,.ledger td{border:1px solid #111;text-align:left;padding:5px;font-size:9px}
+.ledger td{height:12mm}
+footer{border-top:2px solid #111;margin-top:20px;display:flex;justify-content:space-between;font-size:10px;font-weight:900;padding-top:8px}
+@media(max-width:620px){.resources{grid-template-columns:1fr}.sitebar{flex-wrap:wrap}.paper{padding:15px;min-height:0}}
+@media print{html,body{background:#fff}.sitebar{display:none}.paper{width:190mm;height:277mm;min-height:277mm;max-height:277mm;border:0;box-shadow:none;margin:0;padding:0;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}.resources{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body>
+<div class="sitebar"><a href="./">← BACK TO ROGUE CARDS</a><a href="./field-guide.html">READ PHYSICAL RULES ↗</a><a href="#" onclick="window.print();return false;">PRINT MAP & NOTES ↗</a></div>
+<main>
+<section class="paper">
+<div class="issue">RC / DUNGEON SURVEY / FIELD WORK 01 / TWO-ACTION EXPEDITION</div>
+<h1>THE DESCENT MAP</h1>
+<p>Mark each main chamber as you explore. Each depth 1–9 may connect to exactly one side chamber. Revisit known locations without redrawing. Log remaining monsters and loot on this sheet before leaving.</p>
+<table class="sheet-table map-table">
+<thead><tr><th>#</th><th>MAIN CHAMBER<br><small>Room / monster HP / unclaimed loot</small></th><th>SIDE CHAMBER<br><small>Optional / room / monster HP / loot</small></th></tr></thead>
+<tbody>
+<tr><td>00</td><td><b>ENTRANCE</b> / safe</td><td>—</td></tr>
+<tr><td>01</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>02</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>03</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>04</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>05</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>06</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>07</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>08</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>09</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
+<tr><td>10</td><td class="sanctum">VAULT OF YENDOR<br>WARDEN HP: ____ / 7</td><td>—</td></tr>
+</tbody></table>
+<div class="note">MAIN ↔ SIDE: 1 MOVE. MAIN DEPTH n ↔ DEPTH n±1: 1 MOVE. NO OTHER CONNECTIONS.</div>
+<p><b>When a monster is present:</b> You may attack or use items; only retreat to a known connected room toward the entrance. Side chambers always retreat to their main room.</p>
+<footer><span>THE MAP / SHEET ONE</span><span>DO NOT DRAW ROOMS TWICE</span></footer>
+</section>
+<section class="paper">
+<div class="issue">RC / PERSONAL DOSSIER / FIELD WORK 02 / DO NOT LOSE THIS SHEET</div>
+<h1>THE INVENTORY OF<br>BAD DECISIONS</h1>
+<div class="resources">
+  <div class="track"><b>HERO / NAME</b><p>____________________________</p><b>HP / MARK DAMAGE</b><div class="boxes">
+    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span></div></div>
+  <div class="track"><b>HUNGER / START 18, MAX 24</b><div class="boxes">
+    <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>24</span></div></div>
+</div>
+<h2>UNKNOWN OBJECTS / IDENTIFICATION FILE</h2>
+<table class="sheet-table identity-table"><thead><tr><th>Appearance</th><th>Identity (only after tested)</th></tr></thead><tbody>
+<tr><td>Smoky</td><td></td></tr><tr><td>Milky</td><td></td></tr><tr><td>Bubbling</td><td></td></tr>
+<tr><td>Black</td><td></td></tr><tr><td>Cloudy</td><td></td></tr></tbody></table>
+<h2>EQUIPMENT AND STATUS</h2>
+<table class="sheet-table"><tbody>
+<tr><td>WEAPON (one)</td><td>__________________________</td></tr>
+<tr><td>ARMOUR (one)</td><td>__________________________</td></tr>
+<tr><td>COMPANION (one)</td><td>__________________________</td></tr>
+<tr><td>BASE ATTACK / DEFENCE</td><td>ATK _____ / DEF _____</td></tr>
+<tr><td>TEMPORARY EFFECTS</td><td>Invisible ___ / Frozen ___ / Blinded ___</td></tr>
+</tbody></table>
+<h2>TURN TRACKER / TWO ACTIONS</h2>
+<div class="note">TURN # _______ · ACTION 1 □ · ACTION 2 □ · HUNGER -1 □ · BEHAVIOUR □</div>
+<table class="ledger">
+<thead><tr><th>TURN</th><th>INTERACTION, LOOT, ENCOUNTER OR RULE QUESTION</th></tr></thead>
+<tbody><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr><tr><td></td><td></td></tr></tbody></table>
+<footer><span>THE DOSSIER / SHEET TWO</span><span>PERMADEATH IS PERMANENT</span></footer>
+</section>
+</main></body></html>

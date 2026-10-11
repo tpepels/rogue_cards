@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROGUE CARDS — PHYSICAL FIELD GUIDE / ISSUE 002</title>
+<style>
+@page{size:A4;margin:10mm}
+:root{font-family:"Courier New",monospace;color:#111;background:#ebe8df}
+*{box-sizing:border-box}body{margin:0}
+.sitebar{max-width:930px;margin:0 auto;padding:16px;display:flex;gap:20px;justify-content:space-between}
+.sitebar a{color:inherit;font-weight:900;font-size:13px}
+.paper{max-width:190mm;margin:12px auto 30px;padding:14mm;background:#fff;border:3px solid #111;box-shadow:6px 6px 0 #111;min-height:275mm}
+.paper h1{font:900 39px/.98 Impact,"Arial Black",sans-serif;margin:5px 0 14px}
+.paper h2{font:900 22px/1 Impact,"Arial Black",sans-serif;border-bottom:3px solid #111;margin:19px 0 8px}
+.paper p,.paper li{font-size:11px;line-height:1.48}
+.paper ul,.paper ol{padding-left:21px}
+.issue{border-bottom:6px solid #111;padding-bottom:7px;font-size:10px;font-weight:900;letter-spacing:.07em}
+.kicker{font-weight:900;font-size:10px}
+.columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.table{width:100%;border-collapse:collapse;font-size:10px}
+.table th,.table td{border:1px solid #111;padding:6px;text-align:left;vertical-align:top}
+.note{border:2px solid #111;padding:10px;font-size:11px;line-height:1.5;font-weight:bold}
+.small{font-size:10px!important}
+.slips{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:13px}
+.slip{border:1px dashed #111;min-height:42px;padding:8px 4px;text-align:center;font-size:10px;font-weight:900}
+.footer{font-size:10px;border-top:2px solid #111;padding-top:6px;margin-top:20px;display:flex;justify-content:space-between}
+@media(max-width:720px){.paper{min-height:0;margin:10px;padding:17px;box-shadow:none}.columns{grid-template-columns:1fr}.slips{grid-template-columns:repeat(2,1fr)}.sitebar{flex-wrap:wrap}}
+@media print{html,body{background:#fff}.sitebar{display:none}.paper{box-shadow:none;border:0;max-width:none;width:190mm;min-height:277mm;margin:0;padding:0;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}.columns{grid-template-columns:1fr 1fr}.paper h1{font-size:38px}.paper h2{margin-top:14px}.slips{grid-template-columns:repeat(5,1fr)}}
+</style></head>
+<body>
+<div class="sitebar"><a href="./">← BACK TO GAME</a><a href="./playmat.html">DUNGEON TRACKING SHEETS ↗</a><a href="#" onclick="window.print();return false;">PRINT THIS GUIDE ↗</a></div>
+<main>
+<section class="paper">
+  <div class="issue">ROGUE CARDS / VOL. 02 / PHYSICAL RULES / PAGE 01</div>
+  <h1>THE RULES OF<br>DYING UNDERGROUND</h1>
+  <p class="kicker">SOLO PROTOTYPE / 1 PLAYER / 1 D6 / TARGET: 90–120 MINUTES (NOT YET TIMED IN PHYSICAL PLAY)</p>
+  <p>Descend ten depths, defeat the Amulet Warden, claim the Amulet of Yendor, and return to the entrance alive. The dungeon is persistent: rooms, dropped loot and wounded monsters remain when you leave. If HP reaches zero, you lose.</p>
+  <h2>01 / EQUIPMENT & SETUP</h2>
+  <div class="columns">
+    <div>
+      <p>Print the <b>PHYSICAL KIT</b> from the Cards page, along with this guide and the two tracking sheets. Bring one six-sided die, a pencil and markers for HP/hunger.</p>
+      <ol>
+        <li>Pick one Hero. Set HP, ATK and DEF to printed values; hunger to <b>18</b> (maximum 24).</li>
+        <li>Put <b>Dungeon Entrance</b> at depth 0 and <b>Vault of Yendor</b> aside for depth 10.</li>
+        <li>Make six separate piles: random <b>Rooms</b> (all except entrance/vault), <b>Monsters</b> (except Warden), <b>Objects</b> (rations, keys, equipment and potions), <b>Events</b>, <b>Behaviours</b>, and a set-aside <b>Amulet Warden</b>.</li>
+      </ol>
+    </div>
+    <div>
+      <ol start="4">
+        <li>Make the ten-card <b>Behaviour pile</b>: Strike ×3, Lunge ×2, Guard ×2, Frenzy ×1, Drain ×1, Recover ×1.</li>
+        <li>Give the Hero starting items from the Object pile: Delver 2 rations; Knight 1 ration; Wizard 3 random potions; Rogue 1 ration, 1 key and 1 smoky potion. Shuffle the remaining Object pile.</li>
+        <li>Shuffle the five potion identity slips (page 3) face down. Assign one to each potion appearance on the tracking sheet without looking.</li>
+        <li>Set turn <b>1</b>, actions <b>2</b>. Start at entrance.</li>
+      </ol>
+    </div>
+  </div>
+  <h2>02 / HOW THE DUNGEON CONNECTS</h2>
+  <p>The dungeon is a <b>single main route from depth 0 to 10</b>. Depths 1–9 each have an optional <b>side chamber</b> that connects only to that depth's main room. Draw rooms only when exploring an unknown location. Returning to a previously visited room uses one Move action; it never redraws its contents.</p>
+  <p>Use the dungeon sheet to record which main and side locations exist. Keep only the active room, monster, and loot beside your Hero. Record unrecovered items and monster HP in the location boxes when leaving. <b>You may retreat from combat only toward the entrance into a known connected room.</b> A monster otherwise blocks further exploration.</p>
+  <h2>03 / A TURN — EXACTLY THE SAME IN THE BROWSER</h2>
+  <div class="note">
+    TAKE UP TO TWO ACTIONS → LOSE 1 HUNGER → RESOLVE ONE MONSTER BEHAVIOUR CARD IF A MONSTER IS IN YOUR ROOM → BEGIN A NEW TURN WITH TWO ACTIONS.
+  </div>
+  <p>You can end your turn with zero or one action. An action can be: explore, move, melee attack, take loot, drink, throw, eat, equip, consume, pray, use a fountain, or claim the Amulet. Each costs one action. If hunger is 0 after the turn's hunger loss, lose 1 HP from starvation. Resolve starvation before any monster behaviour.</p>
+  <div class="footer"><span>FIELD GUIDE 01 / 03</span><span>NO GAME MASTER REQUIRED</span></div>
+</section>
+<section class="paper">
+  <div class="issue">ROGUE CARDS / PHYSICAL RULES / PAGE 02</div>
+  <h1>ROOMS. DICE.<br>BAD DECISIONS.</h1>
+  <h2>04 / ENTERING AN UNKNOWN LOCATION</h2>
+  <p>For each new main or side location, draw the top Room card and record it on the map. Depth 10 is always the <b>Vault of Yendor</b> with the <b>Amulet Warden</b>, not a random Room. Its defeat is required before claiming the Amulet.</p>
+  <table class="table"><thead><tr><th>Step</th><th>Roll, draw, and resolve</th></tr></thead><tbody>
+    <tr><td>Encounter (d6)</td><td>Main depths 1–6: monster on 1–4. Main depths 7–9: monster on 1–5. Side rooms: monster on 1–3. Draw one random Monster on a hit.</td></tr>
+    <tr><td>Loot (d6)</td><td>Main rooms: object on 1–4. Side rooms: object on 1–5. Draw one Object and leave it in the room until taken.</td></tr>
+    <tr><td>Room effect</td><td>Apply its entry text once. Locked Gallery consumes 1 key or 2 hunger. Tiled Passage consumes 1 key or 2 HP.</td></tr>
+    <tr><td>Event (d6)</td><td>On a natural 6, draw and immediately resolve one Event, then discard it.</td></tr>
+  </tbody></table>
+  <p>Discard a defeated Monster to the Monster discard pile; leave its card face up in the location until recorded. Reshuffle Monster, Event, and Behaviour discards when their draw piles empty. When no objects remain, a new room provides no loot.</p>
+  <h2>05 / D6 COMBAT</h2>
+  <div class="note">ROLL d6 + ATTACK VS 4 + DEFENCE. NATURAL 1 = MISS. NATURAL 6 = HIT FOR 3 DAMAGE. OTHER HITS = 2 DAMAGE.</div>
+  <p>For a Hero attack, use the Hero's ATK and the Monster's DEF. A weapon adds +1 ATK, while Guard adds +1 to Monster DEF until its next behaviour. For a Monster attack, use Monster ATK and Hero DEF; equipped mail adds +1 Hero DEF. An attack with modifiers still uses the natural-1 and natural-6 rules.</p>
+  <p><b>Example:</b> Delver ATK 3 attacks a Rust Monster DEF 1. A d6 result of 2 gives 5 vs target 5: the attack hits for 2 HP. A natural 1 misses; a natural 6 hits for 3 HP. Damage is deducted from the target's HP.</p>
+  <p><b>Monster traits:</b> Goblin's first successful strike deals +1 damage. A Rust Monster's successful strike reduces base Hero DEF by 1 (minimum 0). A Restless Shade's hit also removes 1 hunger. Attacking a surviving Floating Eye in melee costs the Hero 1 HP. A companion Dog adds +1 damage to its first successful melee hit against each monster.</p>
+  <h2>06 / SHARED MONSTER BEHAVIOUR PILE</h2>
+  <table class="table"><thead><tr><th>Card</th><th>Resolve after hunger loss, when a monster is present</th></tr></thead><tbody>
+  <tr><td>Strike ×3</td><td>Monster attacks once.</td></tr>
+  <tr><td>Lunge ×2</td><td>Monster attacks once, +1 on its roll.</td></tr>
+  <tr><td>Guard ×2</td><td>No attack; Monster gains +1 DEF during your next two actions.</td></tr>
+  <tr><td>Frenzy ×1</td><td>Monster attacks twice, each at -1 on its roll.</td></tr>
+  <tr><td>Drain ×1</td><td>No attack; lose 2 hunger.</td></tr>
+  <tr><td>Recover ×1</td><td>No attack; restore up to 2 Monster HP.</td></tr>
+  </tbody></table>
+  <p class="small">If the Hero is invisible, or the Monster is frozen or blinded, skip its behaviour without drawing a card. Decrease that status counter by one turn after the skipped behaviour.</p>
+  <div class="footer"><span>FIELD GUIDE 02 / 03</span><span>ONE SHARED BEHAVIOUR DECK</span></div>
+</section>
+<section class="paper">
+  <div class="issue">ROGUE CARDS / PHYSICAL RULES / PAGE 03</div>
+  <h1>THE STUFF THAT<br>KILLS YOU.</h1>
+  <h2>07 / SUPPLIES AND THE RETURN JOURNEY</h2>
+  <div class="columns"><div>
+    <p><b>Ration:</b> Eat to restore 7 hunger, up to 24. <b>Lucky Bone:</b> Consume to restore 3 HP. <b>Key:</b> Used automatically on first entry to a locked or trapped room, if carried.</p>
+    <p><b>Equipment:</b> Spend an action to equip a Notched Sword (+1 ATK) or Patchwork Mail (+1 DEF). Only one weapon and one armour may be equipped; return the old one to your inventory when replacing it. The Dog occupies a single companion slot and assists on your first successful melee hit against each monster.</p>
+  </div><div>
+    <p><b>Altar:</b> Pray once per altar to restore 2 HP. <b>Fountain:</b> Use once per fountain. On d6 1–3 heal 3 HP; on 4–6 gain a randomly selected potion appearance from the available five.</p>
+    <p>After defeating the Warden, claim the Amulet for one action, then return along <b>previously visited</b> rooms. You cannot reveal new locations during the return. Enter depth 0 with the Amulet to win.</p>
+  </div></div>
+  <h2>08 / IDENTIFICATION WITHOUT A COMPUTER</h2>
+  <p>Cut out the five identity slips below. Shuffle them face down. Assign one beneath each appearance in order: <b>Smoky, Milky, Bubbling, Black, Cloudy</b>. When you drink or throw a potion, reveal its slip, resolve the appropriate effect, and record that appearance in your identification notebook. Subsequent potions of the same appearance share that identity. Never reshuffle the five assignments during a run.</p>
+  <table class="table"><thead><tr><th>Identity</th><th>DRINK</th><th>THROW AT MONSTER</th></tr></thead><tbody>
+    <tr><td>Healing</td><td>Restore 5 HP.</td><td>Deal 2 damage.</td></tr>
+    <tr><td>Poison</td><td>Lose 3 HP.</td><td>Deal 5 damage.</td></tr>
+    <tr><td>Invisibility</td><td>For three monster turns, the monster cannot react.</td><td>Blind the monster for two monster turns.</td></tr>
+    <tr><td>Frost</td><td>Restore 4 hunger.</td><td>Deal 3 damage (5 in Water); freeze the monster for one monster turn.</td></tr>
+    <tr><td>Polymorph</td><td>Roll d6: 1–2 ATK -1; 3–4 unchanged; 5–6 ATK +1 (minimum 1).</td><td>Replace the target with a different random Monster from the draw pile.</td></tr>
+  </tbody></table>
+  <div class="slips" aria-label="Cut-out potion identities">
+    <div class="slip">HEALING<br>IDENTITY</div><div class="slip">POISON<br>IDENTITY</div>
+    <div class="slip">INVISIBILITY<br>IDENTITY</div><div class="slip">FROST<br>IDENTITY</div>
+    <div class="slip">POLYMORPH<br>IDENTITY</div>
+  </div>
+  <h2>09 / EVENTS & RECORD KEEPING</h2>
+  <p>Strange Feeling: lose 1 hunger. Bones of Someone: gain a ration from the supply. Whispers Below: lose 2 hunger. Cold Draft: restore 1 HP. Draw events only when a new non-Vault room is revealed on an event-roll 6.</p>
+  <p>Write down a room's name, monster HP, and untouched loot when leaving it. Re-entering a room has no new room, encounter, loot, trap, or event roll. Each turn, mark action 1 or 2; resolve hunger and one behaviour, then clear the action marks.</p>
+  <p class="small"><b>Scope:</b> This is a Phase 2 physical-first prototype. Session length and card economy require table-timed playtests. All v2 card effects should be resolved using these rules, without consulting a computer.</p>
+  <div class="footer"><span>FIELD GUIDE 03 / 03</span><span>END OF INSTRUCTIONS</span></div>
+</section>
+</main></body></html>
