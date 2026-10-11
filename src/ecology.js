@@ -27,7 +27,7 @@ export function initEcology(s,bones=null) {
  s.intrinsics=[];
  s.corpsesEaten=0;
  s.pet={active:false,hunger:9,position:s.position,loyalty:2,alive:true,lastAction:null};
- s.prayer={favour:0,cooldown:0,lastResult:null};
+ s.prayer={favour:0,cooldown:0,lastResult:null,lastTurn:-1};
  s.bonesRecord=bones&&Array.isArray(bones.items)?{
    heroId:String(bones.heroId||"unknown"),
    items:bones.items.slice(0,3).map(x=>({...x})),
@@ -57,6 +57,7 @@ export function pray(state,d6,log,altar=false){
  if(state.prayer.cooldown>0)return false;
  const roll=d6(state),total=roll+state.prayer.favour+(altar?1:0);
  state.prayer.cooldown=6;
+ state.prayer.lastTurn=state.turn;
  if(total>=4) {
   const heal=altar?4:3;
   state.hp=Math.min(state.maxHp,state.hp+heal);
@@ -79,6 +80,16 @@ export function petTurn(state,d6,log,currentMonster,neighbours){
    if(pet.hunger===0){pet.active=false;log("Your hungry dog wanders off.");return;}
  }
  if(pet.position!==state.position){pet.position=state.position;pet.lastAction="follow";log("Your dog catches up.");return;}
+ const room=state.rooms[state.position];
+ if(pet.hunger<=5 && room?.corpse){
+   const eaten=room.corpse.id;
+   room.corpse=null;
+   pet.hunger=Math.min(9,pet.hunger+3);
+   pet.loyalty=Math.min(4,pet.loyalty+1);
+   pet.lastAction="feed";
+   log("Your dog scavenges the "+eaten+" corpse (hunger +3).");
+   return;
+ }
  const r=d6(state),monster=currentMonster();
  if(r<=2){
    pet.lastAction="roam";
