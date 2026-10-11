@@ -1,4 +1,6 @@
-# ROGUE CARDS / ISSUE 006
+# PRINT & PLAY: https://tpepels.github.io/rogue_cards/print-and-play.html
+
+# ROGUE CARDS / ISSUE 007
 
 **Four kinds of unidentified magic. Two actions. One life.**
 
@@ -100,3 +102,7 @@ Autonomous pets act at turn end (d6), require food, and may follow, sniff, roam 
 - **Print kit:** Eight new oversize 90 × 140 mm tactile reference cards, plus [the two-page A4 Tactical Survival guide](survival-guide.html). Use the printed field guide and map with these additions. No new freeform object combinations are introduced.
 
 **Pacing:** The 90–120-minute physical run remains an *unverified target*. Simulated turns or computer execution time are not the same as physical session length. The test suite checks deterministic engine integrity; physical playtests should record total time, turns, optional rooms explored, decisions, and setup/cleanup overhead.
+
+## Phase 7 — Consolidated print-and-play
+
+The [print-and-play hub](print-and-play.html) provides a single setup order, printable kit entry point, tracking sheets, and links to the consolidated reference hierarchy. Delver and Wizard gain 2 starting HP; Wizard also gains 1 ATK, retaining both heroes' unique techniques and magic. A multi-strategy deterministic benchmark now compares direct, cautious and exploratory policies independently across all four heroes. These computer simulations are balance diagnostics, not measurements of 90–120-minute tabletop sessions. All prior core and tactical mechanics remain in place. The browser now writes v7 saves without replacing v6 progress.
