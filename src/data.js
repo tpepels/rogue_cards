@@ -109,5 +109,5 @@ export const PRINT_COPIES = {
 export const printDeck = types => {
   const chosen = Array.isArray(types) ? types : [types];
   return CATALOGUE.filter(card=>chosen.includes(card.type))
-    .flatMap(card=>Array.from({length:PRINT_COPIES[card.type]?.[card.id] || 0},()=>card));
+    .flatMap(card=>Array.from({length:PRINT_COPIES[card.type]?.[card.id] || 0},(_,i)=>card.type==="ring"?{...card,blessing:["uncursed","blessed","cursed"][i%3]}:card));
 };
