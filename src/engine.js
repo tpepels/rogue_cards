@@ -172,7 +172,8 @@ function openRoom(state, target) {
   state.position=target;
   log(state,nodeLabel(target)+": "+room.title+(room.monster?". "+room.monster.title+" appears.":"."));
   roomEffect(state,room);
-  if (!isVault && d6(state)===6) eventEffect(state);
+  checkDeath(state); // Fatal traps end the run before a beneficial event can occur.
+  if (state.phase!=="dead" && !isVault && d6(state)===6) eventEffect(state);
 }
 function spawnMonster(template) {
   return {...template, maxHp:template.hp, guard:0, frozen:0, blinded:0,
@@ -358,7 +359,15 @@ export function act(previous, id, argument=null) {
   if(id==="fountain") {
     room.used=true;
     if(d6(state)<=3) {state.hp=Math.min(state.maxHp,state.hp+3);log(state,"Fountain: restore 3 HP.");}
-    else {state.inventory.push(potion(choice(state,APPEARANCES).id));log(state,"Fountain: gain a mystery potion.");}
+    else {
+      const potions=state.decks.loot.draw.filter(x=>x.kind==="potion");
+      if(potions.length) {
+        const found=choice(state,potions);
+        const index=state.decks.loot.draw.findIndex(x=>x.id===found.id&&x.kind==="potion");
+        state.inventory.push(...state.decks.loot.draw.splice(index,1));
+        log(state,"Fountain: gain a mystery potion from the Object supply.");
+      } else log(state,"Fountain: no potion remains in the Object supply.");
+    }
   }
   if(["drink","throw","eat","consume","equip"].includes(id)) {
     const thing=state.inventory[argument];
