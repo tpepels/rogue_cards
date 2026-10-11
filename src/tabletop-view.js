@@ -88,7 +88,6 @@ export function cardMarkup(card){
  const index=CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1;
  const type=esc(card.type), layout=composition(card),asset=assetPath(card),plate=printPlate(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
- const front='<header class="tt-head"><span class="tt-masthead">ROGUE CARDS</span><strong class="tt-type">'+esc(card.type.toUpperCase())+'</strong></header>';
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
  let middle;
  // The print plate and paste-on rule paper share one overlapping collage plane.
@@ -107,7 +106,7 @@ export function cardMarkup(card){
   '" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-status="'+(asset?'original':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
-  front+label+middle+
+  label+middle+
   '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+
   String(index).padStart(2,"0")+'</span></footer></article>';
 }
