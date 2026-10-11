@@ -121,3 +121,18 @@ test("Phase 3 magic supplement prints complete two-page A4 reference",async({pag
     expect(p.overflow).toBeLessThanOrEqual(2);
   }
 });
+
+test("Phase 5 physical living-dungeon reference fits two A4 sheets",async({page})=>{
+ await page.goto("/living-guide.html");
+ await expect(page.locator(".paper")).toHaveCount(2);
+ await page.emulateMedia({media:"print"});
+ const pages=await page.locator(".paper").evaluateAll(nodes=>nodes.map(x=>({
+  height:x.getBoundingClientRect().height,width:x.getBoundingClientRect().width,
+  overflow:x.scrollHeight-x.clientHeight
+ })));
+ for(const sheet of pages){
+  expect(sheet.width).toBeLessThanOrEqual(190*96/25.4+2);
+  expect(sheet.height).toBeLessThanOrEqual(277*96/25.4+3);
+  expect(sheet.overflow).toBeLessThanOrEqual(2);
+ }
+});
