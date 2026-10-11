@@ -9,7 +9,8 @@ import {
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v4";
+const SAVE_KEY="rogue-cards-v5";
+const BONES_KEY="rogue-cards-bones-v5";
 let view="play";
 let filter="all";
 let kitMode=false;
@@ -22,7 +23,10 @@ function load() {
   catch {return null;}
 }
 function save() {
-  try {localStorage.setItem(SAVE_KEY,JSON.stringify(state));}
+  try {
+    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+    if(state?.phase==="dead"&&state.bonesOutcome)localStorage.setItem(BONES_KEY,JSON.stringify(state.bonesOutcome));
+  }
   catch { /* Local persistence is optional. */ }
 }
 function heading(issue,title,deck) {
@@ -32,7 +36,7 @@ function heroSelect() {
   return heading("01 / HERO SELECTION","CHOOSE YOUR BAD IDEA","A longer dungeon expedition. Two actions per turn, a shared monster-behaviour deck, and d6 combat.")+
     '<div class="hero-grid" aria-label="Choose an adventurer">'+HEROES.map(hero=>
       '<button class="hero-choice" type="button" data-hero="'+esc(hero.id)+'" aria-label="Start as '+esc(hero.title)+'">'+cardMarkup(hero)+'</button>').join("")+'</div>'+
-    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and four mystery-item identity sets. This game stores the current run locally in your browser.</p>';
+    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and four mystery-item identity sets. A previous adventurer may leave recoverable bones. This game stores the current run locally in your browser.</p>';
 }
 function meter(label,value,max) {
   const percent=Math.max(0,Math.min(100,Math.round(value/max*100)));
@@ -81,7 +85,7 @@ function inventoryView(s) {
 function controls(s) {
   const terminal=s.phase==="won"||s.phase==="dead";
   const actions=availableActions(s);
-  const mainIds=["attack","explore","travel","take","claim"];
+  const mainIds=["attack","explore","travel","take","take-corpse","take-bones","claim"];
   const renderButton=a=>{
     const attrs=(a.target!=null?' data-target="'+esc(a.target)+'"':'')+
       (a.index!=null?' data-index="'+a.index+'"':'');
@@ -123,6 +127,10 @@ function runView() {
     '</div><aside class="expedition-side"><section class="stat-panel"><div class="panel-label">CHARACTER FILE</div>'+
     '<div class="character-head">'+illustration(hero.art)+'<div><b>'+esc(hero.title)+'</b><span>TURN '+s.turn+' / '+esc(nodeLabel(s.position))+'</span></div></div>'+
     meter("HIT POINTS",s.hp,s.maxHp)+meter("HUNGER",s.hunger,MAX_HUNGER)+
+    '<div class="panel-label">LIVING DUNGEON</div>'+
+    '<p class="fine-print">DOG: '+esc(s.pet.active?"Hunger "+s.pet.hunger+" / "+(s.pet.lastAction||"following"):"No companion")+
+    ' · FAVOUR '+s.prayer.favour+' · PRAYER IN '+s.prayer.cooldown+' TURNS</p>'+
+    '<p class="fine-print">INTRINSICS: '+esc(s.intrinsics.join(", ")||"None")+'</p>'+
     '<div class="numeric-stats"><span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span><span>AMULET <b>'+(s.hasAmulet?"YES":"NO")+'</b></span></div>'+
     '<button class="outline-button" type="button" data-choose="1">NEW RUN</button></section>'+
     mapView(s)+inventoryView(s)+
@@ -193,7 +201,11 @@ document.addEventListener("click",event=>{
     try {localStorage.removeItem(SAVE_KEY);} catch { /* storage optional */ }
     render();return;
   }
-  if(button.dataset.hero) {state=startRun(button.dataset.hero);choosing=false;save();render();return;}
+  if(button.dataset.hero) {
+    let bones=null;
+    try {bones=JSON.parse(localStorage.getItem(BONES_KEY));localStorage.removeItem(BONES_KEY);}catch {bones=null;}
+    state=startRun(button.dataset.hero,Date.now(),bones);choosing=false;save();render();return;
+  }
   if(button.dataset.act && state){
     const arg=button.dataset.target??(button.dataset.index===undefined?null:Number(button.dataset.index));
     const next=act(state,button.dataset.act,arg);
