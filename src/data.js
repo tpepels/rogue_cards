@@ -22,7 +22,7 @@ export const MONSTERS = [
 
 export const ROOMS = [
   { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. Safe passage; loot may be found.", flavor:"Neither arrow points out." },
-  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"WATER: Frost/Electric +2. CACHE: Key, DIGGING or 2 Hunger for Object.", flavor:"Something stirs below." },
+  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"WATER: Thrown Frost / Electricity +2. CACHE: Key, DIGGING or 2 Hunger for Object.", flavor:"Something stirs below." },
   { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"PRAY +1. Once: ENCHANT/CLEANSE equipment. BARGAIN: -2 HP for Object.", flavor:"The gods are not all absent." },
   { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", region:"MIDDLE", exits:["SIDE"], rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
   { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"BARGAIN: Once, lose 2 HP to draw one Object. May be fatal.", flavor:"NO CREDIT. NO EXCEPTIONS." },
@@ -84,8 +84,8 @@ export const VAULT = {
 };
 
 export const EQUIPMENT = [
-  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"EQUIP: d6 modifier (1 cursed -1; 2-5 +1; 6 +2). Curse locks gear.", flavor:"Still sharp enough." },
-  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"EQUIP: d6 modifier (1 cursed -1; 2-5 +1; 6 +2). Curse locks gear.", flavor:"It smells of another hero." },
+  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"ON REVEAL: d6 1=CURSED -1, 2-5=+1, 6=+2. EQUIP: apply modifier; cursed locks.", flavor:"Still sharp enough." },
+  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"ON REVEAL: d6 1=CURSED -1, 2-5=+1, 6=+2. EQUIP: apply modifier; cursed locks.", flavor:"It smells of another hero." },
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
