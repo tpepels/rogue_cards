@@ -1,6 +1,15 @@
 import {CATALOGUE,HEROES,MONSTERS,ROOMS,ITEMS,POTIONS,printDeck,EDITION,roomRegions} from "./tabletop-data.js";
 import {cardMarkup,printSheets,esc} from "./tabletop-view.js";
 const mount=document.getElementById("tabletop-app");
+// Shared physical-print filter. Reduce grayscale illustration masters to a few
+// irregular high-contrast photocopy tones; mechanics are never filtered.
+const xeroxInkFilter='<svg class="tt-print-filter-defs" width="0" height="0" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">'+
+ '<defs><filter id="tt-xerox-ink" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">'+
+ '<feColorMatrix type="saturate" values="0"/>'+
+ '<feComponentTransfer><feFuncR type="discrete" tableValues="0 .025 .10 .92 1 1"/>'+
+ '<feFuncG type="discrete" tableValues="0 .025 .10 .92 1 1"/>'+
+ '<feFuncB type="discrete" tableValues="0 .025 .10 .92 1 1"/></feComponentTransfer>'+
+ '</filter></defs></svg>';
 const keys=["hero","room","monster","item","potion"];
 let selected="all",allCopies=true;
 const preview=[HEROES[0],MONSTERS.find(x=>x.id==="eye"),ITEMS.find(x=>x.id==="key"),
@@ -8,7 +17,7 @@ const preview=[HEROES[0],MONSTERS.find(x=>x.id==="eye"),ITEMS.find(x=>x.id==="ke
 function show(){
  const cards=allCopies?printDeck(selected):CATALOGUE.filter(c=>selected==="all"||c.type===selected);
  const physical=printDeck(selected);
- mount.innerHTML='<div class="tt-sitehead">'+
+ mount.innerHTML=xeroxInkFilter+'<div class="tt-sitehead">'+
   '<div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">TABLETOP EDITION · NO BROWSER GAME REQUIRED</div></div>'+
   '<nav class="tt-nav" aria-label="Main links"><a href="./docs/illustration-first-layout-study.html">DESIGN REFERENCE</a><a href="#cards">THE CARDS</a><a href="./rules.html">ONE A4 RULES</a><a href="./print-and-play.html">PRINT GUIDE</a></nav></div>'+
   '<main class="tt-shell">'+
