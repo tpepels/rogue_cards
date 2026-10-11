@@ -85,7 +85,7 @@ export function magicAction(state,id,index,context) {
    return;
  }
  state.inventory.splice(index,1);
- if(effectId==="flame"&&mon)context.hurt(mon,propertiesOf(room.id).includes("water")?1:4,"FIRE");
+ if(effectId==="flame"&&mon)context.hurt(mon,propertiesOf(room.id).includes("water")?1:(propertiesOf(room.id).includes("wood")?6:4),"FIRE");
  if(effectId==="ward"){state.status.ward=2;context.log("HOLY ward protects against two monster attacks.");}
  if(effectId==="mapping"){
    const neighbours=context.neighbours();
