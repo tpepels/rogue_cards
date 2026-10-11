@@ -6,7 +6,7 @@
 
 **Presence is printed on the Room.** It must explicitly name or illustrate every fixture present, such as CHEST, ALTAR, STATUE, FOUNTAIN, LOCKED DOOR, NPC, REMAINS or ARCANE OBJECT. A random draw NEVER decides whether an already printed Chest exists.
 
-**Details may come from a matching drawn card.** A Room that says CHEST — DRAW 1 CHEST places a Chest Feature card beside it, giving that chest's specific lock, trap and rewards. A Room that prints ALTAR with its complete choices needs no Feature draw. A Room may also print MONSTER — DRAW 1 UPPER MONSTER or EVENT — DRAW 1 EVENT; these define actual draws, not generic lookup tables. A specific Chest draw always comes from a Chest pile; do not draw a random fountain or statue and call it a Chest.
+**Details may come from a matching drawn card.** A Room that says CHEST — DRAW 1 CHEST places a Chest Feature card beside it, giving that chest's specific lock, trap and rewards. A Room that prints ALTAR with its complete choices needs no Feature draw. A special STATUE may instead print DRAW 1 STATUE FEATURE; it must come from a matching subtype pile or named card, never a random unrelated feature. A Room may also print MONSTER — DRAW 1 UPPER MONSTER or EVENT — DRAW 1 EVENT; these define actual draws, not generic lookup tables. A specific Chest draw always comes from a Chest pile; do not draw a random fountain or statue and call it a Chest.
 
 **Density:** normally one or two actionable features/encounters, exceptionally three. A Monster+Chest is two. An on-entry Trap+Monster+Statue is three. Visible but purely decorative objects do not count. Optional objects can be left unexplored with no universal cost or lingering clock.
 
@@ -47,7 +47,9 @@ A used Chest is turned sideways; a Monster defeated goes to its discard; Rewards
 
 **Event — Candle in the Dark:** NOW, choose: DOWSE (nothing) or LISTEN d20+WIT DC 14. Pass: peek at next Room; fail: suffer d6 HP. Discard. Room B directs you to draw this Event on entry. It resolves immediately; the Altar remains for the later safe action.
 
-**Room C — Collapsed Gallery (DEEP):** ENTER: draw 1 Trap; then reveal 1 DEEP Monster. HERE AFTER COMBAT: STATUE — break it (suffer d6 HP and take 1 Find) or skip. This is an intentionally rare three-part Room: Trap + Monster + Statue.
+**Room C — Collapsed Gallery (DEEP):** ENTER: draw 1 Trap; then reveal 1 DEEP Monster. HERE AFTER COMBAT: STATUE — place 1 matching STATUE Feature card; interact or skip. This is an intentionally rare three-part Room: Trap + Monster + Statue.
+
+**Feature — Cracked Oracle (STATUE):** USE, choose ONE after combat: BREAK (suffer d6 HP, take 1 Find), or READ (d20+WIT DC 14; pass peek at next Room, fail suffer 2 HP). Turn sideways. This feature is drawn only when a Room visibly prints STATUE.
 
 **Monster — Iron Watcher (DEEP):** HP 12 / ATK +5 / DEF +4. d6: 1–2 Assess (nothing); 3–4 Hammer (ATTACK); 5 Guard (next Hero attack DIS); 6 Crush (ATTACK; +2 damage on hit). DROP: draw 1 Find.
 
@@ -57,7 +59,7 @@ A used Chest is turned sideways; a Monster defeated goes to its discard; Rewards
 
 ### Dry-run script
 
-Place the three Rooms in A/B/C order (representative stages, NOT a replacement for ten-room main game). Give a Hero its basic Strike/Guard/Press prototype Actions and a Rusty Key. Use the Goblin as Room A Monster; test Room A twice, with a different Chest card each time. In one run force a failure to expose the Needle Lock. In Room B compare PRAY/CLEANSE/skip. In Room C resolve the Entry Trap before Iron Watcher, then choose STATUE or leave. Use the named Relic and Remains as alternative reward tests, not automatic extra rewards added in every room.
+Place the three Rooms in A/B/C order (representative stages, NOT a replacement for ten-room main game). Give a Hero its basic Strike/Guard/Press prototype Actions and a Rusty Key. Use the Goblin as Room A Monster; test Room A twice, with a different Chest card each time. In one run force a failure to expose the Needle Lock. In Room B compare PRAY/CLEANSE/skip. In Room C resolve the Entry Trap before Iron Watcher, then place the Cracked Oracle beside the Room and choose its STATUE action or leave. Use the named Relic and Remains as alternative reward tests, not automatic extra rewards added in every room.
 
 ## Role/layout guidance: shared frame, specialised interiors
 
