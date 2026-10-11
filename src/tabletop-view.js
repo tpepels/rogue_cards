@@ -21,6 +21,15 @@ export const CARD_ART=Object.freeze({
  "room:d-oracle":"strange_feeling.png",
  "room:m-statue":"cracked_oracle.png"
 });
+/** Fixed plate offsets for print reproducibility, not CSS randomness or game state.
+ * Identical cards share an intentional slightly imperfect edition mark.
+ */
+export function printPlate(card){
+ const key=card.type+":"+card.id;
+ let hash=2166136261;
+ for(const char of key)hash=Math.imul(hash^char.charCodeAt(0),16777619)>>>0;
+ return ["a","b","c","d"][hash%4];
+}
 export const assetPath=card=>{
  const file=CARD_ART[card.type+":"+card.id];
  return file?"./assets/illustrations/"+file:null;
@@ -77,7 +86,7 @@ function content(card,{sidebar=false}={}){
 export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
  const index=CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1;
- const type=esc(card.type), layout=composition(card),asset=assetPath(card);
+ const type=esc(card.type), layout=composition(card),asset=assetPath(card),plate=printPlate(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
  const front='<header class="tt-head"><span class="tt-masthead">ROGUE CARDS</span><strong class="tt-type">'+esc(card.type.toUpperCase())+'</strong></header>';
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
@@ -90,8 +99,8 @@ export function cardMarkup(card){
    middle='<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+content(card);
  }
  return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
-  (asset?' tt-has-art':' tt-needs-art')+
-  '" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
+  '" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-status="'+(asset?'original':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   front+label+middle+
