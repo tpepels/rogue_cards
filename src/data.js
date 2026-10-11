@@ -22,12 +22,12 @@ export const MONSTERS = [
 
 export const ROOMS = [
   { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. Safe passage; loot may be found.", flavor:"Neither arrow points out." },
-  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"Frost potions deal +2 damage here.", flavor:"Something stirs below." },
-  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"Once: Pray to restore 2 HP.", flavor:"The gods are not all absent." },
+  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"WATER: Frost/Electric +2. CACHE: Key, DIGGING or 2 Hunger for Object.", flavor:"Something stirs below." },
+  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"PRAY +1. Once: ENCHANT/CLEANSE equipment. BARGAIN: -2 HP for Object.", flavor:"The gods are not all absent." },
   { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", region:"MIDDLE", exits:["SIDE"], rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
-  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"Search: Take the loot assigned to this room.", flavor:"NO CREDIT. NO EXCEPTIONS." },
-  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", region:"DEEP", exits:["SIDE","LINK"], rule:"Disturbing the dead is usually a bad idea.", flavor:"There are seven coffins. Six lids." },
-  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", region:"MIDDLE", exits:["SIDE","LINK"], rule:"The air tastes like old bread.", flavor:"Soft footsteps answer yours." },
+  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"BARGAIN: Once, lose 2 HP to draw one Object. May be fatal.", flavor:"NO CREDIT. NO EXCEPTIONS." },
+  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", region:"DEEP", exits:["SIDE","LINK"], rule:"CACHE: Once, Key, DIGGING or 2 Hunger to draw one Object.", flavor:"There are seven coffins. Six lids." },
+  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", region:"MIDDLE", exits:["SIDE","LINK"], rule:"CACHE: Once, Key, DIGGING or 2 Hunger to draw one Object.", flavor:"Soft footsteps answer yours." },
   { id:"locked", type:"room", title:"Locked Gallery", art:"door", terrain:"LOCKED", region:"DEEP", exits:[], rule:"Spend a key on entry, or lose 2 hunger forcing the door.", flavor:"The lock has been repaired." },
   { id:"stairs", type:"room", title:"Stairwell", art:"stairs", terrain:"STAIRS", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. A passage descends onward.", flavor:"Further down. Always further down." },
   { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", region:"MIDDLE", exits:[], rule:"On first entry: Spend a key or lose 2 HP.", flavor:"One tile is cleaner than the rest." }
@@ -84,8 +84,8 @@ export const VAULT = {
 };
 
 export const EQUIPMENT = [
-  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"EQUIP (weapon): +1 ATK while equipped.", flavor:"Still sharp enough." },
-  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"EQUIP (armour): +1 DEF while equipped.", flavor:"It smells of another hero." },
+  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"EQUIP: d6 modifier (1 cursed -1; 2-5 +1; 6 +2). Curse locks gear.", flavor:"Still sharp enough." },
+  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"EQUIP: d6 modifier (1 cursed -1; 2-5 +1; 6 +2). Curse locks gear.", flavor:"It smells of another hero." },
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
