@@ -130,3 +130,48 @@ test("canonical printed cards use live PNG art, fallback placeholders and flexib
   expect(c.footer,"Footer outside "+c.id).toBeLessThanOrEqual(2);
  }
 });
+
+
+test("Phase 1 xerox treatment survives print while rule panels remain legible",async({page})=>{
+ await page.goto("/");
+ const spec=page.locator('.tt-grid .tt-card[data-id="delver"]').first();
+ const key=page.locator('.tt-grid .tt-card[data-id="key"]').first();
+ const first=await spec.evaluate(card=>{
+  const title=card.querySelector(".tt-title");
+  const img=card.querySelector(".tt-art-image");
+  const paper=getComputedStyle(card);
+  const label=getComputedStyle(title);
+  const art=getComputedStyle(img);
+  const rules=card.querySelector(".tt-content");
+  return {
+   paperTexture:paper.backgroundImage,cardWidth:card.getBoundingClientRect().width,
+   labelClip:label.clipPath,labelRotation:label.transform,
+   titleSize:parseFloat(label.fontSize),illustrationFilter:art.filter,
+   rulesClip:rules.scrollHeight-rules.clientHeight
+  };
+ });
+ expect(first.paperTexture).toContain("repeating-linear-gradient");
+ expect(first.labelClip).toContain("polygon(");
+ expect(first.labelRotation).not.toBe("none");
+ expect(first.titleSize).toBeGreaterThanOrEqual(20);
+ expect(first.illustrationFilter).toContain("contrast(2.25)");
+ expect(first.rulesClip).toBeLessThanOrEqual(2);
+ await expect(key.locator(".tt-art-image")).toBeVisible();
+ await page.emulateMedia({media:"print"});
+ const printed=await page.locator('.tt-print-only .tt-card[data-id="delver"]').first().evaluate(card=>{
+  const label=card.querySelector(".tt-title");
+  const image=card.querySelector(".tt-art-image");
+  return {
+   width:card.getBoundingClientRect().width,
+   height:card.getBoundingClientRect().height,
+   labelClip:getComputedStyle(label).clipPath,
+   contrast:getComputedStyle(image).filter,
+   overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight
+  };
+ });
+ expect(printed.width).toBeGreaterThan(90*96/25.4-2);
+ expect(printed.height).toBeLessThan(130*96/25.4+2);
+ expect(printed.labelClip).toContain("polygon(");
+ expect(printed.contrast).toContain("contrast(2.25)");
+ expect(printed.overflow).toBeLessThanOrEqual(2);
+});
