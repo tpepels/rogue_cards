@@ -288,7 +288,7 @@ function finishTurn(state) {
      currentRoom(state).monster.id!=="sentinel")releaseMonster(state,currentRoom(state).monster);
   monsterTurn(state);
   if(state.status.invisible>0) state.status.invisible--;
-  state.prayer.cooldown=Math.max(0,state.prayer.cooldown-1);
+  if(state.prayer.lastTurn!==state.turn)state.prayer.cooldown=Math.max(0,state.prayer.cooldown-1);
   if(state.intrinsics.includes("regeneration") && state.turn%3===0)state.hp=Math.min(state.maxHp,state.hp+1);
   checkDeath(state);
   if(state.phase==="dead") return;
