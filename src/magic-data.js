@@ -14,7 +14,7 @@ export const MAGIC = {
    ["waxed","Waxed Scroll"],["crackling","Crackling Scroll"]
   ],
   effects:[
-   {id:"flame",name:"Flame",property:"fire",rule:"READ: Deal 4 FIRE damage to a monster. WATER reduces this to 1."},
+   {id:"flame",name:"Flame",property:"fire",rule:"READ: Deal 4 FIRE damage; WATER reduces to 1, WOOD rooms increase to 6."},
    {id:"mapping",name:"Mapping",property:"light",rule:"READ: Look at the top Room card without moving or revealing a location."},
    {id:"ward",name:"Warding",property:"holy",rule:"READ: Reduce damage of the next two successful monster attacks by 2 each."},
    {id:"banish",name:"Banishment",property:"teleport",rule:"READ: Banish a non-Warden monster permanently. Remove its card from play."}
