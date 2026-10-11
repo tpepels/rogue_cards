@@ -5,7 +5,7 @@ import { cardMarkup, printSheets, escapeHtml as esc } from "./card-view.js";
 import {
   startRun, act, currentRoom, currentMonster, availableActions, validateSave,
   LAST_FLOOR, MAX_ACTIONS, MAX_HUNGER, heroAttack, heroDefense, knownIdentity,
-  nodeLabel, itemTitle
+  nodeLabel, itemTitle, regionAt
 } from "./engine.js";
 
 const app=document.querySelector("#app");
@@ -43,16 +43,17 @@ function mapView(s) {
   for(let i=0;i<=LAST_FLOOR;i++){
     const main=s.rooms[String(i)];
     const branch=s.rooms[i+"b"];
+    const sideOpen=main?.exits?.includes("SIDE");
     const mainCurrent=s.position===String(i);
     const branchCurrent=s.position===i+"b";
     const node=(id,room,current,label)=>
       '<span class="map-cell '+(room?'map-cell--known ':'')+(current?'map-cell--active':'')+'">'+
       '<b>'+esc(label)+'</b> <small>'+ (room?esc(room.title):(id.endsWith("b")?"·":"?"))+'</small></span>';
-    rows+='<li class="map-row">'+node(String(i),main,mainCurrent,""+i)+
-      (i>0&&i<LAST_FLOOR?node(i+"b",branch,branchCurrent,"SIDE"): '<span class="map-cell map-cell--void">—</span>')+'</li>';
+    rows+='<li class="map-row" data-region="'+esc(regionAt(i))+'">'+node(String(i),main,mainCurrent,""+i)+
+      (i>0&&i<LAST_FLOOR?(sideOpen?node(i+"b",branch,branchCurrent,"SIDE"):'<span class="map-cell map-cell--void">NO EXIT</span>'): '<span class="map-cell map-cell--void">—</span>')+'</li>';
   }
   return '<section class="map-panel" aria-label="Discovered dungeon map"><div class="panel-label">YOUR DUNGEON / 10 DEPTHS</div>'+
-    '<p class="help-text">The main route descends on the left. Side chambers connect to one depth only. Dark squares are undiscovered.</p>'+
+    '<p class="help-text">Main rooms always connect forward. SIDE opens optional chambers; adjacent discovered LINK chambers make shortcuts. Monsters stay in their room.</p>'+
     '<ol class="map-rows">'+rows+'</ol></section>';
 }
 function inventoryView(s) {
@@ -107,7 +108,7 @@ function runView() {
   const monsterDisplay=enemy?{...enemy,type:"monster",defense:enemy.defense+(enemy.guard||0)}:null;
   return heading("01 / THE EXPEDITION",s.phase==="ascending"?"FIND THE WAY BACK":
     s.phase==="won"?"ASCENSION":s.phase==="dead"?"YOU HAVE DIED":"DOWN INTO THE DARK",
-    "Explore the main route and optional side chambers. Every turn allows up to two actions, then the monster-behaviour deck acts.")+
+    "Explore three dungeon regions. Printed SIDE and LINK exits create branches and shortcuts; monsters never move.")+
     '<div class="mobile-hud" role="group" aria-label="Character status">'+
     '<span>HP <b>'+s.hp+'/'+s.maxHp+'</b></span><span>HUNGER <b>'+s.hunger+'</b></span>'+
     '<span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span>'+
@@ -150,7 +151,7 @@ function rulesView() {
     "Phase 3: four unidentified magical families, fifteen shared properties, and printed interactions, alongside the Phase 2 dungeon rules.")+
     '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a></div>'+
     '<div class="rules-grid">'+
-    '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Depths 1–9 have one optional side chamber. Every side chamber connects only to its main-depth parent.</p></article>'+
+    '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Room cards show their SIDE and LINK exits. SIDE opens a side chamber; adjacent explored LINK chambers connect into occasional loops. Three regions use separate Room piles.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+
     '<article><span class="eyebrow">III / COMBAT</span><h2>ROLL ONE D6.</h2><p>Roll d6 + attack against 4 + defender defence. Natural 1 always misses. Natural 6 always hits and deals 3 damage. Other hits deal 2 damage.</p><p>Monster attacks use exactly the same roll. A living Floating Eye punishes melee attacks, even when you miss.</p></article>'+
     '<article><span class="eyebrow">IV / MONSTER DECK</span><h2>DRAW ONE CARD.</h2><p>Strike, Lunge, Guard, Frenzy, Drain and Recover make up a ten-card shared behaviour pile. Shuffle its discards when empty. Status effects may prevent a draw.</p><p>Guard grants +1 monster defence during your next two actions.</p></article>'+
