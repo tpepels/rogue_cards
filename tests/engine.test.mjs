@@ -195,3 +195,45 @@ test("500 seeded action-driven runs terminate",()=>{
     assert.ok(["won","dead"].includes(s.phase),"Run "+seed+" never terminated");
   }
 });
+
+test("starting items are reserved from the finite printed Object pile",()=>{
+  const inventorySizes={delver:2,knight:1,wizard:3,rogue:3};
+  for(const [hero,size] of Object.entries(inventorySizes)){
+    const s=startRun(hero,55);
+    assert.equal(s.decks.loot.draw.length,44-size);
+    assert.equal(s.inventory.length,size);
+  }
+});
+test("trap damage is fatal before a later event could heal the hero",()=>{
+  let tested=0;
+  for(let seed=1;seed<=1200;seed++){
+    const s=startRun("delver",seed);
+    s.hp=1;
+    const after=action(s,"explore","1");
+    if(after.rooms["1"].id==="trap" && !after.inventory.some(x=>x.kind==="key")) {
+      assert.equal(after.hp,0);
+      assert.equal(after.phase,"dead");
+      assert.ok(!after.log[0]?.startsWith("Event:"),"An event revived the hero");
+      tested++;
+      break;
+    }
+  }
+  assert.ok(tested>=1,"No deterministic trap seed found");
+});
+test("fountain potion comes from the printed Object supply",()=>{
+  let checked=0;
+  for(let seed=1;seed<=1300;seed++){
+    let s=startRun("delver",seed);
+    s=action(s,"explore","1");
+    if(s.rooms["1"].id!=="fountain") continue;
+    s.rooms["1"].monster=null;
+    const before=s.decks.loot.draw.length;
+    const held=s.inventory.length;
+    s=action(s,"fountain");
+    if(s.inventory.length===held+1){
+      assert.equal(s.decks.loot.draw.length,before-1);
+      checked++;break;
+    }
+  }
+  assert.ok(checked>=1,"No seeded fountain potion result found");
+});
