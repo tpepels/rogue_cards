@@ -45,7 +45,7 @@ export function magicModifier(state,slot) {
  return ring.blessing==="blessed"?2:ring.blessing==="cursed"?-1:1;
 }
 export function ignoresDark(state) {
- return state.equipped?.ring && resolvedIdentity(state,"ring",state.equipped.ring.id)?.id==="lantern";
+ return state.equipped?.ring && resolvedIdentity(state,"ring",state.equipped.ring.id)?.id==="lantern" && state.equipped.ring.blessing!=="cursed";
 }
 export function ignoresHunger(state) {
  return state.equipped?.ring && resolvedIdentity(state,"ring",state.equipped.ring.id)?.id==="forager" && state.equipped.ring.blessing!=="cursed";
