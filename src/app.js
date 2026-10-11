@@ -147,14 +147,14 @@ function galleryView() {
 }
 function rulesView() {
   return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
-    "Phase 3 physical rules. The browser follows the same setup, combat, monster behaviour and dungeon geometry.")+
-    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a></div>'+
+    "Phase 3: four unidentified magical families, fifteen shared properties, and printed interactions, alongside the Phase 2 dungeon rules.")+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a></div>'+
     '<div class="rules-grid">'+
     '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Depths 1–9 have one optional side chamber. Every side chamber connects only to its main-depth parent.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+
     '<article><span class="eyebrow">III / COMBAT</span><h2>ROLL ONE D6.</h2><p>Roll d6 + attack against 4 + defender defence. Natural 1 always misses. Natural 6 always hits and deals 3 damage. Other hits deal 2 damage.</p><p>Monster attacks use exactly the same roll. A living Floating Eye punishes melee attacks, even when you miss.</p></article>'+
     '<article><span class="eyebrow">IV / MONSTER DECK</span><h2>DRAW ONE CARD.</h2><p>Strike, Lunge, Guard, Frenzy, Drain and Recover make up a ten-card shared behaviour pile. Shuffle its discards when empty. Status effects may prevent a draw.</p><p>Guard grants +1 monster defence during your next two actions.</p></article>'+
-    '<article><span class="eyebrow">V / SECRET BOTTLES</span><h2>DISCOVER THE CONTENTS.</h2><p>Randomly pair potion appearances with identities at setup. An appearance retains its identity all run. Drink or throw to identify it. Note the result.</p><p>The physical kit has five potion appearances and five identities. Use the identification table in the playmat.</p></article>'+
+    '<article><span class="eyebrow">V / SECRET BOTTLES</span><h2>DISCOVER THE CONTENTS.</h2><p>Randomly pair potion appearances with identities at setup. An appearance retains its identity all run. Drink or throw to identify it. Note the result.</p><p>The physical kit includes identity cards for scrolls, wands and rings, plus potion slips. Use the separate magic identification guide.</p></article>'+
     '<article><span class="eyebrow">VI / PHYSICAL TABLE</span><h2>KEEP A SMALL MAP.</h2><p>Use the A4 dungeon sheet to track explored rooms, loot, wounds, and passages. Only the current large room and monster cards need to be displayed.</p><p>Print the physical kit with duplicate cards. The full intended run is 90–120 minutes, pending actual table-timed testing.</p></article>'+
     '</div>';
 }
