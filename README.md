@@ -17,6 +17,14 @@ The browser dungeon of earlier prototypes was the wrong product. This edition **
 - **No hunger and no cross-run bones files.** Potions remember a first-use d6 discovery within a run, via the consumed Potion card itself.
 - **90–120 minutes remains an unmeasured playtest target.** No simulation results are being presented as human game times.
 
+## Canonical illustration-first card faces
+
+The **production card gallery and A4 print sheets** now use the flexible illustration-first card design, not the earlier generic mini-art template. Hero/Monster cards place a stat rail inside a large ink illustration, short-effect Items devote most of the card to the image, and the Flooded Chamber demonstrates the optional Room-with-sidebar layout. The title overlays the image as an ivory paper strip. Mechanical wording stays on clean paper.
+
+All **ten original uploaded PNGs** in `assets/illustrations/` are connected via the explicit mapping in `src/tabletop-view.js`; the current corresponding cards are Cave Delver, Floating Eye, Rusty Key, Smoky Potion, Flooded Chamber, Forgotten Supplies (storeroom scene), Goblin Raider (scavenger scene), Buried Lockbox (chest), Broken Oracle (strange feeling scene) and Stone Watcher (cracked statue). These are visual assignments only; card gameplay text and the one-A4 rules are unchanged. Cards without new art retain visibly monochrome SVG placeholders until individually illustrated.
+
+The experimental proposals for **separate Chest, Event, Feature, Reward and other card types** remain design studies, not current playable card types. Their implementation requires a subsequent physical mechanics/content redesign; a large image alone does not make that prototype canonical.
+
 ## Physical components and source of truth
 
 `src/tabletop-data.js` defines the entire tabletop catalogue and real print quantities. `src/tabletop-view.js` renders those cards (90 × 130 mm) in the gallery and four-up A4 print sheets. `src/tabletop-app.js` is only a browsing/printing tool. `rules.html` is the **sole shared rules sheet**. `print-and-play.html` is optional pre-game preparation, **not** a second rulebook.
