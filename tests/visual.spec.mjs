@@ -75,7 +75,7 @@ test("field guide and tracking sheets contain their intended pages",async({page}
 });
 
 test("print handouts fit their declared A4 content area without clipping",async({page})=>{
-  for(const route of ["/field-guide.html","/playmat.html"]){
+  for(const route of ["/field-guide.html","/playmat.html","/magic-guide.html"]){
     await page.goto(route);
     await page.emulateMedia({media:"print"});
     const pages=await page.locator("section.paper").evaluateAll(elements=>elements.map(el=>{
@@ -89,5 +89,35 @@ test("print handouts fit their declared A4 content area without clipping",async(
       expect(sheet.height,route+" page "+i+" height").toBeLessThanOrEqual(277*96/25.4+3);
       expect(sheet.scroll,route+" page "+i+" content overflow").toBeLessThanOrEqual(sheet.client+2);
     }
+  }
+});
+
+test("Phase 3 print kit includes hidden identity cards and ring polarity markers",async({page})=>{
+  await page.goto("/");
+  await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
+  await page.getByRole("button",{name:"PHYSICAL KIT"}).click();
+  await expect(page.locator(".gallery .game-card--scroll")).toHaveCount(12);
+  await expect(page.locator(".gallery .game-card--wand")).toHaveCount(12);
+  await expect(page.locator(".gallery .game-card--ring")).toHaveCount(12);
+  await expect(page.locator(".gallery .game-card--identity")).toHaveCount(12);
+  await expect(page.locator(".gallery .game-card--ring .game-card__tag")).toHaveCount(12);
+  await page.getByRole("button",{name:/\[\s*03\s*\]\s*FIELD NOTES/}).click();
+  await expect(page.getByRole("link",{name:/MAGIC \/ IDENTIFICATION/})).toBeVisible();
+});
+test("Phase 3 magic supplement prints complete two-page A4 reference",async({page})=>{
+  await page.goto("/magic-guide.html");
+  await expect(page.locator("section.sheet")).toHaveCount(2);
+  await page.emulateMedia({media:"print"});
+  const pages=await page.locator("section.sheet").evaluateAll(nodes=>nodes.map(node=>({
+    visible:getComputedStyle(node).display!=="none",
+    width:node.getBoundingClientRect().width,
+    height:node.getBoundingClientRect().height,
+    overflow:node.scrollHeight-node.clientHeight
+  })));
+  for(const p of pages){
+    expect(p.visible).toBe(true);
+    expect(p.width).toBeLessThanOrEqual(190*96/25.4+2);
+    expect(p.height).toBeLessThanOrEqual(277*96/25.4+3);
+    expect(p.overflow).toBeLessThanOrEqual(2);
   }
 });
