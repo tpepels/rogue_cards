@@ -11,6 +11,13 @@ a{color:inherit}.tt-sitehead{background:#151411;color:#f3efe4;padding:18px max(2
 .tt-hero h1{font:900 clamp(37px,6vw,76px)/.95 Georgia,serif;letter-spacing:-2px;max-width:810px;margin:14px 0}
 .tt-hero p{font-size:15px;max-width:740px;line-height:1.6}
 .tt-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:17px}.tt-links a{border:2px solid;padding:11px 15px;font-weight:bold;text-decoration:none}.tt-links a:first-child{color:white;background:#171510}
+.tt-design-preview{margin:18px 0 0;padding:18px 22px;background:#eee7d9;border:3px double #171510;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.tt-design-preview h2{font:900 24px/1.1 Georgia,serif;margin:5px 0 7px}
+.tt-design-preview p{font:12px/1.5 "Courier New",monospace;max-width:650px;margin:0}
+.tt-design-preview-label{font:bold 10px "Courier New",monospace;letter-spacing:.07em}
+.tt-design-preview-links{display:flex;gap:8px;flex-wrap:wrap}
+.tt-design-preview-links a{border:2px solid #171510;padding:9px 11px;font:bold 11px "Courier New",monospace;text-decoration:none;background:#faf7ef}
+.tt-design-preview-links a:hover{background:#171510;color:#faf7ef}
 .tt-info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.tt-info>div{padding:15px;background:#f9f6ef;border:2px solid}.tt-info b{display:block;font-size:17px}.tt-info span{font-size:12px;line-height:1.5}
 .tt-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:4px solid;margin:18px 0;padding-bottom:12px}
 .tt-toolbar h2{margin:0;font:900 25px Georgia,serif}.tt-toolbar-controls{display:flex;gap:8px;flex-wrap:wrap}
