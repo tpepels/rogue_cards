@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rogue Cards — Illustration-first flexible card study</title>
+<style>
+@page { size:A4 portrait; margin:8mm }
+:root{--ink:#16130f;--paper:#efe9dd;--scratches:#948674;}
+*{box-sizing:border-box}body{background:#beb6a9;color:var(--ink);margin:0;font-family:"Courier New",monospace}
+header{background:#191610;color:#f1eadf;padding:22px max(20px,calc((100vw - 1180px)/2))}
+header h1{font:900 clamp(27px,4vw,40px)/1 Georgia,serif;margin:2px 0 8px}
+header p{font-size:12px;line-height:1.5;max-width:960px}
+header a{color:inherit}
+aside{max-width:1180px;margin:17px auto;background:#eee6d8;border:2px solid;padding:12px 17px;font-size:12px;line-height:1.6}
+aside a{color:inherit;font-weight:bold}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(355px,1fr));justify-items:center;gap:26px 15px;max-width:1220px;margin:24px auto 46px}
+.specimen{max-width:94%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.specimen>p{max-width:90mm;font:11px/1.45 "Courier New",monospace;margin:0}
+.card{width:90mm;height:130mm;flex-shrink:0;overflow:hidden;position:relative;isolation:isolate;background:var(--paper);border:2px solid var(--ink);box-shadow:3px 5px 0 #807365;padding:2.9mm 3mm 2.6mm;display:flex;flex-direction:column}
+.card:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;opacity:.35;background:radial-gradient(ellipse at 20% 80%,#6f5f4c33,transparent 65%),repeating-linear-gradient(40deg,transparent 0 9px,#17110a0c 9px 10px)}
+.card .head{height:5.5mm;min-height:5.5mm;display:flex;align-items:center;justify-content:space-between;gap:2mm;font:900 8pt/1 "Courier New",monospace;border-bottom:1.4px solid;letter-spacing:.01em}
+.card .head .kind{font-weight:900;letter-spacing:.06em}
+.card .visual{position:relative;flex:none;width:100%;height:var(--visual,75mm);overflow:hidden;margin-top:1.5mm;background:#1a1815;outline:1px solid #171510}
+.card .visual .illustration{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 64% 44%,#c3bba8 0%,#7b7265 52%,#25221d 100%)}
+.card .visual .illustration svg{display:block;height:102%;width:100%;filter:grayscale(1) contrast(3.1);mix-blend-mode:screen}
+.card .visual:after{content:"";z-index:1;position:absolute;inset:0;pointer-events:none;opacity:.35;background:repeating-linear-gradient(100deg,transparent 0 17px,#eee9d820 17px 18px),radial-gradient(ellipse at 40% 35%,transparent 30%,#08080755 95%)}
+.card h2{font:900 19pt/.94 Georgia,serif;letter-spacing:-.7px;color:#14110e;position:absolute;z-index:4;top:9.5mm;left:3mm;right:auto;max-width:calc(100% - 6mm);background:#f2ede1;padding:1.3mm 2mm 1.4mm 2mm;margin:0;box-shadow:1mm 1mm 0 #171411;overflow-wrap:break-word}
+.card .rules{flex:1;min-height:0;border-top:2px solid var(--ink);margin-top:1.6mm;padding-top:1.5mm;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-start;gap:1.3mm;font:10.1pt/1.18 "Courier New",monospace}
+.card .rules strong{font-weight:900}
+.card .rules .entry{border-bottom:1px solid #b1a99d;padding-bottom:1mm}.card .rules .entry:last-child{border-bottom:0}
+.card .rules .tag{font:bold 8.2pt "Courier New",monospace;background:#181510;color:#f5ecdc;padding:1px 4px;display:inline-block;margin-right:4px}
+.card .rules .heading{font:bold 8.2pt "Courier New",monospace}
+.card .footer{height:5.7mm;min-height:5.7mm;border-top:1.5px solid;margin-top:1.3mm;display:flex;justify-content:space-between;gap:2mm;align-items:flex-end}
+.card .footer em{font:italic 8.7pt/1.08 Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card .footer small{font:7.5pt "Courier New",monospace}
+.card .statrail{position:absolute;top:var(--rail-top,19mm);left:0;bottom:0;z-index:3;width:16.5mm;background:#f2ebdb;display:flex;flex-direction:column;border-right:2px solid #17130e}
+.card .statrail div{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;border-bottom:1px solid #17130e}
+.card .statrail div:last-child{border:0}.statrail b{font:900 13pt Georgia,serif}.statrail small{font:8pt "Courier New",monospace}
+.card.stats-left .visual .illustration{left:15.7mm}
+.card.stats-left .visual:after{left:15.7mm}
+.card.stats-left .statrail{top:0}
+.card.stats-left h2{left:2.5mm}
+.card .art-label{position:absolute;z-index:5;bottom:0;right:0;background:var(--ink);color:#eae2d6;padding:1mm 2mm;font:8pt "Courier New",monospace}
+.card .split{display:grid;grid-template-columns:minmax(0,63%) minmax(0,37%);height:100%}
+.card .split .illustration{position:relative;inset:auto}
+.card .split .side{z-index:3;background:#f0e9db;padding:10mm 1.8mm 1mm;display:flex;flex-direction:column;font:8.8pt/1.23 "Courier New",monospace;gap:2mm;border-left:2px solid}
+.card .split .side p{margin:0;border-bottom:1px solid #b2a79a;padding-bottom:1.5mm}
+.card .split .side b{display:block;letter-spacing:.02em}
+.card .d6row{display:grid;grid-template-columns:10mm 1fr;gap:1.2mm;padding-bottom:1.1mm;border-bottom:1px solid #b0a79a}
+.card .d6row:last-of-type{border-bottom:0}
+.card .d6row b{white-space:nowrap}
+.card .options{display:flex;flex-direction:column;gap:1.6mm}
+.card .options>div{border-left:2px solid var(--ink);padding-left:2mm}
+.card .mini{font-size:8.7pt}
+.card.illustration-dominant{--visual:86mm}
+.card.big-art{--visual:81mm}
+.card.large-art{--visual:72mm}
+.card.medium-art{--visual:64mm}
+.card.dense{--visual:56mm}
+.card.room-split{--visual:78mm}
+.card.monster{--visual:62mm}
+.card.monster .rules{font-size:9.4pt;gap:1.1mm}
+.card.chest{--visual:59mm}
+.card.chest .rules{font-size:9.4pt}
+.card .branded{position:absolute;z-index:1;bottom:2mm;left:2mm;font:7pt "Courier New",monospace;color:#f2ede5;background:#201b14;padding:1mm}
+.card .art-source{position:absolute;z-index:3;bottom:0;left:0;right:0;height:4mm;background:#1d1a14;color:#eee;font:7.3pt "Courier New",monospace;text-align:center;line-height:4mm;opacity:.8}
+.card.illustration-dominant .rules{font-size:10.5pt;line-height:1.16}
+.card .icon{font-style:normal;margin-right:4px}
+.card .illustration .ink{display:block;filter:contrast(2.4);width:100%;height:100%;object-fit:contain}
+.reference{max-width:940px;margin:20px auto 60px;border:2px solid;background:#eee6d9;padding:16px 21px;font-size:12px;line-height:1.55}
+.reference h3{font:900 22px Georgia,serif;margin:0 0 8px}
+.reference table{border-collapse:collapse;width:100%;font-size:11px}.reference td,.reference th{padding:8px;border:1px solid;text-align:left}
+@media(max-width:390px){.cards{grid-template-columns:1fr}.specimen{max-width:100%}}
+@media print{header,aside,.specimen>p,.reference{display:none}body{background:white}.cards{display:grid;grid-template-columns:90mm 90mm;column-gap:5mm;row-gap:5mm;margin:0;break-inside:avoid}.specimen{break-inside:avoid}.card{box-shadow:none!important}}
+</style></head><body>
+<header><h1>Rogue Cards · Illustration-first layouts</h1><p>Flexible art-to-text proportions, inspired by the uploaded black-and-white card reference. Large original engravings will dominate; different card types use different internal composition while retaining one battered ivory-and-ink visual identity. This is a design study only, not the finished deck.</p><p><a href="./room-feature-prototype.md">Three-Room playtest architecture</a> · <a href="./room-feature-layout-study.html">Earlier small-illustration comparison</a></p></header>
+<aside><strong>NEW DIRECTION:</strong> The picture should be the card's centre of gravity. No universal fixed art height or triple-row rules container. Illustration occupies 50–70% of most cards; concise effects live at the bottom, longer d6 behaviour is allowed more space. For example, a Room can have its rules in a narrow right-hand column over a large scene, whereas an Item needs only a short text band.</aside>
+<main class="cards">
+<section class="specimen"><article class="card stats-left big-art hero"><div class="head"><span>ROGUE CARDS</span><span class="kind">HERO</span></div><div class="visual"><div class="illustration" data-art="delver"></div><div class="statrail"><div><b>22</b><small>HP</small></div><div><b>+4</b><small>ATK</small></div><div><b>+3</b><small>DEF</small></div><div><b>+3</b><small>WIT</small></div></div></div><h2>Cave Delver</h2><div class="rules"><div class="entry">You know these tunnels.</div><div class="entry"><strong>ABILITY:</strong> Take your two Delver Ability cards.</div><div class="entry"><strong>EQUIP:</strong> Weapon, Armour, Companion.</div></div><div class="footer"><em>“Down is a kind of home.”</em><small>H-01</small></div></article><p>Hero: nearly full-height portrait with permanent stat rail *inside* the illustration zone.</p></section>
+<section class="specimen"><article class="card stats-left monster"><div class="head"><span>ROGUE CARDS</span><span class="kind">MONSTER</span></div><div class="visual"><div class="illustration" data-art="eye"></div><div class="statrail"><div><b>9</b><small>HP</small></div><div><b>+2</b><small>ATK</small></div><div><b>+4</b><small>DEF</small></div></div></div><h2>Floating Eye</h2><div class="rules"><div class="heading">BEHAVIOUR · ROLL d6</div><div class="d6row"><b>1–2</b><span>Watch: nothing.</span></div><div class="d6row"><b>3–4</b><span>Gaze: ATTACK +2.</span></div><div class="d6row"><b>5</b><span>Stare: Hero's next roll DIS.</span></div><div class="d6row"><b>6</b><span>Flash: ATTACK with ADV.</span></div><div class="mini"><b>DROP:</b> Take one Find.</div></div><div class="footer"><em>“It sees what you forget.”</em><small>M-04</small></div></article><p>Monster: the four d6 results determine the smaller bottom rules band, but the creature still gets a dominant portrait.</p></section>
+<section class="specimen"><article class="card room-split room"><div class="head"><span>ROGUE CARDS</span><span class="kind">ROOM · MIDDLE</span></div><div class="visual"><div class="split"><div class="illustration" data-art="water"></div><div class="side"><p><b>ENTER</b>Draw 1 MIDDLE Monster.</p><p><b>HERE</b>CHEST. Place one Chest.</p><p><b>LEAVE</b>Open or skip after combat.</p></div></div></div><h2>Flooded Chamber</h2><div class="rules"><div class="entry"><b>WATER.</b> The chamber's cold water swallows every footstep.</div></div><div class="footer"><em>“Something moves below.”</em><small>R-04</small></div></article><p>Room variation A: detailed environmental art plus a narrow information column, like your example's map-and-rule card.</p></section>
+<section class="specimen"><article class="card large-art room"><div class="head"><span>ROGUE CARDS</span><span class="kind">ROOM · UPPER</span></div><div class="visual"><div class="illustration" data-art="shop"></div><div class="art-label">CHEST</div></div><h2>Abandoned Storeroom</h2><div class="rules"><div class="entry"><span class="tag">ENTER</span>Draw 1 UPPER Monster.</div><div class="entry"><span class="tag">HERE</span>Place 1 Chest; open it after combat or skip.</div></div><div class="footer"><em>“A room someone locked twice.”</em><small>R-01</small></div></article><p>Room variation B: cinematic illustration occupying most of the face, just two interaction lines.</p></section>
+<section class="specimen"><article class="card chest chest"><div class="head"><span>ROGUE CARDS</span><span class="kind">FEATURE · CHEST</span></div><div class="visual"><div class="illustration" data-art="door"></div></div><h2>Ironbound Chest</h2><div class="rules"><div class="heading">OPEN AFTER COMBAT · CHOOSE</div><div class="options"><div><b>PICK · WIT DC 13:</b> Pass: 1 Find. Fail: draw 1 Trap.</div><div><b>FORCE · ATK DC 15:</b> Pass: 1 Find. Fail: suffer d6 HP.</div></div><div class="mini">Turn sideways after your attempt.</div></div><div class="footer"><em>“The iron waits.”</em><small>F-C01</small></div></article><p>Chest: still has large artwork, but allocates a visibly larger bottom area for two distinct opening methods.</p></section>
+<section class="specimen"><article class="card illustration-dominant item"><div class="head"><span>ROGUE CARDS</span><span class="kind">ITEM</span></div><div class="visual"><div class="illustration" data-art="key"></div></div><h2>Rusty Key</h2><div class="rules"><div class="entry"><strong>USE — DISCARD:</strong> Open one locked Chest or door without a roll.</div></div><div class="footer"><em>“It still turns.”</em><small>I-02</small></div></article><p>Item: nearly full art. One clear functional sentence, no mandatory headings or empty text sections.</p></section>
+<section class="specimen"><article class="card big-art event"><div class="head"><span>ROGUE CARDS</span><span class="kind">EVENT</span></div><div class="visual"><div class="illustration" data-art="spiral"></div></div><h2>A Strange Feeling</h2><div class="rules"><div class="entry">The dungeon remembers you.</div><div class="entry"><b>CHOOSE:</b> Ignore it, or test WIT DC 14 to peek at the next Room. On failure suffer d6 HP.</div></div><div class="footer"><em>“You are not the first.”</em><small>E-02</small></div></article><p>Event: a dramatic near-full portrait, then a small storytelling/action block.</p></section>
+<section class="specimen"><article class="card big-art trap"><div class="head"><span>ROGUE CARDS</span><span class="kind">TRAP</span></div><div class="visual"><div class="illustration" data-art="trap"></div></div><h2>Needle Lock</h2><div class="rules"><div class="entry"><strong>NOW:</strong> WIT DC 13.</div><div class="entry">Fail: suffer d6 HP. Discard this card.</div></div><div class="footer"><em>“The prick comes later.”</em><small>T-01</small></div></article><p>Trap: substantial mechanism artwork; only the actual triggering test remains beneath.</p></section>
+<section class="specimen"><article class="card illustration-dominant companion"><div class="head"><span>ROGUE CARDS</span><span class="kind">COMPANION</span></div><div class="visual"><div class="illustration" data-art="dog"></div></div><h2>Loyal Hound</h2><div class="rules"><div class="entry">Once per Room, after you hit a Monster, add +d6 damage. Turn sideways.</div></div><div class="footer"><em>“Smarter than its master.”</em><small>P-01</small></div></article><p>Companion: artwork-first portrait; ongoing presence shown by the physical card beside the Hero.</p></section>
+<section class="specimen"><article class="card illustration-dominant feature"><div class="head"><span>ROGUE CARDS</span><span class="kind">FEATURE · STATUE</span></div><div class="visual"><div class="illustration" data-art="eye"></div></div><h2>Cracked Oracle</h2><div class="rules"><div class="entry">After combat, choose: break it for 1 Find and suffer d6 HP; or leave it untouched.</div></div><div class="footer"><em>“Stone is patient.”</em><small>F-S01</small></div></article><p>Simple Feature: an oversized image can use the same visual architecture as an Item rather than a special rigid layout.</p></section>
+</main>
+<section class="reference"><h3>Illustration space is content-dependent</h3>
+<table><thead><tr><th>Layout</th><th>Illustration height</th><th>Use when…</th></tr></thead><tbody>
+<tr><td>Illustration dominant</td><td>86 mm (66%)</td><td>One short effect: Item, Companion, simple Feature</td></tr>
+<tr><td>Large art</td><td>72–81 mm (55–62%)</td><td>Hero, Event, Room with compact effects, Trap</td></tr>
+<tr><td>Monster</td><td>62 mm (48%)</td><td>Needs statistics and four d6 behaviours</td></tr>
+<tr><td>Chest / dense</td><td>56–59 mm (43–45%)</td><td>Two alternative actions with risks and rewards</td></tr>
+<tr><td>Split Room</td><td>78 mm (60%)</td><td>Map/room illustration with compact instructions alongside</td></tr>
+</tbody></table><p>Title may overlap the illustration on an opaque ivory paste-on strip. Rules stay on a separate clean paper area, with no text over dark art. No algorithmic micro-fonts: if a card becomes too verbose, edit its effect or use a Feature card, not a tiny font. All art is placeholder until original engravings are created. <a href="./room-feature-prototype.md">Prototype audit and gameplay architecture</a>.</p></section>
+<script type="module">import{illustration}from"../src/art.js";document.querySelectorAll("[data-art]").forEach(el=>el.innerHTML=illustration(el.dataset.art));</script>
+</body></html>
