@@ -73,3 +73,21 @@ test("field guide and tracking sheets contain their intended pages",async({page}
   await expect(page.locator("section.paper")).toHaveCount(2);
   await expect(page.getByText("VAULT OF YENDOR")).toBeVisible();
 });
+
+test("print handouts fit their declared A4 content area without clipping",async({page})=>{
+  for(const route of ["/field-guide.html","/playmat.html"]){
+    await page.goto(route);
+    await page.emulateMedia({media:"print"});
+    const pages=await page.locator("section.paper").evaluateAll(elements=>elements.map(el=>{
+      const rect=el.getBoundingClientRect();
+      return {height:rect.height, client:el.clientHeight, scroll:el.scrollHeight, width:rect.width};
+    }));
+    expect(pages.length).toBe(route.includes("field-guide")?3:2);
+    for(let i=0;i<pages.length;i++){
+      const sheet=pages[i];
+      expect(sheet.width,route+" page "+i+" width").toBeLessThanOrEqual(190*96/25.4+2);
+      expect(sheet.height,route+" page "+i+" height").toBeLessThanOrEqual(277*96/25.4+3);
+      expect(sheet.scroll,route+" page "+i+" content overflow").toBeLessThanOrEqual(sheet.client+2);
+    }
+  }
+});
