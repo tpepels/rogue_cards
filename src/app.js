@@ -98,7 +98,7 @@ function runView() {
   if(!state||choosing) return heroSelect();
   const s=state, room=currentRoom(s), enemy=currentMonster(s), hero=byId(HEROES,s.heroId);
   const roomDisplay={...room,type:"room",number:s.position.toUpperCase()};
-  const monsterDisplay=enemy?{...enemy,type:"monster"}:null;
+  const monsterDisplay=enemy?{...enemy,type:"monster",defense:enemy.defense+(enemy.guard||0)}:null;
   return heading("01 / THE EXPEDITION",s.phase==="ascending"?"FIND THE WAY BACK":
     s.phase==="won"?"ASCENSION":s.phase==="dead"?"YOU HAVE DIED":"DOWN INTO THE DARK",
     "Explore the main route and optional side chambers. Every turn allows up to two actions, then the monster-behaviour deck acts.")+
