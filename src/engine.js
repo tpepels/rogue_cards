@@ -124,11 +124,13 @@ export function startRun(heroId = "delver", seed = Date.now()) {
 function findItemIndex(state, id) { return state.inventory.findIndex(x=>x.kind===id); }
 function roomEffect(state, room) {
   if (room.id==="locked") {
+    if(state.status.passage>0) {state.status.passage--;log(state,"DIGGING opens the locked passage.");return;}
     const i=findItemIndex(state,"key");
     if (i>=0) { state.inventory.splice(i,1); log(state,"Used a key to open the gallery."); }
     else { state.hunger=Math.max(0,state.hunger-2); log(state,"Forced the lock. Hunger -2."); }
   }
   if (room.id==="trap") {
+    if(state.status.passage>0) {state.status.passage--;log(state,"DIGGING disarms the pressure plate.");return;}
     const i=findItemIndex(state,"key");
     if (i>=0) { state.inventory.splice(i,1); log(state,"Jammed the trap with a key."); }
     else { state.hp -= 2; log(state,"Spring trap! HP -2."); }
