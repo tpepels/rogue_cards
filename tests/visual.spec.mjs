@@ -312,3 +312,32 @@ test("collage cards physically overlap art, pasted rules, titles and stat rails 
   expect(v.overflow).toBeLessThanOrEqual(2);
  }
 });
+
+
+test("canonical cards have no top masthead and begin with artwork and pasted title",async({page})=>{
+ await page.goto("/");
+ const cards=page.locator(".tt-grid .tt-card");
+ await expect(cards.first()).toBeVisible();
+ await expect(page.locator(".tt-grid .tt-head, .tt-grid .tt-masthead, .tt-grid .tt-type")).toHaveCount(0);
+ const measurements=await cards.evaluateAll(els=>els.map(card=>{
+  const image=card.querySelector(".tt-visual").getBoundingClientRect();
+  const title=card.querySelector(".tt-title").getBoundingClientRect();
+  const frame=card.getBoundingClientRect();
+  const text=card.querySelector(".tt-content");
+  return {id:card.dataset.id,artTop:image.top-frame.top,
+    titleOverArt:title.bottom>image.top && title.top<image.bottom,
+    textClip:text.scrollHeight-text.clientHeight};
+ }));
+ for(const data of measurements){
+  expect(data.artTop,"Illustration does not reach top on "+data.id).toBeLessThan(24);
+  expect(data.titleOverArt,"Pasted title not overlapping image on "+data.id).toBe(true);
+  expect(data.textClip,"Rules clipped on "+data.id).toBeLessThanOrEqual(2);
+ }
+ await page.emulateMedia({media:"print"});
+ await expect(page.locator(".tt-print-only .tt-head")).toHaveCount(0);
+ const size=await page.locator(".tt-print-only .tt-card").first().evaluate(el=>({
+  width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height
+ }));
+ expect(size.width).toBeGreaterThan(90*96/25.4-2);
+ expect(size.height).toBeLessThan(130*96/25.4+2);
+});
