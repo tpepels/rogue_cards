@@ -31,6 +31,12 @@ The printed card renderer now uses the actual reference-inspired physical gramma
 
 This is still a **visual-only** release. It preserves all current rules, card names, illustration assignments, quantity, dimensions, and four-up A4 print layout. The proposed separate Room/Chest/Feature/Reward taxonomy is still not implemented.
 
+### Phase 3: the Xerox artifact treatment
+
+The production print deck now renders illustration PNGs and placeholder artwork through a shared **reduced-tone black/ivory SVG ink filter** (see `#tt-xerox-ink` in `src/tabletop-app.js`). Paper grain, edge abrasion, pinholes and fine photocopy scratches are confined to the physical frame and illustration plate, not the rules. A deterministic per-card **four-plate misregistration scheme** introduces slight shifts and pasted-label rotations; duplicates of the same printed card are reproducible. No client-side random effects, no extra card state and no dependency on a computer to play.
+
+The gritty treatment deliberately leaves HP, ATK/DEF/WIT, monster d6 tables, item effects and rule text untouched. The original 90 × 130 mm cards and four-per-A4 print sheets remain in force. CI checks the illustration filter in preview and print media, verifies that effects stay unfiltered, and checks the complete physical deck for clipping. This is a visual-composition milestone, **not** a claim of production-grade print proofing or new art for every card. Readability and ink density still need an actual paper proof.
+
 ## Physical components and source of truth
 
 `src/tabletop-data.js` defines the entire tabletop catalogue and real print quantities. `src/tabletop-view.js` renders those cards (90 × 130 mm) in the gallery and four-up A4 print sheets. `src/tabletop-app.js` is only a browsing/printing tool. `rules.html` is the **sole shared rules sheet**. `print-and-play.html` is optional pre-game preparation, **not** a second rulebook.
