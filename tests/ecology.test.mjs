@@ -67,3 +67,27 @@ test("all ecology rules are printable with species-specific hazards",()=>{
  assert.equal(cards.length,ECOLOGY_CARDS.reduce((s,c)=>s+(c.id==="corpse"?6:1),0)+INTRINSICS.length);
  assert.ok(CATALOGUE.some(c=>c.id==="prayer"&&c.type==="ecology"));
 });
+
+test("dog scavenges a corpse autonomously instead of allowing the hero to eat it",()=>{
+ let s=startRun("delver",19);
+ s.inventory.push({kind:"dog",id:"dog"});
+ s=execute(s,"equip",s.inventory.length-1);
+ s.pet.hunger=4;
+ s.rooms["0"].corpse=corpseFor({id:"rat"},s.turn);
+ s=execute(s,"end");
+ assert.equal(s.pet.lastAction,"feed");
+ assert.equal(s.pet.hunger,7);
+ assert.equal(s.rooms["0"].corpse,null);
+});
+test("prayer cooldown counts six full turns after the invocation turn",()=>{
+ let s=startRun("knight",19);
+ s=execute(s,"pray");
+ s=execute(s,"end");
+ assert.equal(s.prayer.cooldown,6);
+ for(let i=0;i<5;i++)s=execute(s,"end");
+ assert.equal(s.prayer.cooldown,1);
+ assert.ok(!availableActions(s).some(a=>a.id==="pray"));
+ s=execute(s,"end");
+ assert.equal(s.prayer.cooldown,0);
+ assert.ok(availableActions(s).some(a=>a.id==="pray"));
+});
