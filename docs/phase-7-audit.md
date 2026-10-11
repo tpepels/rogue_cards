@@ -33,3 +33,18 @@ Balance adjustments should be judged by **cross-policy comparisons** and ideally
 ## Outstanding physical acceptance requirements
 
 The 90–120 minute target cannot be verified by engine speed. Record at least setup time, tutorial reading time, number of turns, time per turn, total physical playtime, floor reached, optional side chambers entered, and reports of unclear card wording. Real print color/contrast, cut tolerances, card handling and readability need human inspection. The repository does not claim those empirical tests were performed.
+
+## Final seeded benchmark — 2026-10-11, workflow 38166033670
+
+80 seeds per hero-policy cell (12 cells), no timeouts. Win rates:
+
+| Hero | Direct | Cautious | Explorer |
+| --- | ---: | ---: | ---: |
+| Delver | 42.5% | 28.75% | 30.0% |
+| Knight | 55.0% | 43.75% | 27.5% |
+| Wizard | 40.0% | 27.5% | 32.5% |
+| Rogue | 53.75% | 38.75% | 36.25% |
+
+Final role adjustments are **Delver HP 13, ATK 3, DEF 2** (previous Phase 6 baseline HP 12/ATK 3/DEF 1) and **Wizard HP 12, ATK 3, DEF 1** (previous baseline HP 10/ATK 2/DEF 1); Knight and Rogue remain unchanged. All techniques and starting objects remain unchanged. Under the direct policy, the hero spread narrows to 15 percentage points (40.0–55.0%). Cautious still spans 16.25 points, while explorer spans 8.75 points. That is evidence of better *approximate parity* across strategies, **not proof of balanced human play**. Three agents share substantial decision logic and may underestimate the Wizard's consumable magic or overuse optional risks.
+
+The simulated mean number of turns ranges from about 20 to 33, depending on hero and policy, which cannot be converted into minutes without measured human timings. The ten-depth target has not changed.
