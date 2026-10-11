@@ -92,11 +92,41 @@ test("illustration-first draft uses ten role-specific art proportions without cl
 
 test("design studies are accessible from the live homepage without replacing playable cards",async({page})=>{
  await page.goto("/");
- await expect(page.getByRole("link",{name:"NEW CARD DESIGNS"})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
- await expect(page.getByRole("link",{name:/VIEW NEW CARD LAYOUTS/})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
+ await expect(page.getByRole("link",{name:"DESIGN REFERENCE"})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
+ await expect(page.getByRole("link",{name:/VIEW DESIGN REFERENCE/})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
  await expect(page.getByRole("link",{name:/VIEW ROOM & CHEST STUDY/})).toHaveAttribute("href","./docs/room-feature-layout-study.html");
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
- await page.getByRole("link",{name:/VIEW NEW CARD LAYOUTS/}).click();
+ await page.getByRole("link",{name:/VIEW DESIGN REFERENCE/}).click();
  await expect(page).toHaveURL(/\/docs\/illustration-first-layout-study\.html$/);
  await expect(page.locator(".specimen .card")).toHaveCount(10);
+});
+
+test("canonical printed cards use live PNG art, fallback placeholders and flexible compositions",async({page})=>{
+ await page.goto("/");
+ const hero=page.locator('.tt-grid .tt-card[data-id="delver"]');
+ const eye=page.locator('.tt-grid .tt-card[data-id="eye"]');
+ const key=page.locator('.tt-grid .tt-card[data-id="key"]');
+ const flood=page.locator('.tt-grid .tt-card[data-id="m-flood"]');
+ await expect(hero).toHaveAttribute("data-art-status","original");
+ await expect(hero).toHaveAttribute("data-layout","portrait-stats");
+ await expect(eye).toHaveAttribute("data-layout","monster-dense");
+ await expect(key).toHaveAttribute("data-layout","illustration-dominant");
+ await expect(flood).toHaveAttribute("data-layout","room-split");
+ for(const card of [hero,eye,key,flood]){
+  const img=card.locator("img.tt-art-image");
+  await expect(img).toBeVisible();
+  await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+ }
+ const specimens=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const vis=card.querySelector(".tt-visual"),rules=card.querySelector(".tt-content");
+  return {id:card.dataset.id,ratio:vis.getBoundingClientRect().height/card.getBoundingClientRect().height,
+    clip:rules?.scrollHeight-rules?.clientHeight??0,
+    footer:card.querySelector(".tt-footer").getBoundingClientRect().bottom-card.getBoundingClientRect().bottom};
+ }));
+ expect(specimens.some(c=>c.ratio>.6)).toBeTruthy();
+ expect(specimens.some(c=>c.ratio<.42)).toBeTruthy();
+ for(const c of specimens){
+  expect(c.clip,"Rules clipped on "+c.id).toBeLessThanOrEqual(2);
+  expect(c.footer,"Footer outside "+c.id).toBeLessThanOrEqual(2);
+ }
 });
