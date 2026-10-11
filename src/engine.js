@@ -63,6 +63,13 @@ function lootStock() {
     ...stock("item", [...ITEMS, ...EQUIPMENT].filter(x=>!["amulet"].includes(x.id)))
       .map(id=>item(id))];
 }
+function decorateGear(state,thing){
+  if(!thing||!["sword","mail"].includes(thing.kind)||thing.enchant!=null)return thing;
+  const roll=d6(state);
+  thing.enchant=roll===6?2:roll===1?-1:1;
+  thing.cursed=roll===1;
+  return thing;
+}
 export const currentRoom = state => state.rooms[state.position];
 export const currentMonster = state => currentRoom(state)?.monster?.hp > 0 ? currentRoom(state).monster : null;
 export const heroAttack = state => state.attack + (state.equipped.weapon ? (state.equipped.weapon.enchant??1) : 0);
@@ -203,11 +210,7 @@ function openRoom(state, target) {
     }
     const lootRoll=d6(state);
     if (lootRoll <= (branch?5:4)) room.loot=draw(state,state.decks.loot);
-    if(room.loot && ["sword","mail"].includes(room.loot.kind)){
-      const enchantRoll=d6(state);
-      room.loot.enchant=enchantRoll===6?2:enchantRoll===1?-1:1;
-      room.loot.cursed=enchantRoll===1;
-    }
+    decorateGear(state,room.loot);
     if(["crypt","nest","flood"].includes(room.id))room.puzzle={solved:false};
     if(["shop","altar"].includes(room.id))room.bargain={used:false};
   }
@@ -452,7 +455,7 @@ export function act(previous, id, argument=null) {
     else{state.hunger=Math.max(0,state.hunger-2);log(state,"Forced the cache; hunger -2.");}
     room.puzzle.solved=true;
     const gift=state.decks.loot.draw.pop();
-    if(gift)state.inventory.push(gift);
+    if(gift)state.inventory.push(decorateGear(state,gift));
     log(state,gift?"Cache recovered: "+itemTitle(gift)+".":"The cache is empty.");
   }
   if(id==="enchant"){
@@ -467,7 +470,7 @@ export function act(previous, id, argument=null) {
     log(state,"Cleansed "+gear.kind+" (-2 HP).");
   }
   if(id==="bargain"){state.hp-=2;room.bargain.used=true;state.bargains++;const gift=state.decks.loot.draw.pop();if(gift)state.inventory.push(gift);log(state,"A costly bargain: -2 HP"+(gift?", gained "+itemTitle(gift):", no objects remain")+".");}
-  if(id==="take") {state.inventory.push(room.loot);log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
+  if(id==="take") {state.inventory.push(decorateGear(state,room.loot));log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
   if(id==="take-corpse"){state.inventory.push(room.corpse);log(state,"Collected "+room.corpse.id+" corpse.");room.corpse=null;}
   if(id==="take-bones"){state.inventory.push(room.bones);log(state,"Recovered lost equipment.");room.bones=null;}
   if(id==="claim") {state.hasAmulet=true;state.phase="ascending";log(state,"The Amulet is yours. Return to the entrance.");}
