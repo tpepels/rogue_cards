@@ -25,6 +25,12 @@ All **ten original uploaded PNGs** in `assets/illustrations/` are connected via 
 
 The experimental proposals for **separate Chest, Event, Feature, Reward and other card types** remain design studies, not current playable card types. Their implementation requires a subsequent physical mechanics/content redesign; a large image alone does not make that prototype canonical.
 
+### Phase 2: composition, not just distress
+
+The printed card renderer now uses the actual reference-inspired physical grammar. A common imperfect masthead and cut-paper title sit over **adaptive illustration panels**; the effect text determines how much space the artwork can occupy, rather than imposing one fixed image height. Heroes and Monsters use a left-side HP/ATK/DEF (plus Hero WIT) stat rail with printed symbols; Monsters have a clearly separated four-row d6 behaviour record and full corpse wording. Short-effect Items fill more of the face with art. The **Flooded Chamber** uses a real printed side-column Room treatment, not the same bottom panel as every other card.
+
+This is still a **visual-only** release. It preserves all current rules, card names, illustration assignments, quantity, dimensions, and four-up A4 print layout. The proposed separate Room/Chest/Feature/Reward taxonomy is still not implemented.
+
 ## Physical components and source of truth
 
 `src/tabletop-data.js` defines the entire tabletop catalogue and real print quantities. `src/tabletop-view.js` renders those cards (90 × 130 mm) in the gallery and four-up A4 print sheets. `src/tabletop-app.js` is only a browsing/printing tool. `rules.html` is the **sole shared rules sheet**. `print-and-play.html` is optional pre-game preparation, **not** a second rulebook.
