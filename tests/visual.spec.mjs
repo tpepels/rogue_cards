@@ -219,3 +219,46 @@ test("Phase 2 uses distinct reference-style physical compositions with complete 
  await page.emulateMedia({media:"print"});
  await expect(page.locator('.tt-print-only .tt-card[data-id="m-flood"] .tt-content--sidebar').first()).toBeVisible();
 });
+
+
+test("Phase 3 Xerox filter is on illustrations only and appears on all print copies",async({page})=>{
+ await page.goto("/");
+ const plateFilter=page.locator("#tt-xerox-ink");
+ await expect(plateFilter).toHaveCount(1);
+ const film=await page.locator("#tt-xerox-ink feFuncR").evaluate(el=>el.getAttribute("tableValues"));
+ expect(film).toBe("0 .025 .10 .92 1 1");
+ const cards=page.locator(".tt-grid .tt-card");
+ const plates=await cards.evaluateAll(xs=>[...new Set(xs.map(x=>x.dataset.plate))].sort());
+ expect(plates).toEqual(["a","b","c","d"]);
+ for(const id of ["delver","eye","key","smoky","m-flood"]){
+  const specimen=page.locator('.tt-grid .tt-card[data-id="'+id+'"]').first();
+  const data=await specimen.evaluate(el=>{
+    const art=el.querySelector(".tt-art-image");
+    const rules=el.querySelector(".tt-content");
+    return {
+      plate:el.dataset.plate,
+      artFilter:getComputedStyle(art).filter,
+      rulesFilter:getComputedStyle(rules).filter,
+      labelRotate:getComputedStyle(el.querySelector(".tt-title")).transform,
+      contentOverflow:rules.scrollHeight-rules.clientHeight
+    };
+  });
+  expect(["a","b","c","d"]).toContain(data.plate);
+  expect(data.artFilter).toContain("tt-xerox-ink");
+  expect(data.artFilter).toContain("contrast(2.25)");
+  expect(data.rulesFilter).toBe("none");
+  expect(data.labelRotate).not.toBe("none");
+  expect(data.contentOverflow,"text on "+id).toBeLessThanOrEqual(2);
+ }
+ await page.emulateMedia({media:"print"});
+ const preview=await page.locator('.tt-print-only .tt-card[data-id="delver"]').first().evaluate(card=>{
+  const art=card.querySelector(".tt-art-image");
+  const body=card.querySelector(".tt-content");
+  return {artFilter:getComputedStyle(art).filter,ruleFilter:getComputedStyle(body).filter,
+   width:card.getBoundingClientRect().width,height:card.getBoundingClientRect().height};
+ });
+ expect(preview.artFilter).toContain("tt-xerox-ink");
+ expect(preview.ruleFilter).toBe("none");
+ expect(preview.width).toBeGreaterThan(90*96/25.4-2);
+ expect(preview.height).toBeLessThan(130*96/25.4+2);
+});
