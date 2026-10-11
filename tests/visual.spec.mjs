@@ -159,3 +159,12 @@ test("Phase 6 survival guide prints exactly two unclipped A4 sheets",async({page
    expect(pageSize.overflow).toBeLessThanOrEqual(2);
  }
 });
+
+test("Phase 7 print-and-play hub exposes every required physical reference",async({page})=>{
+ await page.goto("/print-and-play.html");
+ const routes=["playmat.html","field-guide.html","magic-guide.html","living-guide.html","survival-guide.html"];
+ for(const path of routes)await expect(page.locator('a[href="./'+path+'"]')).toHaveCount(1);
+ await expect(page.getByText(/90–120 minutes, unverified/)).toHaveCount(1);
+ const dimensions=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));
+ expect(dimensions.width).toBeLessThanOrEqual(dimensions.viewport+2);
+});
