@@ -9,7 +9,7 @@ export const ECOLOGY = {
  sentinel:{corpse:null,food:0,intrinsic:null,hazard:0,habitat:"SACRED",bonus:0}
 };
 export const INTRINSICS=[
- {id:"scent",title:"Scent",rule:"First time you enter a room with a monster, reveal its next behaviour card (no draw)."},
+ {id:"scent",title:"Scent",rule:"Your first melee attack against each monster gains +1 ATK."},
  {id:"scavenger",title:"Scavenger",rule:"Once per run, gain +3 hunger when consuming a corpse."},
  {id:"focus",title:"Focus",rule:"Ignore DARK attack penalties."},
  {id:"rustproof",title:"Rustproof",rule:"Rust attacks no longer reduce your DEF."},
@@ -71,7 +71,7 @@ export function pray(state,d6,log,altar=false){
  }
  return true;
 }
-export function petTurn(state,d6,log,currentMonster){
+export function petTurn(state,d6,log,currentMonster,neighbours){
  const pet=state.pet;
  if(!pet.active||!pet.alive)return;
  if(state.turn%3===0){
@@ -83,7 +83,11 @@ export function petTurn(state,d6,log,currentMonster){
  if(r<=2){
    pet.lastAction="roam";
    pet.loyalty=Math.max(0,pet.loyalty-1);
-   log("Your dog roams and sniffs at the corners.");
+   const possible=neighbours().filter(id=>state.rooms[id] && id!==state.position);
+   if(possible.length) {
+     pet.position=possible[0];
+     log("Your dog roams to "+pet.position+".");
+   } else log("Your dog roams and sniffs at the corners.");
  }else if(r<=4){
    pet.lastAction="sniff";pet.loyalty=Math.min(4,pet.loyalty+1);
    if(state.rooms[state.position].id==="trap"&&state.rooms[state.position].used===false)
