@@ -202,6 +202,9 @@ function openRoom(state, target) {
     const lootRoll=d6(state);
     if (lootRoll <= (branch?5:4)) room.loot=draw(state,state.decks.loot);
   }
+  if(room.monster && ECOLOGY[room.monster.id]?.habitat===room.terrain){
+    room.monster.hp++;room.monster.maxHp++;room.monster.habitatBonus=true;
+  }
   state.rooms[target]=room;
   state.position=target;
   log(state,room.region+" / "+nodeLabel(target)+": "+room.title+(room.monster?". "+room.monster.title+" appears.":"."));
@@ -209,6 +212,7 @@ function openRoom(state, target) {
   checkDeath(state); // Fatal traps end the run before a beneficial event can occur.
   if (state.phase!=="dead" && !isVault && d6(state)===6) eventEffect(state);
   if(state.phase!=="dead") bonesInRoom(state,d6,line=>log(state,line),depth);
+  if(state.intrinsics.includes("scent") && room.monster)log(state,"SCENT: the monster is "+room.monster.title+".");
 }
 function spawnMonster(template) {
   return {...template, maxHp:template.hp, guard:0, frozen:0, blinded:0,
@@ -395,7 +399,7 @@ export function act(previous, id, argument=null) {
     }
   }
   if(id==="attack" && mon) {
-    const darkPenalty=currentRoom(state).terrain==="DARK"&&!ignoresDark(state)?-1:0;
+    const darkPenalty=currentRoom(state).terrain==="DARK"&&!ignoresDark(state)&&!state.intrinsics.includes("focus")?-1:0;
     const hit=rollAttack(state,heroAttack(state)+darkPenalty,mon.defense+mon.guard,"Hero");
     if(hit.hit) {
       const petBonus=0; // Autonomous companion resolves at turn end, never on Hero attack.
@@ -432,7 +436,10 @@ export function act(previous, id, argument=null) {
       hurt:(mon,damage,property)=>{mon.hp-=damage;log(state,property+" deals "+damage+" damage.");if(mon.hp<=0)releaseMonster(state,mon);}
     });
   }
-  if(id==="eat-corpse")eatCorpse(state,argument,d6,line=>log(state,line));
+  if(id==="eat-corpse"){
+    eatCorpse(state,argument,d6,line=>log(state,line));
+    if(state.intrinsics.includes("scavenger")&&!state.status.scavenged){state.hunger=Math.min(MAX_HUNGER,state.hunger+3);state.status.scavenged=true;log(state,"Scavenger grants +3 hunger (once).");}
+  }
   if(id==="feed-pet"){state.inventory.splice(argument,1);state.pet.hunger=9;state.pet.loyalty=Math.min(4,state.pet.loyalty+1);log(state,"Fed your dog.");}
   if(["drink","throw","eat","consume","equip"].includes(id)) {
     const thing=state.inventory[argument];
