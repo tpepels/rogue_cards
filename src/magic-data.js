@@ -15,9 +15,9 @@ export const MAGIC = {
   ],
   effects:[
    {id:"flame",name:"Flame",property:"fire",rule:"READ: Deal 4 FIRE damage to a monster. WATER reduces this to 1."},
-   {id:"mapping",name:"Mapping",property:"light",rule:"READ: Reveal a connected unexplored room without moving or triggering it."},
-   {id:"ward",name:"Warding",property:"holy",rule:"READ: Gain 2 ward against the next two monster attacks."},
-   {id:"banish",name:"Banishment",property:"teleport",rule:"READ: Move a non-Warden monster out of the room; it returns when revisited."}
+   {id:"mapping",name:"Mapping",property:"light",rule:"READ: Look at the top Room card without moving or revealing a location."},
+   {id:"ward",name:"Warding",property:"holy",rule:"READ: Reduce damage of the next two successful monster attacks by 2 each."},
+   {id:"banish",name:"Banishment",property:"teleport",rule:"READ: Banish a non-Warden monster permanently. Remove its card from play."}
   ]
  },
  wand:{
@@ -36,9 +36,9 @@ export const MAGIC = {
    ["etched","Etched Ring"],["ivory","Ivory Ring"],["twisted","Twisted Ring"],["brass","Brass Ring"]
   ],
   effects:[
-   {id:"shield",name:"Protection",property:"metal",rule:"WEAR: +1 DEF."},
-   {id:"lantern",name:"Light",property:"light",rule:"WEAR: DARK rooms do not impose their -1 attack penalty."},
-   {id:"forager",name:"Sustenance",property:"wood",rule:"WEAR: Ignore the next 1 hunger loss each turn (minimum 0)."},
+   {id:"shield",name:"Protection",property:"metal",rule:"WEAR: +1 DEF (Blessed +2; Cursed -1)."},
+   {id:"lantern",name:"Light",property:"light",rule:"WEAR: Ignore DARK attack penalty (unless Cursed)."},
+   {id:"forager",name:"Sustenance",property:"wood",rule:"WEAR: Ignore turn-end hunger loss (unless Cursed)."},
    {id:"resist",name:"Resistance",property:"poison",rule:"WEAR: Ignore poison and shade hunger-loss effects."}
   ]
  }
