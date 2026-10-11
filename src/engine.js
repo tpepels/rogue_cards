@@ -191,7 +191,7 @@ function openRoom(state, target) {
     template=find(ROOMS,id);
   }
   const room={...template,nodeId:target,depth,branch,region:regionAt(depth),used:false,
-    monster:null,loot:null,bones:null,corpse:null,puzzle:null,bargain:null,visited:true};
+    monster:null,loot:null,bones:null,corpse:null,puzzle:null,bargain:null,enchanted:false,visited:true};
   if (isVault) room.monster=spawnMonster(find(MONSTERS,"sentinel"));
   else {
     const encounterRoll=d6(state);
@@ -258,7 +258,7 @@ function monsterAttack(state, monster, modifier=0) {
   const attack=rollAttack(state,monster.attack,heroDefense(state),monster.title,modifier);
   if(!attack.hit) return;
   let damage=attack.damage;
-  if(state.status.evade){state.status.evade=0;damage=0;log(state,"Rogue evades the hit.");}
+  if(state.status.evade){state.status.evade=0;log(state,"Rogue evades the hit.");return;}
   if(state.status.ward>0){state.status.ward--;damage=Math.max(0,damage-2);log(state,"Ward absorbs 2 damage.");}
   if(monster.id==="goblin" && !monster.ambushed) { damage++;monster.ambushed=true; }
   state.hp-=damage;
@@ -360,6 +360,12 @@ export function availableActions(state) {
     if(room.loot) actions.push({id:"take",label:"Take "+itemTitle(room.loot)});
     if(room.puzzle&&!room.puzzle.solved)actions.push({id:"solve",label:"Unlock hidden cache: key, DIGGING or 2 hunger"});
     if(room.bargain&&!room.bargain.used)actions.push({id:"bargain",label:"Risk bargain: lose 2 HP for one object"});
+    if(room.id==="altar"&&!room.enchanted)for(const slot of ["weapon","armour"]){
+      if(state.equipped[slot]){
+        if(state.equipped[slot].cursed)actions.push({id:"cleanse",target:slot,label:"Cleanse cursed "+slot+" (-2 HP)"});
+        else actions.push({id:"enchant",target:slot,label:"Enchant "+slot+" (d6; curse on 1)"});
+      }
+    }
     if(room.corpse)actions.push({id:"take-corpse",label:"Collect "+room.corpse.id+" corpse"});
     if(room.bones)actions.push({id:"take-bones",label:"Recover remains: "+itemTitle(room.bones)});
 
@@ -448,6 +454,17 @@ export function act(previous, id, argument=null) {
     const gift=state.decks.loot.draw.pop();
     if(gift)state.inventory.push(gift);
     log(state,gift?"Cache recovered: "+itemTitle(gift)+".":"The cache is empty.");
+  }
+  if(id==="enchant"){
+    const gear=state.equipped[argument];
+    room.enchanted=true;
+    const roll=d6(state);
+    if(roll===1){gear.cursed=true;gear.enchant=-1;log(state,"The altar curses your "+gear.kind+" (-1).");}
+    else {gear.enchant=Math.min(3,(gear.enchant??1)+(roll>=5?2:1));log(state,"Enchanted "+gear.kind+" to "+gear.enchant+".");}
+  }
+  if(id==="cleanse"){
+    const gear=state.equipped[argument];room.enchanted=true;state.hp-=2;gear.cursed=false;gear.enchant=1;
+    log(state,"Cleansed "+gear.kind+" (-2 HP).");
   }
   if(id==="bargain"){state.hp-=2;room.bargain.used=true;state.bargains++;const gift=state.decks.loot.draw.pop();if(gift)state.inventory.push(gift);log(state,"A costly bargain: -2 HP"+(gift?", gained "+itemTitle(gift):", no objects remain")+".");}
   if(id==="take") {state.inventory.push(room.loot);log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
