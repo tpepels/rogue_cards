@@ -19,16 +19,16 @@ export const MONSTERS = [
 ];
 
 export const ROOMS = [
-  { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", rule:"Nothing happens here. This room may contain loot.", flavor:"Neither arrow points out." },
-  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", rule:"Frost potions deal +2 damage here.", flavor:"Something stirs below." },
-  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", rule:"Once: Pray to restore 2 HP.", flavor:"The gods are not all absent." },
-  { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
-  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", rule:"Search: Take the loot assigned to this room.", flavor:"NO CREDIT. NO EXCEPTIONS." },
-  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", rule:"Disturbing the dead is usually a bad idea.", flavor:"There are seven coffins. Six lids." },
-  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", rule:"The air tastes like old bread.", flavor:"Soft footsteps answer yours." },
-  { id:"locked", type:"room", title:"Locked Gallery", art:"door", terrain:"LOCKED", rule:"Spend a key on entry, or lose 2 hunger forcing the door.", flavor:"The lock has been repaired." },
-  { id:"stairs", type:"room", title:"Stairwell", art:"stairs", terrain:"STAIRS", rule:"Worn steps descend into the dark.", flavor:"Further down. Always further down." },
-  { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", rule:"On first entry: Spend a key or lose 2 HP.", flavor:"One tile is cleaner than the rest." }
+  { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. Safe passage; loot may be found.", flavor:"Neither arrow points out." },
+  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"Frost potions deal +2 damage here.", flavor:"Something stirs below." },
+  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"Once: Pray to restore 2 HP.", flavor:"The gods are not all absent." },
+  { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", region:"MIDDLE", exits:["SIDE"], rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
+  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"Search: Take the loot assigned to this room.", flavor:"NO CREDIT. NO EXCEPTIONS." },
+  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", region:"DEEP", exits:["SIDE","LINK"], rule:"Disturbing the dead is usually a bad idea.", flavor:"There are seven coffins. Six lids." },
+  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", region:"MIDDLE", exits:["SIDE","LINK"], rule:"The air tastes like old bread.", flavor:"Soft footsteps answer yours." },
+  { id:"locked", type:"room", title:"Locked Gallery", art:"door", terrain:"LOCKED", region:"DEEP", exits:[], rule:"Spend a key on entry, or lose 2 hunger forcing the door.", flavor:"The lock has been repaired." },
+  { id:"stairs", type:"room", title:"Stairwell", art:"stairs", terrain:"STAIRS", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. A passage descends onward.", flavor:"Further down. Always further down." },
+  { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", region:"MIDDLE", exits:[], rule:"On first entry: Spend a key or lose 2 HP.", flavor:"One tile is cleaner than the rest." }
 ];
 
 export const APPEARANCES = [
