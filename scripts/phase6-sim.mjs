@@ -4,7 +4,9 @@ const heroes=["delver","knight","wizard","rogue"];
 const n=Number.parseInt(process.argv[2]||"80",10);
 if(!Number.isInteger(n)||n<1||n>1000)throw Error("Simulation count must be 1..1000 per hero");
 const results=[];
+const strategies=["direct","cautious","explorer"];
 for(const hero of heroes){
+ for(const strategy of strategies){
  for(let seed=1;seed<=n;seed++){
   let s=startRun(hero,seed*997+23),steps=0,maxDepth=0,rooms=0,bargains=0,caches=0,techniques=0;
   const visited=new Set(["0"]);
@@ -15,6 +17,7 @@ for(const hero of heroes){
    let a=null;
    if(mon){
     a=find("technique");
+    if(!a&&strategy==="cautious"&&s.actionsLeft===2&&s.hp<6)a=find("brace");
     if(!a&&s.hp<=4)a=find("drink",x=>s.assignments[s.inventory[x.index].id]==="healing");
     if(!a)a=find("attack");
    }else{
@@ -22,12 +25,12 @@ for(const hero of heroes){
     if(!a&&s.hp<s.maxHp-3)a=find("consume");
     if(!a&&s.hp<7)a=find("drink",x=>s.assignments[s.inventory[x.index].id]==="healing");
     if(!a)a=find("take")||find("take-bones");
-    if(!a&&s.phase==="descending"&&seed%3===0&&s.hunger>=10)a=find("solve");
-    if(!a&&s.phase==="descending"&&seed%5===0&&s.hp>=9)a=find("bargain");
+    if(!a&&s.phase==="descending"&&(strategy==="explorer"||strategy==="cautious"&&seed%2===0)&&s.hunger>=10)a=find("solve");
+    if(!a&&s.phase==="descending"&&(strategy==="explorer"&&seed%2===0||strategy==="cautious"&&seed%5===0)&&s.hp>=9)a=find("bargain");
     if(!a&&s.phase==="descending"&&s.position==="10")a=find("claim");
     const depth=nodeDepth(s.position);
     if(!a&&s.phase==="descending"){
-     if(seed%4===0&&depth>=1&&depth<=9&&!s.position.endsWith("b")&&s.hunger>14&&s.hp>7&&!s.rooms[depth+"b"])
+     if((strategy==="explorer"||strategy==="cautious"&&seed%3===0)&&depth>=1&&depth<=9&&!s.position.endsWith("b")&&s.hunger>14&&s.hp>7&&!s.rooms[depth+"b"])
       a=find("explore",x=>x.target===depth+"b");
      if(!a&&s.position.endsWith("b"))a=find("travel",x=>x.target===String(depth));
      if(!a)a=find("explore",x=>x.target===String(depth+1))||find("travel",x=>x.target===String(depth+1));
@@ -47,20 +50,23 @@ for(const hero of heroes){
    if(!visited.has(next.position)){visited.add(next.position);rooms++;}
    s=next;steps++;maxDepth=Math.max(maxDepth,nodeDepth(s.position));
   }
-  results.push({hero,seed,result:s.phase,turns:s.turn,actions:steps,maxDepth,rooms,bargains,caches,techniques});
+  results.push({hero,strategy,seed,result:s.phase,turns:s.turn,actions:steps,maxDepth,rooms,bargains,caches,techniques});
+ }
  }
 }
 const mean=(list,key)=>list.reduce((acc,x)=>acc+x[key],0)/list.length;
 const round=x=>Math.round(x*100)/100;
 for(const hero of heroes){
- const xs=results.filter(x=>x.hero===hero);
+ for(const strategy of strategies){
+ const xs=results.filter(x=>x.hero===hero&&x.strategy===strategy);
  const wins=xs.filter(x=>x.result==="won").length;
  const deaths=xs.filter(x=>x.result==="dead").length;
  const timeouts=xs.length-wins-deaths;
- console.log(JSON.stringify({hero,runs:xs.length,wins,deaths,timeouts,winPct:round(100*wins/xs.length),
+ console.log(JSON.stringify({hero,strategy,runs:xs.length,wins,deaths,timeouts,winPct:round(100*wins/xs.length),
    meanTurns:round(mean(xs,"turns")),meanActions:round(mean(xs,"actions")),
    meanMaxDepth:round(mean(xs,"maxDepth")),meanRooms:round(mean(xs,"rooms")),
    meanTechniques:round(mean(xs,"techniques")),
    meanBargains:round(mean(xs,"bargains")),meanCaches:round(mean(xs,"caches"))}));
+ }
 }
 console.log("Note: computer turns/actions cannot establish the 90–120-minute tabletop target.");
