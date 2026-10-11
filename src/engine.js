@@ -159,7 +159,7 @@ export function act(previous, id, index = null) {
   if (id === "explore") {
     state.position++;
     spawnRoom(state);
-    monsterCanAct=false;
+    monsterCanAct=true;
   } else if (id === "return") {
     state.position--;
     log(state, "You retrace your steps to " + currentRoom(state).title + ".");
