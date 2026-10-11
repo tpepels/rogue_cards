@@ -175,3 +175,47 @@ test("Phase 1 xerox treatment survives print while rule panels remain legible",a
  expect(printed.contrast).toContain("contrast(2.25)");
  expect(printed.overflow).toBeLessThanOrEqual(2);
 });
+
+
+test("Phase 2 uses distinct reference-style physical compositions with complete text",async({page})=>{
+ await page.goto("/");
+ const hero=page.locator('.tt-grid .tt-card[data-type="hero"]').first();
+ const monster=page.locator('.tt-grid .tt-card[data-type="monster"]').first();
+ const room=page.locator('.tt-grid .tt-card[data-id="m-flood"]').first();
+ const object=page.locator('.tt-grid .tt-card[data-id="key"]').first();
+ const potion=page.locator('.tt-grid .tt-card[data-id="smoky"]').first();
+ for(const card of [hero,monster]){
+  await expect(card.locator(".tt-stats .tt-stat-symbol").first()).toBeVisible();
+  await expect(card.locator(".tt-stats")).toBeVisible();
+  await expect(card.locator(".tt-illustration")).toBeVisible();
+ }
+ await expect(monster.locator(".tt-behaviour-row")).toHaveCount(4);
+ await expect(monster.locator(".tt-corpse")).toBeVisible();
+ await expect(room.locator(".tt-visual--split")).toBeVisible();
+ await expect(room.locator(".tt-content--sidebar")).toBeVisible();
+ const roomMetrics=await room.evaluate(el=>{
+  const visual=el.querySelector(".tt-visual"),side=el.querySelector(".tt-content--sidebar");
+  return {share:side.getBoundingClientRect().width/visual.getBoundingClientRect().width,
+   clip:side.scrollHeight-side.clientHeight};
+ });
+ expect(roomMetrics.share).toBeGreaterThan(.3);
+ expect(roomMetrics.share).toBeLessThan(.45);
+ expect(roomMetrics.clip).toBeLessThanOrEqual(2);
+ const ratios=await Promise.all([hero,monster,object,potion].map(card=>card.evaluate(el=>
+  el.querySelector(".tt-visual").getBoundingClientRect().height/el.getBoundingClientRect().height)));
+ expect(ratios[2]).toBeGreaterThan(ratios[1]);
+ expect(ratios[0]).toBeGreaterThan(ratios[1]);
+ const content=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>({
+  id:card.dataset.id,
+  titleRight:card.querySelector(".tt-title").getBoundingClientRect().right-card.getBoundingClientRect().right,
+  titleTop:card.querySelector(".tt-title").getBoundingClientRect().top-card.getBoundingClientRect().top,
+  overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight
+ })));
+ for(const card of content){
+  expect(card.titleRight,"Pasted title outside "+card.id).toBeLessThanOrEqual(2);
+  expect(card.titleTop,"Title above card "+card.id).toBeGreaterThanOrEqual(0);
+  expect(card.overflow,"Missing mechanical lines on "+card.id).toBeLessThanOrEqual(2);
+ }
+ await page.emulateMedia({media:"print"});
+ await expect(page.locator('.tt-print-only .tt-card[data-id="m-flood"] .tt-content--sidebar').first()).toBeVisible();
+});
