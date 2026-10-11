@@ -15,19 +15,19 @@ room("u-passage","Dripping Passage","corridor","UPPER","REVEAL — Draw an UPPER
 room("u-gate","Rusty Gate","door","UPPER","REVEAL — WIT DC 13. On failure suffer d6 damage. Then draw an UPPER Monster.","This door opens inward."),
 room("u-supply","Forgotten Supplies","shop","UPPER","QUIET — Take 2 Items. Each Hero may keep one; discard any excess.","Someone expected to return."),
 room("u-nest","Rat Nest","rat","UPPER","REVEAL — Draw an UPPER Monster. If you eat its corpse, roll twice and keep either result.","Little teeth in the dark."),
-room("u-shrine","Abandoned Shrine","altar","UPPER","QUIET — Each Hero may PRAY: d20+WIT vs DC 13. Success: heal d6 HP. Failure: lose d6 HP.","Something is listening."),
-room("u-fall","Collapsing Stairs","stairs","UPPER","REVEAL — Every Hero tests WIT DC 12; failure: d6 damage. Draw 1 Item.","Down is easier than up."),
+room("u-shrine","Abandoned Shrine","altar","UPPER","ALTAR — Each Hero may PRAY: d20+WIT vs DC 13. Success: heal d6 HP. Failure: lose d6 HP. Or CLEANSE a cursed item by discarding 1 Item.","Something is listening."),
+room("u-fall","Collapsing Stairs","stairs","UPPER","REVEAL — Every Hero tests WIT DC 12; failure: d6 damage. Then take 1 Item.","Down is easier than up."),
 room("m-flood","Flooded Chamber","water","MIDDLE","REVEAL — Draw a MIDDLE Monster. All d20 attacks here have DIS unless you carry a Rope.","Stagnant water hides movement."),
 room("m-statue","Stone Watcher","altar","MIDDLE","QUIET — One Hero may offer an Item: discard it, then heal d6 HP and take 1 Item.","A stone face judges you."),
-room("m-vault","Buried Lockbox","door","MIDDLE","REVEAL — WIT DC 14 to open. Success: take 2 Items. Failure: suffer d6 damage; take 1 Item.","The lock remembers its maker."),
+room("m-vault","Buried Lockbox","door","MIDDLE","REVEAL — One Hero tests WIT DC 14 to open. Success: take 2 Items. Failure: suffer d6 damage; take 1 Item.","The lock remembers its maker."),
 room("m-crypt","Opened Crypt","crypt","MIDDLE","REVEAL — Draw a MIDDLE Monster. AFTER VICTORY — Take 1 Item or heal d6 HP.","The final coffin is empty."),
 room("m-fungus","Fungal Garden","mushroom","MIDDLE","REVEAL — Each Hero tests WIT DC 14; failure: POISONED. Draw a MIDDLE Monster.","You hear spores fall."),
-room("m-altar","Candle Altar","altar","MIDDLE","QUIET — Each Hero may PRAY: d20+WIT vs DC 14. Success: remove a status or heal d6. Failure: become POISONED.","Wax like old bone."),
+room("m-altar","Candle Altar","altar","MIDDLE","ALTAR — Each Hero may PRAY: d20+WIT vs DC 14. Success: remove a status or heal d6. Failure: become POISONED. Or CLEANSE a curse by discarding 1 Item.","Wax like old bone."),
 room("d-shadow","Lightless Hall","crypt","DEEP","REVEAL — Draw a DEEP Monster. Its first attack has ADV unless a Hero carries a Torch.","An absence of stars."),
 room("d-bridge","Broken Bridge","stairs","DEEP","REVEAL — WIT DC 15 for each Hero; failure: d6+2 damage. Rope grants ADV on this test.","Do not look down."),
 room("d-reliquary","Lost Reliquary","amulet","DEEP","QUIET — Each Hero chooses: take 2 Items and suffer d6 damage, OR heal d6 HP.","The offering tray is still warm."),
 room("d-bones","Hall of Teeth","bones","DEEP","REVEAL — Draw a DEEP Monster. Its first d6 behaviour roll is 6.","Many pilgrims came before."),
-room("d-oracle","Broken Oracle","eye","DEEP","QUIET — Roll d20+WIT vs DC 15. Success: look at the next Room and choose to keep it or draw another. Failure: suffer d6 damage.","Ask nothing you cannot bear."),
+room("d-oracle","Broken Oracle","eye","DEEP","QUIET — One Hero tests WIT DC 15. Success: peek at the next Room and choose it or another from the same pile. Failure: suffer d6 damage.","Ask nothing you cannot bear."),
 room("d-gate","Warden's Threshold","door","DEEP","REVEAL — Draw a DEEP Monster. AFTER VICTORY — Heal d6 HP or take 1 Item.","There are marks on both sides.")
 ];
 export const VAULT={id:"vault",type:"room",title:"The Amulet Vault",art:"amulet",stage:"FINAL",rule:"REVEAL — Face the Amulet Warden. Its defeat ends the expedition immediately. You win; do not return to the Entrance.",flavor:"The prize was never unattended.",copies:1};
@@ -39,11 +39,11 @@ monster("crawler","Sewer Crawler","rust","UPPER",8,2,2,["Hide: next Hero attack 
 monster("bat","Cave Bat Swarm","eye","UPPER",6,3,3,["Circle: no attack.","Swoop: ATTACK.","Confuse: active Hero has DIS on next action.","Swoop: ATTACK with ADV."],"EAT d6: 1–2 suffer 2 HP; 3–4 heal 2; 5–6 keep card: once per room, reroll a failed DEF d20.","A thousand small shadows.",2),
 monster("troll","Bridge Troll","troll","MIDDLE",14,4,3,["Glare: no attack.","Club: ATTACK.","Regenerate: heal 2 HP.","Crush: ATTACK; on hit +2 damage."],"EAT d6: 1–2 POISONED; 3–4 heal d6; 5–6 keep card: when entering a new Room heal 1 HP.","It wants a toll.",2),
 monster("wisp","Will-o'-Wisp","spiral","MIDDLE",8,4,5,["Flicker: next Hero attack has DIS.","Spark: ATTACK.","Lead Astray: active Hero loses 1 HP.","Flash: ATTACK with ADV."],"EAT d6: 1–2 suffer d6; 3–4 heal 2; 5–6 keep card: your next spell attack has ADV (discard).","Do not follow the lights.",2),
-monster("eye","Floating Eye","eye","MIDDLE",9,2,4,["Stare: no attack.","Gaze: ATTACK using WIT in place of ATK.","Freeze: active Hero has DIS next action.","Gaze: ATTACK with ADV."],"EAT d6: 1–2 POISONED; 3–4 heal 2; 5–6 keep card: once per room, +2 WIT.","It sees what you forget.",2),
+monster("eye","Floating Eye","eye","MIDDLE",9,2,4,["Stare: no attack.","Gaze: ATTACK with +2 instead of ATK.","Freeze: active Hero has DIS next action.","Gaze: ATTACK with ADV."],"EAT d6: 1–2 POISONED; 3–4 heal 2; 5–6 keep card: once per room, +2 WIT.","It sees what you forget.",2),
 monster("mold","Living Mold","mushroom","MIDDLE",12,3,2,["Spread: next Hero attack has DIS.","Spores: active Hero becomes POISONED.","Digest: ATTACK.","Bloom: ATTACK with ADV."],"EAT d6: 1–2 POISONED; 3–4 heal d6; 5–6 keep card: your first damage in a Room is reduced by 2.","A patient appetite.",2),
 monster("wraith","Restless Shade","ghost","DEEP",11,5,4,["Fade: next Hero attack has DIS.","Cold Hand: ATTACK.","Drain: ATTACK; on hit discard one held Item.","Haunt: ATTACK with ADV."],"EAT d6: 1–2 suffer d6; 3–4 heal 2; 5–6 keep card: ignore one status (discard after use).","It knows your name.",2),
 monster("rust","Rust Monster","rust","DEEP",12,4,3,["Sniff: no attack.","Gnaw: ATTACK.","Corrode: active Hero's armour loses 1 DEF until Room ends.","Gnaw: ATTACK with ADV."],"EAT d6: 1–2 POISONED; 3–4 heal 2; 5–6 keep card: once per room, +2 DEF against one attack.","Metal is its meal.",2),
-monster("cultist","Forgotten Acolyte","wizard","DEEP",12,4,4,["Chant: next attack has ADV.","Hex: ATTACK using WIT +5.","Curse: active Hero POISONED.","Hex: ATTACK +2."],"EAT d6: 1–2 suffer d6; 3–4 heal 2; 5–6 keep card: once per room, your spell deals +2 damage.","The prayer never ended.",2),
+monster("cultist","Forgotten Acolyte","wizard","DEEP",12,4,4,["Chant: next attack has ADV.","Hex: ATTACK with +5 instead of ATK.","Curse: active Hero POISONED.","Hex: ATTACK +2."],"EAT d6: 1–2 suffer d6; 3–4 heal 2; 5–6 keep card: once per room, your spell deals +2 damage.","The prayer never ended.",2),
 monster("sentinel","Iron Sentinel","warden","DEEP",15,5,5,["Guard: next Hero attack has DIS.","Hammer: ATTACK.","Crush: ATTACK; +2 damage on hit.","Hammer: ATTACK with ADV."],"No edible corpse.","An engine without a master.",2)
 ];
 export const WARDEN=monster("warden","Amulet Warden","warden","FINAL",22,6,5,
