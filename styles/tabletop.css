@@ -374,6 +374,120 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  padding-top:.45mm;
 }
 
+/* PHASE 3 — THE FOUND XEROX OBJECT
+ * Four fixed mechanical print plates replace artificially pristine repetition.
+ * Black/ivory thresholding, rough ink pickup, stamped titles, scuffed image
+ * borders and a little misregistration. Everything repeats deterministically
+ * in both browser and A4 print, and no effect/stat text is distressed over.
+ */
+.tt-print-filter-defs{position:absolute!important;width:0!important;height:0!important;overflow:hidden!important;pointer-events:none!important}
+.tt-plate-a{--plate-shift-x:-.23mm;--plate-shift-y:.12mm;--plate-turn:-.5deg;--label-angle:-.65deg;--plate-scar:.49}
+.tt-plate-b{--plate-shift-x:.2mm;--plate-shift-y:-.16mm;--plate-turn:.38deg;--label-angle:.18deg;--plate-scar:.33}
+.tt-plate-c{--plate-shift-x:-.11mm;--plate-shift-y:-.14mm;--plate-turn:.54deg;--label-angle:-.18deg;--plate-scar:.39}
+.tt-plate-d{--plate-shift-x:.18mm;--plate-shift-y:.15mm;--plate-turn:-.36deg;--label-angle:.45deg;--plate-scar:.58}
+.tt-card{
+ border:2px solid #100e0a;
+ background-color:#eae3d4;
+ background-image:
+  radial-gradient(circle at 0% 0%,#241a1229,transparent 21%),
+  radial-gradient(circle at 100% 100%,#1a130e22,transparent 26%),
+  repeating-linear-gradient(17deg,#1e170c04 0 1px,transparent 1px 8px);
+ box-shadow:1.5px 2px 0 #6f6657;
+}
+.tt-card:before{
+ opacity:.8;
+ background:
+  radial-gradient(circle at 1px 3px,#16100a38 0 .52px,transparent .8px) 0 0/9px 11px,
+  radial-gradient(circle at 6px 5px,#241b1230 0 .64px,transparent 1.1px) 0 0/17px 23px,
+  repeating-linear-gradient(178deg,transparent 0 14px,#2a1b1010 14.2px 14.8px,transparent 15px 35px);
+}
+.tt-card:after{
+ background:
+  radial-gradient(ellipse at 0 0,#19120973 0 1.8mm,transparent 4.4mm),
+  radial-gradient(ellipse at 100% 0,#140e0b54 0 1.6mm,transparent 3.6mm),
+  radial-gradient(ellipse at 0 100%,#22160c68 0 1.9mm,transparent 4.1mm),
+  radial-gradient(ellipse at 100% 100%,#170f0a72 0 2mm,transparent 4.3mm),
+  repeating-linear-gradient(90deg,transparent 0 11px,#0a080710 11.3px 11.8px,transparent 12px 31px);
+ opacity:.55;
+ border-color:#18100a7d;
+}
+.tt-masthead{
+ border-bottom:1.3px solid #211b15;
+ letter-spacing:-.12px;
+ background:#110f0d;
+ clip-path:polygon(0 8%,12% 0,24% 7%,45% 2%,68% 5%,80% 0,100% 6%,99% 93%,83% 100%,64% 94%,37% 100%,17% 95%,0 99%);
+ box-shadow:1px 1px 0 #443c32;
+}
+.tt-type{font-weight:900;letter-spacing:-.2px;text-shadow:.12px 0 currentColor}
+.tt-title{
+ transform:rotate(var(--label-angle,-.35deg));
+ transform-origin:14% 65%;
+ background:
+  linear-gradient(176deg,#f0e9d9,#e7ddcb 92%);
+ box-shadow:.65mm .75mm 0 #15120c, .8mm .87mm 0 #574f40;
+ clip-path:polygon(0 6%,7% 1%,17% 3%,26% 0,41% 3%,57% 0,74% 4%,88% 0,100% 5%,99% 44%,100% 94%,89% 99%,73% 96%,57% 100%,43% 97%,25% 100%,12% 96%,0 100%);
+}
+.tt-title span{position:relative;z-index:1;text-shadow:.2px 0 currentColor}
+.tt-card .tt-illustration{background:#100e0b;isolation:isolate}
+.tt-card .tt-art-image{
+ filter:url("#tt-xerox-ink") grayscale(1) contrast(2.25) brightness(.91);
+ transform:translate(var(--plate-shift-x,0),var(--plate-shift-y,0)) rotate(var(--plate-turn,0deg)) scale(1.022);
+ transform-origin:50% 45%;
+}
+.tt-card .tt-art-placeholder .ink-art{
+ filter:url("#tt-xerox-ink") grayscale(1) contrast(2.8) brightness(.91);
+ transform:translate(var(--plate-shift-x,0),var(--plate-shift-y,0)) rotate(var(--plate-turn,0deg)) scale(1.018);
+ transform-origin:50% 50%;
+}
+/* Light pinholes, print scratches and uneven ink pickup ONLY inside artwork. */
+.tt-card .tt-illustration:after{
+ content:"";position:absolute;z-index:2;inset:0;pointer-events:none;
+ opacity:var(--plate-scar,.38);mix-blend-mode:screen;
+ background:
+  radial-gradient(ellipse 1px 8px at 13% 22%,#ebe1cee0 0 80%,transparent 100%),
+  radial-gradient(ellipse 2px 17px at 91% 54%,#ebe1ceaa 0 70%,transparent 100%),
+  radial-gradient(ellipse 9px 1px at 62% 8%,#f0e9d89a 0 65%,transparent 100%),
+  repeating-linear-gradient(113deg,transparent 0 35px,#faf0dc35 36px 36.6px,transparent 37px 81px),
+  radial-gradient(circle at 2px 5px,#f5ebd165 0 .55px,transparent 1px) 0 0/11px 15px;
+}
+.tt-card .tt-visual:after{
+ opacity:.38;
+ background:
+  radial-gradient(circle at 2px 3px,#f4ead65f 0 .8px,transparent 1.3px) 0 0/13px 17px,
+  radial-gradient(circle at 7px 6px,#100c0859 0 .8px,transparent 1.3px) 0 0/19px 11px,
+  repeating-linear-gradient(179deg,transparent 0 22px,#0b080a24 22px 22.8px,transparent 23px 57px),
+  radial-gradient(ellipse at 45% 44%,transparent 44%,#04030288 100%);
+}
+.tt-card .tt-stats{
+ background:#e9e0d0;
+ border-right-color:#0f0d0a;
+ box-shadow:1px 0 0 #594d3a;
+}
+.tt-stat{
+ border-bottom:1px solid #2f2417;
+ background:repeating-linear-gradient(169deg,transparent 0 20px,#2a1f1109 20px 20.6px,transparent 21px 43px);
+}
+.tt-card .tt-stage{background:#100e0a;color:#f1eadb;letter-spacing:-.1px}
+.tt-card .tt-content{
+ background:#f0e8da;
+ border-top:1.5px solid #21180f;
+ /* No blur, grain overlay or opacity changes on mechanics. */
+ text-shadow:.09px 0 currentColor;
+}
+.tt-card .tt-content--sidebar{background:#f0e7d7}
+.tt-card .tt-content--monster .tt-behaviour-row b{
+ background:#1c160f;color:#f5ebd8;
+}
+.tt-card .tt-footer{
+ background:transparent;
+ border-top:1px solid #2b1f15;
+}
+.tt-card .tt-footer i{font-family:Georgia,serif}
+@media print{
+ .tt-card{box-shadow:none!important}
+ .tt-art-image,.tt-art-placeholder .ink-art{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
