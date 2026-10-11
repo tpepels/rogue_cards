@@ -9,7 +9,8 @@ import {
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v4";
+const SAVE_KEY="rogue-cards-v5";
+const BONES_KEY="rogue-cards-bones-v5";
 let view="play";
 let filter="all";
 let kitMode=false;
@@ -22,7 +23,10 @@ function load() {
   catch {return null;}
 }
 function save() {
-  try {localStorage.setItem(SAVE_KEY,JSON.stringify(state));}
+  try {
+    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+    if(state?.phase==="dead"&&state.bonesOutcome)localStorage.setItem(BONES_KEY,JSON.stringify(state.bonesOutcome));
+  }
   catch { /* Local persistence is optional. */ }
 }
 function heading(issue,title,deck) {
@@ -32,7 +36,7 @@ function heroSelect() {
   return heading("01 / HERO SELECTION","CHOOSE YOUR BAD IDEA","A longer dungeon expedition. Two actions per turn, a shared monster-behaviour deck, and d6 combat.")+
     '<div class="hero-grid" aria-label="Choose an adventurer">'+HEROES.map(hero=>
       '<button class="hero-choice" type="button" data-hero="'+esc(hero.id)+'" aria-label="Start as '+esc(hero.title)+'">'+cardMarkup(hero)+'</button>').join("")+'</div>'+
-    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and four mystery-item identity sets. This game stores the current run locally in your browser.</p>';
+    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and four mystery-item identity sets. A previous adventurer may leave recoverable bones. This game stores the current run locally in your browser.</p>';
 }
 function meter(label,value,max) {
   const percent=Math.max(0,Math.min(100,Math.round(value/max*100)));
@@ -81,7 +85,7 @@ function inventoryView(s) {
 function controls(s) {
   const terminal=s.phase==="won"||s.phase==="dead";
   const actions=availableActions(s);
-  const mainIds=["attack","explore","travel","take","claim"];
+  const mainIds=["attack","explore","travel","take","take-corpse","take-bones","claim"];
   const renderButton=a=>{
     const attrs=(a.target!=null?' data-target="'+esc(a.target)+'"':'')+
       (a.index!=null?' data-index="'+a.index+'"':'');
@@ -123,6 +127,10 @@ function runView() {
     '</div><aside class="expedition-side"><section class="stat-panel"><div class="panel-label">CHARACTER FILE</div>'+
     '<div class="character-head">'+illustration(hero.art)+'<div><b>'+esc(hero.title)+'</b><span>TURN '+s.turn+' / '+esc(nodeLabel(s.position))+'</span></div></div>'+
     meter("HIT POINTS",s.hp,s.maxHp)+meter("HUNGER",s.hunger,MAX_HUNGER)+
+    '<div class="panel-label">LIVING DUNGEON</div>'+
+    '<p class="fine-print">DOG: '+esc(s.pet.active?"Hunger "+s.pet.hunger+" / "+(s.pet.lastAction||"following")+" / at "+s.pet.position:"No companion")+
+    ' · FAVOUR '+s.prayer.favour+' · PRAYER IN '+s.prayer.cooldown+' TURNS</p>'+
+    '<p class="fine-print">INTRINSICS: '+esc(s.intrinsics.join(", ")||"None")+'</p>'+
     '<div class="numeric-stats"><span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span><span>AMULET <b>'+(s.hasAmulet?"YES":"NO")+'</b></span></div>'+
     '<button class="outline-button" type="button" data-choose="1">NEW RUN</button></section>'+
     mapView(s)+inventoryView(s)+
@@ -143,13 +151,13 @@ function galleryView() {
     '<button class="filter '+(kitMode?"filter--active":"")+'" data-kit="kit" aria-pressed="'+kitMode+'">PHYSICAL KIT</button></div>'+
     '<button class="outline-button print-button" data-print="1">PRINT CARDS / SAVE PDF ↗</button></div>'+
     '<p class="catalogue-count">FILED: '+cards.length+' PRINTABLE CARDS · 90 × 140 MM · A4 / 4 PER SHEET</p>'+
-    '<p class="print-instructions">For physical play, select PHYSICAL KIT and print at 100% scale. You also need the <a href="./field-guide.html">field guide and tracking sheets ↗</a>, one six-sided die, and a pencil.</p>'+
+    '<p class="print-instructions">For physical play, select PHYSICAL KIT and print at 100% scale. You also need the <a href="./field-guide.html">field guide</a>, <a href="./living-guide.html">living-dungeon rules</a>, and <a href="./playmat.html">tracking sheets ↗</a>, one six-sided die, and a pencil.</p>'+
     '<section class="gallery" aria-label="Card catalogue">'+cards.map(card=>cardMarkup(card)).join("")+'</section>'+printSheets(cards);
 }
 function rulesView() {
   return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
-    "Phase 3: four unidentified magical families, fifteen shared properties, and printed interactions, alongside the Phase 2 dungeon rules.")+
-    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a></div>'+
+    "Phase 5: autonomous pets, corpses, intrinsics, ecology, prayer and bones layered onto the Phase 2–4 dungeon and magical systems.")+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a><a class="outline-button" href="./living-guide.html">PETS / CORPSES / GODS ↗</a></div>'+
     '<div class="rules-grid">'+
     '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Room cards show their SIDE and LINK exits. SIDE opens a side chamber; adjacent explored LINK chambers connect into occasional loops. Three regions use separate Room piles.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+
@@ -193,7 +201,11 @@ document.addEventListener("click",event=>{
     try {localStorage.removeItem(SAVE_KEY);} catch { /* storage optional */ }
     render();return;
   }
-  if(button.dataset.hero) {state=startRun(button.dataset.hero);choosing=false;save();render();return;}
+  if(button.dataset.hero) {
+    let bones=null;
+    try {bones=JSON.parse(localStorage.getItem(BONES_KEY));localStorage.removeItem(BONES_KEY);}catch {bones=null;}
+    state=startRun(button.dataset.hero,Date.now(),bones);choosing=false;save();render();return;
+  }
   if(button.dataset.act && state){
     const arg=button.dataset.target??(button.dataset.index===undefined?null:Number(button.dataset.index));
     const next=act(state,button.dataset.act,arg);

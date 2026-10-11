@@ -1,4 +1,4 @@
-# ROGUE CARDS / ISSUE 004
+# ROGUE CARDS / ISSUE 005
 
 **Four kinds of unidentified magic. Two actions. One life.**
 
@@ -84,3 +84,7 @@ See [Phase 2 implementation](docs/phase-2-audit.md) and [Phase 3 implementation]
 The Upper Works (depths 1–3), Flooded Hollows (4–6) and Black Crypts (7–9) each use their own printed Room pile. Reveal the next matching room **only on entry**. All main rooms connect forward and back; printed SIDE exits open optional rooms and LINK on two adjacent explored side rooms joins them in a loop. Monsters remain stationary. The browser map and physical map sheet use these same rules.
 
 Older v3 saves remain untouched. New Phase 4 runs use save key `rogue-cards-v4`.
+
+## Phase 5 — The Living Dungeon
+
+Autonomous pets act at turn end (d6), require food, and may follow, sniff, roam into known adjacent rooms or bite. Monster corpses are collected and eaten at risk of illness and can confer persistent intrinsic traits. Habitat affinity grants matching monsters +1 HP. Prayer now works anywhere with a six-turn cooldown, favour and Altar modifiers. The death of an adventurer can leave a recoverable Bones Record for the next run. These rules are documented in [The Living Dungeon](living-guide.html) and printed ecology cards. New runs use save key `rogue-cards-v5`; earlier saves remain separate.

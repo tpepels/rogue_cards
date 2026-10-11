@@ -4,7 +4,7 @@ import { startRun,act,availableActions,connectedLocations,currentMonster,regionA
 import { ROOMS,printDeck } from "../src/data.js";
 
 test("every printed room has a region and explicit exits",()=>{
-  assert.equal(VERSION,4);
+  assert.equal(VERSION,5);
   assert.equal(LAST_FLOOR,10);
   assert.deepEqual(new Set(ROOMS.map(r=>r.region)),new Set(["UPPER","MIDDLE","DEEP"]));
   assert.ok(ROOMS.every(r=>Array.isArray(r.exits)&&r.exits.every(e=>["SIDE","LINK"].includes(e))));

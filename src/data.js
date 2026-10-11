@@ -1,3 +1,4 @@
+import { ECOLOGY_CARDS, ECOLOGY_COPIES, INTRINSICS } from "./ecology.js";
 import { MAGICAL_CARDS, MAGIC_IDENTITIES, MAGIC_PRINT_COPIES } from "./magic-data.js";
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
@@ -51,7 +52,7 @@ export const ITEMS = [
   { id:"ration", type:"item", title:"Iron Ration", art:"ration", rule:"EAT: Restore 7 hunger.", flavor:"Tastes better in a crisis." },
   { id:"key", type:"item", title:"Rusty Key", art:"key", rule:"OPEN: Pass a locked room. Also jams a trap.", flavor:"Opens things that should stay closed." },
   { id:"amulet", type:"item", title:"Amulet of Yendor", art:"amulet", rule:"Carry this back to the entrance to win.", flavor:"Heavy for something so small." },
-  { id:"dog", type:"item", title:"Faithful Dog", art:"dog", rule:"COMPANION: Your first successful hit each encounter deals +1.", flavor:"A better judge of character than you." }
+  { id:"dog", type:"item", title:"Faithful Dog", art:"dog", rule:"COMPANION: At turn end roll d6 for autonomous actions. Feed rations to retain the dog.", flavor:"A better judge of character than you." }
 ];
 
 export const EVENTS = [
@@ -87,8 +88,8 @@ export const EQUIPMENT = [
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
-export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES];
-export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity"];
+export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES, ...ECOLOGY_CARDS, ...INTRINSICS.map(x=>({...x,type:"intrinsic",art:"bones",flavor:"A permanent taste of the dungeon."}))];
+export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity","ecology","intrinsic"];
 
 // Print quantities describe a playable physical supply, not simply specimens.
 // Distinct decks are printed separately and shuffled at setup.
@@ -104,7 +105,9 @@ export const PRINT_COPIES = {
   scroll:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="scroll").map(x=>[x.id,3])),
   wand:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="wand").map(x=>[x.id,3])),
   ring:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="ring").map(x=>[x.id,3])),
-  identity:Object.fromEntries(MAGIC_IDENTITIES.map(x=>[x.id,1]))
+  identity:Object.fromEntries(MAGIC_IDENTITIES.map(x=>[x.id,1])),
+  ecology:ECOLOGY_COPIES,
+  intrinsic:Object.fromEntries(INTRINSICS.map(x=>[x.id,1]))
 };
 export const printDeck = types => {
   const chosen = Array.isArray(types) ? types : [types];

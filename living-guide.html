@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROGUE CARDS / THE LIVING DUNGEON</title>
+<style>
+@page{size:A4;margin:10mm}
+*{box-sizing:border-box}body{font:11px/1.5 "Courier New",monospace;background:#e8e5de;color:#111;margin:0}
+nav{max-width:190mm;margin:15px auto;display:flex;justify-content:space-between}nav a{color:inherit;font-weight:900}
+.paper{background:white;width:min(96%,190mm);min-height:277mm;margin:12px auto;padding:12mm;border:2px solid #111}
+.issue{border-bottom:5px solid #111;font-weight:900;padding-bottom:8px}
+h1{font:900 36px/.95 Impact,"Arial Black",sans-serif;margin:17px 0}
+h2{font:900 20px/1 Impact,"Arial Black",sans-serif;margin:19px 0 6px;border-bottom:2px solid}
+p{margin:8px 0}table{border-collapse:collapse;width:100%;font-size:10px}
+td,th{border:1px solid #111;padding:6px;text-align:left;vertical-align:top}
+.note{padding:9px;border:2px solid #111;font-weight:bold}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cards>div{border:2px dashed #111;padding:9px}
+.cards b{display:block;font-weight:900}
+footer{border-top:2px solid;margin-top:23px;padding-top:6px;display:flex;justify-content:space-between}
+@media(max-width:650px){.cards{grid-template-columns:1fr}.paper{padding:17px;min-height:0}}
+@media print{html,body{background:white}nav{display:none}.paper{width:190mm;height:277mm;min-height:277mm;margin:0;border:0;padding:0;break-after:page}.paper:last-child{break-after:auto}}
+</style></head><body>
+<nav><a href="./">← GAME</a><a href="./field-guide.html">CORE RULES</a><a href="#" onclick="print();return false">PRINT ↗</a></nav>
+<section class="paper"><div class="issue">ROGUE CARDS / FIELD GUIDE / VOL 005 / PAGE 01</div>
+<h1>THE DUNGEON<br>IS HUNGRY.</h1>
+<p>Use the original dungeon, two-action turn, d6 combat and monster behaviour rules unchanged. Phase 5 adds a separate <b>Living Dungeon</b> reference pile; these cards are not shuffled into the loot deck. Track each pet, corpse, intrinsic, and prayer result with a pencil.</p>
+<h2>01 / AUTONOMOUS COMPANION</h2>
+<p>EQUIP the Faithful Dog as one action. At the end of every turn, before monster behaviour, check the Dog. Every third turn reduce Dog hunger by 1. If Dog hunger reaches 0 it wanders off. Feed a ration as one action to restore Dog hunger to 9 and raise loyalty by 1 (maximum 4).</p>
+<table><tr><th>Roll d6</th><th>Pet action, when present in the current room</th></tr>
+<tr><td>1–2</td><td>ROAM: loyalty -1. Dog moves to the first known adjacent room (BACK, FORWARD, SIDE, LINK); if none, it stays. Monsters never move.</td></tr>
+<tr><td>3–4</td><td>SNIFF: loyalty +1 (maximum 4). Can signal an old trap.</td></tr>
+<tr><td>5–6</td><td>ATTACK: if a monster is present, deal 1 damage. Otherwise rest.</td></tr></table>
+<p>When you change rooms the Dog catches up on its next turn-end instead of rolling. If the Dog is present, hungry (5 or less), and a corpse lies in the room, it eats the corpse before rolling: remove the corpse, restore 3 pet hunger, and gain 1 loyalty. It is autonomous: do not add the previous passive +1 bonus to your melee attack.</p>
+<h2>02 / CORPSES: MEAT WITH CONSEQUENCES</h2>
+<p>When an ordinary monster dies, place one species Corpse marker in that room (unless it already has one). COLLECT it for one action; EAT it for another. Corpse freshness is measured in turns since death. After 6 turns a corpse is stale: restore two fewer hunger (minimum 1), and illness is more likely.</p>
+<table><tr><th>Species</th><th>Hunger restored</th><th>Ill on roll d6 ≤</th><th>Possible intrinsic</th></tr>
+<tr><td>Giant Rat</td><td>4</td><td>1</td><td>Scent</td></tr><tr><td>Goblin</td><td>5</td><td>2</td><td>Scavenger</td></tr>
+<tr><td>Floating Eye</td><td>2</td><td>3</td><td>Focus</td></tr><tr><td>Rust Monster</td><td>3</td><td>2</td><td>Rustproof</td></tr>
+<tr><td>Restless Shade</td><td>1</td><td>4</td><td>Shade</td></tr><tr><td>Bridge Troll</td><td>6</td><td>2</td><td>Regeneration</td></tr></table>
+<p>If the roll is at or below illness threshold (+1 if stale), lose 2 HP. Otherwise, on an exact 6 gain the species' permanent intrinsic. The Amulet Warden leaves no edible corpse.</p>
+<div class="note">Death remains permanent. Corpse illness can kill you. Cap hunger at 24, as before.</div>
+<footer><span>LIVE RULES / 01</span><span>ONE D6 / NO GM</span></footer></section>
+<section class="paper"><div class="issue">ROGUE CARDS / FIELD GUIDE / VOL 005 / PAGE 02</div>
+<h1>THE GODS AND<br>THE DEAD.</h1>
+<h2>03 / INTRINSICS</h2>
+<table><tr><th>Intrinsic</th><th>Permanent benefit after eating its species</th></tr>
+<tr><td>Scent</td><td>+1 ATK on the first melee attempt against each monster.</td></tr>
+<tr><td>Scavenger</td><td>Once per run, a subsequent corpse meal restores 3 extra hunger.</td></tr>
+<tr><td>Focus</td><td>Ignore DARK room attack penalties.</td></tr><tr><td>Rustproof</td><td>Rust Monster hits no longer reduce your defence.</td></tr>
+<tr><td>Shade</td><td>Restless Shade attacks no longer drain hunger.</td></tr>
+<tr><td>Regeneration</td><td>Every third completed turn, regain 1 HP (maximum your starting HP).</td></tr></table>
+<h2>04 / MONSTER ECOLOGY</h2>
+<p>Monsters stay in their original rooms (Phase 4). Habitat affinity grants a newly encountered monster +1 maximum HP and +1 current HP if its preferred terrain matches the room. These traits use existing printed terrain labels.</p>
+<table><tr><th>Monster</th><th>Favoured terrain</th><th>Monster</th><th>Favoured terrain</th></tr>
+<tr><td>Rat</td><td>SPORES</td><td>Goblin</td><td>DUST</td></tr><tr><td>Eye</td><td>DARK</td><td>Rust Monster</td><td>LOCKED</td></tr>
+<tr><td>Shade</td><td>DARK</td><td>Troll</td><td>WATER</td></tr></table>
+<h2>05 / PRAY: A RISKY ACTION ANYWHERE</h2>
+<p>Prayer takes one normal action. You may pray in any room, including while in danger. Roll d6 + Favour (+1 if at an Altar). Start at Favour 0, range -2 to +2.</p>
+<p>On a total of 4 or more, restore 3 HP (4 at an Altar), then Favour +1. Otherwise lose 2 Hunger and Favour -1. After praying, do not pray again until six completed turns have passed. The altar no longer gives automatic healing.</p>
+<h2>06 / BONES: WHAT THE PREVIOUS HERO LEFT</h2>
+<p>On death, write a <b>Bones Record</b>: dead Hero class and up to three uneaten objects carried. Save it between games. On the next expedition, the first newly revealed room at depth 3–9 is eligible. Roll d6 once: on 5–6, leave the first recorded object in that room as Bones loot. It costs one action to reclaim. Otherwise the remains are never found this run. The record is spent after that attempt.</p>
+<div class="cards"><div><b>BONES RECORD</b>Hero: __________________________<p>Object 1: ______________________</p><p>Object 2: ______________________</p><p>Object 3: ______________________</p></div>
+<div><b>LIVING DUNGEON</b>Pet hunger: __ / 9<br>Pet loyalty: __ / 4<p>Favour: __ (-2 to +2)</p><p>Prayer cooldown: __ / 6</p><p>Intrinsics: _____________________</p></div></div>
+<footer><span>LIVE RULES / 02</span><span>PHYSICAL-FIRST REFERENCE</span></footer>
+</section></body></html>
