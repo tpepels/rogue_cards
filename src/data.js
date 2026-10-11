@@ -1,10 +1,10 @@
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
 export const HEROES = [
-  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with an extra ration.", flavor:"The map is wrong. Again." },
-  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with two unidentified potions.", flavor:"Almost certainly harmless." },
-  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Your defence reduces incoming damage.", flavor:"An honourable way to die." },
-  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Start with a smoky potion and a key.", flavor:"Every lock is a suggestion." }
+  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with two rations.", flavor:"The map is wrong. Again." },
+  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with three unidentified potions.", flavor:"Almost certainly harmless." },
+  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 defence (already included).", flavor:"An honourable way to die." },
+  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with a ration, a key, and a smoky potion.", flavor:"Every lock is a suggestion." }
 ];
 
 export const MONSTERS = [
@@ -18,16 +18,16 @@ export const MONSTERS = [
 ];
 
 export const ROOMS = [
-  { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", rule:"Someone has scratched arrows into the stone.", flavor:"Neither arrow points out." },
-  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", rule:"Fire potions do nothing here. Frost potions deal +2 damage.", flavor:"Something stirs below." },
+  { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", rule:"Nothing happens here. This room may contain loot.", flavor:"Neither arrow points out." },
+  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", rule:"Frost potions deal +2 damage here.", flavor:"Something stirs below." },
   { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", rule:"Once: Pray to restore 2 HP.", flavor:"The gods are not all absent." },
   { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
-  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", rule:"A looted counter holds something useful.", flavor:"NO CREDIT. NO EXCEPTIONS." },
+  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", rule:"Search: Take the loot assigned to this room.", flavor:"NO CREDIT. NO EXCEPTIONS." },
   { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", rule:"Disturbing the dead is usually a bad idea.", flavor:"There are seven coffins. Six lids." },
   { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", rule:"The air tastes like old bread.", flavor:"Soft footsteps answer yours." },
   { id:"locked", type:"room", title:"Locked Gallery", art:"door", terrain:"LOCKED", rule:"Spend a key on entry, or lose 2 hunger forcing the door.", flavor:"The lock has been repaired." },
   { id:"stairs", type:"room", title:"Stairwell", art:"stairs", terrain:"STAIRS", rule:"Worn steps descend into the dark.", flavor:"Further down. Always further down." },
-  { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", rule:"On entry: Lose 2 HP unless you have a key to jam the mechanism.", flavor:"One tile is cleaner than the rest." }
+  { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", rule:"On first entry: Spend a key or lose 2 HP.", flavor:"One tile is cleaner than the rest." }
 ];
 
 export const APPEARANCES = [
@@ -42,7 +42,7 @@ export const EFFECTS = [
   { id:"healing", name:"Healing", drink:"Restore 5 HP.", thrown:"Deal 2 damage." },
   { id:"poison", name:"Poison", drink:"Lose 3 HP.", thrown:"Deal 5 damage." },
   { id:"invisibility", name:"Invisibility", drink:"Ignore monster attacks for 3 turns.", thrown:"Blind the monster for 2 turns." },
-  { id:"frost", name:"Frost", drink:"Restore 3 hunger.", thrown:"Deal 3 damage, +2 in water. Freeze the monster for 1 turn." },
+  { id:"frost", name:"Frost", drink:"Restore 4 hunger.", thrown:"Deal 3 damage, +2 in water. Freeze the monster for 1 turn." },
   { id:"polymorph", name:"Polymorph", drink:"Permanently change attack by -1, 0 or +1.", thrown:"Turn the monster into a different random monster." }
 ];
 
@@ -50,15 +50,59 @@ export const ITEMS = [
   { id:"ration", type:"item", title:"Iron Ration", art:"ration", rule:"EAT: Restore 7 hunger.", flavor:"Tastes better in a crisis." },
   { id:"key", type:"item", title:"Rusty Key", art:"key", rule:"OPEN: Pass a locked room. Also jams a trap.", flavor:"Opens things that should stay closed." },
   { id:"amulet", type:"item", title:"Amulet of Yendor", art:"amulet", rule:"Carry this back to the entrance to win.", flavor:"Heavy for something so small." },
-  { id:"dog", type:"item", title:"Faithful Dog", art:"dog", rule:"Once each battle, add 1 melee damage.", flavor:"A better judge of character than you." }
+  { id:"dog", type:"item", title:"Faithful Dog", art:"dog", rule:"COMPANION: Your first successful hit each encounter deals +1.", flavor:"A better judge of character than you." }
 ];
 
 export const EVENTS = [
-  { id:"unease", type:"event", title:"A Strange Feeling", art:"spiral", rule:"You feel the dungeon rearranging behind you.", flavor:"You are not the first." },
-  { id:"bones", type:"event", title:"The Bones of Someone", art:"bones", rule:"A dead adventurer holds an ordinary ration.", flavor:"They almost made it." },
-  { id:"whisper", type:"event", title:"Whispers Below", art:"whisper", rule:"Lose 1 hunger. Something knows your name.", flavor:"Do not answer." },
-  { id:"wind", type:"event", title:"Cold Draft", art:"wind", rule:"A gust extinguishes your imaginary torch.", flavor:"There must be another opening." }
+  { id:"unease", type:"event", title:"A Strange Feeling", art:"spiral", rule:"Lose 1 hunger.", flavor:"You are not the first." },
+  { id:"bones", type:"event", title:"The Bones of Someone", art:"bones", rule:"Gain an Iron Ration.", flavor:"They almost made it." },
+  { id:"whisper", type:"event", title:"Whispers Below", art:"whisper", rule:"Lose 2 hunger.", flavor:"Do not answer." },
+  { id:"wind", type:"event", title:"Cold Draft", art:"wind", rule:"Restore 1 HP.", flavor:"There must be another opening." }
 ];
 
-export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...APPEARANCES, ...ROOMS, ...EVENTS];
-export const TYPES = ["all","hero","monster","item","potion","room","event"];
+// Monster turn: draw and resolve exactly one behaviour card. Discard and reshuffle
+// the shared pile when empty. Each copy is a physical card in the print kit.
+export const BEHAVIOURS = [
+  { id:"strike", type:"behaviour", title:"Strike", art:"key", copies:3, rule:"Attack once.", flavor:"The obvious choice is often enough." },
+  { id:"lunge", type:"behaviour", title:"Lunge", art:"wind", copies:2, rule:"Attack once with +1 to the roll.", flavor:"Too quick to follow." },
+  { id:"guard", type:"behaviour", title:"Guard", art:"knight", copies:2, rule:"Do not attack. Gain +1 DEF until your next behaviour.", flavor:"It waits behind its claws." },
+  { id:"frenzy", type:"behaviour", title:"Frenzy", art:"spiral", copies:1, rule:"Attack twice, each with -1 to the roll.", flavor:"A dreadful commotion." },
+  { id:"drain", type:"behaviour", title:"Drain", art:"ghost", copies:1, rule:"Do not attack. Hero loses 2 hunger.", flavor:"Something is missing." },
+  { id:"recover", type:"behaviour", title:"Recover", art:"bones", copies:1, rule:"Do not attack. Monster regains 2 HP, up to maximum.", flavor:"It rises again." }
+];
+
+export const ENTRANCE = {
+  id:"entrance", type:"room", title:"Dungeon Entrance", art:"stairs", terrain:"SAFE",
+  rule:"RETURN WITH THE AMULET to ascend.", flavor:"Daylight is still possible."
+};
+export const VAULT = {
+  id:"vault", type:"room", title:"Vault of Yendor", art:"crypt", terrain:"SACRED",
+  rule:"Defeat the Amulet Warden. CLAIM the Amulet, then escape.", flavor:"There is no easy way back."
+};
+
+export const EQUIPMENT = [
+  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"EQUIP (weapon): +1 ATK while equipped.", flavor:"Still sharp enough." },
+  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"EQUIP (armour): +1 DEF while equipped.", flavor:"It smells of another hero." },
+  { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
+];
+
+export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS];
+export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event"];
+
+// Print quantities describe a playable physical supply, not simply specimens.
+// Distinct decks are printed separately and shuffled at setup.
+export const PRINT_COPIES = {
+  hero: { delver:1, wizard:1, knight:1, rogue:1 },
+  monster: { rat:4, goblin:4, eye:3, rust:3, wraith:3, troll:3, sentinel:1 },
+  room: { entrance:1, vault:1, corridor:4, flood:3, altar:2, fountain:2, shop:2,
+    crypt:3, nest:3, locked:3, stairs:3, trap:3 },
+  potion: { smoky:3, milky:3, bubbling:3, black:3, cloudy:3 },
+  item: { ration:12, key:6, amulet:1, dog:1, sword:3, mail:3, charm:4 },
+  behaviour: Object.fromEntries(BEHAVIOURS.map(x=>[x.id,x.copies])),
+  event: { unease:2, bones:2, whisper:2, wind:2 }
+};
+export const printDeck = types => {
+  const chosen = Array.isArray(types) ? types : [types];
+  return CATALOGUE.filter(card=>chosen.includes(card.type))
+    .flatMap(card=>Array.from({length:PRINT_COPIES[card.type]?.[card.id] || 0},()=>card));
+};

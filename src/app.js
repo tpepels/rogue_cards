@@ -1,124 +1,196 @@
-import { HEROES, CATALOGUE, TYPES, EFFECTS, APPEARANCES } from "./data.js";
+import { HEROES, CATALOGUE, TYPES, EFFECTS, APPEARANCES, BEHAVIOURS, printDeck } from "./data.js";
 import { illustration } from "./art.js";
 import { cardMarkup, printSheets, escapeHtml as esc } from "./card-view.js";
-import { startRun, act, currentRoom, currentMonster, availableActions, validateSave, LAST_FLOOR, itemTitle } from "./engine.js";
+import {
+  startRun, act, currentRoom, currentMonster, availableActions, validateSave,
+  LAST_FLOOR, MAX_ACTIONS, MAX_HUNGER, heroAttack, heroDefense, knownIdentity,
+  nodeLabel, itemTitle
+} from "./engine.js";
 
-const app = document.querySelector("#app");
-const SAVE_KEY = "rogue-cards-v1";
-let view = "play";
-let filter = "all";
-let state = restore();
-let choosing = !state;
-let confirmingRestart = false;
-const heroById = id => HEROES.find(c => c.id === id);
-const byId = (arr,id) => arr.find(c => c.id===id);
-function restore() {
-  try { const value=JSON.parse(localStorage.getItem(SAVE_KEY)); return validateSave(value) ? value : null; }
-  catch { return null; }
+const app=document.querySelector("#app");
+const SAVE_KEY="rogue-cards-v2";
+let view="play";
+let filter="all";
+let kitMode=false;
+let state=load();
+let choosing=!state;
+let confirmingRestart=false;
+const byId=(cards,id)=>cards.find(c=>c.id===id);
+function load() {
+  try {const value=JSON.parse(localStorage.getItem(SAVE_KEY));return validateSave(value)?value:null;}
+  catch {return null;}
 }
-function save() { try { localStorage.setItem(SAVE_KEY,JSON.stringify(state)); } catch { /* storage optional */ } }
-function sectionHeading(eyebrow,title,deck) { return '<div class="section-heading"><div><span class="eyebrow">'+eyebrow+'</span><h1>'+title+'</h1></div><p>'+deck+'</p></div>'; }
+function save() {
+  try {localStorage.setItem(SAVE_KEY,JSON.stringify(state));}
+  catch { /* Local persistence is optional. */ }
+}
+function heading(issue,title,deck) {
+  return '<div class="section-heading"><div><span class="eyebrow">'+esc(issue)+'</span><h1>'+esc(title)+'</h1></div><p>'+esc(deck)+'</p></div>';
+}
 function heroSelect() {
-  return sectionHeading("01 / PREPARE TO DIE", "CHOOSE YOUR BAD IDEA", "Four adventurers. One dungeon. No second chances. Select a card to begin a run.")+
-   '<section class="hero-grid" aria-label="Choose a hero">'+HEROES.map(hero =>
-     '<button class="hero-choice" type="button" data-hero="'+hero.id+'" aria-label="Start as '+esc(hero.title)+'">'+cardMarkup(hero)+'</button>'
-   ).join("")+'</section>'+
-   '<p class="fine-print">The dungeon is randomly generated. A new run reshuffles what every potion does. Nothing is uploaded to a server.</p>';
+  return heading("01 / HERO SELECTION","CHOOSE YOUR BAD IDEA","A longer dungeon expedition. Two actions per turn, a shared monster-behaviour deck, and d6 combat.")+
+    '<div class="hero-grid" aria-label="Choose an adventurer">'+HEROES.map(hero=>
+      '<button class="hero-choice" type="button" data-hero="'+esc(hero.id)+'" aria-label="Start as '+esc(hero.title)+'">'+cardMarkup(hero)+'</button>').join("")+'</div>'+
+    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and potion-identity decks. This game stores the current run locally in your browser.</p>';
 }
-function meter(name,value,max,suffix="") {
-  const fraction=Math.max(0,Math.min(100,Math.round(value/max*100)));
-  return '<div class="meter"><div class="meter__labels"><span>'+name+'</span><strong>'+esc(value)+suffix+'</strong></div><div class="meter__bar"><i style="width:'+fraction+'%"></i></div></div>';
+function meter(label,value,max) {
+  const percent=Math.max(0,Math.min(100,Math.round(value/max*100)));
+  return '<div class="meter"><div class="meter__labels"><span>'+esc(label)+'</span><strong>'+esc(value)+' / '+esc(max)+'</strong></div><div class="meter__bar"><i style="width:'+percent+'%"></i></div></div>';
 }
-function itemCatalogue(item) {
-  return item.kind==='potion' ? byId(APPEARANCES,item.id) : byId(CATALOGUE,item.id);
+function mapView(s) {
+  let rows='';
+  for(let i=0;i<=LAST_FLOOR;i++){
+    const main=s.rooms[String(i)];
+    const branch=s.rooms[i+"b"];
+    const mainCurrent=s.position===String(i);
+    const branchCurrent=s.position===i+"b";
+    const node=(id,room,current,label)=>
+      '<span class="map-cell '+(room?'map-cell--known ':'')+(current?'map-cell--active':'')+'">'+
+      '<b>'+esc(label)+'</b> <small>'+ (room?esc(room.title):(id.endsWith("b")?"·":"?"))+'</small></span>';
+    rows+='<li class="map-row">'+node(String(i),main,mainCurrent,""+i)+
+      (i>0&&i<LAST_FLOOR?node(i+"b",branch,branchCurrent,"SIDE"): '<span class="map-cell map-cell--void">—</span>')+'</li>';
+  }
+  return '<section class="map-panel" aria-label="Discovered dungeon map"><div class="panel-label">YOUR DUNGEON / 10 DEPTHS</div>'+
+    '<p class="help-text">The main route descends on the left. Side chambers connect to one depth only. Dark squares are undiscovered.</p>'+
+    '<ol class="map-rows">'+rows+'</ol></section>';
+}
+function inventoryView(s) {
+  const held=s.inventory.map((item,index)=>{
+    const identified=item.kind==="potion" ? knownIdentity(s,item.id) : null;
+    return '<li class="inventory__item"><span class="inventory__index">'+String(index+1).padStart(2,"0")+'</span>'+
+      '<span>'+esc(itemTitle(item))+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
+      '<span class="inventory__mark">'+(item.kind==="potion"&&!identified?'?':'+')+'</span></li>';
+  }).join("");
+  const identities=APPEARANCES.map(app=>
+    '<div class="identification__row"><span>'+esc(app.title)+'</span><b>'+esc(knownIdentity(s,app.id)||"???")+'</b></div>').join("");
+  return '<section class="inventory"><div class="panel-label">BACKPACK / '+s.inventory.length+' OBJECTS</div>'+
+    '<ul class="inventory-list">'+(held||'<li class="muted">Nothing in your pack.</li>')+'</ul>'+
+    '<div class="equipped"><div class="panel-label">EQUIPMENT</div>'+
+    '<div>WEAPON <b>'+esc(s.equipped.weapon||"None")+'</b></div>'+
+    '<div>ARMOUR <b>'+esc(s.equipped.armour||"None")+'</b></div>'+
+    '<div>COMPANION <b>'+(s.equipped.companion?"DOG":"None")+'</b></div></div>'+
+    '<div class="identification"><div class="panel-label">POTION IDENTIFICATION</div>'+identities+'</div></section>';
+}
+function controls(s) {
+  const terminal=s.phase==="won"||s.phase==="dead";
+  const actions=availableActions(s);
+  const mainIds=["attack","explore","travel","take","claim"];
+  const renderButton=a=>{
+    const attrs=(a.target!=null?' data-target="'+esc(a.target)+'"':'')+
+      (a.index!=null?' data-index="'+a.index+'"':'');
+    return '<button class="action '+(mainIds.includes(a.id)?"action--primary":"action--secondary")+
+      '" data-act="'+esc(a.id)+'"'+attrs+' type="button">'+esc(a.label)+
+      '<span aria-hidden="true">↗</span></button>';
+  };
+  const roll=s.lastRoll;
+  return '<section class="command-panel"><div class="panel-label">TURN '+s.turn+' / '+s.actionsLeft+' OF '+MAX_ACTIONS+' ACTIONS LEFT</div>'+
+    '<div class="command-status"><strong>'+esc(nodeLabel(s.position))+'</strong>'+
+    '<span>'+ (s.phase==="ascending"?"ESCAPE WITH THE AMULET":"FIND THE AMULET AT DEPTH 10") +'</span></div>'+
+    (roll?'<div class="roll-report">LAST ROLL: '+esc(roll.label)+' · d6='+roll.roll+' · TOTAL '+roll.total+
+      ' vs '+roll.threshold+' · '+(roll.hit?"HIT":"MISS")+'</div>':'')+
+    (s.lastBehaviour?'<p class="behaviour-report">LAST MONSTER CARD: <b>'+esc(byId(BEHAVIOURS,s.lastBehaviour)?.title||s.lastBehaviour)+'</b></p>':'')+
+    (terminal?'<p class="end-message">'+(s.phase==="won"?"YOU ASCEND. The Amulet has reached daylight.":"YOU DIE. Your possessions remain below.")+'</p>'+
+      '<button class="action action--primary" type="button" data-choose="1">BEGIN ANOTHER RUN ↗</button>':
+      '<div class="actions">'+actions.filter(a=>a.id!=="end").map(renderButton).join("")+
+      actions.filter(a=>a.id==="end").map(renderButton).join("")+'</div>')+'</section>';
 }
 function runView() {
-  if (!state || choosing) return heroSelect();
-  const s=state, room=currentRoom(s), enemy=currentMonster(s), hero=heroById(s.heroId);
-  const terminal=s.phase==='won'||s.phase==='dead';
-  const steps=Array.from({length:LAST_FLOOR+1},(_,floor)=>{
-    const here = s.position===floor, explored = floor<s.rooms.length;
-    return '<span class="depth__room '+(here?'depth__room--here ':'')+(explored?'depth__room--seen':'')+'" title="'+(explored?esc(s.rooms[floor].title):'Unexplored')+'">'+(here?'@':explored?'#':'?')+'<small>'+floor+'</small></span>';
-  }).join("");
-  const actions=availableActions(s);
-  const primary=actions.filter(a=>["explore","attack","claim","return","take"].includes(a.id));
-  const other=actions.filter(a=>!primary.includes(a));
-  const actionButton=(a,kind)=>'<button class="action action--'+kind+'" data-act="'+a.id+'" '+(a.index==null?'':'data-index="'+a.index+'"')+'>'+esc(a.label)+' <span aria-hidden="true">↗</span></button>';
-  const roomDisplay={...room,type:"room",number:"D"+String(s.position).padStart(2,"0")};
-  const monsterDisplay=enemy?{...enemy,type:"monster"}:null;
-  const inventory=s.inventory.length ? s.inventory.map((item,idx)=>{
-    const known=item.kind==='potion'?s.known[item.id]:null;
-    const additional=known?' / '+byId(EFFECTS,known)?.name.toUpperCase():'';
-    return '<div class="inventory__item"><span class="inventory__index">'+String(idx+1).padStart(2,"0")+'</span><span>'+esc(itemTitle(item))+esc(additional)+'</span><span class="inventory__mark">'+(known?'!':item.kind==='potion'?'?':'+')+'</span></div>';
-  }).join(""):'<p class="muted">Empty pockets.</p>';
-  return sectionHeading("01 / DUNGEON EXPLORER", s.phase==="ascending"?"THE WAY BACK":terminal?(s.phase==="won"?"YOU ASCENDED":"YOU DIED"):"DOWN IS A KIND OF HOME",
-    "Find the Amulet on floor 6 and carry it back to the entrance. Each action consumes 1 hunger.")+
-  '<div class="mobile-hud" role="group" aria-label="Current character status"><span>FLOOR <b>'+s.position+'</b></span><span>HP <b>'+s.hp+'/'+s.maxHp+'</b></span><span>HUNGER <b>'+s.hunger+'</b></span><span>'+(s.hasAmulet?'AMULET HELD':'AMULET LOST')+'</span></div><span class="sr-only" role="status" aria-live="polite">'+esc(s.log[0]||'')+'</span>'+
-  '<section class="play-layout"><aside class="run-sidebar">'+
-  '<div class="stat-panel"><div class="panel-label">CHARACTER FILE / '+esc(hero.title)+'</div><div class="character-head">'+illustration(hero.art)+'<div><b>'+esc(hero.title)+'</b><span>TURN '+s.turn+' / FLOOR '+s.position+'</span></div></div>'+
-  meter("HIT POINTS",s.hp,s.maxHp) + meter("HUNGER",s.hunger,30)+
-  '<div class="numeric-stats"><span>ATK <b>'+s.attack+'</b></span><span>DEF <b>'+s.defense+'</b></span><span>AMULET <b>'+(s.hasAmulet?'YES':'NO')+'</b></span></div>'+
-  '<div class="depth-label">THE DESCENT / KNOWN FLOORS</div><div class="depth" aria-label="Dungeon depth from zero to six">'+steps+'</div>'+
-  '<button class="outline-button" data-choose="1">START NEW RUN</button></div>'+
-  '<section class="notebook"><div class="panel-label">FIELD LOG / NEWEST FIRST</div><ol aria-label="Recent events">'+s.log.map((line,i)=>'<li><span>'+String(Math.max(1,s.turn-i)).padStart(2,"0")+'</span>'+esc(line)+'</li>').join("")+'</ol></section></aside>'+
-  '<div class="encounter"><div class="encounter__cards"><div>'+cardMarkup(roomDisplay)+'</div><div>'+(monsterDisplay?cardMarkup(monsterDisplay):'<div class="empty-encounter"><span class="empty-encounter__glyph">'+(terminal?(s.phase==="won"?"*":"X"):"·")+'</span><strong>'+ (terminal?(s.phase==="won"?"ESCAPED":"RUN ENDED"):"NO MONSTER")+'</strong><p>'+ (room.loot?'There is something to pick up.':'For now, it is quiet.')+'</p></div>')+'</div></div>'+
-  '<section class="command-panel"><div class="panel-label">AVAILABLE ACTIONS</div>'+
-  (terminal?'<p class="end-message">'+(s.phase==="won"?"You escaped with the Amulet of Yendor.":'No resurrection. Your possessions remain in the dungeon.')+'</p><button class="action action--primary" data-choose="1">TRY ANOTHER RUN ↗</button>':
-   '<div class="actions">'+(primary.length?primary.map(a=>actionButton(a,"primary")).join(""):"")+(other.length?other.map(a=>actionButton(a,"secondary")).join(""):"")+'</div>')+
-  '</section><section class="inventory"><div class="panel-label">IN YOUR POCKETS / '+s.inventory.length+' ITEMS</div>'+inventory+
-  '<div class="identification"><div class="panel-label">POTION NOTES / '+Object.keys(s.known).length+'/'+APPEARANCES.length+' KNOWN</div>'+
-  APPEARANCES.map(appearance=>'<div class="identification__row"><span>'+esc(appearance.title)+'</span><b>'+esc(byId(EFFECTS,s.known[appearance.id])?.name||'???')+'</b></div>').join('')+
-  '</div></section>'+
-  '<p class="fine-print">Prototype rules: A monster retaliates after most actions. Throwing potions can bypass its defences. Your dog assists once per fight. Use the card gallery to print specimens.</p>'+
-  '</div></section>';
+  if(!state||choosing) return heroSelect();
+  const s=state, room=currentRoom(s), enemy=currentMonster(s), hero=byId(HEROES,s.heroId);
+  const roomDisplay={...room,type:"room",number:s.position.toUpperCase()};
+  const monsterDisplay=enemy?{...enemy,type:"monster",defense:enemy.defense+(enemy.guard||0)}:null;
+  return heading("01 / THE EXPEDITION",s.phase==="ascending"?"FIND THE WAY BACK":
+    s.phase==="won"?"ASCENSION":s.phase==="dead"?"YOU HAVE DIED":"DOWN INTO THE DARK",
+    "Explore the main route and optional side chambers. Every turn allows up to two actions, then the monster-behaviour deck acts.")+
+    '<div class="mobile-hud" role="group" aria-label="Character status">'+
+    '<span>HP <b>'+s.hp+'/'+s.maxHp+'</b></span><span>HUNGER <b>'+s.hunger+'</b></span>'+
+    '<span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span>'+
+    '<span>ACTIONS <b>'+s.actionsLeft+'</b></span></div>'+
+    '<div class="expedition-layout"><div class="expedition-main">'+controls(s)+
+    '<div class="encounter"><div class="panel-label">CURRENT LOCATION / '+esc(nodeLabel(s.position))+'</div><div class="encounter__cards">'+
+      '<div>'+cardMarkup(roomDisplay)+'</div>'+
+      '<div>'+(monsterDisplay?cardMarkup(monsterDisplay):
+        '<div class="empty-encounter"><span class="empty-encounter__glyph">·</span><strong>NO HOSTILE CREATURE</strong><p>'+(
+          room.loot?"Loot is available in this chamber.":"The room is quiet.")+'</p></div>')+'</div></div></div>'+
+    '<p class="fine-print">Attack: d6 + ATK vs 4 + DEF. Natural 1 misses; natural 6 hits for 3 damage. Other hits deal 2. The monster draws one behaviour after your turn.</p>'+
+    '</div><aside class="expedition-side"><section class="stat-panel"><div class="panel-label">CHARACTER FILE</div>'+
+    '<div class="character-head">'+illustration(hero.art)+'<div><b>'+esc(hero.title)+'</b><span>TURN '+s.turn+' / '+esc(nodeLabel(s.position))+'</span></div></div>'+
+    meter("HIT POINTS",s.hp,s.maxHp)+meter("HUNGER",s.hunger,MAX_HUNGER)+
+    '<div class="numeric-stats"><span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span><span>AMULET <b>'+(s.hasAmulet?"YES":"NO")+'</b></span></div>'+
+    '<button class="outline-button" type="button" data-choose="1">NEW RUN</button></section>'+
+    mapView(s)+inventoryView(s)+
+    '<section class="notebook"><div class="panel-label">FIELD LOG / MOST RECENT FIRST</div><ol>'+
+    s.log.slice(0,18).map(message=>'<li>'+esc(message)+'</li>').join("")+'</ol></section></aside></div>';
 }
 function galleryView() {
-  const cards=filter==="all"?CATALOGUE:CATALOGUE.filter(card=>card.type===filter);
-  return sectionHeading("02 / THE CARD FILE", "PAPER CUTS & BAD DECISIONS", "Large 90 × 140 mm specimens. Sparse line drawings, black ink, handmade borders, and rules you can actually read.")+
-  '<div class="gallery-tools"><div class="filters" aria-label="Filter cards">'+TYPES.map(type=>'<button type="button" class="filter '+(type===filter?'filter--active':'')+'" aria-pressed="'+(type===filter)+'" data-filter="'+type+'">'+type.toUpperCase()+'</button>').join("")+'</div><button class="outline-button print-button" data-print="1">PRINT / SAVE PDF ↗</button></div>'+
-  '<p class="catalogue-count">FILED: '+cards.length+' / '+CATALOGUE.length+' SPECIMENS · 90 × 140 MM · A4 / 4 PER SHEET</p>'+
-  '<section class="gallery" aria-label="Card catalogue">'+cards.map(card=>cardMarkup(card)).join("")+'</section>'+printSheets(cards)+
-  '<p class="fine-print">Prototype cards. Artwork is original SVG linework. Card effects and values are subject to playtesting; the identities of unidentified potions change every run.</p>';
+  const specimens=filter==="all"?CATALOGUE:CATALOGUE.filter(card=>card.type===filter);
+  const cards=kitMode?(filter==="all"?TYPES.slice(1).flatMap(type=>printDeck(type)):printDeck(filter)):specimens;
+  return heading("02 / THE CARD FILE",kitMode?"CUT, SHUFFLE, PLAY":"PAPER CUTS & BAD DECISIONS",
+    kitMode?"Print real quantities for the physical prototype. Keep room, monster, object, event and behaviour decks separate.":
+      "Oversized 90 × 140 mm black-and-white zine cards. Filter specimens, or print the complete playtest kit.")+
+    '<div class="gallery-tools"><div class="filters" aria-label="Card category">'+
+    TYPES.map(t=>'<button type="button" class="filter '+(t===filter?"filter--active":"")+
+      '" aria-pressed="'+(t===filter)+'" data-filter="'+t+'">'+t.toUpperCase()+'</button>').join("")+
+    '</div><div class="kit-toggle" role="group" aria-label="Print mode">'+
+    '<button class="filter '+(!kitMode?"filter--active":"")+'" data-kit="specimens" aria-pressed="'+(!kitMode)+'">SPECIMENS</button>'+
+    '<button class="filter '+(kitMode?"filter--active":"")+'" data-kit="kit" aria-pressed="'+kitMode+'">PHYSICAL KIT</button></div>'+
+    '<button class="outline-button print-button" data-print="1">PRINT CARDS / SAVE PDF ↗</button></div>'+
+    '<p class="catalogue-count">FILED: '+cards.length+' PRINTABLE CARDS · 90 × 140 MM · A4 / 4 PER SHEET</p>'+
+    '<p class="print-instructions">For physical play, select PHYSICAL KIT and print at 100% scale. You also need the <a href="./field-guide.html">field guide and tracking sheets ↗</a>, one six-sided die, and a pencil.</p>'+
+    '<section class="gallery" aria-label="Card catalogue">'+cards.map(card=>cardMarkup(card)).join("")+'</section>'+printSheets(cards);
 }
 function rulesView() {
-  return sectionHeading("03 / FIELD NOTES", "READ BEFORE DESCENDING", "A one-page field manual for the playable vertical slice. The full tabletop rules are still in development.")+
-  '<section class="rules-grid"><article><span class="eyebrow">I / OBJECTIVE</span><h2>GET IN. GET OUT.</h2><p>Choose an adventurer. Descend six floors, defeat the Amulet Warden, take the Amulet of Yendor and return to floor 0 alive. Death ends the run permanently.</p><p>Rooms remain in the dungeon, so you retrace your explored path when returning.</p></article>'+
-  '<article><span class="eyebrow">II / TIME</span><h2>EVERY MOVE COUNTS.</h2><p>Each action costs 1 hunger. At zero hunger, each further action costs 1 HP. Rations restore 8 hunger. Keep enough provisions for the journey back.</p><p>Taking loot, drinking, throwing, attacking, exploring and praying all consume time.</p></article>'+
-  '<article><span class="eyebrow">III / FIGHTING</span><h2>DO NOT STARE.</h2><p>In combat, melee damage is your attack plus 0–1, minus enemy defence (minimum 1). Your pet adds 1 damage to your first melee attack each fight.</p><p>New monsters are revealed when you enter a room and begin attacking after your next action. Damage is attack minus your defence (minimum 1), unless an effect prevents it.</p></article>'+
-  '<article><span class="eyebrow">IV / EXPERIMENTS</span><h2>TRY THE BOTTLE.</h2><p>Every run randomly matches five potion appearances to five effects. The same appearance always means the same thing during that run.</p><p>Drinking and throwing a potion have different consequences. Once used, its appearance is identified in your inventory.</p></article>'+
-  '<article><span class="eyebrow">V / CARD PHYSICS</span><h2>LET THINGS COLLIDE.</h2><p>Frost damages creatures more in flooded rooms. Keys open locks or disable traps. Prayer restores health at an altar. Monster traits can punish careless attacks.</p><p>The current interaction set is deliberately small; combinations will expand after playtests.</p></article>'+
-  '<article><span class="eyebrow">VI / WHAT IS MISSING</span><h2>WORK IN PROGRESS.</h2><p>This first release uses a linear six-floor dungeon. Spatial exploration, shops, equipment slots, curses, divine favour, corpse effects and full room generation are planned but not yet playable.</p><p>The printable card file is a visual design catalogue, not yet a complete physical boxed game.</p></article></section>'+
-  '<div class="colophon"><span>COLOPHON / NO TRACKERS · NO FONTS TO DOWNLOAD · NO BUILD STEP</span><p>These cards are meant to look like copies from a 1984 dungeon zine: blunt type, generous negative space, deliberately rough borders and economical pen drawings. Print at 100% scale on A4.</p></div>';
+  return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
+    "Phase 2 physical rules. The browser follows the same setup, combat, monster behaviour and dungeon geometry.")+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a></div>'+
+    '<div class="rules-grid">'+
+    '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Depths 1–9 have one optional side chamber. Every side chamber connects only to its main-depth parent.</p></article>'+
+    '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+
+    '<article><span class="eyebrow">III / COMBAT</span><h2>ROLL ONE D6.</h2><p>Roll d6 + attack against 4 + defender defence. Natural 1 always misses. Natural 6 always hits and deals 3 damage. Other hits deal 2 damage.</p><p>Monster attacks use exactly the same roll. A living Floating Eye punishes melee attacks, even when you miss.</p></article>'+
+    '<article><span class="eyebrow">IV / MONSTER DECK</span><h2>DRAW ONE CARD.</h2><p>Strike, Lunge, Guard, Frenzy, Drain and Recover make up a ten-card shared behaviour pile. Shuffle its discards when empty. Status effects may prevent a draw.</p><p>Guard grants +1 monster defence during your next two actions.</p></article>'+
+    '<article><span class="eyebrow">V / SECRET BOTTLES</span><h2>DISCOVER THE CONTENTS.</h2><p>Randomly pair potion appearances with identities at setup. An appearance retains its identity all run. Drink or throw to identify it. Note the result.</p><p>The physical kit has five potion appearances and five identities. Use the identification table in the playmat.</p></article>'+
+    '<article><span class="eyebrow">VI / PHYSICAL TABLE</span><h2>KEEP A SMALL MAP.</h2><p>Use the A4 dungeon sheet to track explored rooms, loot, wounds, and passages. Only the current large room and monster cards need to be displayed.</p><p>Print the physical kit with duplicate cards. The full intended run is 90–120 minutes, pending actual table-timed testing.</p></article>'+
+    '</div>';
 }
 function restartView() {
-  return sectionHeading("01 / NEW RUN", "ABANDON THIS RUN?", "Your current dungeon and its discoveries will be lost. This cannot be undone.") +
-    '<section class="restart-prompt"><p>Progress is stored in this browser. Starting a new run replaces the existing save.</p>' +
-    '<div class="restart-prompt__actions"><button class="action action--primary" type="button" data-confirm-restart="1">ABANDON RUN & CHOOSE HERO ↗</button>' +
-    '<button class="action action--secondary" type="button" data-cancel-restart="1">CONTINUE CURRENT RUN</button></div></section>';
+  return heading("01 / RESET","ABANDON THIS EXPEDITION?",
+    "The current v2 run will be replaced. Exploration, gear, and potion discoveries cannot be restored.")+
+    '<section class="restart-prompt"><p>Starting a new run discards this dungeon and changes the randomized potion identities.</p>'+
+    '<div class="restart-prompt__actions"><button class="action action--primary" data-confirm-restart="1">DISCARD RUN ↗</button>'+
+    '<button class="action action--secondary" data-cancel-restart="1">KEEP PLAYING</button></div></section>';
 }
 function render() {
-  document.querySelectorAll(".site-nav__button").forEach(btn=>{
-    const active=btn.dataset.view===view;
-    btn.classList.toggle("site-nav__button--active",active);
-    btn.setAttribute("aria-current",active?"page":"false");
+  document.querySelectorAll(".site-nav__button").forEach(button=>{
+    const selected=button.dataset.view===view;
+    button.classList.toggle("site-nav__button--active",selected);
+    button.setAttribute("aria-current",selected?"page":"false");
   });
   document.body.dataset.view=view;
-  app.innerHTML=confirmingRestart?restartView():(view==="play"?runView():view==="cards"?galleryView():rulesView());
+  app.innerHTML=confirmingRestart?restartView():view==="play"?runView():view==="cards"?galleryView():rulesView();
 }
 document.addEventListener("click",event=>{
   const button=event.target.closest("button");
-  if (!button) return;
-  if (button.dataset.view) { view=button.dataset.view; render(); window.scrollTo({top:0,behavior:"instant"}); return; }
-  if (button.dataset.filter) { filter=button.dataset.filter; render(); return; }
-  if (button.dataset.print) { window.print(); return; }
-  if (button.dataset.choose) { if (state && state.phase!=="won" && state.phase!=="dead") confirmingRestart=true; else choosing=true; render(); return; }
-  if (button.dataset.cancelRestart) { confirmingRestart=false; render(); return; }
-  if (button.dataset.confirmRestart) { confirmingRestart=false; choosing=true; state=null; try { localStorage.removeItem(SAVE_KEY); } catch { /* storage optional */ } render(); return; }
-  if (button.dataset.hero) { state=startRun(button.dataset.hero); choosing=false; confirmingRestart=false; save(); render(); return; }
-  if (button.dataset.act && state) {
-    const index=button.dataset.index===undefined?null:Number(button.dataset.index);
-    const next=act(state,button.dataset.act,index);
-    if (next!==state) { state=next; save(); render(); }
+  if(!button) return;
+  if(button.dataset.view) {view=button.dataset.view;confirmingRestart=false;render();window.scrollTo(0,0);return;}
+  if(button.dataset.filter) {filter=button.dataset.filter;render();return;}
+  if(button.dataset.kit) {kitMode=button.dataset.kit==="kit";render();return;}
+  if(button.dataset.print) {window.print();return;}
+  if(button.dataset.choose) {
+    if(state && !["dead","won"].includes(state.phase)) confirmingRestart=true;
+    else choosing=true;
+    render();return;
+  }
+  if(button.dataset.cancelRestart) {confirmingRestart=false;render();return;}
+  if(button.dataset.confirmRestart) {
+    confirmingRestart=false;choosing=true;state=null;
+    try {localStorage.removeItem(SAVE_KEY);} catch { /* storage optional */ }
+    render();return;
+  }
+  if(button.dataset.hero) {state=startRun(button.dataset.hero);choosing=false;save();render();return;}
+  if(button.dataset.act && state){
+    const arg=button.dataset.target??(button.dataset.index===undefined?null:Number(button.dataset.index));
+    const next=act(state,button.dataset.act,arg);
+    if(next!==state) {state=next;save();render();}
   }
 });
 render();

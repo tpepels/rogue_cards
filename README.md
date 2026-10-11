@@ -1,84 +1,69 @@
-# ROGUE CARDS
+# ROGUE CARDS / ISSUE 002
 
-**A black-and-white photocopied dungeon. One life. Many bad ideas.**
+**Two actions. One life. A black-and-white photocopied dungeon.**
 
-[Play on GitHub Pages](https://tpepels.github.io/rogue_cards/)
+**[PLAY IN YOUR BROWSER](https://tpepels.github.io/rogue_cards/)** · [Physical rules](https://tpepels.github.io/rogue_cards/field-guide.html) · [Dungeon sheets](https://tpepels.github.io/rogue_cards/playmat.html)
 
-A solo-first card roguelike with oversized **90 × 140 mm** printable specimens, minimal pen-and-ink vector art, a deliberately rough 1980s zine layout and a playable browser prototype.
+Rogue Cards is a solo-first, physical-first roguelike card-game prototype. All physical cards are **90 × 140 mm** with economical monochrome line drawings inspired by 1980s homemade zines. The browser game and printable field guide use the same fundamental rules. **90–120 minutes is the desired physical session length, not a measured claim.**
 
-## What's in issue 001
+## Phase 2 game
 
-- **Play**: Choose one of four heroes; explore six dungeon floors; fight monsters; eat, pray and find supplies; defeat the Amulet Warden; then return alive with the Amulet of Yendor.
-- **Unknown potions**: Five appearances are mapped to five identities at the start of every run. Discover their effects by drinking or throwing them. The same appearance remains consistent throughout a run.
-- **A few systemic effects**: Water amplifies frost; keys open locked doors and jam traps; the Floating Eye punishes melee; a Rust Monster damages defence; invisibility and blindness prevent attacks.
-- **Cards**: 34 large-format printable prototypes across heroes, monsters, items, potions, rooms and events. All drawings are original small SVG illustrations rendered in the browser, not raster art.
-- **Field notes**: A short playable manual and an honest description of missing mechanics.
-- **No framework / no runtime dependency / no build step**. Browser persistence uses localStorage; no account is needed.
-
-## GitHub Pages
-
-Pages should be configured to deploy **from main / root**. The website is index.html at the repository root, uses relative paths throughout, and works under /rogue_cards/. No Actions deployment workflow is needed.
-
-Open https://tpepels.github.io/rogue_cards/ after GitHub Pages publishes the branch. If Pages is configured to publish a different branch or docs folder, adjust the Pages source.
+- **A hybrid dungeon:** Ten main depths (0–10) and an optional side chamber at depths 1–9. Side chambers connect only to their parent; explored rooms and wounded monsters persist.
+- **Two actions per turn:** Move, reveal, attack, eat, use or equip an item, take loot, pray, claim the Amulet; end early if needed. At the end of the turn, lose one hunger and activate the monster.
+- **Dice-based combat:** Roll a single d6 + attack against 4 + defence. A natural 1 misses, a natural 6 hits critically for three damage, and an ordinary hit deals two.
+- **Shared ten-card monster behaviour deck:** Strike ×3, Lunge ×2, Guard ×2, Frenzy, Drain, Recover. Shuffle its discards once the pile empties.
+- **Loot and equipment:** Rations, keys, mystery potions, a Notched Sword, Patchwork Mail, a Lucky Bone and a companion Dog. One weapon, one armour and one companion slot.
+- **Identifying potions:** Five potion appearances are randomly mapped to five hidden effects each run.
+- **Objective:** Defeat the Amulet Warden at depth 10, take the Amulet of Yendor and return by explored rooms to the entrance.
+- **Physical kit:** Print full card quantities, field guide, dungeon/map sheets and potion identity slips. Requires a six-sided die and pencil.
 
 ## Run locally
 
-Use any static file server; JavaScript modules cannot be opened directly as file URLs in most browsers.
+No framework, no build process and no server-side dependencies are needed for the website. Use a local static server for ES modules:
 
     python3 -m http.server 8000
-    # open http://localhost:8000
+    # http://localhost:8000
+
+Saved games are browser-local (key \`rogue-cards-v2\`). Phase 1 saves are not migrated automatically: the two-action rules are incompatible with v1 saved runs. Legacy saves are not overwritten.
 
 ## Tests
 
-Node.js 20+:
+Run the engine and presentation tests with Node 22+:
 
     npm test
 
-Optional **browser geometry tests** using Playwright + Chromium (development only):
+The browser geometry and print suite uses Playwright (only a development dependency):
 
     npm install
     npx playwright install chromium
     npm run test:visual
 
-Browser checks cover 375–1440px widths, horizontal overflow, clipped card regions,
-mobile gameplay controls, and the physical dimensions and sheet count in print mode.
-These tests are not required for GitHub Pages deployment; the site has no runtime dependencies.
+These checks cover deterministic deck setup, physical map topology, turns, dice, status effects, victory/death, seeded simulations, HTML-escaped rendering, responsive cards, and A4 print layout. They deliberately **do not block GitHub Pages deployment** during rapid prototyping.
 
-Tests cover run initialization, deterministic appearance mappings, catalogue integrity, legal actions, exploration, potion discovery, win condition and death. The tests are intentionally **not a deployment gate** during rapid prototyping.
+## Print-and-play
 
-## Printing
+1. Open **Cards** and select **PHYSICAL KIT** rather than **SPECIMENS**.
+2. Select **PRINT CARDS / SAVE PDF**; print on A4 at 100% scale, with browser headers and footers off.
+3. Each page contains up to four **90 × 140 mm** cards. Separate the physical Room, Monster, Object, Behaviour, and Event piles after cutting.
+4. Print [field-guide.html](field-guide.html) (includes five identity slips) and [playmat.html](playmat.html) (dungeon map and character notebook).
+5. Shuffle decks, reserve starting kit items and fixed Vault/Warden, and follow the field guide. Record monster wounds and uncollected loot in the map grid to avoid needing to display all cards at once.
 
-Open **Cards** and select **Print / Save PDF**. The browser's print layout uses A4 sheets, **four 90 × 140 mm cards per page**, arranged 2 × 2. Disable browser-generated headers and footers, select scale 100%, and avoid “fit to page”. Cards use only black ink and white paper and do not require downloaded fonts.
+**Print size still requires confirmation on the user's actual printer; browser/PDF scaling may vary.**
 
-## Files
+## Repository
 
-- src/data.js — single source of truth for cards, monsters, rooms, heroes and potion effects
-- src/art.js — spare, hand-drawn-style SVG linework for every card
-- src/card-view.js — shared, HTML-escaped renderer and explicit print-sheet pagination
-- styles/phase1.css — adaptive large-card layout and 90 × 140 mm A4 print contracts
-- tests/presentation.test.mjs — lightweight markup and print-sheet tests
-- tests/visual.spec.mjs — optional headless Chromium visual geometry tests
-- src/engine.js — isolated, deterministic seeded run engine
-- src/app.js — DOM-based interface, catalogue, game and field notes
-- styles.css — responsive layout, 1980s xerox zine style and print rules
-- tests/ — native Node tests
+- \`src/data.js\` — all physical card definitions, copies and monster behaviours
+- \`src/engine.js\` — seeded, presentation-agnostic, two-action roguelike engine
+- \`src/app.js\` — browser play, discovery map, inventory/identifications and printable catalogue
+- \`src/card-view.js\` — shared pure card renderer and four-card A4 pagination
+- \`src/art.js\` — original simple SVG pen artwork
+- \`styles.css\`, \`styles/phase1.css\`, \`styles/phase2.css\` — monochrome style, responsive layout and print rules
+- \`field-guide.html\` — standalone rules and potion identification slips
+- \`playmat.html\` — writable dungeon and character sheets
+- \`tests/\` — native unit tests and optional Playwright browser tests
 
 ## Scope and limitations
 
-This release is a **vertical slice**, not a complete NetHack adaptation or final print-and-play game. The dungeon is a linear six-floor path, not a spatial dungeon with branches. Shops, equipment slots, real curses/blessings, corpse eating, prayer reputation, pets as independent agents, procedural map connections and a full physical tabletop ruleset are **not yet implemented**. Cards in the gallery are design specimens; some describe future systems not available in this playable slice.
+The prototype is solo and follows a fixed topology with randomly revealed rooms, monsters, objects and events. It does not yet have true spatial line-of-sight, AI pathfinding, priest shops, curses, corpse eating, a full item physics engine, or persistent bones levels. Some exploratory card effects may be rebalanced later. Session length and game economy are not validated by timed physical playtests. The system is not an official NetHack product.
 
-**Design direction:** Large readable typography; few marks per illustration; black ink; photocopy textures kept away from text; consistent top strips and action language; interesting interactions with very little rules overhead.
-
-This is an original roguelike card-game prototype and not an official NetHack product.
-
-## Phase 1 changes
-
-- Cards now retain a readable width across desktop/tablet/phone breakpoints instead of squeezing into narrow columns.
-- The mobile play screen shows health, hunger, floor, encounter, and available actions before the long session log.
-- Potion identifications remain visible in a notebook even after the last bottle of that type is consumed.
-- Starting another run asks for confirmation before deleting a living run.
-- Field Notes match the engine: newly revealed monsters attack after the player's **next** action.
-- Browsers print explicit four-card sheets rather than relying on CSS grid auto-pagination.
-- Screen and print modes share a pure, separately testable card renderer.
-
-See [the Phase 1 acceptance checklist](docs/phase-1-audit.md) for verification and known limitations.
+See [Phase 2 implementation and audit](docs/phase-2-audit.md).

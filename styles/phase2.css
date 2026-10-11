@@ -1,0 +1,91 @@
+/* Phase 2: physical-first play surface, shared deck map and readable controls. */
+.expedition-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, .78fr);
+  align-items: start;
+  gap: clamp(18px,2.5vw,35px);
+}
+.expedition-main,.expedition-side { min-width:0; display:flex; flex-direction:column; gap:24px; }
+.expedition-main .command-panel { margin:0; }
+.expedition-main .encounter__cards {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,26px);
+  max-width:800px;
+}
+.expedition-main .encounter__cards > div { min-width:0; }
+.expedition-main .game-card { max-width:390px; }
+.expedition-main .empty-encounter { aspect-ratio:9/14; }
+.expedition-main .panel-label {margin-bottom:15px;}
+.expedition-side > section {margin:0;}
+.expedition-side .notebook {background:var(--white);}
+.expedition-side .notebook li {border-bottom:1px dotted #aaa;padding:9px 0;}
+.expedition-side .notebook ol {padding:0 0 0 16px;}
+.command-status {display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center;
+  border-bottom:2px dashed var(--ink);padding-bottom:14px;margin-bottom:15px;}
+.command-status strong {font:900 24px/1 Impact,"Arial Black",sans-serif;}
+.command-status span {font-size:11px;font-weight:900;}
+.roll-report {font-size:12px;line-height:1.5;font-weight:900;padding:8px 10px;border:2px solid var(--ink);margin-bottom:12px;}
+.behaviour-report {font-size:11px;line-height:1.4;margin:8px 0 15px;}
+.command-panel .actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+.command-panel .actions .action {min-height:48px;}
+.command-panel .actions .action[data-act="end"] {background:#dfdcd3;grid-column:1/-1;}
+.expedition-side .character-head {min-width:0;}
+.expedition-side .character-head div {min-width:0;}
+.expedition-side .character-head span {overflow-wrap:anywhere;}
+.map-panel {
+  border:3px solid var(--ink);
+  background:var(--white);padding:20px;
+}
+.map-panel .help-text {font-size:11px;line-height:1.65;margin:0 0 13px;}
+.map-rows {list-style:none;margin:0;padding:0;display:grid;gap:4px;}
+.map-row {display:grid;grid-template-columns:1fr .82fr;gap:8px;align-items:stretch;}
+.map-cell {
+  display:flex;align-items:center;gap:8px;padding:8px 7px;
+  min-width:0;min-height:30px;background:#e8e5dd;border:1px dashed #9b9993;
+  font-size:11px;line-height:1.3;
+}
+.map-cell b {min-width:29px;text-align:center;border-right:1px solid currentColor;padding-right:5px;}
+.map-cell small {font-size:10px;overflow-wrap:anywhere;}
+.map-cell--known {background:var(--white);border:1px solid var(--ink);}
+.map-cell--active {background:var(--ink);color:var(--white);border:1px solid var(--ink);}
+.map-cell--void {background:transparent;border:0;color:#999;justify-content:center;}
+.inventory-list {padding:0;list-style:none;margin:0;}
+.equipped {margin-top:20px;}
+.equipped .panel-label {margin-bottom:8px;}
+.equipped > div:not(.panel-label) {display:flex;justify-content:space-between;gap:9px;
+  font-size:11px;padding:7px 0;border-bottom:1px dotted var(--ink);}
+.gallery-tools {align-items:center;}
+.kit-toggle {display:flex;gap:4px;}
+.print-instructions {margin:12px 0 27px;font-size:12px;line-height:1.7;}
+.print-instructions a {font-weight:900;text-underline-offset:3px;}
+.rules-cta {display:flex;gap:12px;flex-wrap:wrap;margin-bottom:30px;}
+.rules-cta .outline-button {width:auto;display:inline-block;text-decoration:none;}
+.mobile-hud {display:flex;margin-top:0;}
+@media (max-width:1180px) {
+  .expedition-layout {grid-template-columns:minmax(0,1fr);}
+  .expedition-side {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;}
+  .expedition-side .map-panel {grid-row:span 2;}
+  .expedition-main .encounter__cards {max-width:800px;}
+}
+@media (max-width:760px) {
+  .expedition-side {grid-template-columns:minmax(0,1fr);}
+  .expedition-side .map-panel {grid-row:auto;}
+  .command-panel .actions {grid-template-columns:minmax(0,1fr);}
+  .expedition-main .encounter__cards {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .expedition-main .game-card__picture {min-height:60px;}
+}
+@media (max-width:630px) {
+  .expedition-main .encounter__cards {grid-template-columns:minmax(0,1fr);max-width:375px;margin:0 auto;}
+  .expedition-main .encounter__cards .game-card {max-width:375px;}
+  .expedition-main .encounter__cards .empty-encounter {display:none;}
+  .expedition-side .stat-panel {padding:16px;}
+  .map-cell small {font-size:10px;}
+  .kit-toggle {width:100%;margin:8px 0;}
+  .kit-toggle .filter {flex:1;}
+  .rules-cta .outline-button {width:100%;}
+}
+@media print {
+  .print-instructions,.rules-cta {display:none!important;}
+  .expedition-layout,.mobile-hud {display:none!important;}
+  .print-sheet {break-inside:avoid;}
+  .print-sheet .game-card {box-shadow:none!important;}
+}
