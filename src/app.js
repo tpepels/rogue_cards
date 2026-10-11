@@ -9,7 +9,7 @@ import {
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v6";
+const SAVE_KEY="rogue-cards-v7";
 const BONES_KEY="rogue-cards-bones-v5";
 let view="play";
 let filter="all";
@@ -159,7 +159,7 @@ function galleryView() {
 function rulesView() {
   return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
     "Phase 5: autonomous pets, corpses, intrinsics, ecology, prayer and bones layered onto the Phase 2–4 dungeon and magical systems.")+
-    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a><a class="outline-button" href="./living-guide.html">PETS / CORPSES / GODS ↗</a><a class="outline-button" href="./survival-guide.html">TACTICAL SURVIVAL ↗</a></div>'+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a><a class="outline-button" href="./living-guide.html">PETS / CORPSES / GODS ↗</a><a class="outline-button" href="./survival-guide.html">TACTICAL SURVIVAL ↗</a><a class="outline-button" href="./print-and-play.html">PRINT AND PLAY ↗</a></div>'+
     '<div class="rules-grid">'+
     '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Room cards show their SIDE and LINK exits. SIDE opens a side chamber; adjacent explored LINK chambers connect into occasional loops. Three regions use separate Room piles.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+

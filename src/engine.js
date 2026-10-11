@@ -6,7 +6,7 @@ import { MAGIC_TYPES } from "./magic-data.js";
 import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName,propertiesOf } from "./magic.js";
 import {initEcology,corpseFor,eatCorpse,pray,petTurn,bonesInRoom,buildBones,ECOLOGY} from "./ecology.js";
 
-export const VERSION = 6;
+export const VERSION = 7;
 export const LAST_FLOOR = 10;
 export const MAX_ACTIONS = 2;
 export const MAX_HUNGER = 24;

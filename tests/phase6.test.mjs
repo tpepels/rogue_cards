@@ -14,8 +14,8 @@ const doAction=(s,id,arg=null)=>{
 };
 test("Phase 6 saves and physical tactical cards are defined",()=>{
  const s=startRun("delver",10);
- assert.equal(VERSION,6);
- assert.equal(s.version,6);
+ assert.equal(VERSION,7);
+ assert.equal(s.version,7);
  assert.equal(PHASE6_CARDS.length,8);
  assert.equal(printDeck("tactic").length,8);
  assert.deepEqual(s.tactics,{guard:0,feint:0,used:false});

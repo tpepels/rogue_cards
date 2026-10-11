@@ -7,7 +7,7 @@ const execute=(s,id,arg=null)=>{const n=act(s,id,arg);assert.notStrictEqual(n,s,
 
 test("v5 setups include physical ecology state and do not accept v4 saves",()=>{
  const s=startRun("delver",123);
- assert.equal(s.version,6);
+ assert.equal(s.version,7);
  assert.ok(validateSave(s));
  assert.deepEqual(s.intrinsics,[]);
  assert.equal(s.prayer.cooldown,0);
