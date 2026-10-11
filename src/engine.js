@@ -7,7 +7,7 @@ const find = (cards, id) => cards.find(card => card.id === id);
 const log = (state, message) => { state.log.unshift(message); state.log.length = Math.min(state.log.length, 14); };
 const rand = (state, limit) => {
   state.rng = (Math.imul(1664525, state.rng) + 1013904223) >>> 0;
-  return state.rng % limit;
+  return Math.floor((state.rng / 4294967296) * limit);
 };
 const choice = (state, array) => array[rand(state, array.length)];
 export const currentRoom = state => state.rooms[state.position];
