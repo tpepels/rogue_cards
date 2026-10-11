@@ -205,13 +205,22 @@ test("starting items are reserved from the finite printed Object pile",()=>{
     assert.equal(s.inventory.length,size);
   }
 });
+function readyForMiddleRegion(seed) {
+  const s=startRun("delver",seed);
+  for(let i=1;i<=3;i++){
+    s.rooms[String(i)]={id:"corridor",title:"Crooked Corridor",region:"UPPER",
+      exits:["SIDE","LINK"],monster:null,loot:null,used:false,visited:true};
+  }
+  s.position="3";
+  return s;
+}
 test("trap damage is fatal before a later event could heal the hero",()=>{
   let tested=0;
   for(let seed=1;seed<=1200;seed++){
-    const s=startRun("delver",seed);
+    const s=readyForMiddleRegion(seed);
     s.hp=1;
-    const after=action(s,"explore","1");
-    if(after.rooms["1"].id==="trap" && !after.inventory.some(x=>x.kind==="key")) {
+    const after=action(s,"explore","4");
+    if(after.rooms["4"].id==="trap" && !after.inventory.some(x=>x.kind==="key")) {
       assert.equal(after.hp,0);
       assert.equal(after.phase,"dead");
       assert.ok(!after.log[0]?.startsWith("Event:"),"An event revived the hero");
@@ -224,10 +233,10 @@ test("trap damage is fatal before a later event could heal the hero",()=>{
 test("fountain potion comes from the printed Object supply",()=>{
   let checked=0;
   for(let seed=1;seed<=1300;seed++){
-    let s=startRun("delver",seed);
-    s=action(s,"explore","1");
-    if(s.rooms["1"].id!=="fountain") continue;
-    s.rooms["1"].monster=null;
+    let s=readyForMiddleRegion(seed);
+    s=action(s,"explore","4");
+    if(s.rooms["4"].id!=="fountain") continue;
+    s.rooms["4"].monster=null;
     const before=s.decks.loot.draw.length;
     const held=s.inventory.length;
     s=action(s,"fountain");
