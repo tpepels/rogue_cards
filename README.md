@@ -37,6 +37,12 @@ The production print deck now renders illustration PNGs and placeholder artwork 
 
 The gritty treatment deliberately leaves HP, ATK/DEF/WIT, monster d6 tables, item effects and rule text untouched. The original 90 × 130 mm cards and four-per-A4 print sheets remain in force. CI checks the illustration filter in preview and print media, verifies that effects stay unfiltered, and checks the complete physical deck for clipping. This is a visual-composition milestone, **not** a claim of production-grade print proofing or new art for every card. Readability and ink density still need an actual paper proof.
 
+### Collage construction (post-Phase 3)
+
+The current **canonical** printed cards now use one physical assemblage rather than vertically stacked UI boxes. `src/tabletop-view.js` groups each illustration plate, left inset Hero/Monster stat rail, and printed effect into a `tt-collage`; the ivory title and small footer are independently pasted over the same surface. `styles/tabletop.css` deliberately overlaps these layers, with deterministic four-plate offsets instead of runtime randomness. The Flooded Chamber has an offset right-hand note on the picture instead of a docked UI sidebar. Images stay actual image elements under `#tt-xerox-ink` so they are meaningful physical scene art, not CSS background fills.
+
+The rule paper remains solid and unfiltered. Long Monster behaviour/corpse passages do not sit directly on imagery, and their readability is validated by both browser and A4 print clipping tests. Art, type, text, deck quantities, mechanics and the one-A4 core rules remain unchanged. The collage is a **presentation change**, not a new object/card taxonomy.
+
 ## Physical components and source of truth
 
 `src/tabletop-data.js` defines the entire tabletop catalogue and real print quantities. `src/tabletop-view.js` renders those cards (90 × 130 mm) in the gallery and four-up A4 print sheets. `src/tabletop-app.js` is only a browsing/printing tool. `rules.html` is the **sole shared rules sheet**. `print-and-play.html` is optional pre-game preparation, **not** a second rulebook.
