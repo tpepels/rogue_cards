@@ -91,16 +91,20 @@ export function cardMarkup(card){
  const front='<header class="tt-head"><span class="tt-masthead">ROGUE CARDS</span><strong class="tt-type">'+esc(card.type.toUpperCase())+'</strong></header>';
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
  let middle;
+ // The print plate and paste-on rule paper share one overlapping collage plane.
+ // Neither is a browser background: the art is a genuine illustrated card layer.
  if(layout==="room-split"){
-   // Identical text is printed *beside* the room illustration instead of repeated below it.
-   middle='<div class="tt-visual tt-visual--split">'+
-    visual(card)+content(card,{sidebar:true})+stage+'</div>';
+   middle='<div class="tt-collage" aria-label="Illustration with pasted room instructions">'+
+    '<div class="tt-visual tt-visual--split">'+
+    visual(card)+content(card,{sidebar:true})+stage+'</div></div>';
  }else{
-   middle='<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+content(card);
+   middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
+     '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
+     content(card)+'</div>';
  }
  return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
-  '" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-status="'+(asset?'original':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   front+label+middle+
