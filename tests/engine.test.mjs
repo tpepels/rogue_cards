@@ -22,7 +22,7 @@ test("reproducible setup and randomized potion mapping",()=>{
   for(const hero of HEROES){
     const s=startRun(hero.id,304);
     assert.deepEqual(s,startRun(hero.id,304));
-    assert.equal(s.version,6);
+    assert.equal(s.version,7);
     assert.equal(s.position,"0");
     assert.equal(s.hunger,18);
     assert.equal(s.hp,hero.hp);
