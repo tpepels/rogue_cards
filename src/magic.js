@@ -11,7 +11,7 @@ export const MAGIC_PROPERTIES = Object.freeze({
 export const propertiesOf = id=>MAGIC_PROPERTIES[id]||[];
 export const magicStock=()=>Object.entries(MAGIC_PRINT_COPIES).flatMap(([key,count])=>{
   const [kind,id]=key.split(":");
-  return Array.from({length:count},()=>({kind,id,charges:kind==="wand"?3:undefined,blessing:"uncursed"}));
+  return Array.from({length:count},(_,i)=>({kind,id,charges:kind==="wand"?3:undefined,blessing:kind==="ring"?["uncursed","blessed","cursed"][i%3]:"uncursed"}));
 });
 export function setupMagic(state,shuffle) {
   state.magicAssignments={};state.magicKnown={};
