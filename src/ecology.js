@@ -18,7 +18,7 @@ export const INTRINSICS=[
 ];
 export const ECOLOGY_CARDS=[
  {id:"corpse",type:"ecology",title:"Monster Corpse",art:"bones",rule:"EAT corpse: +food hunger; roll d6 for illness and possible intrinsic. Record species and freshness.",flavor:"Something is always hungry."},
- {id:"pet",type:"ecology",title:"Faithful Dog / Instincts",art:"dog",rule:"At each turn end roll d6: 1–2 roam; 3–4 sniff; 5–6 attack the present monster for 1 damage. Pet hunger falls 1 every 3 turns.",flavor:"Not merely an extra sword."},
+ {id:"pet",type:"ecology",title:"Faithful Dog / Instincts",art:"dog",rule:"Turn end: if hungry, eat corpse; else d6: 1–2 roam, 3–4 sniff, 5–6 bite for 1 damage. Hunger -1 every 3 turns.",flavor:"Not merely an extra sword."},
  {id:"prayer",type:"ecology",title:"Prayer and Favour",art:"altar",rule:"PRAY anywhere. Roll d6 + favour: 4+ heal 3 HP; otherwise lose 2 hunger. Cooldown: 6 turns.",flavor:"All gods demand patience."},
  {id:"bones",type:"ecology",title:"Bones of an Adventurer",art:"bones",rule:"Once per new run, on the first eligible room at depth 3+, roll d6: 5–6 find the last dead hero's lost item and record.",flavor:"The dungeon remembers."}
 ];
