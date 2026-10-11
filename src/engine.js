@@ -190,7 +190,7 @@ function openRoom(state, target) {
     template=find(ROOMS,id);
   }
   const room={...template,nodeId:target,depth,branch,region:regionAt(depth),used:false,
-    monster:null,loot:null,bones:null,corpse:null,visited:true};
+    monster:null,loot:null,bones:null,corpse:null,puzzle:null,bargain:null,visited:true};
   if (isVault) room.monster=spawnMonster(find(MONSTERS,"sentinel"));
   else {
     const encounterRoll=d6(state);
@@ -202,7 +202,16 @@ function openRoom(state, target) {
     }
     const lootRoll=d6(state);
     if (lootRoll <= (branch?5:4)) room.loot=draw(state,state.decks.loot);
+    if(room.loot && ["sword","mail"].includes(room.loot.kind)){
+      const enchantRoll=d6(state);
+      room.loot.enchant=enchantRoll===6?2:enchantRoll===1?-1:1;
+      room.loot.cursed=enchantRoll===1;
+    }
+    if(["crypt","nest","flood"].includes(room.id))room.puzzle={solved:false};
+    if(["shop","altar"].includes(room.id))room.bargain={used:false};
   }
+  state.pressure=Math.max(state.pressure,Math.floor(depth/3)+(branch?1:0));
+  if(room.monster && depth>=7){room.monster.hp++;room.monster.maxHp++;}
   if(room.monster && ECOLOGY[room.monster.id]?.habitat===room.terrain){
     room.monster.hp++;room.monster.maxHp++;room.monster.habitatBonus=true;
   }
@@ -248,7 +257,6 @@ function monsterAttack(state, monster, modifier=0) {
   const attack=rollAttack(state,monster.attack,heroDefense(state),monster.title,modifier);
   if(!attack.hit) return;
   let damage=attack.damage;
-  if(state.tactics.guard)state.tactics.guard=0;
   if(state.status.ward>0){state.status.ward--;damage=Math.max(0,damage-2);log(state,"Ward absorbs 2 damage.");}
   if(monster.id==="goblin" && !monster.ambushed) { damage++;monster.ambushed=true; }
   state.hp-=damage;
@@ -380,8 +388,8 @@ export function availableActions(state) {
     if(thing.kind==="corpse")actions.push({id:"eat-corpse",index,label:"Eat "+thing.id+" corpse"});
     if(thing.kind==="ration"&&state.pet.active&&state.pet.hunger<9)actions.push({id:"feed-pet",index,label:"Feed dog ration"});
     if(thing.kind==="charm") actions.push({id:"consume",index,label:"Use lucky bone"});
-    if(["sword","mail","dog"].includes(thing.kind))
-      actions.push({id:"equip",index,label:"Equip "+itemTitle(thing)});
+    if(["sword","mail","dog"].includes(thing.kind) && !(thing.kind==="sword"&&state.equipped.weapon?.cursed) && !(thing.kind==="mail"&&state.equipped.armour?.cursed))
+      actions.push({id:"equip",index,label:"Equip "+itemTitle(thing)+(thing.enchant===2?" (+2)":thing.cursed?" (cursed)":"")});
   });
   actions.push({id:"end",label:"End turn (monster reacts)"});
   return actions;
@@ -421,7 +429,7 @@ export function act(previous, id, argument=null) {
     if(mon.hp<=0) releaseMonster(state,mon);
   }
   if(id==="solve"){const i=state.inventory.findIndex(x=>x.kind==="key");if(i>=0)state.inventory.splice(i,1);else state.hunger=Math.max(0,state.hunger-2);room.puzzle.solved=true;log(state,"Obstacle solved; a passage opens.");}
-  if(id==="bargain"){state.hp-=2;room.bargain.used=true;const gift=state.decks.loot.draw.pop();if(gift)state.inventory.push(gift);log(state,"A costly bargain: -2 HP"+(gift?", gained "+itemTitle(gift):", no objects remain")+".");}
+  if(id==="bargain"){state.hp-=2;room.bargain.used=true;state.bargains++;const gift=state.decks.loot.draw.pop();if(gift)state.inventory.push(gift);log(state,"A costly bargain: -2 HP"+(gift?", gained "+itemTitle(gift):", no objects remain")+".");}
   if(id==="take") {state.inventory.push(room.loot);log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
   if(id==="take-corpse"){state.inventory.push(room.corpse);log(state,"Collected "+room.corpse.id+" corpse.");room.corpse=null;}
   if(id==="take-bones"){state.inventory.push(room.bones);log(state,"Recovered lost equipment.");room.bones=null;}
@@ -475,7 +483,7 @@ export function act(previous, id, argument=null) {
       state.inventory.splice(argument,1);
       const slot=thing.kind==="sword"?"weapon":thing.kind==="mail"?"armour":"companion";
       const old=state.equipped[slot];
-      if(old && old!==true){if(old.cursed){state.inventory.splice(argument,0,thing);log(state,"Cursed equipment cannot be removed.");breakEquip: {} }else state.inventory.push(typeof old==="object"?{kind:old.kind,id:old.kind,enchant:old.enchant,cursed:old.cursed}:item(old));}
+      if(old && old!==true)state.inventory.push(typeof old==="object"?{kind:old.kind,id:old.kind,enchant:old.enchant,cursed:old.cursed}:item(old));
       if(slot==="companion" && old) state.inventory.push(item("dog"));
       state.equipped[slot]=slot==="companion"?true:slot==="weapon"||slot==="armour"?{kind:thing.kind,enchant:thing.enchant??1,cursed:!!thing.cursed}:thing.kind;
       if(slot==="companion"){state.pet.active=true;state.pet.alive=true;state.pet.position=state.position;state.pet.hunger=9;}
