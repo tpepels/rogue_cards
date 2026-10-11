@@ -5,7 +5,7 @@ import {
 import { MAGIC_TYPES } from "./magic-data.js";
 import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName,propertiesOf } from "./magic.js";
 
-export const VERSION = 3;
+export const VERSION = 4;
 export const LAST_FLOOR = 10;
 export const MAX_ACTIONS = 2;
 export const MAX_HUNGER = 24;
@@ -75,16 +75,34 @@ export function itemTitle(thing) {
 export function knownIdentity(state, appearanceId) {
   return find(EFFECTS, state.known[appearanceId])?.name || null;
 }
-export function connectedLocations(node) {
+export function connectedLocations(node, state=null) {
   const depth = Number.parseInt(node, 10);
   if (!Number.isInteger(depth) || depth < 0 || depth > LAST_FLOOR) return [];
-  if (String(node).endsWith("b")) return [String(depth)];
+  if (String(node).endsWith("b")) {
+    const links=[String(depth)];
+    if(state){
+      const room=state.rooms[node];
+      for(const n of [depth-1,depth+1]){
+        const other=state.rooms[n+"b"];
+        if(n>0 && n<LAST_FLOOR && room?.exits?.includes("LINK") && other?.exits?.includes("LINK"))
+          links.push(n+"b");
+      }
+    }
+    return links;
+  }
   const links=[];
   if (depth>0) links.push(String(depth-1));
   if (depth<LAST_FLOOR) links.push(String(depth+1));
-  if (depth>0 && depth<LAST_FLOOR) links.push(depth+"b");
+  if (depth>0 && depth<LAST_FLOOR && (!state || state.rooms[String(depth)]?.exits?.includes("SIDE")))
+    links.push(depth+"b");
   return links;
 }
+export const REGIONS = Object.freeze([
+  {name:"UPPER",first:1,last:3,label:"The Upper Works"},
+  {name:"MIDDLE",first:4,last:6,label:"The Flooded Hollows"},
+  {name:"DEEP",first:7,last:9,label:"The Black Crypts"}
+]);
+export const regionAt = depth => REGIONS.find(r=>depth>=r.first&&depth<=r.last)?.name||"BOUNDARY";
 export const nodeDepth = id => Number.parseInt(id, 10);
 export const isBranch = id => id.endsWith("b");
 export const nodeLabel = id => id === "0" ? "Entrance" : isBranch(id) ? "Side "+nodeDepth(id) : "Depth "+nodeDepth(id);
@@ -101,11 +119,14 @@ export function startRun(heroId = "delver", seed = Date.now()) {
     decks:{}, lastBehaviour:null, lastRoll:null, log:[]
   };
   s.rooms["0"] = {...ENTRANCE, nodeId:"0", depth:0, branch:false,
-    used:false, monster:null, loot:null, visited:true};
+    used:false, monster:null, loot:null, visited:true,exits:["FORWARD"]};
   const effects=shuffle(s, EFFECTS.map(card=>card.id));
   APPEARANCES.forEach((card,i)=>{s.assignments[card.id]=effects[i];});
   setupMagic(s,shuffle);
-  s.decks.rooms = deck(s, stock("room", ROOMS));
+  // Physical setup: shuffle each region's printed room stack separately.
+  // Retain a single supply object for saves and depletion checks.
+  const roomIds=shuffle(s,stock("room",ROOMS));
+  s.decks.rooms={draw:roomIds,discard:[]};
   s.decks.monsters = deck(s, stock("monster", MONSTERS.filter(x=>x.id!=="sentinel")));
   s.decks.loot = deck(s, lootStock());
   s.decks.events = deck(s, stock("event", EVENTS));
@@ -158,15 +179,19 @@ function openRoom(state, target) {
   let template;
   if (isVault) template=VAULT;
   else {
-    const id=draw(state,state.decks.rooms);
-    template=find(ROOMS,id) || ROOMS[0];
+    const region=regionAt(depth);
+    const index=state.decks.rooms.draw.findLastIndex(id=>find(ROOMS,id)?.region===region);
+    if(index<0) throw Error("Room supply exhausted in "+region);
+    const [id]=state.decks.rooms.draw.splice(index,1);
+    template=find(ROOMS,id);
   }
-  const room={...template,nodeId:target,depth,branch,used:false,
+  const room={...template,nodeId:target,depth,branch,region:regionAt(depth),used:false,
     monster:null,loot:null,visited:true};
   if (isVault) room.monster=spawnMonster(find(MONSTERS,"sentinel"));
   else {
     const encounterRoll=d6(state);
-    const threshold=branch?PHYSICAL_RULES.encounterBranch:(depth>=7?5:PHYSICAL_RULES.encounterSpine);
+    const baseline=regionAt(depth)==="UPPER"?3:regionAt(depth)==="MIDDLE"?4:5;
+    const threshold=branch?Math.max(1,baseline-1):baseline;
     if (encounterRoll <= threshold) {
       const enemyId=draw(state,state.decks.monsters);
       if (enemyId) room.monster=spawnMonster(find(MONSTERS,enemyId));
@@ -176,7 +201,7 @@ function openRoom(state, target) {
   }
   state.rooms[target]=room;
   state.position=target;
-  log(state,nodeLabel(target)+": "+room.title+(room.monster?". "+room.monster.title+" appears.":"."));
+  log(state,room.region+" / "+nodeLabel(target)+": "+room.title+(room.monster?". "+room.monster.title+" appears.":"."));
   roomEffect(state,room);
   checkDeath(state); // Fatal traps end the run before a beneficial event can occur.
   if (state.phase!=="dead" && !isVault && d6(state)===6) eventEffect(state);
@@ -306,12 +331,13 @@ export function availableActions(state) {
     if(state.position===String(LAST_FLOOR)&&!state.hasAmulet)
       actions.push({id:"claim",label:"Claim the Amulet"});
   }
-  const neighbours=connectedLocations(state.position);
+  const neighbours=connectedLocations(state.position,state);
   for(const target of neighbours) {
     if(monster) {
       // Retreat is possible through an already explored passage toward the surface.
-      const retreat=state.rooms[target] && !isBranch(target) &&
-        (isBranch(state.position)||nodeDepth(target)<nodeDepth(state.position));
+      const retreat=state.rooms[target] &&
+        (isBranch(state.position)?nodeDepth(target)<=nodeDepth(state.position):
+         !isBranch(target)&&nodeDepth(target)<nodeDepth(state.position));
       if(retreat) actions.push({id:"travel",target,label:"Retreat to "+nodeLabel(target)});
     } else if(state.rooms[target]) {
       actions.push({id:"travel",target,label:"Move to "+nodeLabel(target)});
@@ -381,7 +407,7 @@ export function act(previous, id, argument=null) {
   if(["read","zap","wear"].includes(id)) {
     magicAction(state,id,argument,{
       monster:()=>currentMonster(state),room:()=>currentRoom(state),
-      neighbours:()=>connectedLocations(state.position),
+      neighbours:()=>connectedLocations(state.position,state),
       roomTitle:roomId=>find(ROOMS,roomId)?.title,
       log:line=>log(state,line),
       hurt:(mon,damage,property)=>{mon.hp-=damage;log(state,property+" deals "+damage+" damage.");if(mon.hp<=0)releaseMonster(state,mon);}
@@ -424,7 +450,7 @@ export function validateSave(s) {
       !["descending","ascending","won","dead"].includes(s.phase)) return false;
   if (!s.rooms || !s.rooms[s.position] || !Array.isArray(s.inventory) ||
       !s.equipped || !s.decks?.behaviour || !s.decks?.loot ||
-      !s.assignments || !s.known || !s.magicAssignments || !s.magicKnown || s.equipped.ring===undefined) return false;
+      !s.assignments || !s.known || !s.rooms["0"]?.exits || !s.magicAssignments || !s.magicKnown || s.equipped.ring===undefined) return false;
   if (!Number.isInteger(s.actionsLeft) || s.actionsLeft<1 || s.actionsLeft>MAX_ACTIONS) return false;
   if (!Array.isArray(s.log) || !Number.isInteger(s.turn)) return false;
   return true;
