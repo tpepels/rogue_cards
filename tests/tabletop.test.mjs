@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {CATALOGUE,PRINT_DECK,HEROES,ROOMS,MONSTERS,VAULT,WARDEN,POTIONS,ITEMS,CARD_WIDTH_MM,CARD_HEIGHT_MM,printDeck} from "../src/tabletop-data.js";
-import {cardMarkup,printSheets,CARDS_PER_SHEET} from "../src/tabletop-view.js";
+import {cardMarkup,printSheets,CARDS_PER_SHEET,esc} from "../src/tabletop-view.js";
 import {illustration} from "../src/art.js";
 test("entire printable game is physical-first and uses no browser engine",()=>{
  const index=readFileSync("index.html","utf8");
@@ -70,7 +70,7 @@ test("all printed copies are represented exactly once with distinct card numberi
   const html=cardMarkup(card);
   assert.match(html,/tt-card/);
   assert.match(html,/tt-footer/);
-  assert.ok(html.includes(card.title),card.id);
+  assert.ok(html.includes(esc(card.title)),card.id);
   assert.match(illustration(card.art),/^<svg/);
  }
 });
