@@ -59,7 +59,7 @@ export const MAGIC_IDENTITIES = Object.entries(MAGIC).flatMap(([type,family])=>f
  family:type,identity:effect.id,property:effect.property
 })));
 export const MAGIC_PRINT_COPIES = Object.fromEntries(
-  MAGICAL_CARDS.map(c=>[c.type+":"+c.id,c.type==="ring"?2:3])
+  MAGICAL_CARDS.map(c=>[c.type+":"+c.id,3])
 );
 export const magicDefinitions=(kind)=>MAGIC[kind]?.effects||[];
 export const magicAppearance=(kind,id)=>MAGICAL_CARDS.find(c=>c.type===kind&&c.id===id);
