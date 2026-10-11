@@ -1,4 +1,4 @@
-# ROGUE CARDS / ISSUE 003
+# ROGUE CARDS / ISSUE 004
 
 **Four kinds of unidentified magic. Two actions. One life.**
 
@@ -19,7 +19,7 @@ Rogue Cards is a solo-first, physical-first roguelike card-game prototype. All p
 
 ## Phase 2 game
 
-- **A hybrid dungeon:** Ten main depths (0–10) and an optional side chamber at depths 1–9. Side chambers connect only to their parent; explored rooms and wounded monsters persist.
+- **A hybrid dungeon:** Ten main depths (0–10), exit-gated side chambers, and loops between adjacent explored side rooms bearing LINK exits; explored rooms and wounded monsters persist.
 - **Two actions per turn:** Move, reveal, attack, eat, use or equip an item, take loot, pray, claim the Amulet; end early if needed. At the end of the turn, lose one hunger and activate the monster.
 - **Dice-based combat:** Roll a single d6 + attack against 4 + defence. A natural 1 misses, a natural 6 hits critically for three damage, and an ordinary hit deals two.
 - **Shared ten-card monster behaviour deck:** Strike ×3, Lunge ×2, Guard ×2, Frenzy, Drain, Recover. Shuffle its discards once the pile empties.
@@ -75,6 +75,12 @@ These checks cover deterministic deck setup, physical map topology, turns, dice,
 
 ## Scope and limitations
 
-The prototype is solo and follows a fixed topology with randomly revealed rooms, monsters, objects and events. It does not yet have true spatial line-of-sight, AI pathfinding, priest shops, curses, corpse eating, a full item physics engine, or persistent bones levels. Some exploratory card effects may be rebalanced later. Session length and game economy are not validated by timed physical playtests. The system is not an official NetHack product.
+The prototype is solo and follows a main-route topology with printed SIDE and LINK exits, three themed room piles, and randomly revealed rooms, monsters, objects and events. It does not yet have true spatial line-of-sight, AI pathfinding, priest shops, curses, corpse eating, a full item physics engine, or persistent bones levels. Some exploratory card effects may be rebalanced later. Session length and game economy are not validated by timed physical playtests. The system is not an official NetHack product.
 
 See [Phase 2 implementation](docs/phase-2-audit.md) and [Phase 3 implementation](docs/phase-3-audit.md).
+
+## Phase 4 — Procedural dungeon
+
+The Upper Works (depths 1–3), Flooded Hollows (4–6) and Black Crypts (7–9) each use their own printed Room pile. Reveal the next matching room **only on entry**. All main rooms connect forward and back; printed SIDE exits open optional rooms and LINK on two adjacent explored side rooms joins them in a loop. Monsters remain stationary. The browser map and physical map sheet use these same rules.
+
+Older v3 saves remain untouched. New Phase 4 runs use save key `rogue-cards-v4`.

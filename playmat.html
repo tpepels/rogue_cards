@@ -41,9 +41,9 @@ footer{border-top:2px solid #111;margin-top:20px;display:flex;justify-content:sp
 <section class="paper">
 <div class="issue">RC / DUNGEON SURVEY / FIELD WORK 01 / TWO-ACTION EXPEDITION</div>
 <h1>THE DESCENT MAP</h1>
-<p>Mark each main chamber as you explore. Each depth 1–9 may connect to exactly one side chamber. Revisit known locations without redrawing. Log remaining monsters and loot on this sheet before leaving.</p>
+<p>Mark each main chamber as you explore. Each main Room card has BACK and FORWARD exits. A SIDE mark permits a side chamber; LINK on two adjacent explored side rooms joins them into a loop. Revisit known rooms without redrawing. Log remaining monsters and loot on this sheet before leaving.</p>
 <table class="sheet-table map-table">
-<thead><tr><th>#</th><th>MAIN CHAMBER<br><small>Room / monster HP / unclaimed loot</small></th><th>SIDE CHAMBER<br><small>Optional / room / monster HP / loot</small></th></tr></thead>
+<thead><tr><th>#</th><th>MAIN CHAMBER<br><small>Room / monster HP / unclaimed loot</small></th><th>SIDE CHAMBER<br><small>SIDE? LINK? / room / HP / loot</small></th></tr></thead>
 <tbody>
 <tr><td>00</td><td><b>ENTRANCE</b> / safe</td><td>—</td></tr>
 <tr><td>01</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
@@ -57,8 +57,8 @@ footer{border-top:2px solid #111;margin-top:20px;display:flex;justify-content:sp
 <tr><td>09</td><td><span class="record-line"></span><span class="step"></span></td><td><span class="record-line"></span><span class="step"></span></td></tr>
 <tr><td>10</td><td class="sanctum">VAULT OF YENDOR<br>WARDEN HP: ____ / 7</td><td>—</td></tr>
 </tbody></table>
-<div class="note">MAIN ↔ SIDE: 1 MOVE. MAIN DEPTH n ↔ DEPTH n±1: 1 MOVE. NO OTHER CONNECTIONS.</div>
-<p><b>When a monster is present:</b> You may attack or use items; only retreat to a known connected room toward the entrance. Side chambers always retreat to their main room.</p>
+<div class="note">MAIN ↔ SIDE (if SIDE): 1 MOVE. MAIN n ↔ n±1: 1 MOVE. SIDE n ↔ SIDE n±1: 1 MOVE only if BOTH display LINK.</div>
+<p><b>When a monster is present:</b> You may attack or use items; only retreat to a known connected room toward the entrance. Side chambers may retreat to their main room or through an open LINK toward the surface.</p>
 <footer><span>THE MAP / SHEET ONE</span><span>DO NOT DRAW ROOMS TWICE</span></footer>
 </section>
 <section class="paper">

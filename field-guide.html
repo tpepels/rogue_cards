@@ -40,7 +40,7 @@
       <ol>
         <li>Pick one Hero. Set HP, ATK and DEF to printed values; hunger to <b>18</b> (maximum 24).</li>
         <li>Put <b>Dungeon Entrance</b> at depth 0 and <b>Vault of Yendor</b> aside for depth 10. Keep the Warden and Amulet cards beside the Vault.</li>
-        <li>Make six separate piles: random <b>Rooms</b> (all except entrance/vault), <b>Monsters</b> (except Warden), <b>Objects</b> (rations, keys, equipment and potions), <b>Events</b>, <b>Behaviours</b>, and a set-aside <b>Amulet Warden</b>.</li>
+        <li>Make separate Room piles marked <b>UPPER (depths 1–3), MIDDLE (4–6), DEEP (7–9)</b>, plus <b>Monsters</b> (except Warden), <b>Objects</b> (rations, keys, equipment and potions), <b>Events</b>, <b>Behaviours</b>, and a set-aside <b>Amulet Warden</b>.</li>
       </ol>
     </div>
     <div>
@@ -53,7 +53,7 @@
     </div>
   </div>
   <h2>02 / HOW THE DUNGEON CONNECTS</h2>
-  <p>The dungeon is a <b>single main route from depth 0 to 10</b>. Depths 1–9 each have an optional <b>side chamber</b> that connects only to that depth's main room. Draw rooms only when exploring an unknown location. Returning to a previously visited room uses one Move action; it never redraws its contents.</p>
+  <p>The dungeon has a <b>main route from depth 0 to 10</b>. A main Room card with <b>SIDE</b> opens an optional chamber at that depth. Two adjacent already explored side chambers bearing <b>LINK</b> connect, creating a shortcut or loop. Draw rooms only when entering an unknown location. Returning to a previously visited room uses one Move action; it never redraws its contents.</p>
   <p>Use the dungeon sheet to record which main and side locations exist. Keep only the active room, monster, and loot beside your Hero. Record unrecovered items and monster HP in the location boxes when leaving. <b>You may retreat from combat only toward the entrance into a known connected room.</b> A monster otherwise blocks further exploration.</p>
   <h2>03 / A TURN — EXACTLY THE SAME IN THE BROWSER</h2>
   <div class="note">
@@ -66,9 +66,9 @@
   <div class="issue">ROGUE CARDS / PHYSICAL RULES / PAGE 02</div>
   <h1>ROOMS. DICE.<br>BAD DECISIONS.</h1>
   <h2>04 / ENTERING AN UNKNOWN LOCATION</h2>
-  <p>For each new main or side location, draw the top Room card and record it on the map. Depth 10 is always the <b>Vault of Yendor</b> with the <b>Amulet Warden</b>, not a random Room. Its defeat is required before claiming the Amulet.</p>
+  <p>For each new main or side location, draw from the matching regional Room pile and record the exits and room on the map. All main rooms connect backwards and forwards; a printed SIDE mark allows a side chamber. LINK on adjacent revealed side chambers forms a shortcut. Depth 10 is always the <b>Vault of Yendor</b> with the <b>Amulet Warden</b>, not a random Room. Its defeat is required before claiming the Amulet.</p>
   <table class="table"><thead><tr><th>Step</th><th>Roll, draw, and resolve</th></tr></thead><tbody>
-    <tr><td>Encounter (d6)</td><td>Main depths 1–6: monster on 1–4. Main depths 7–9: monster on 1–5. Side rooms: monster on 1–3. Draw one random Monster on a hit.</td></tr>
+    <tr><td>Encounter (d6)</td><td>Side rooms: one less than the regional threshold. UPPER depths 1–3: main 1–3, side 1–2; MIDDLE 4–6: main 1–4, side 1–3; DEEP 7–9: main 1–5, side 1–4.</td></tr>
     <tr><td>Loot (d6)</td><td>Main rooms: object on 1–4. Side rooms: object on 1–5. Draw one Object and leave it in the room until taken.</td></tr>
     <tr><td>Room effect</td><td>Apply its entry text once. Locked Gallery consumes 1 key or 2 hunger. Tiled Passage consumes 1 key or 2 HP.</td></tr>
     <tr><td>Event (d6)</td><td>On a natural 6, draw and immediately resolve one Event, then discard it.</td></tr>
@@ -118,7 +118,7 @@
   </div>
   <h2>09 / EVENTS & RECORD KEEPING</h2>
   <p>Strange Feeling: lose 1 hunger. Bones of Someone: gain a ration from the supply, if one remains. Whispers Below: lose 2 hunger. Cold Draft: restore 1 HP. Draw events only when a new non-Vault room is revealed on an event-roll 6.</p>
-  <p>Write down a room's name, monster HP, and untouched loot when leaving it. Re-entering a room has no new room, encounter, loot, trap, or event roll. Each turn, mark action 1 or 2; resolve hunger and one behaviour, then clear the action marks.</p>
+  <p>Write down a room's name, monster HP, and untouched loot when leaving it. Monsters stay in the room where encountered and never pursue. Re-entering a room has no new room, encounter, loot, trap, or event roll. Each turn, mark action 1 or 2; resolve hunger and one behaviour, then clear the action marks.</p>
   <p class="small"><b>Phase 3:</b> Shuffle unidentified Scroll, Wand and Ring appearance cards into the Object deck as well. Each has its own matching hidden Identity pile and reference sheet. Read <a href="./magic-guide.html">The Unknown Objects ↗</a> for the fifteen properties, Ring blessings/curses, and exact READ / ZAP / WEAR actions.</p>
   <p class="small"><b>Scope:</b> This is a Phase 2 physical-first prototype. Session length and card economy require table-timed playtests. All v2 card effects should be resolved using these rules, without consulting a computer.</p>
   <div class="footer"><span>FIELD GUIDE 03 / 03</span><span>END OF INSTRUCTIONS</span></div>
