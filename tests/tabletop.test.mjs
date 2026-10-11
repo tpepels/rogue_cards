@@ -80,3 +80,27 @@ test("print hub leads only to the one canonical rules sheet",()=>{
  assert.match(hub,/four per A4/);
  assert.doesNotMatch(hub,/magic-guide\.html|field-guide\.html|living-guide\.html/);
 });
+
+test("canonical illustration-first renderer matches ten real assets, never external images",async()=>{
+ const {CARD_ART,assetPath,composition}=await import("../src/tabletop-view.js");
+ const {existsSync}=await import("node:fs");
+ assert.equal(Object.keys(CARD_ART).length,10);
+ for(const [key,file] of Object.entries(CARD_ART)){
+  const [type,id]=key.split(":");
+  const card=CATALOGUE.find(x=>x.type===type&&x.id===id);
+  assert.ok(card,"Artwork orphaned: "+key);
+  assert.ok(existsSync("assets/illustrations/"+file),"Missing uploaded art: "+file);
+  const html=cardMarkup(card);
+  assert.ok(html.includes('src="./assets/illustrations/'+file+'"'),key);
+  assert.match(html,/data-art-status="original"/);
+  assert.ok(assetPath(card)?.endsWith(file));
+  assert.ok(composition(card));
+ }
+ assert.match(cardMarkup(HEROES[0]),/tt-layout-portrait-stats/);
+ assert.match(cardMarkup(MONSTERS.find(x=>x.id==="eye")) ,/tt-layout-monster-dense/);
+ assert.match(cardMarkup(ROOMS.find(x=>x.id==="m-flood")) ,/tt-layout-room-split/);
+ assert.match(cardMarkup(ITEMS.find(x=>x.id==="key")),/tt-layout-illustration-dominant/);
+ const remaining=CATALOGUE.find(c=>!CARD_ART[c.type+":"+c.id]);
+ assert.ok(remaining);
+ assert.match(cardMarkup(remaining),/data-art-status="placeholder"/);
+});
