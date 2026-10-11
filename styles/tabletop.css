@@ -42,8 +42,6 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  border:2px solid #181512;box-shadow:3px 4px 0 #9f9686;
 }
 .tt-card:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.46;background:repeating-linear-gradient(34deg,transparent 0 13px,#00000008 13px 14px),radial-gradient(ellipse at 80% 8%,#91867634,transparent 57%)}
-.tt-head{z-index:2;display:flex;justify-content:space-between;align-items:center;gap:2mm;min-height:5.5mm;height:5.5mm;flex:none;font:bold 9px/1.1 "Courier New",monospace;letter-spacing:.06em;border-bottom:2px solid #181512}
-.tt-head strong{font-size:10px}
 .tt-title{
  z-index:4;position:absolute;top:10.2mm;left:3mm;max-width:calc(100% - 6mm);
  margin:0;padding:1.15mm 1.6mm 1.25mm;
@@ -135,13 +133,6 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
   radial-gradient(circle at 100% 100%,#20180f73 0 2.7mm,transparent 4.6mm);
  opacity:.66;
 }
-.tt-head{border-bottom:1.8px solid #20180e;letter-spacing:.015em}
-.tt-head>span:first-child{
- color:#efe6d6;background:#181511;
- padding:.45mm 1.8mm .25mm;margin-left:-.3mm;
- clip-path:polygon(0 5%,22% 0,49% 4%,71% 0,100% 5%,99% 92%,80% 100%,39% 95%,0 100%);
-}
-.tt-head strong{font-weight:900;text-shadow:.18px 0 currentColor}
 .tt-title{
  background:#eee8dc;color:#211910;
  font-family:"Courier New",Courier,monospace;
@@ -194,23 +185,6 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  --title-shift:0mm;
  --image-focus-x:center;
  --image-focus-y:48%;
-}
-.tt-card .tt-head{
- min-height:6mm;height:6mm;
- padding-right:1mm;
- border-bottom:1px solid #20170e;
-}
-.tt-masthead{
- display:block;min-width:25mm;
- background:#15120f;color:#eee7d9;
- margin-left:-.7mm;padding:.55mm 1.6mm .4mm;
- font:bold 9px/.95 "Courier New",monospace;
- transform:rotate(-.35deg);
-}
-.tt-type{
- align-self:center;
- font:bold 10.3px/1 Georgia,serif;
- letter-spacing:.035em;
 }
 .tt-title{
  top:10.2mm;
@@ -411,14 +385,6 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  opacity:.55;
  border-color:#18100a7d;
 }
-.tt-masthead{
- border-bottom:1.3px solid #211b15;
- letter-spacing:-.12px;
- background:#110f0d;
- clip-path:polygon(0 8%,12% 0,24% 7%,45% 2%,68% 5%,80% 0,100% 6%,99% 93%,83% 100%,64% 94%,37% 100%,17% 95%,0 99%);
- box-shadow:1px 1px 0 #443c32;
-}
-.tt-type{font-weight:900;letter-spacing:-.2px;text-shadow:.12px 0 currentColor}
 .tt-title{
  transform:rotate(var(--label-angle,-.35deg));
  transform-origin:14% 65%;
@@ -510,12 +476,6 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-card.tt-plate-b{--art-left:.2mm;--art-right:-.85mm;--slip-left:.8mm;--slip-right:1.05mm;--slip-tilt:.41deg;--title-drop:.25mm;--rail-tilt:.4deg}
 .tt-card.tt-plate-c{--art-left:-.65mm;--art-right:-.25mm;--slip-left:1.4mm;--slip-right:.65mm;--slip-tilt:.28deg;--title-drop:-.1mm;--rail-tilt:-.55deg}
 .tt-card.tt-plate-d{--art-left:-.15mm;--art-right:-.6mm;--slip-left:.65mm;--slip-right:1.2mm;--slip-tilt:-.38deg;--title-drop:.55mm;--rail-tilt:.65deg}
-.tt-card .tt-head{
- position:relative;z-index:7;
- background:transparent;
- border:0;
- padding-left:.4mm;
-}
 .tt-card .tt-collage{
  display:block;position:relative;z-index:1;
  flex:1 1 auto;min-height:0;
