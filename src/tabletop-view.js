@@ -3,30 +3,96 @@ import {illustration} from "./art.js";
 export {CARD_WIDTH_MM,CARD_HEIGHT_MM};
 export const CARDS_PER_SHEET=4;
 export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/** Curated art assignments. Assets are part of this repository, and never loaded from an external server.
+ * Some illustration subjects represent existing cards with different printed titles:
+ * e.g. Abandoned Storeroom illustrates Forgotten Supplies, and the Ironbound Chest
+ * illustrates Buried Lockbox. This changes presentation ONLY, not physical rules.
+ */
+export const CARD_ART=Object.freeze({
+ "hero:delver":"cave_delver.png",
+ "monster:eye":"floating_eye.png",
+ "item:key":"rusty_key.png",
+ "potion:smoky":"smoky_potion.png",
+ "room:m-flood":"flooded_chamber.png",
+ "room:u-supply":"abandoned_storeroom.png",
+ "monster:goblin":"goblin_scavenger.png",
+ "room:m-vault":"ironbound_chest.png",
+ "room:d-oracle":"strange_feeling.png",
+ "room:m-statue":"cracked_oracle.png"
+});
+export const assetPath=card=>{
+ const file=CARD_ART[card.type+":"+card.id];
+ return file?"./assets/illustrations/"+file:null;
+};
+
+/** Choose an art/text composition deliberately; never hide overflowing text by scaling the font. */
+const SPLIT_ROOMS=new Set(["m-flood"]);
+const DENSE_MONSTERS=new Set(["rat","goblin","crawler","bat","troll","eye","mold","wraith","cultist","rust","sentinel","warden","wisp"]);
+const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquary","m-fungus","u-nest"]);
+const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
+export function composition(card){
+ if(card.type==="hero")return "portrait-stats";
+ if(card.type==="monster")return DENSE_MONSTERS.has(card.id)?"monster-dense":"monster";
+ if(card.type==="room")return SPLIT_ROOMS.has(card.id)?"room-split":DENSE_ROOMS.has(card.id)?"scene-compact":"room-scene";
+ if(card.type==="potion")return "mystery";
+ if(card.type==="item")return DENSE_ITEMS.has(card.id)?"item-compact":"illustration-dominant";
+ return "illustration-dominant";
+}
+const rulify=rule=>esc(rule).replace(
+ /(^|(?:\.\s+))((?:REVEAL|QUIET|ALTAR|AFTER VICTORY|FIRST USE|ONCE PER ROOM|ACTION|DRINK|EQUIP|CONSUME|SPELL|WEAPON|ARMOUR|GEAR|COMPANION|CURSED WEAPON|CURSED ARMOUR|RELIC)(?:\s*\([^)]*\))?)(\s*[—:])/g,
+ (_,prefix,verb,sep)=>prefix+'<strong class="tt-rule-key">'+verb+sep+'</strong>'
+);
+function visual(card){
+ const asset=assetPath(card);
+ const image=asset
+  ?'<img class="tt-art-image" src="'+esc(asset)+'" alt="" loading="lazy" decoding="async">'
+  :'<div class="tt-art-placeholder" aria-hidden="true">'+illustration(card.art)+'</div>';
+ return '<div class="tt-illustration">'+image+'</div>';
+}
+function stats(card){
+ if(card.type!=="hero"&&card.type!=="monster")return "";
+ const values=[["HP",card.hp],["ATK","+"+card.atk],["DEF","+"+card.def],
+ ...(card.type==="hero"?[["WIT","+"+card.wit]]:[])];
+ return '<div class="tt-stats">'+values.map(([name,value])=>
+  '<div class="tt-stat"><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
+}
+function content(card){
+ if(card.type==="monster"){
+  return '<div class="tt-content tt-content--monster">'+
+   '<div class="tt-label">BEHAVIOUR · d6 AFTER HERO ACTION</div>'+
+   '<div class="tt-behaviours">'+card.behavior.map((line,i)=>
+    '<div><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(line)+'</span></div>').join("")+'</div>'+
+   '<p class="tt-corpse"><b>CORPSE — </b>'+esc(card.corpse)+'</p>'+
+   '</div>';
+ }
+ return '<div class="tt-content"><p class="tt-rule">'+rulify(card.rule)+'</p>'+
+   (card.mystery?'<div class="tt-identified">FIRST USE: keep this card as the identification reminder.</div>':"")+
+   '</div>';
+}
 export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
  const index=CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1;
- const stats=card.type==="hero"||card.type==="monster"
-   ?'<div class="tt-stats">'+[
-    ["HP",card.hp],["ATK","+"+card.atk],["DEF","+"+card.def],
-    ...(card.type==="hero"?[["WIT","+"+card.wit]]:[])
-    ].map(([name,value])=>'<div class="tt-stat"><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>':"";
- const feature=card.type==="monster"?
-   '<div class="tt-label">BEHAVIOUR · ROLL d6 AFTER EACH HERO ACTION</div>'+
-   '<div class="tt-behaviours">'+card.behavior.map((line,i)=>
-     '<div><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(line)+'</span></div>').join("")+'</div>'+
-   '<p class="tt-corpse"><b>CORPSE — </b>'+esc(card.corpse)+'</p>'
-   :'<p class="tt-rule">'+esc(card.rule)+'</p>';
+ const type=esc(card.type), layout=composition(card),asset=assetPath(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
- const mystery=card.mystery?'<div class="tt-identified">IDENTIFIED THIS RUN: ________</div>':"";
- return '<article class="tt-card tt-'+esc(card.type)+'" data-type="'+esc(card.type)+
-   '" data-id="'+esc(card.id)+'" aria-label="'+esc(card.title)+' card">'+
-   '<header class="tt-head"><span>ROGUE CARDS</span><strong>'+esc(card.type.toUpperCase())+'</strong></header>'+
-   '<h2 class="tt-title">'+esc(card.title)+'</h2>'+
-   '<div class="tt-visual">'+stats+'<div class="tt-illustration">'+illustration(card.art)+'</div>'+stage+'</div>'+
-   '<div class="tt-content">'+feature+mystery+'</div>'+
-   '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+String(index).padStart(2,"0")+'</span></footer>'+
-   '</article>';
+ const front='<header class="tt-head"><span>ROGUE CARDS</span><strong>'+esc(card.type.toUpperCase())+'</strong></header>';
+ const label='<h2 class="tt-title">'+esc(card.title)+'</h2>';
+ let middle;
+ if(layout==="room-split"){
+   // Identical text is printed *beside* the room illustration instead of repeated below it.
+   middle='<div class="tt-visual tt-visual--split">'+
+    visual(card)+content(card)+stage+'</div>';
+ }else{
+   middle='<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+content(card);
+ }
+ return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
+  (asset?' tt-has-art':' tt-needs-art')+
+  '" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-art-status="'+(asset?'original':'placeholder')+
+  '" aria-label="'+esc(card.title)+' card">'+
+  front+label+middle+
+  '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+
+  String(index).padStart(2,"0")+'</span></footer></article>';
 }
 export function printSheets(cards=printDeck("all")){
  if(!Array.isArray(cards))throw new TypeError("Expected a physical card list");
