@@ -1,5 +1,8 @@
 # Room, Feature & Chest — three-Room tabletop prototype
 
+**LATEST VISUAL DIRECTION:** The uploaded reference favours much larger images and layout flexibility. [Illustration-first study](illustration-first-layout-study.html) and [design specification](illustration-first-design-spec.md) now supersede fixed-height illustrations and generic boxed text. This does not alter the prototype gameplay.
+
+
 **Design review only, not production rules.** Applies ten new answers on top of the earlier twenty decisions: solo/co-op 1–2, one A4 shared rules, nine sequential Rooms then Amulet Vault (no return), one meaningful Hero action, opposed d20 combat, d6 damage and four-branch d6 Monster behaviour, no Hunger or cross-run Bones, pets, corpse eating, prayer, spells, curses and traps, HP counters + card orientation only, 90 × 130 mm original distressed-ink illustrated cards.
 
 ## Key reconciliation: what Room cards contain versus what is drawn
