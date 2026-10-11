@@ -4,7 +4,7 @@ import { MAGICAL_CARDS, MAGIC_IDENTITIES, MAGIC_PRINT_COPIES } from "./magic-dat
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
 export const HEROES = [
-  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:14, attack:3, defense:1, rule:"Scavenge: Begin with 2 rations. TECHNIQUE: next melee attack +3 ATK (once per monster).", flavor:"The map is wrong. Again." },
+  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:13, attack:3, defense:2, rule:"Scavenge: Begin with 2 rations. TECHNIQUE: next melee attack +3 ATK (once per monster).", flavor:"The map is wrong. Again." },
   { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:12, attack:3, defense:1, rule:"Oddments: Begin with 3 mystery potions. TECHNIQUE: HEX deals 2 damage (once per monster).", flavor:"Almost certainly harmless." },
   { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 DEF (included). TECHNIQUE: HOLD +3 DEF for this response (once per monster).", flavor:"An honourable way to die." },
   { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with ration, key, smoky potion. TECHNIQUE: EVADE next successful hit (once per monster).", flavor:"Every lock is a suggestion." }
