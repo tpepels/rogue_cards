@@ -9,7 +9,7 @@ import {
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v3";
+const SAVE_KEY="rogue-cards-v4";
 let view="play";
 let filter="all";
 let kitMode=false;
