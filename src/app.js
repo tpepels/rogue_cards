@@ -59,7 +59,7 @@ function inventoryView(s) {
   const held=s.inventory.map((item,index)=>{
     const identified=item.kind==="potion" ? knownIdentity(s,item.id) : (s.magicKnown?.[item.kind]?.[item.id]||null);
     return '<li class="inventory__item"><span class="inventory__index">'+String(index+1).padStart(2,"0")+'</span>'+
-      '<span>'+esc(itemTitle(item))+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
+      '<span>'+esc(itemTitle(item))+(item.kind==="ring"?' <small>['+esc(item.blessing||"uncursed")+']</small>':'')+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
       '<span class="inventory__mark">'+(item.kind==="potion"&&!identified?'?':'+')+'</span></li>';
   }).join("");
   const identities=APPEARANCES.map(app=>
@@ -70,7 +70,7 @@ function inventoryView(s) {
     '<div>WEAPON <b>'+esc(s.equipped.weapon||"None")+'</b></div>'+
     '<div>ARMOUR <b>'+esc(s.equipped.armour||"None")+'</b></div>'+
     '<div>COMPANION <b>'+(s.equipped.companion?"DOG":"None")+'</b></div>'+
-    '<div>RING <b>'+esc(s.equipped.ring?.id||"None")+'</b></div></div>'+
+    '<div>RING <b>'+esc(s.equipped.ring?(s.equipped.ring.id+" / "+s.equipped.ring.blessing):"None")+'</b></div></div>'+
     '<div class="identification"><div class="panel-label">POTION IDENTIFICATION</div>'+identities+'</div>'+
     MAGIC_TYPES.map(type=>'<div class="identification"><div class="panel-label">'+type.toUpperCase()+' IDENTIFICATION</div>'+
       MAGIC[type].appearances.map(([id,title])=>'<div class="identification__row"><span>'+esc(title)+'</span><b>'+
