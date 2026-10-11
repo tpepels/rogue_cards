@@ -104,3 +104,20 @@ test("canonical illustration-first renderer matches ten real assets, never exter
  assert.ok(remaining);
  assert.match(cardMarkup(remaining),/data-art-status="placeholder"/);
 });
+
+
+test("Phase 3 xerox plates vary by card identity, never by render or copy number",async()=>{
+ const {printPlate}=await import("../src/tabletop-view.js");
+ const used=new Set(CATALOGUE.map(printPlate));
+ assert.deepEqual([...used].sort(),["a","b","c","d"]);
+ for(const card of CATALOGUE){
+  const first=cardMarkup(card),second=cardMarkup(card);
+  const plate=printPlate(card);
+  assert.equal(first,second,"Card markup must print deterministically: "+card.id);
+  assert.match(first,new RegExp('tt-plate-'+plate));
+  assert.ok(first.includes('data-plate="'+plate+'"'));
+  assert.match(first,/tt-content/);
+ }
+ const sheets=printSheets();
+ assert.equal((sheets.match(/class="tt-sheet"/g)||[]).length,Math.ceil(printDeck("all").length/4));
+});
