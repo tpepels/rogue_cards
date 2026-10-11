@@ -67,3 +67,25 @@ test("filtering print copies does not generate or lose components",async({page})
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(CATALOGUE.filter(c=>c.type==="monster").length);
  await expect(page.getByRole("button",{name:/ONE EACH/})).toBeVisible();
 });
+
+test("illustration-first draft uses ten role-specific art proportions without clipping mechanics",async({page})=>{
+ await page.goto("/docs/illustration-first-layout-study.html");
+ await expect(page.locator(".specimen .card")).toHaveCount(10);
+ const layouts=await page.locator(".specimen .card").evaluateAll(cards=>cards.map(card=>{
+  const visual=card.querySelector(".visual");
+  const rules=card.querySelector(".rules");
+  const footer=card.querySelector(".footer");
+  const cardRect=card.getBoundingClientRect(), artRect=visual.getBoundingClientRect();
+  return {type:card.className,
+   artRatio:artRect.height/cardRect.height,
+   rulesOverflow:rules.scrollHeight-rules.clientHeight,
+   footerBottom:footer.getBoundingClientRect().bottom-cardRect.bottom
+  };
+ }));
+ expect(layouts.some(x=>x.artRatio>.6)).toBeTruthy();
+ expect(layouts.some(x=>x.artRatio<.52)).toBeTruthy();
+ for(const l of layouts){
+  expect(l.rulesOverflow,"Clipped rules on "+l.type).toBeLessThanOrEqual(2);
+  expect(l.footerBottom,"Footer outside card on "+l.type).toBeLessThanOrEqual(2);
+ }
+});
