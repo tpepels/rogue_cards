@@ -6,7 +6,7 @@
 
 **Presence is printed on the Room.** It must explicitly name or illustrate every fixture present, such as CHEST, ALTAR, STATUE, FOUNTAIN, LOCKED DOOR, NPC, REMAINS or ARCANE OBJECT. A random draw NEVER decides whether an already printed Chest exists.
 
-**Details may come from a matching drawn card.** A Room that says CHEST — DRAW 1 CHEST places a Chest Feature card beside it, giving that chest's specific lock, trap and rewards. A Room that prints ALTAR with its complete choices needs no Feature draw. A special STATUE may instead print DRAW 1 STATUE FEATURE; it must come from a matching subtype pile or named card, never a random unrelated feature. A Room may also print MONSTER — DRAW 1 UPPER MONSTER or EVENT — DRAW 1 EVENT; these define actual draws, not generic lookup tables. A specific Chest draw always comes from a Chest pile; do not draw a random fountain or statue and call it a Chest.
+**Details may come from a matching drawn card.** A Room that says CHEST — DRAW 1 CHEST places a Chest Feature card beside it, giving that chest's specific lock, trap and rewards. A Room that prints ALTAR with its complete choices needs no Feature draw. A special STATUE may instead name a physical Feature card (as this prototype does) or instruct DRAW 1 STATUE FEATURE from a matching sorted subtype pile; never a random unrelated feature. A Room may also print MONSTER — DRAW 1 UPPER MONSTER or EVENT — DRAW 1 EVENT; these define actual draws, not generic lookup tables. A specific Chest draw always comes from a Chest pile; do not draw a random fountain or statue and call it a Chest.
 
 **Density:** normally one or two actionable features/encounters, exceptionally three. A Monster+Chest is two. An on-entry Trap+Monster+Statue is three. Visible but purely decorative objects do not count. Optional objects can be left unexplored with no universal cost or lingering clock.
 
@@ -16,12 +16,12 @@ HERO | ABILITY | COMBAT ACTION | ROOM | MONSTER | EVENT | TRAP | FEATURE (Chest 
 
 - The twelve types describe **what the physical card means**. They do NOT require twelve decks.
 - **Region decks:** 3 Rooms and 3 Monsters. Monsters are drawn only on printed Room command; the Warden and final Vault remain fixed.
-- **Scenes:** one small Event/Trap deck for generic surprises; the prototype can place known Trap/Event cards on top so their timing is tested deterministically.
-- **Fixtures:** one shuffled Chest subpile, available only when a Room prints CHEST; a separate special-Feature mini-pile is optional and needed only when a printed Room explicitly asks for one.
-- **Finds:** one finite deck of common supplies and occasional equipment or Spells, with rarer named Relics given by specific Room/Chest/Monster rules rather than treated as common draws.
+- **Scenes:** one small EVENT pile and one separate TRAP pile. A printed DRAW 1 TRAP must never produce an Event, and DRAW 1 EVENT must never produce a Trap. Their trigger and resolution live on the drawn card.
+- **Fixtures:** one shuffled CHEST pile, available only when a Room prints CHEST; unusual other Features are taken from a small **named face-up reserve**, or a correctly sorted subtype pile only when enough variants exist. The prototype's STATUE takes the named Cracked Oracle from this reserve.
+- **Finds:** one finite deck of common supplies and occasional equipment or Spells; rarer named Relics are earned from specific Room/Chest/Monster text rather than treated as common draws.
 - **Static cards:** Heroes, their two Abilities and reusable Combat Actions start face-up, not in any deck. Named Reward and Remains cards may form a face-up stock if a printed drop directly names them.
 
-**Cost to audit:** without non-Chest Features there are 3+3+1+1+1=9 shuffled piles (10 with other Feature pile). If physical setup is too awkward, reduce piles only when a printed draw still produces the correct type without repeated searching.
+**Pile-count and table footprint audit:** Across the whole game, this requires **3 Room + 3 Monster + Event + Trap + Chest + Finds = 10 shuffled piles**, plus an optional named Feature reserve. However, organise the regional Room/Monster cards into three packets and put only the **current region's Room and Monster piles** on the table. Then there are exactly **six active shuffled piles** (Room, Monster, Event, Trap, Chest, Finds), plus any face-up reserved cards. Other regions stay in their packet until needed. If six still proves excessive, revise after tabletop testing; do not hide the cost by making draws require searching through mismatched card types.
 
 ## Physical loop
 
@@ -83,7 +83,7 @@ Place the three Rooms in A/B/C order (representative stages, NOT a replacement f
 4. **Attempts:** current prototype grants one Chest opening attempt per Hero safe action and then turns the Chest sideways, whether successful or not. This is provisional and needs tabletop judgement.
 5. **Status carrier:** current main has a persistent untracked POISONED condition. Prototype Trap uses immediate HP loss instead; later rewrite must attach a physical card for every lasting effect.
 6. **One vs two players:** one safe action per Hero grants two-person party more optional feature interactions; treat this as balance question, not a silent exception.
-7. **Table footprint:** nine or ten shuffled mini-piles may be excessive despite simple rules; see whether small fixtures can be sorted behind the Room deck between draws.
+7. **Table footprint:** ten piles exist across the entire adventure, but only six shuffled piles are active when the region packets are used. Count actual setup and handling time at the table.
 8. **90–120 min:** unmeasured target for full ten-Room game; a three-Room test should measure per-encounter attention and card-handling, not extrapolate duration.
 9. **Card density:** optional three-feature Rooms may strain text layout. Prioritise legibility and meaningful choice before adding content.
 10. **Art:** current minimal SVG reused icons do not fulfil detailed engraving direction. These prototype cards use placeholder shapes only.
