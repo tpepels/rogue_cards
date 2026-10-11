@@ -52,36 +52,40 @@ function visual(card){
 }
 function stats(card){
  if(card.type!=="hero"&&card.type!=="monster")return "";
- const values=[["HP",card.hp],["ATK","+"+card.atk],["DEF","+"+card.def],
- ...(card.type==="hero"?[["WIT","+"+card.wit]]:[])];
- return '<div class="tt-stats">'+values.map(([name,value])=>
-  '<div class="tt-stat"><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
+ const values=[["HP",card.hp,"♥"],["ATK","+"+card.atk,"⚔"],["DEF","+"+card.def,"⬟"],
+ ...(card.type==="hero"?[["WIT","+"+card.wit,"✶"]]:[])];
+ return '<div class="tt-stats" aria-label="Printed character statistics">'+values.map(([name,value,mark])=>
+  '<div class="tt-stat"><span class="tt-stat-symbol" aria-hidden="true">'+mark+'</span><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
 }
-function content(card){
+function content(card,{sidebar=false}={}){
  if(card.type==="monster"){
-  return '<div class="tt-content tt-content--monster">'+
-   '<div class="tt-label">BEHAVIOUR · d6 AFTER HERO ACTION</div>'+
+  return '<section class="tt-content tt-content--monster tt-record" aria-label="Monster behaviour and remains">'+
+   '<div class="tt-label">BEHAVIOUR <span>ROLL d6 AFTER EACH HERO ACTION</span></div>'+
    '<div class="tt-behaviours">'+card.behavior.map((line,i)=>
-    '<div><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(line)+'</span></div>').join("")+'</div>'+
+    '<div class="tt-behaviour-row"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(line)+'</span></div>').join("")+'</div>'+
    '<p class="tt-corpse"><b>CORPSE — </b>'+esc(card.corpse)+'</p>'+
-   '</div>';
+   '</section>';
  }
- return '<div class="tt-content"><p class="tt-rule">'+rulify(card.rule)+'</p>'+
-   (card.mystery?'<div class="tt-identified">FIRST USE: keep this card as the identification reminder.</div>':"")+
-   '</div>';
+ const cls='tt-content'+(sidebar?' tt-content--sidebar':'')+
+  (card.type==="room"?' tt-content--room':card.type==="potion"?' tt-content--potion':
+   card.type==="item"?' tt-content--item':' tt-content--hero');
+ return '<section class="'+cls+'" aria-label="Card effect">'+
+  '<p class="tt-rule">'+rulify(card.rule)+'</p>'+
+  (card.mystery?'<div class="tt-identified">FIRST USE: keep this card as the identification reminder.</div>':"")+
+  '</section>';
 }
 export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
  const index=CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1;
  const type=esc(card.type), layout=composition(card),asset=assetPath(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
- const front='<header class="tt-head"><span>ROGUE CARDS</span><strong>'+esc(card.type.toUpperCase())+'</strong></header>';
- const label='<h2 class="tt-title">'+esc(card.title)+'</h2>';
+ const front='<header class="tt-head"><span class="tt-masthead">ROGUE CARDS</span><strong class="tt-type">'+esc(card.type.toUpperCase())+'</strong></header>';
+ const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
  let middle;
  if(layout==="room-split"){
    // Identical text is printed *beside* the room illustration instead of repeated below it.
    middle='<div class="tt-visual tt-visual--split">'+
-    visual(card)+content(card)+stage+'</div>';
+    visual(card)+content(card,{sidebar:true})+stage+'</div>';
  }else{
    middle='<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+content(card);
  }
