@@ -212,7 +212,7 @@ function openRoom(state, target) {
   checkDeath(state); // Fatal traps end the run before a beneficial event can occur.
   if (state.phase!=="dead" && !isVault && d6(state)===6) eventEffect(state);
   if(state.phase!=="dead") bonesInRoom(state,d6,line=>log(state,line),depth);
-  if(state.intrinsics.includes("scent") && room.monster)log(state,"SCENT: the monster is "+room.monster.title+".");
+
 }
 function spawnMonster(template) {
   return {...template, maxHp:template.hp, guard:0, frozen:0, blinded:0,
@@ -283,7 +283,7 @@ function finishTurn(state) {
   if(state.hunger===0) {state.hp--;log(state,"Starvation costs 1 HP.");}
   checkDeath(state);
   if(state.phase==="dead") return;
-  petTurn(state,d6,line=>log(state,line),()=>currentMonster(state));
+  petTurn(state,d6,line=>log(state,line),()=>currentMonster(state),()=>connectedLocations(state.position,state));
   if(currentRoom(state).monster?.hp<=0 && currentRoom(state).corpse==null &&
      currentRoom(state).monster.id!=="sentinel")releaseMonster(state,currentRoom(state).monster);
   monsterTurn(state);
@@ -400,7 +400,9 @@ export function act(previous, id, argument=null) {
   }
   if(id==="attack" && mon) {
     const darkPenalty=currentRoom(state).terrain==="DARK"&&!ignoresDark(state)&&!state.intrinsics.includes("focus")?-1:0;
-    const hit=rollAttack(state,heroAttack(state)+darkPenalty,mon.defense+mon.guard,"Hero");
+    const scentBonus=state.intrinsics.includes("scent")&&!mon.scentUsed?1:0;
+    mon.scentUsed=true;
+    const hit=rollAttack(state,heroAttack(state)+darkPenalty+scentBonus,mon.defense+mon.guard,"Hero");
     if(hit.hit) {
       const petBonus=0; // Autonomous companion resolves at turn end, never on Hero attack.
       if(petBonus) {mon.petUsed=true; log(state,"Your companion assists (+1).");}
@@ -437,8 +439,9 @@ export function act(previous, id, argument=null) {
     });
   }
   if(id==="eat-corpse"){
+    const hadScavenger=state.intrinsics.includes("scavenger");
     eatCorpse(state,argument,d6,line=>log(state,line));
-    if(state.intrinsics.includes("scavenger")&&!state.status.scavenged){state.hunger=Math.min(MAX_HUNGER,state.hunger+3);state.status.scavenged=true;log(state,"Scavenger grants +3 hunger (once).");}
+    if(hadScavenger&&!state.status.scavenged){state.hunger=Math.min(MAX_HUNGER,state.hunger+3);state.status.scavenged=true;log(state,"Scavenger grants +3 hunger (once).");}
   }
   if(id==="feed-pet"){state.inventory.splice(argument,1);state.pet.hunger=9;state.pet.loyalty=Math.min(4,state.pet.loyalty+1);log(state,"Fed your dog.");}
   if(["drink","throw","eat","consume","equip"].includes(id)) {
