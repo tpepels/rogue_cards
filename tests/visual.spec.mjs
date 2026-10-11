@@ -92,7 +92,7 @@ test("illustration-first draft uses ten role-specific art proportions without cl
 
 test("design studies are accessible from the live homepage without replacing playable cards",async({page})=>{
  await page.goto("/");
- await expect(page.getByRole("link",{name:"DESIGN REFERENCE"})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
+ await expect(page.getByRole("link",{name:"DESIGN REFERENCE",exact:true})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
  await expect(page.getByRole("link",{name:/VIEW DESIGN REFERENCE/})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
  await expect(page.getByRole("link",{name:/VIEW ROOM & CHEST STUDY/})).toHaveAttribute("href","./docs/room-feature-layout-study.html");
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
@@ -103,10 +103,10 @@ test("design studies are accessible from the live homepage without replacing pla
 
 test("canonical printed cards use live PNG art, fallback placeholders and flexible compositions",async({page})=>{
  await page.goto("/");
- const hero=page.locator('.tt-grid .tt-card[data-id="delver"]');
- const eye=page.locator('.tt-grid .tt-card[data-id="eye"]');
- const key=page.locator('.tt-grid .tt-card[data-id="key"]');
- const flood=page.locator('.tt-grid .tt-card[data-id="m-flood"]');
+ const hero=page.locator('.tt-grid .tt-card[data-id="delver"]').first();
+ const eye=page.locator('.tt-grid .tt-card[data-id="eye"]').first();
+ const key=page.locator('.tt-grid .tt-card[data-id="key"]').first();
+ const flood=page.locator('.tt-grid .tt-card[data-id="m-flood"]').first();
  await expect(hero).toHaveAttribute("data-art-status","original");
  await expect(hero).toHaveAttribute("data-layout","portrait-stats");
  await expect(eye).toHaveAttribute("data-layout","monster-dense");
