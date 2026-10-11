@@ -5,8 +5,8 @@ export const MAGIC_PROPERTIES = Object.freeze({
   shop:["wood"],crypt:["dark","stone"],nest:["wood","poison"],
   locked:["metal","stone"],stairs:["stone"],trap:["metal","stone"],
   entrance:["light","stone"],vault:["holy","stone"],
-  rat:["wood"],goblin:["wood"],eye:["dark"],rust:["metal","acid"],
-  wraith:["dark","cold"],troll:["stone"],sentinel:["metal","holy"]
+  rat:["organic"],goblin:["organic"],eye:["dark"],rust:["metal","acid"],
+  wraith:["dark","cold"],troll:["stone","organic"],sentinel:["metal","holy"]
 });
 export const propertiesOf = id=>MAGIC_PROPERTIES[id]||[];
 export const magicStock=()=>Object.entries(MAGIC_PRINT_COPIES).flatMap(([key,count])=>{
@@ -77,9 +77,8 @@ export function magicAction(state,id,index,context) {
    if(effectId==="frost"&&mon){context.hurt(mon,2,"COLD");mon.frozen=1;}
    if(effectId==="corrode"&&mon)context.hurt(mon,2+(propertiesOf(mon.id).includes("metal")?2:0),"ACID");
    if(effectId==="burrow"){
-     if(room.id==="locked"||propertiesOf(room.id).includes("stone")){
-       state.status.passage=1;context.log("DIGGING makes the next locked passage free.");
-     }else context.log("No diggable obstruction.");
+     state.status.passage=1;
+     context.log("DIGGING: your next TRAP or LOCKED room is bypassed.");
    }
    if(!mon && ["spark","frost","corrode"].includes(effectId))context.log("The magic dissipates: no target.");
    if(thing.charges===0){state.inventory.splice(index,1);context.log("The wand crumbles after its final charge.");}
