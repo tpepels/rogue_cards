@@ -53,6 +53,7 @@ test("ring printed copies and browser loot have matching B/U/C state",()=>{
 test("scroll read identifies appearance, uses one action, and applies FIRE/WATER",()=>{
  let s=startRun("wizard",57);
  s.rooms["0"].monster=monster("rust");
+ s.rooms["0"].id="flood";
  s.rooms["0"].terrain="WATER";
  s.inventory.push({kind:"scroll",id:"ragged"});
  s.magicAssignments.scroll.ragged="flame";
@@ -66,6 +67,7 @@ test("scroll read identifies appearance, uses one action, and applies FIRE/WATER
 test("wand ZAP has three charges, identifies, and uses water conduction",()=>{
  let s=startRun("wizard",57);
  s.rooms["0"].monster=monster("rust");
+ s.rooms["0"].id="flood";
  s.rooms["0"].terrain="WATER";
  s.inventory.push({kind:"wand",id:"bone",charges:3,blessing:"uncursed"});
  s.magicAssignments.wand.bone="spark";
