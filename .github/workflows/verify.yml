@@ -22,6 +22,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Engine and presentation unit tests
         run: npm test
+      - name: Deterministic Phase 6 expedition balance report
+        run: npm run sim:phase6
       - name: Browser layout, interaction, and A4 print geometry
         run: npm run test:visual
       - name: Upload browser report on failure
