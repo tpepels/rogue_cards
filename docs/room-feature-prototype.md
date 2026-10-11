@@ -43,9 +43,9 @@ A used Chest is turned sideways; a Monster defeated goes to its discard; Rewards
 
 **Trap — Needle Lock:** NOW: the opener tests d20+WIT DC 13. Pass: avoid needle. Fail: suffer d6 HP. Discard this Trap. No lingering status.
 
-**Room B — Chapel of Ash (MIDDLE):** ENTER: no Monster. HERE: ALTAR — choose PRAY d20+WIT DC 14 (pass heal d6 HP; fail suffer 2 HP), OR CLEANSE one CURSED Item by discarding one other Item. LEAVE: optional, skip freely. Room itself contains this feature; no altar card draw.
+**Room B — Chapel of Ash (MIDDLE):** ENTER: draw 1 Event (no Monster). HERE: ALTAR — choose PRAY d20+WIT DC 14 (pass heal d6 HP; fail suffer 2 HP), OR CLEANSE one CURSED Item by discarding one other Item. LEAVE: optional, skip freely. Room itself contains this feature; no altar card draw.
 
-**Event — Candle in the Dark:** NOW, choose: DOWSE (nothing) or LISTEN d20+WIT DC 14. Pass: peek at next Room; fail: suffer d6 HP. Discard. Event is only drawn when a Room/scenario directs it; not an automatic second encounter in Room B.
+**Event — Candle in the Dark:** NOW, choose: DOWSE (nothing) or LISTEN d20+WIT DC 14. Pass: peek at next Room; fail: suffer d6 HP. Discard. Room B directs you to draw this Event on entry. It resolves immediately; the Altar remains for the later safe action.
 
 **Room C — Collapsed Gallery (DEEP):** ENTER: draw 1 Trap; then reveal 1 DEEP Monster. HERE AFTER COMBAT: STATUE — break it (suffer d6 HP and take 1 Find) or skip. This is an intentionally rare three-part Room: Trap + Monster + Statue.
 
