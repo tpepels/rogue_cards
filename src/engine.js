@@ -43,6 +43,12 @@ function draw(state, pile) {
 }
 function potion(id) { return {kind:"potion",id}; }
 function item(id) { return {kind:id,id}; }
+function takeReserved(state, wanted) {
+  // Starting gear is removed from the printed Object supply, not conjured.
+  const index=state.decks.loot.draw.findIndex(x=>x.kind===wanted.kind && x.id===wanted.id);
+  if(index < 0) throw new Error("Starting object missing from print supply: "+wanted.id);
+  return state.decks.loot.draw.splice(index,1)[0];
+}
 function stock(type, ids) {
   return ids.flatMap(card => Array.from(
     {length:PRINT_COPIES[type]?.[card.id] || 0}, () => card.id
@@ -100,10 +106,14 @@ export function startRun(heroId = "delver", seed = Date.now()) {
   s.decks.loot = deck(s, lootStock());
   s.decks.events = deck(s, stock("event", EVENTS));
   s.decks.behaviour = deck(s, stock("behaviour", BEHAVIOURS));
-  if (hero.id==="delver") s.inventory.push(item("ration"),item("ration"));
-  if (hero.id==="knight") s.inventory.push(item("ration"));
-  if (hero.id==="wizard") for(let i=0;i<3;i++) s.inventory.push(potion(choice(s,APPEARANCES).id));
-  if (hero.id==="rogue") s.inventory.push(item("ration"),item("key"),potion("smoky"));
+  if (hero.id==="delver") for(let i=0;i<2;i++) s.inventory.push(takeReserved(s,item("ration")));
+  if (hero.id==="knight") s.inventory.push(takeReserved(s,item("ration")));
+  if (hero.id==="wizard") for(let i=0;i<3;i++) {
+    const bottles=s.decks.loot.draw.filter(thing=>thing.kind==="potion");
+    s.inventory.push(takeReserved(s,choice(s,bottles)));
+  }
+  if (hero.id==="rogue") for(const x of [item("ration"),item("key"),potion("smoky")])
+    s.inventory.push(takeReserved(s,x));
   log(s,"You have two actions each turn. Descend to depth 10; return with the Amulet.");
   return s;
 }
@@ -126,7 +136,11 @@ function eventEffect(state) {
   state.decks.events.discard.push(id);
   const card=find(EVENTS,id);
   if (id==="unease") { state.hunger=Math.max(0,state.hunger-1); }
-  if (id==="bones") { state.inventory.push(item("ration")); }
+  if (id==="bones") {
+    const reserve=state.decks.loot.draw.findIndex(x=>x.kind==="ration");
+    if(reserve>=0) state.inventory.push(...state.decks.loot.draw.splice(reserve,1));
+    else log(state,"No rations remain in the Object supply.");
+  }
   if (id==="whisper") { state.hunger=Math.max(0,state.hunger-2); }
   if (id==="wind") { state.hp=Math.min(state.maxHp,state.hp+1); }
   log(state, "Event: "+card.title+". "+card.rule);
@@ -243,10 +257,18 @@ function consumePotion(state, appearanceId, thrown) {
     if(effect==="invisibility") mon.blinded=2;
     if(effect==="frost") {mon.hp-=(currentRoom(state).terrain==="WATER"?5:3);mon.frozen=1;}
     if(effect==="polymorph") {
-      const possible=MONSTERS.filter(m=>m.id!=="sentinel" && m.id!==mon.id);
-      const transformed=spawnMonster(choice(state,possible));
-      currentRoom(state).monster=transformed;
-      log(state,"Polymorph! "+transformed.title+" appears.");
+      let replacement=draw(state,state.decks.monsters);
+      let attempts=0;
+      while(replacement===mon.id && attempts++<20) {
+        state.decks.monsters.discard.push(replacement);
+        replacement=draw(state,state.decks.monsters);
+      }
+      if(replacement) {
+        if(mon.id!=="sentinel") state.decks.monsters.discard.push(mon.id);
+        const transformed=spawnMonster(find(MONSTERS,replacement));
+        currentRoom(state).monster=transformed;
+        log(state,"Polymorph! "+transformed.title+" appears.");
+      } else log(state,"The polymorph fizzles; no monster cards remain.");
       return;
     }
     if(mon.hp<=0) releaseMonster(state,mon);
@@ -307,7 +329,7 @@ export function act(previous, id, argument=null) {
   const valid=availableActions(previous).some(a=>a.id===id &&
     (a.index??a.target??null)===(argument??null));
   if(!valid) return previous;
-  const state=structuredClone(previous);
+  const state=JSON.parse(JSON.stringify(previous));
   if(id==="end") {finishTurn(state);return state;}
   const room=currentRoom(state);
   const mon=currentMonster(state);
