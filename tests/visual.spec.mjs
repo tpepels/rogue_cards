@@ -89,3 +89,14 @@ test("illustration-first draft uses ten role-specific art proportions without cl
   expect(l.footerBottom,"Footer outside card on "+l.type).toBeLessThanOrEqual(2);
  }
 });
+
+test("design studies are accessible from the live homepage without replacing playable cards",async({page})=>{
+ await page.goto("/");
+ await expect(page.getByRole("link",{name:"NEW CARD DESIGNS"})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
+ await expect(page.getByRole("link",{name:/VIEW NEW CARD LAYOUTS/})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
+ await expect(page.getByRole("link",{name:/VIEW ROOM & CHEST STUDY/})).toHaveAttribute("href","./docs/room-feature-layout-study.html");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
+ await page.getByRole("link",{name:/VIEW NEW CARD LAYOUTS/}).click();
+ await expect(page).toHaveURL(/\/docs\/illustration-first-layout-study\.html$/);
+ await expect(page.locator(".specimen .card")).toHaveCount(10);
+});
