@@ -22,7 +22,7 @@ test("reproducible setup and randomized potion mapping",()=>{
   for(const hero of HEROES){
     const s=startRun(hero.id,304);
     assert.deepEqual(s,startRun(hero.id,304));
-    assert.equal(s.version,3);
+    assert.equal(s.version,4);
     assert.equal(s.position,"0");
     assert.equal(s.hunger,18);
     assert.equal(s.hp,hero.hp);
@@ -59,6 +59,7 @@ test("two actions; end early draws behaviour and costs hunger",()=>{
   assert.equal(s.actionsLeft,2);
   assert.equal(s.hunger,17);
   clear(s);
+  s.rooms["1"].exits=["SIDE","LINK"];
   s=action(s,"explore","1b");
   assert.equal(s.actionsLeft,1);
   assert.ok(s.rooms["1b"]);
