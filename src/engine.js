@@ -183,7 +183,7 @@ function rollAttack(state, attack, defense, label, adjustment=0) {
   const hit=roll!==1 && (roll===6 || total>=threshold);
   const damage=hit?(roll===6?PHYSICAL_RULES.criticalDamage:PHYSICAL_RULES.normalDamage):0;
   state.lastRoll={roll,total,threshold,hit,damage,label};
-  log(state,label+": d6 "+roll+" + "+attack+(adjustment?" "+ "+adjustment:"")+" vs "+threshold+" — "+(hit?"HIT "+damage:"MISS")+".");
+  log(state,label+": d6 "+roll+" + "+attack+(adjustment?" + "+adjustment:"")+" vs "+threshold+" — "+(hit?"HIT "+damage:"MISS")+".");
   return {roll,hit,damage};
 }
 function monsterAttack(state, monster, modifier=0) {
