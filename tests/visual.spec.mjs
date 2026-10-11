@@ -1,170 +1,69 @@
-import { test, expect } from "@playwright/test";
-import { CATALOGUE, TYPES, printDeck } from "../src/data.js";
-
-test("specimen gallery has no horizontal overflow or card clipping across breakpoints", async ({page})=>{
-  const errors=[];
-  page.on("pageerror",e=>errors.push(e.message));
-  await page.goto("/");
-  await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
-  for(const width of [375,414,630,768,1024,1440]){
-    await page.setViewportSize({width,height:900});
-    await expect(page.locator(".gallery .game-card")).toHaveCount(CATALOGUE.length);
-    const m=await page.evaluate(()=>{
-      const cards=[...document.querySelectorAll(".gallery .game-card")];
-      return {width:document.documentElement.scrollWidth,viewport:innerWidth,
-        clipped:cards.filter(card=>{
-          const rect=card.getBoundingClientRect();
-          const title=card.querySelector(".game-card__title").getBoundingClientRect();
-          const rule=card.querySelector(".game-card__rule").getBoundingClientRect();
-          const flavor=card.querySelector(".game-card__flavor").getBoundingClientRect();
-          return rect.left<-2||rect.right>innerWidth+2||card.scrollHeight>card.clientHeight+3||
-            title.bottom>rect.bottom-2||rule.bottom>rect.bottom-2||flavor.bottom>rect.bottom-2;
-        }).map(card=>card.dataset.cardId)};
-    });
-    expect(m.width,"horizontal scroll at "+width).toBeLessThanOrEqual(m.viewport+2);
-    expect(m.clipped,"clipped cards at "+width).toEqual([]);
-  }
-  expect(errors).toEqual([]);
-});
-test("hero can explore two-action dungeon and branch to side room",async({page})=>{
-  await page.setViewportSize({width:390,height:850});
-  await page.goto("/");
-  await page.getByRole("button",{name:/Cave Delver/}).click();
-  await expect(page.locator(".mobile-hud")).toBeVisible();
-  await expect(page.getByText("2 OF 2 ACTIONS LEFT")).toBeVisible();
-  await page.getByRole("button",{name:/Explore Depth 1/}).click();
-  await expect(page.locator(".map-cell--active")).toContainText("1");
-  await expect(page.locator(".encounter__cards .game-card").first()).toBeVisible();
-  await expect(page.locator(".command-panel")).toBeVisible();
-  const m=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));
-  expect(m.width).toBeLessThanOrEqual(m.viewport+2);
-  await page.getByRole("button",{name:/NEW RUN/}).click();
-  await expect(page.getByText("ABANDON THIS EXPEDITION?")).toBeVisible();
-  await page.getByRole("button",{name:/KEEP PLAYING/}).click();
-  await expect(page.locator(".command-panel")).toBeVisible();
-});
-test("physical kit contains correct counts and explicit A4 sheets",async({page})=>{
-  await page.goto("/");
-  await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
-  await page.getByRole("button",{name:"PHYSICAL KIT"}).click();
-  const size=TYPES.slice(1).flatMap(type=>printDeck(type)).length;
-  await expect(page.locator(".gallery .game-card")).toHaveCount(size);
-  await page.emulateMedia({media:"print"});
-  const totalSheets=Math.ceil(size/4);
-  await expect(page.locator(".print-sheet")).toHaveCount(totalSheets);
-  await expect(page.locator(".gallery")).toBeHidden();
-  const info=await page.evaluate(()=>{
-    const sheets=[...document.querySelectorAll(".print-sheet")];
-    const style=getComputedStyle(sheets[0].querySelector(".game-card"));
-    return {width:parseFloat(style.width),height:parseFloat(style.height),
-      cardMax:Math.max(...sheets.map(s=>s.querySelectorAll(".game-card").length)),
-      count:sheets.reduce((n,s)=>n+s.querySelectorAll(".game-card").length,0)};
-  });
-  expect(info.cardMax).toBe(4);
-  expect(info.count).toBe(size);
-  expect(info.width).toBeCloseTo(90*96/25.4,0);
-  expect(info.height).toBeCloseTo(140*96/25.4,0);
-});
-test("field guide and tracking sheets contain their intended pages",async({page})=>{
-  await page.goto("/field-guide.html");
-  await expect(page.locator("section.paper")).toHaveCount(3);
-  await expect(page.getByText("TWO ACTIONS", {exact:false}).first()).toBeVisible();
-  await page.goto("/playmat.html");
-  await expect(page.locator("section.paper")).toHaveCount(2);
-  await expect(page.getByText("VAULT OF YENDOR")).toBeVisible();
-});
-
-test("print handouts fit their declared A4 content area without clipping",async({page})=>{
-  for(const route of ["/field-guide.html","/playmat.html"]){
-    await page.goto(route);
-    await page.emulateMedia({media:"print"});
-    const pages=await page.locator("section.paper").evaluateAll(elements=>elements.map(el=>{
-      const rect=el.getBoundingClientRect();
-      return {height:rect.height, client:el.clientHeight, scroll:el.scrollHeight, width:rect.width};
-    }));
-    expect(pages.length).toBe(route.includes("field-guide")?3:2);
-    for(let i=0;i<pages.length;i++){
-      const sheet=pages[i];
-      expect(sheet.width,route+" page "+i+" width").toBeLessThanOrEqual(190*96/25.4+2);
-      expect(sheet.height,route+" page "+i+" height").toBeLessThanOrEqual(277*96/25.4+3);
-      expect(sheet.scroll,route+" page "+i+" content overflow").toBeLessThanOrEqual(sheet.client+2);
-    }
-  }
-});
-
-test("Phase 3 print kit includes hidden identity cards and ring polarity markers",async({page})=>{
-  await page.goto("/");
-  await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
-  await page.getByRole("button",{name:"PHYSICAL KIT"}).click();
-  await expect(page.locator(".gallery .game-card--scroll")).toHaveCount(12);
-  await expect(page.locator(".gallery .game-card--wand")).toHaveCount(12);
-  await expect(page.locator(".gallery .game-card--ring")).toHaveCount(12);
-  await expect(page.locator(".gallery .game-card--identity")).toHaveCount(12);
-  await expect(page.locator(".gallery .game-card--ring .game-card__tag")).toHaveCount(12);
-  await page.getByRole("button",{name:/\[\s*03\s*\]\s*FIELD NOTES/}).click();
-  await expect(page.getByRole("link",{name:/MAGIC \/ IDENTIFICATION/})).toBeVisible();
-});
-test("Phase 3 magic supplement prints complete two-page A4 reference",async({page})=>{
-  await page.goto("/magic-guide.html");
-  await expect(page.locator("section.sheet")).toHaveCount(2);
-  await page.emulateMedia({media:"print"});
-  const pages=await page.locator("section.sheet").evaluateAll(nodes=>nodes.map(node=>({
-    visible:getComputedStyle(node).display!=="none",
-    width:node.getBoundingClientRect().width,
-    height:node.getBoundingClientRect().height,
-    overflow:node.scrollHeight-node.clientHeight
-  })));
-  for(const p of pages){
-    expect(p.visible).toBe(true);
-    expect(p.width).toBeLessThanOrEqual(190*96/25.4+2);
-    expect(p.height).toBeLessThanOrEqual(277*96/25.4+3);
-    expect(p.overflow).toBeLessThanOrEqual(2);
-  }
-});
-
-test("Phase 5 physical living-dungeon reference fits two A4 sheets",async({page})=>{
- await page.goto("/living-guide.html");
- await expect(page.locator(".paper")).toHaveCount(2);
- await page.emulateMedia({media:"print"});
- const pages=await page.locator(".paper").evaluateAll(nodes=>nodes.map(x=>({
-  height:x.getBoundingClientRect().height,width:x.getBoundingClientRect().width,
-  overflow:x.scrollHeight-x.clientHeight
- })));
- for(const sheet of pages){
-  expect(sheet.width).toBeLessThanOrEqual(190*96/25.4+2);
-  expect(sheet.height).toBeLessThanOrEqual(277*96/25.4+3);
-  expect(sheet.overflow).toBeLessThanOrEqual(2);
- }
-});
-
-test("Phase 6 tactical cards are discoverable in the 90 x 140 mm physical kit",async({page})=>{
+import {test,expect} from "@playwright/test";
+import {CATALOGUE,printDeck} from "../src/tabletop-data.js";
+test("homepage is a physical card game, not a browser dungeon engine",async({page})=>{
+ const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/");
- await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
- await page.getByRole("button",{name:"TACTIC"}).click();
- await expect(page.locator(".gallery .game-card")).toHaveCount(8);
- await page.getByRole("button",{name:"PHYSICAL KIT"}).click();
- await expect(page.locator(".gallery .game-card")).toHaveCount(8);
+ await expect(page.getByRole("heading",{name:/dungeon lives on the table/i})).toBeVisible();
+ await expect(page.getByRole("link",{name:/one-page rules/i})).toBeVisible();
+ await expect(page.locator(".tt-card")).toHaveCount(printDeck("all").length);
+ expect(errors).toEqual([]);
 });
-test("Phase 6 survival guide prints exactly two unclipped A4 sheets",async({page})=>{
- await page.goto("/survival-guide.html");
- await expect(page.locator("article.paper")).toHaveCount(2);
- await page.emulateMedia({media:"print"});
- const sizes=await page.locator("article.paper").evaluateAll(nodes=>nodes.map(el=>{
-   const rect=el.getBoundingClientRect();
-   return {width:rect.width,height:rect.height,overflow:el.scrollHeight-el.clientHeight};
- }));
- for(const pageSize of sizes){
-   expect(pageSize.width).toBeLessThanOrEqual(190*96/25.4+2);
-   expect(pageSize.height).toBeLessThanOrEqual(277*96/25.4+3);
-   expect(pageSize.overflow).toBeLessThanOrEqual(2);
+test("all card specimen content fits within its physical card face",async({page})=>{
+ await page.goto("/");
+ await page.getByRole("button",{name:/PRINT QUANTITIES/}).click();
+ await expect(page.locator(".tt-card")).toHaveCount(CATALOGUE.length);
+ const overflowing=await page.locator(".tt-card").evaluateAll(cards=>cards.filter(card=>{
+   const body=card.querySelector(".tt-content");
+   const title=card.querySelector(".tt-title");
+   return body.scrollHeight>body.clientHeight+2||title.scrollHeight>title.clientHeight+2;
+ }).map(card=>({id:card.dataset.id,body:card.querySelector(".tt-content").scrollHeight,available:card.querySelector(".tt-content").clientHeight})));
+ expect(overflowing).toEqual([]);
+});
+test("browser card gallery is usable without horizontal overflow on mobile",async({page})=>{
+ await page.goto("/");
+ for(const w of [375,414,720,1024,1440]){
+  await page.setViewportSize({width:w,height:900});
+  const measured=await page.evaluate(()=>({doc:document.documentElement.scrollWidth,viewport:innerWidth}));
+  expect(measured.doc,"at width "+w).toBeLessThanOrEqual(measured.viewport+2);
  }
 });
-
-test("Phase 7 print-and-play hub exposes every required physical reference",async({page})=>{
- await page.goto("/print-and-play.html");
- const routes=["playmat.html","field-guide.html","magic-guide.html","living-guide.html","survival-guide.html"];
- for(const path of routes)await expect(page.locator('a[href="./'+path+'"]')).toHaveCount(1);
- await expect(page.getByText(/90–120 minutes, unverified/)).toHaveCount(1);
- const dimensions=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));
- expect(dimensions.width).toBeLessThanOrEqual(dimensions.viewport+2);
+test("single A4 core rules fit without clipping",async({page})=>{
+ await page.goto("/rules.html");
+ await page.emulateMedia({media:"print"});
+ const dims=await page.locator(".sheet").evaluate(el=>({w:el.getBoundingClientRect().width,
+  h:el.getBoundingClientRect().height,body:el.scrollHeight,client:el.clientHeight,
+  left:el.scrollWidth,inner:el.clientWidth}));
+ expect(dims.w).toBeLessThanOrEqual(192*96/25.4+2);
+ expect(dims.h).toBeLessThanOrEqual(279*96/25.4+2);
+ expect(dims.body,"One-page rules overflow").toBeLessThanOrEqual(dims.client+2);
+ expect(dims.left,"Horizontal rules overflow").toBeLessThanOrEqual(dims.inner+2);
+});
+test("A4 physical card sheets have exactly four 90x130 mm slots",async({page})=>{
+ await page.goto("/");
+ await page.emulateMedia({media:"print"});
+ const summary=await page.evaluate(()=>{
+  const sheets=[...document.querySelectorAll(".tt-print-only .tt-sheet")];
+  const cards=[...document.querySelectorAll(".tt-print-only .tt-card")];
+  return {sheets:sheets.length,cards:cards.length,pages:sheets.map(page=>({
+   width:page.getBoundingClientRect().width,height:page.getBoundingClientRect().height,
+   overflowing:page.scrollHeight>page.clientHeight+2,
+   children:page.querySelectorAll(".tt-card").length
+  })),first:cards[0]?{w:cards[0].getBoundingClientRect().width,h:cards[0].getBoundingClientRect().height}:null};
+ });
+ expect(summary.cards).toBe(printDeck("all").length);
+ expect(summary.sheets).toBe(Math.ceil(summary.cards/4));
+ expect(summary.pages.every(p=>p.children<=4&&!p.overflowing)).toBeTruthy();
+ expect(summary.first.w).toBeGreaterThan(90*96/25.4-2);
+ expect(summary.first.w).toBeLessThan(90*96/25.4+2);
+ expect(summary.first.h).toBeGreaterThan(130*96/25.4-2);
+ expect(summary.first.h).toBeLessThan(130*96/25.4+2);
+});
+test("filtering print copies does not generate or lose components",async({page})=>{
+ await page.goto("/");
+ await page.getByLabel("Card category").selectOption("monster");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("monster").length);
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(printDeck("monster").length);
+ await page.getByRole("button",{name:/PRINT QUANTITIES/}).click();
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(CATALOGUE.filter(c=>c.type==="monster").length);
+ await expect(page.getByRole("button",{name:/ONE EACH/})).toBeVisible();
 });
