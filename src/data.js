@@ -1,12 +1,13 @@
+import {PHASE6_CARDS,PHASE6_COPIES} from "./phase6-data.js";
 import { ECOLOGY_CARDS, ECOLOGY_COPIES, INTRINSICS } from "./ecology.js";
 import { MAGICAL_CARDS, MAGIC_IDENTITIES, MAGIC_PRINT_COPIES } from "./magic-data.js";
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
 export const HEROES = [
-  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with two rations.", flavor:"The map is wrong. Again." },
-  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with three unidentified potions.", flavor:"Almost certainly harmless." },
-  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 defence (already included).", flavor:"An honourable way to die." },
-  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with a ration, a key, and a smoky potion.", flavor:"Every lock is a suggestion." }
+  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with 2 rations. TECHNIQUE: next melee attack +3 ATK (once per monster).", flavor:"The map is wrong. Again." },
+  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with 3 mystery potions. TECHNIQUE: HEX deals 2 damage (once per monster).", flavor:"Almost certainly harmless." },
+  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 DEF (included). TECHNIQUE: HOLD +3 DEF for this response (once per monster).", flavor:"An honourable way to die." },
+  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with ration, key, smoky potion. TECHNIQUE: EVADE next successful hit (once per monster).", flavor:"Every lock is a suggestion." }
 ];
 
 export const MONSTERS = [
@@ -88,8 +89,8 @@ export const EQUIPMENT = [
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
-export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES, ...ECOLOGY_CARDS, ...INTRINSICS.map(x=>({...x,type:"intrinsic",art:"bones",flavor:"A permanent taste of the dungeon."}))];
-export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity","ecology","intrinsic"];
+export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES, ...ECOLOGY_CARDS, ...INTRINSICS.map(x=>({...x,type:"intrinsic",art:"bones",flavor:"A permanent taste of the dungeon."})), ...PHASE6_CARDS];
+export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity","ecology","intrinsic","tactic"];
 
 // Print quantities describe a playable physical supply, not simply specimens.
 // Distinct decks are printed separately and shuffled at setup.
@@ -107,6 +108,7 @@ export const PRINT_COPIES = {
   ring:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="ring").map(x=>[x.id,3])),
   identity:Object.fromEntries(MAGIC_IDENTITIES.map(x=>[x.id,1])),
   ecology:ECOLOGY_COPIES,
+  tactic:PHASE6_COPIES,
   intrinsic:Object.fromEntries(INTRINSICS.map(x=>[x.id,1]))
 };
 export const printDeck = types => {
