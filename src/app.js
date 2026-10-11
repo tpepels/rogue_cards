@@ -128,7 +128,7 @@ function runView() {
     '<div class="character-head">'+illustration(hero.art)+'<div><b>'+esc(hero.title)+'</b><span>TURN '+s.turn+' / '+esc(nodeLabel(s.position))+'</span></div></div>'+
     meter("HIT POINTS",s.hp,s.maxHp)+meter("HUNGER",s.hunger,MAX_HUNGER)+
     '<div class="panel-label">LIVING DUNGEON</div>'+
-    '<p class="fine-print">DOG: '+esc(s.pet.active?"Hunger "+s.pet.hunger+" / "+(s.pet.lastAction||"following"):"No companion")+
+    '<p class="fine-print">DOG: '+esc(s.pet.active?"Hunger "+s.pet.hunger+" / "+(s.pet.lastAction||"following")+" / at "+s.pet.position:"No companion")+
     ' · FAVOUR '+s.prayer.favour+' · PRAYER IN '+s.prayer.cooldown+' TURNS</p>'+
     '<p class="fine-print">INTRINSICS: '+esc(s.intrinsics.join(", ")||"None")+'</p>'+
     '<div class="numeric-stats"><span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span><span>AMULET <b>'+(s.hasAmulet?"YES":"NO")+'</b></span></div>'+
