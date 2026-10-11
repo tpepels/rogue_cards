@@ -488,6 +488,213 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  .tt-art-image,.tt-art-placeholder .ink-art{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
 
+
+/* PHASE 3b — COLLAGE ASSEMBLY
+   The image remains a real cropped, ink-filtered illustration, but it is now
+   the physical plate UNDER the stat rail, title, rule slip and corner label.
+   Pieces overlap like cut photocopies, never a tidy vertical UI stack.
+   Fixed plate variables are deterministic for screen and printed copies.
+   Mechanics always sit on solid, clean ivory stock. */
+.tt-card{
+ --art-right:-.6mm;
+ --art-left:-.45mm;
+ --art-bottom:5mm;
+ --slip-left:1.1mm;
+ --slip-right:.5mm;
+ --slip-bottom:7.2mm;
+ --slip-tilt:-.24deg;
+ --title-drop:0mm;
+ --rail-tilt:-.4deg;
+}
+.tt-card.tt-plate-a{--art-left:-.9mm;--art-right:-.2mm;--slip-left:1.7mm;--slip-right:.35mm;--slip-tilt:-.54deg;--title-drop:-.5mm;--rail-tilt:-.75deg}
+.tt-card.tt-plate-b{--art-left:.2mm;--art-right:-.85mm;--slip-left:.8mm;--slip-right:1.05mm;--slip-tilt:.41deg;--title-drop:.25mm;--rail-tilt:.4deg}
+.tt-card.tt-plate-c{--art-left:-.65mm;--art-right:-.25mm;--slip-left:1.4mm;--slip-right:.65mm;--slip-tilt:.28deg;--title-drop:-.1mm;--rail-tilt:-.55deg}
+.tt-card.tt-plate-d{--art-left:-.15mm;--art-right:-.6mm;--slip-left:.65mm;--slip-right:1.2mm;--slip-tilt:-.38deg;--title-drop:.55mm;--rail-tilt:.65deg}
+.tt-card .tt-head{
+ position:relative;z-index:7;
+ background:transparent;
+ border:0;
+ padding-left:.4mm;
+}
+.tt-card .tt-collage{
+ display:block;position:relative;z-index:1;
+ flex:1 1 auto;min-height:0;
+ width:100%;
+ margin:0;
+ isolation:isolate;
+ overflow:visible;
+}
+.tt-card .tt-collage > .tt-visual{
+ position:absolute;
+ z-index:1;
+ top:-.6mm;
+ bottom:var(--art-bottom);
+ left:var(--art-left);
+ right:var(--art-right);
+ width:auto;
+ height:auto;
+ min-height:0;
+ margin:0;
+ border:0;
+ box-shadow:none;
+ overflow:hidden;
+ background:#110e0b;
+ transform:rotate(var(--plate-turn,-.2deg));
+ transform-origin:40% 25%;
+}
+.tt-card .tt-collage > .tt-visual .tt-illustration{
+ flex:1 1 auto;
+ min-width:0;
+ width:100%;height:100%;
+ border:0;
+}
+.tt-card .tt-collage > .tt-visual .tt-art-image,
+.tt-card .tt-collage > .tt-visual .tt-art-placeholder{
+ width:100%;height:100%;
+}
+.tt-card .tt-title{
+ top:calc(10mm + var(--title-drop));
+ left:calc(2.2mm + var(--title-shift,0mm));
+ z-index:7;
+ max-width:calc(100% - 6mm - var(--title-shift,0mm));
+ padding:1.25mm 2.4mm 1.35mm 1.7mm;
+}
+.tt-card .tt-collage > .tt-content{
+ position:absolute;
+ z-index:5;
+ flex:none;
+ height:auto;
+ max-height:calc(100% - 18mm);
+ bottom:var(--slip-bottom);
+ left:var(--slip-left);
+ right:var(--slip-right);
+ width:auto;
+ margin:0;
+ padding:2.2mm 2.2mm 2.6mm;
+ border:0;
+ overflow:hidden;
+ background:#eee4d5;
+ background-image:linear-gradient(175deg,#f0e7d8,#eae0cf);
+ box-shadow:.8mm 1.05mm 0 #14100d,1.15mm 1.35mm 0 #746451;
+ transform:rotate(var(--slip-tilt));
+ transform-origin:20% 75%;
+ clip-path:polygon(0 1.6%,9% 0,18% 1.6%,29% .2%,42% 1.1%,55% .1%,69% 1.5%,83% 0,100% 1.4%,99.4% 50%,100% 99%,86% 100%,69% 99%,51% 100%,34% 98.6%,16% 100%,0 98.6%);
+}
+.tt-card .tt-collage > .tt-content:before{
+ content:"";position:absolute;
+ left:2mm;right:2mm;top:.6mm;
+ height:.5px;background:#1d170e4d;
+ pointer-events:none;
+}
+.tt-card .tt-collage > .tt-content .tt-rule,
+.tt-card .tt-collage > .tt-content .tt-behaviours,
+.tt-card .tt-collage > .tt-content .tt-corpse{
+ position:relative;z-index:1;
+}
+.tt-card .tt-footer{
+ position:absolute;
+ z-index:6;
+ bottom:1.5mm;
+ left:3mm;
+ right:3mm;
+ width:auto;
+ height:5mm;
+ min-height:5mm;
+ margin:0;
+ padding:.55mm 1.2mm .45mm;
+ border:0;
+ background:#e6dac6;
+ box-shadow:.5mm .55mm 0 #17130d;
+ transform:rotate(calc(var(--slip-tilt) * -.6));
+}
+/* A creature is a pasted text folio over a mostly full-size portrait. */
+.tt-layout-portrait-stats{--art-bottom:4mm;--slip-bottom:7.7mm}
+.tt-layout-monster,.tt-layout-monster-dense{
+ --art-bottom:37mm;
+ --slip-bottom:7.4mm;
+}
+.tt-layout-monster-dense{--art-bottom:39mm}
+.tt-layout-monster .tt-collage > .tt-content,
+.tt-layout-monster-dense .tt-collage > .tt-content{
+ padding:1.65mm 2mm 1.7mm;
+}
+.tt-card .tt-collage .tt-stats{
+ position:absolute;z-index:5;
+ order:initial;
+ top:9.5mm;
+ bottom:auto;
+ left:-.45mm;
+ width:15.4mm;
+ height:var(--rail-height,51mm);
+ flex:none;
+ background:#e8deca;
+ border:1px solid #17130d;
+ border-right:2px solid #17130d;
+ box-shadow:.65mm .8mm 0 #15110d;
+ transform:rotate(var(--rail-tilt));
+ transform-origin:10% 9%;
+}
+.tt-layout-portrait-stats{--rail-height:57mm}
+.tt-layout-monster,.tt-layout-monster-dense{--rail-height:39mm}
+.tt-card .tt-collage > .tt-visual .tt-stage{
+ position:absolute;z-index:6;
+ right:-.2mm;
+ top:var(--stage-top,25mm);
+ bottom:auto;
+ transform:rotate(calc(var(--slip-tilt) * -1));
+ box-shadow:.45mm .55mm 0 #d2c6b5;
+}
+.tt-layout-scene-compact{--art-bottom:17mm}
+.tt-layout-room-scene{--art-bottom:7mm}
+.tt-layout-item-compact{--art-bottom:13mm}
+.tt-layout-illustration-dominant{--art-bottom:2mm}
+.tt-layout-mystery{--art-bottom:17mm}
+/* Flooded Chamber: a separate note taped OVER the illustration, not docked
+   to its edge. The artwork is visible to the right and beneath the paper. */
+.tt-card.tt-layout-room-split{--art-bottom:3mm}
+.tt-card.tt-layout-room-split .tt-collage > .tt-visual{
+ bottom:3mm;
+ display:block;
+}
+.tt-card.tt-layout-room-split .tt-collage > .tt-visual .tt-illustration{
+ display:block;position:absolute;inset:0;
+ width:100%;height:100%;
+}
+.tt-card.tt-layout-room-split .tt-collage > .tt-visual .tt-content--sidebar{
+ position:absolute;z-index:5;
+ top:16mm;
+ right:1mm;
+ bottom:auto;
+ left:auto;
+ display:block;flex:none;
+ width:39%;height:auto;
+ max-height:calc(100% - 24mm);
+ min-height:0;
+ padding:2.4mm 2.2mm 3mm;
+ margin:0;
+ overflow:hidden;
+ border:0;
+ background:#ede3d3;
+ box-shadow:.8mm .8mm 0 #110e0b;
+ transform:rotate(var(--slip-tilt));
+ clip-path:polygon(0 1%,23% 0,51% 1.5%,78% 0,100% 2%,99% 98%,69% 100%,38% 99%,0 100%);
+}
+.tt-card.tt-layout-room-split .tt-collage > .tt-visual .tt-content--sidebar .tt-rule{
+ font-size:11.7px;
+ line-height:1.3;
+}
+.tt-card.tt-layout-room-split .tt-collage > .tt-visual:after{
+ right:0;
+ pointer-events:none;
+ z-index:2;
+}
+.tt-layout-room-split .tt-title{--title-shift:0mm;max-width:62%;font-size:19.5px}
+/* Do not clip a tilted paste-on sheet against the art plate in print mode. */
+@media print{
+ .tt-card .tt-collage{overflow:visible}
+ .tt-card .tt-content,.tt-card .tt-title{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
