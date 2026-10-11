@@ -1,0 +1,59 @@
+@page{size:A4 portrait;margin:8mm}
+:root{font-family:"Courier New",monospace;background:#e5e1d5;color:#171510;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,select{font:inherit}
+a{color:inherit}.tt-sitehead{background:#151411;color:#f3efe4;padding:18px max(22px,calc((100vw - 1150px)/2));display:flex;gap:22px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.tt-brand{font-family:Georgia,serif;font-size:34px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+.tt-sub{font:11px/1.5 "Courier New",monospace;letter-spacing:.09em;margin-top:5px}
+.tt-nav{display:flex;gap:8px;flex-wrap:wrap}.tt-nav a,.tt-button{border:2px solid currentColor;background:transparent;padding:9px 12px;text-decoration:none;font-weight:bold;font-size:12px;cursor:pointer}
+.tt-nav a:hover,.tt-button:hover{background:#cfc6b4;color:#151411}.tt-shell{max-width:1150px;margin:0 auto;padding:24px 18px 80px}
+.tt-hero{border:3px solid #171510;padding:22px 24px;background:#f9f6ef}
+.tt-kicker{font-size:11px;letter-spacing:.1em;font-weight:bold;text-transform:uppercase}
+.tt-hero h1{font:900 clamp(37px,6vw,76px)/.95 Georgia,serif;letter-spacing:-2px;max-width:810px;margin:14px 0}
+.tt-hero p{font-size:15px;max-width:740px;line-height:1.6}
+.tt-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:17px}.tt-links a{border:2px solid;padding:11px 15px;font-weight:bold;text-decoration:none}.tt-links a:first-child{color:white;background:#171510}
+.tt-info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.tt-info>div{padding:15px;background:#f9f6ef;border:2px solid}.tt-info b{display:block;font-size:17px}.tt-info span{font-size:12px;line-height:1.5}
+.tt-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:4px solid;margin:18px 0;padding-bottom:12px}
+.tt-toolbar h2{margin:0;font:900 25px Georgia,serif}.tt-toolbar-controls{display:flex;gap:8px;flex-wrap:wrap}
+.tt-toolbar select,.tt-toolbar button{border:2px solid #171510;padding:8px 11px;background:#fffdfa;color:#171510;font-size:12px;font-weight:bold;cursor:pointer}
+.tt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:19px;justify-items:center}
+.tt-sheet{display:contents}
+.tt-card{background:#f6f1e5;color:#111;position:relative;overflow:hidden;width:90mm;height:130mm;min-width:90mm;max-width:90mm;min-height:130mm;max-height:130mm;display:flex;flex-direction:column;border:2px solid #181512;box-shadow:3px 4px 0 #9f9686;padding:3.2mm 3.2mm 2.6mm;isolation:isolate}
+.tt-card:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 6px,#00000004 6px 7px),radial-gradient(ellipse at 80% 8%,#aca59a33,transparent 45%)}
+.tt-head{display:flex;justify-content:space-between;align-items:center;gap:4mm;border-bottom:2px solid #151411;line-height:1.3;font-size:9px;letter-spacing:.055em;font-weight:bold;min-height:5mm}
+.tt-head strong{font-size:11px}
+.tt-title{font:900 23px/.98 Georgia,"Times New Roman",serif;margin:2mm 0 2.5mm;letter-spacing:-.7px;min-height:8mm;overflow-wrap:anywhere}
+.tt-visual{display:flex;position:relative;min-height:34mm;height:34mm;flex-shrink:0;border:1.6px solid #151411;background:repeating-linear-gradient(32deg,#e3ddd0,#e3ddd0 1px,#f5f0e5 1px,#f5f0e5 4px)}
+.tt-illustration{display:grid;place-items:center;flex:1;overflow:hidden;color:#151411}
+.tt-illustration .ink-art{width:100%;height:100%;max-height:33mm;object-fit:contain}
+.tt-stats{border-right:2px solid;width:15mm;display:flex;flex-direction:column;justify-content:stretch;background:#f6f1e5}
+.tt-stat{display:flex;justify-content:center;align-items:center;gap:2px;flex:1;flex-direction:column;border-bottom:1px solid}
+.tt-stat:last-child{border-bottom:0}
+.tt-stat b{font:bold 15px/.98 Georgia,serif}.tt-stat small{font:bold 8px "Courier New",monospace}
+.tt-stage{position:absolute;bottom:0;right:0;background:#171510;color:#fff;padding:1mm 2mm;font:bold 10px "Courier New",monospace}
+.tt-content{flex:1;min-height:0;overflow:hidden;border-bottom:1.5px solid #171510;margin-top:2mm;display:flex;flex-direction:column}
+.tt-rule{white-space:pre-line;font:12px/1.34 "Courier New",monospace;margin:1mm 0 0;overflow-wrap:break-word}
+.tt-label{font:bold 9px/1.2 "Courier New",monospace;letter-spacing:.01em}
+.tt-behaviours{margin-top:1mm;font-size:10px;line-height:1.2}
+.tt-behaviours>div{display:grid;grid-template-columns:10mm 1fr;padding:1.3mm 0;border-bottom:1px solid #aba69e;gap:1mm}
+.tt-behaviours b{font-weight:900}
+.tt-corpse{font:10px/1.22 "Courier New",monospace;margin:2mm 0 0;overflow-wrap:break-word}
+.tt-identified{font:bold 9px "Courier New",monospace;margin-top:auto;padding-top:1.5mm}
+.tt-footer{min-height:6.8mm;display:flex;justify-content:space-between;align-items:end;gap:2mm;font:10px/1.1 Georgia,serif}
+.tt-footer i{overflow:hidden;max-height:5.8mm;max-width:80%;white-space:nowrap;text-overflow:ellipsis}
+.tt-footer span{font:8px "Courier New",monospace;white-space:nowrap}
+.tt-monster .tt-visual{height:28mm;min-height:28mm}.tt-monster .tt-illustration .ink-art{max-height:27mm}
+.tt-monster .tt-title{font-size:21px}
+.tt-monster .tt-footer{min-height:5mm}
+.tt-monster .tt-content{margin-top:1.4mm}
+.tt-footerbar{max-width:1150px;margin:auto;padding:16px 18px 30px;font-size:11px}
+.tt-archive{margin-top:20px;font:12px/1.5 "Courier New",monospace}
+.tt-print-only{display:none}
+@media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-card{transform-origin:top center}.tt-hero{padding:17px}.tt-sitehead{padding:16px}.tt-title{font-size:23px}}
+@media print{
+ html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .tt-sitehead,.tt-shell,.tt-footerbar,.tt-noprint{display:none!important}
+ .tt-print-only{display:block!important}
+ .tt-sheet{display:grid;grid-template-columns:90mm 90mm;grid-template-rows:130mm 130mm;column-gap:4mm;row-gap:4mm;justify-content:center;align-content:start;width:194mm;height:277mm;max-height:277mm;break-after:page;page-break-after:always;overflow:hidden}
+ .tt-sheet:last-child{break-after:auto;page-break-after:auto}
+ .tt-card{box-shadow:none!important;margin:0!important;break-inside:avoid;page-break-inside:avoid;border-width:1.5px}
+}
