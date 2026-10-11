@@ -186,6 +186,194 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-footer{border-top-color:#33271d}
 .tt-footer i{letter-spacing:-.1px}
 
+/* PHASE 2 — compositional grammar taken from the six-card physical reference.
+   The physical card has ONE shared battered frame but different interior structures.
+   Rules and stats are printed on clear paper, art fills the remaining usable area. */
+.tt-card{
+ --min-illustration:52mm;
+ --title-shift:0mm;
+ --image-focus-x:center;
+ --image-focus-y:48%;
+}
+.tt-card .tt-head{
+ min-height:6mm;height:6mm;
+ padding-right:1mm;
+ border-bottom:1px solid #20170e;
+}
+.tt-masthead{
+ display:block;min-width:25mm;
+ background:#15120f;color:#eee7d9;
+ margin-left:-.7mm;padding:.55mm 1.6mm .4mm;
+ font:bold 9px/.95 "Courier New",monospace;
+ transform:rotate(-.35deg);
+}
+.tt-type{
+ align-self:center;
+ font:bold 10.3px/1 Georgia,serif;
+ letter-spacing:.035em;
+}
+.tt-title{
+ top:10.2mm;
+ left:calc(2.3mm + var(--title-shift));
+ max-width:calc(100% - 5mm);
+ z-index:5;
+ font-family:"Courier New",Courier,monospace;
+ font-size:22px;
+ line-height:.98;
+ letter-spacing:-.95px;
+ padding:1mm 1.7mm 1.05mm 1.4mm;
+ box-shadow:.8mm .9mm 0 #100e0b;
+ background:#f1ebdf;
+ transform:rotate(-.3deg);
+}
+.tt-title span{display:block}
+.tt-card:not(.tt-layout-room-split) .tt-visual{
+ flex:1 1 auto;
+ height:auto;
+ min-height:var(--min-illustration);
+ margin-top:1.1mm;
+ border:0;
+ background:#17130e;
+}
+/* Print-plate blocks stop at the photograph; their slight black edge is deliberate. */
+.tt-card:not(.tt-layout-room-split) .tt-visual .tt-illustration{
+ border:1px solid #18130f;
+}
+.tt-card:not(.tt-layout-room-split) .tt-content{
+ flex:0 0 auto;
+ min-height:0;
+ padding-top:1.1mm;
+ padding-bottom:.45mm;
+ margin-top:1.35mm;
+ border-top:1.3px solid #23180f;
+}
+.tt-card .tt-art-image{
+ object-position:var(--image-focus-x) var(--image-focus-y);
+}
+.tt-layout-portrait-stats{--min-illustration:79mm;--image-focus-x:53%}
+.tt-layout-monster{--min-illustration:42mm;--image-focus-x:57%}
+.tt-layout-monster-dense{--min-illustration:36mm;--image-focus-x:55%}
+.tt-layout-room-scene{--min-illustration:61mm}
+.tt-layout-scene-compact{--min-illustration:48mm}
+.tt-layout-illustration-dominant{--min-illustration:77mm}
+.tt-layout-item-compact{--min-illustration:63mm}
+.tt-layout-mystery{--min-illustration:52mm}
+.tt-layout-portrait-stats .tt-stats,
+.tt-layout-monster .tt-stats,
+.tt-layout-monster-dense .tt-stats{
+ flex:0 0 15.1mm;
+ background:#e7dfd0;
+ border:1px solid #15120f;
+ border-right:2px solid #15120f;
+ box-shadow:2px 0 0 #0d0c0a;
+}
+.tt-stat{
+ display:grid;
+ grid-template-columns:5mm 1fr;
+ grid-template-rows:auto auto;
+ gap:0;
+ align-content:center;
+ justify-content:center;
+ padding:.9mm .5mm;
+ border-bottom:1.5px solid #1b1711;
+}
+.tt-stat-symbol{
+ grid-column:1;grid-row:1 / 3;
+ display:grid;place-items:center;
+ font:900 14px/.95 Georgia,serif;
+}
+.tt-stat b{grid-column:2;grid-row:1;font:900 17px/1 "Courier New",monospace;text-align:center}
+.tt-stat small{grid-column:2;grid-row:2;font:bold 8px/.95 "Courier New",monospace;text-align:center}
+.tt-layout-portrait-stats .tt-stat-symbol{font-size:15px}
+.tt-layout-portrait-stats .tt-title{--title-shift:13mm}
+.tt-layout-monster .tt-title,
+.tt-layout-monster-dense .tt-title{--title-shift:13mm}
+.tt-layout-monster-dense .tt-title{font-size:20.5px}
+/* The monster is a species portrait plus a four-entry paper behaviour block.
+   The full corpse wording is retained during this visual-only phase. */
+.tt-content--monster .tt-label{
+ display:flex;align-items:baseline;justify-content:space-between;
+ gap:1mm;font:bold 10.8px/1.15 "Courier New",monospace;
+}
+.tt-content--monster .tt-label span{font:8.5px/1.1 "Courier New",monospace;text-align:right}
+.tt-content--monster .tt-behaviours{margin-top:.55mm;font-size:11.8px;line-height:1.15}
+.tt-content--monster .tt-behaviour-row{
+ grid-template-columns:10mm 1fr;
+ gap:1mm;
+ border-bottom:1px solid #a19889;
+ padding:.55mm 0;
+}
+.tt-content--monster .tt-behaviour-row b{
+ display:inline-block;
+ background:#251f17;color:#f5ead8;
+ padding:.1mm .7mm;
+ width:max-content;
+}
+.tt-content--monster .tt-corpse{
+ margin-top:.7mm;
+ padding-top:.6mm;
+ border-top:1.2px solid #241a12;
+ font:11.2px/1.15 "Courier New",monospace;
+}
+.tt-content--monster .tt-corpse b{font-weight:900}
+.tt-content--room .tt-rule,
+.tt-content--item .tt-rule,
+.tt-content--hero .tt-rule{line-height:1.22}
+.tt-content--item .tt-rule{
+ font-size:12.8px;
+ max-width:100%;
+}
+.tt-content--potion .tt-rule{
+ font-size:12.25px;
+ line-height:1.19;
+}
+.tt-content--potion .tt-identified{
+ font-size:9.3px;
+ border-top:1px solid #6c6051;
+ padding-top:.8mm;
+ margin-top:1mm;
+}
+.tt-content--room{padding-left:.35mm}
+/* Inset-room design: a true vertical paper strip, not a hidden second panel.
+   The sidebar is an actual sibling of the room illustration, never a footer. */
+.tt-layout-room-split .tt-visual{
+ min-height:0;height:auto;flex:1 1 auto;
+ margin-top:1.1mm;
+ border:2px solid #17130f;
+}
+.tt-layout-room-split .tt-title{
+ top:9.9mm;left:2.8mm;
+ font-size:19px;
+ max-width:calc(100% - 6mm);
+}
+.tt-visual--split .tt-illustration{flex:1 1 61%;width:61%;min-width:0}
+.tt-visual--split .tt-content--sidebar{
+ flex:0 0 39%;width:39%;
+ height:100%;min-height:0;
+ margin:0;padding:14mm 1.4mm 2mm;
+ border:0;border-left:2px solid #18130e;
+ background:#eee5d6;
+ box-shadow:inset 2px 0 #60534350;
+}
+.tt-visual--split .tt-content--sidebar .tt-rule{
+ font-size:11px;
+ line-height:1.3;
+ overflow-wrap:anywhere;
+}
+.tt-visual--split:after{right:39%;pointer-events:none}
+.tt-visual--split .tt-stage{right:39%;bottom:0}
+/* The short-effect card is almost entirely a single found illustration. */
+.tt-layout-illustration-dominant .tt-content{
+ padding-left:1mm;padding-right:1mm;
+}
+.tt-layout-illustration-dominant .tt-rule{font-size:13.2px;line-height:1.25}
+.tt-layout-illustration-dominant .tt-title{font-size:23px}
+/* Footer is a simple ink rule rather than a new decorated control strip. */
+.tt-footer{
+ border-top:1.3px solid #16120f;
+ padding-top:.45mm;
+}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
