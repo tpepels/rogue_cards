@@ -5,7 +5,7 @@ test("homepage is a physical card game, not a browser dungeon engine",async({pag
  await page.goto("/");
  await expect(page.getByRole("heading",{name:/dungeon lives on the table/i})).toBeVisible();
  await expect(page.getByRole("link",{name:/one-page rules/i})).toBeVisible();
- await expect(page.locator(".tt-card")).toHaveCount(printDeck("all").length);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
  expect(errors).toEqual([]);
 });
 test("all card specimen content fits within its physical card face",async({page})=>{
