@@ -78,6 +78,20 @@ test("print handouts fit their declared A4 content area without clipping",async(
   for(const route of ["/field-guide.html","/playmat.html"]){
     await page.goto(route);
     await page.emulateMedia({media:"print"});
+    const geom=await page.evaluate(()=>{
+      const paper=document.querySelector("section.paper");
+      const table=paper.querySelector(".map-table");
+      if(!table) return null;
+      const row=table.querySelector("tbody tr");
+      const footer=paper.querySelector("footer");
+      return {paperScroll:paper.scrollHeight,paperClient:paper.clientHeight,
+        tableHeight:table.getBoundingClientRect().height,
+        firstRowHeight:row.getBoundingClientRect().height,
+        rowCSS:getComputedStyle(row.querySelector("td")).height,
+        footerBottom:footer.getBoundingClientRect().bottom-paper.getBoundingClientRect().top,
+        pageHeight:paper.getBoundingClientRect().height};
+    });
+    if(geom) console.log("PRINT MAP GEOMETRY",JSON.stringify(geom));
     const pages=await page.locator("section.paper").evaluateAll(elements=>elements.map(el=>{
       const rect=el.getBoundingClientRect();
       return {height:rect.height, client:el.clientHeight, scroll:el.scrollHeight, width:rect.width};
