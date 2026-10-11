@@ -262,3 +262,53 @@ test("Phase 3 Xerox filter is on illustrations only and appears on all print cop
  expect(preview.width).toBeGreaterThan(90*96/25.4-2);
  expect(preview.height).toBeLessThan(130*96/25.4+2);
 });
+
+
+test("collage cards physically overlap art, pasted rules, titles and stat rails without hiding mechanics",async({page})=>{
+ await page.goto("/");
+ const samples=["delver","eye","key","smoky","m-flood"];
+ const measurements=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.filter(c=>
+   ["delver","eye","key","smoky","m-flood"].includes(c.dataset.id)).map(card=>{
+  const art=card.querySelector(".tt-visual");
+  const note=card.querySelector(".tt-content");
+  const title=card.querySelector(".tt-title");
+  const rail=card.querySelector(".tt-stats");
+  const a=art.getBoundingClientRect(),n=note.getBoundingClientRect(),t=title.getBoundingClientRect();
+  const overlap=(x,y)=>Math.max(0,Math.min(x.bottom,y.bottom)-Math.max(x.top,y.top))
+    *Math.max(0,Math.min(x.right,y.right)-Math.max(x.left,y.left));
+  return {id:card.dataset.id,assembly:card.dataset.assembly,
+    artWithPaper:overlap(a,n),artWithTitle:overlap(a,t),
+    artWithStats:rail?overlap(a,rail.getBoundingClientRect()):null,
+    clipped:note.scrollHeight-note.clientHeight,
+    textFilter:getComputedStyle(note).filter,
+    paperColor:getComputedStyle(note).backgroundColor,
+    paperPosition:getComputedStyle(note).position,
+    artPosition:getComputedStyle(art).position
+  };
+ }));
+ expect(measurements).toHaveLength(samples.length);
+ for(const value of measurements){
+  expect(value.assembly).toBe("collage");
+  expect(value.artPosition).toBe("absolute");
+  expect(value.paperPosition).toBe("absolute");
+  expect(value.artWithPaper,"Art and paste-on slip don't overlap on "+value.id).toBeGreaterThan(150);
+  expect(value.artWithTitle,"Title doesn't overlay printed image on "+value.id).toBeGreaterThan(100);
+  expect(value.clipped,"Rules clipped on "+value.id).toBeLessThanOrEqual(2);
+  expect(value.textFilter).toBe("none");
+  expect(value.paperColor).not.toBe("rgba(0, 0, 0, 0)");
+ }
+ for(const value of measurements.filter(v=>v.artWithStats!==null)){
+  expect(value.artWithStats,"Stats must intrude onto art on "+value.id).toBeGreaterThan(100);
+ }
+ await page.emulateMedia({media:"print"});
+ for(const id of ["delver","eye","key","m-flood"]){
+  const v=await page.locator('.tt-print-only .tt-card[data-id="'+id+'"]').first().evaluate(card=>{
+    const art=card.querySelector(".tt-visual").getBoundingClientRect();
+    const note=card.querySelector(".tt-content").getBoundingClientRect();
+    return {overlap:Math.max(0,Math.min(art.bottom,note.bottom)-Math.max(art.top,note.top)),
+      overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight};
+  });
+  expect(v.overlap,"Print loses collage overlap "+id).toBeGreaterThan(4);
+  expect(v.overflow).toBeLessThanOrEqual(2);
+ }
+});
