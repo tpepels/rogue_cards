@@ -4,7 +4,7 @@ export const PROPERTIES = [
   ["fire","FIRE"],["water","WATER"],["cold","COLD"],["electricity","ELECTRICITY"],
   ["acid","ACID"],["poison","POISON"],["metal","METAL"],["wood","WOOD"],
   ["stone","STONE"],["dark","DARK"],["light","LIGHT"],["holy","HOLY"],
-  ["digging","DIGGING"],["teleport","TELEPORT"]
+  ["digging","DIGGING"],["teleport","TELEPORT"],["organic","ORGANIC"]
 ].map(([id,title])=>({id,title}));
 
 export const MAGIC = {
@@ -27,7 +27,7 @@ export const MAGIC = {
   effects:[
    {id:"spark",name:"Sparks",property:"electricity",rule:"ZAP: Deal 3 ELECTRICITY damage; +2 in WATER."},
    {id:"frost",name:"Frost",property:"cold",rule:"ZAP: Deal 2 COLD damage and freeze a monster for 1 monster turn."},
-   {id:"burrow",name:"Digging",property:"digging",rule:"ZAP: Ignore one LOCKED or STONE obstacle in your current room."},
+   {id:"burrow",name:"Digging",property:"digging",rule:"ZAP: Disarm the next TRAP or open the next LOCKED passage without a key."},
    {id:"corrode",name:"Acid",property:"acid",rule:"ZAP: Deal 2 ACID damage; +2 against METAL monsters."}
   ]
  },
