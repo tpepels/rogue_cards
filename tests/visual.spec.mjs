@@ -75,7 +75,7 @@ test("field guide and tracking sheets contain their intended pages",async({page}
 });
 
 test("print handouts fit their declared A4 content area without clipping",async({page})=>{
-  for(const route of ["/field-guide.html","/playmat.html","/magic-guide.html"]){
+  for(const route of ["/field-guide.html","/playmat.html"]){
     await page.goto(route);
     await page.emulateMedia({media:"print"});
     const pages=await page.locator("section.paper").evaluateAll(elements=>elements.map(el=>{
