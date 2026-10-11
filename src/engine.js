@@ -3,7 +3,7 @@ import {
   BEHAVIOURS, EVENTS, ENTRANCE, VAULT, PRINT_COPIES
 } from "./data.js";
 import { MAGIC_TYPES } from "./magic-data.js";
-import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName } from "./magic.js";
+import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName,propertiesOf } from "./magic.js";
 
 export const VERSION = 3;
 export const LAST_FLOOR = 10;
@@ -261,9 +261,9 @@ function consumePotion(state, appearanceId, thrown) {
   const mon=currentMonster(state);
   if(thrown && mon) {
     if(effect==="healing") mon.hp-=2;
-    if(effect==="poison") mon.hp -= 5 + (["rat","goblin","troll"].includes(mon.id) ? 2 : 0);
+    if(effect==="poison") mon.hp -= 5 + (propertiesOf(mon.id).includes("organic") ? 2 : 0);
     if(effect==="invisibility") mon.blinded=2;
-    if(effect==="frost") {mon.hp-=(currentRoom(state).terrain==="WATER"?5:3);mon.frozen=1;}
+    if(effect==="frost") {mon.hp-=(propertiesOf(currentRoom(state).id).includes("water")?5:3);mon.frozen=1;}
     if(effect==="polymorph") {
       let replacement=draw(state,state.decks.monsters);
       let attempts=0;
