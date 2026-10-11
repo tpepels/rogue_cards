@@ -22,7 +22,7 @@ test("reproducible setup and randomized potion mapping",()=>{
   for(const hero of HEROES){
     const s=startRun(hero.id,304);
     assert.deepEqual(s,startRun(hero.id,304));
-    assert.equal(s.version,2);
+    assert.equal(s.version,3);
     assert.equal(s.position,"0");
     assert.equal(s.hunger,18);
     assert.equal(s.hp,hero.hp);
@@ -200,7 +200,7 @@ test("starting items are reserved from the finite printed Object pile",()=>{
   const inventorySizes={delver:2,knight:1,wizard:3,rogue:3};
   for(const [hero,size] of Object.entries(inventorySizes)){
     const s=startRun(hero,55);
-    assert.equal(s.decks.loot.draw.length,44-size);
+    assert.equal(s.decks.loot.draw.length,80-size);
     assert.equal(s.inventory.length,size);
   }
 });
