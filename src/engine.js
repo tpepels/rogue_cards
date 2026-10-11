@@ -283,7 +283,7 @@ function consumePotion(state, appearanceId, thrown) {
     return;
   }
   if(effect==="healing") state.hp=Math.min(state.maxHp,state.hp+5);
-  if(effect==="poison") state.hp-=3;
+  if(effect==="poison") {if(resistsPoison(state))log(state,"Resistance ring blocks POISON.");else state.hp-=3;}
   if(effect==="invisibility") state.status.invisible=3;
   if(effect==="frost") state.hunger=Math.min(MAX_HUNGER,state.hunger+4);
   if(effect==="polymorph") {
