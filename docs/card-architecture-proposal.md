@@ -1,5 +1,9 @@
 # Rogue Cards: Card architecture proposal (review only)
 
+> **Updated design decision (2026-10-11):** The later [Room, Feature & Chest prototype](room-feature-prototype.md) supersedes the seven-pile assumption and the earlier eleven-role count below. The revised design has **twelve roles** (adding Feature; Chest is a Feature subtype), printed Room fixtures, matching Chest/Feature draws, optional objects accessible **only after combat**, and a separate Event/Trap trigger. Existing eleven-role study is archived here as a comparison, not the current proposed architecture. See [the focused, actual-size layout study](room-feature-layout-study.html).
+
+
+
 **Status:** design proposal; no changes to the current deck, rulebook or renderer until approved.
 
 ## Locked constraints
