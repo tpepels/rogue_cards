@@ -267,8 +267,8 @@ test("Phase 3 Xerox filter is on illustrations only and appears on all print cop
 test("collage cards physically overlap art, pasted rules, titles and stat rails without hiding mechanics",async({page})=>{
  await page.goto("/");
  const samples=["delver","eye","key","smoky","m-flood"];
- const measurements=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.filter(c=>
-   ["delver","eye","key","smoky","m-flood"].includes(c.dataset.id)).map(card=>{
+ const measurements=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>[...new Map(cards.filter(c=>
+   ["delver","eye","key","smoky","m-flood"].includes(c.dataset.id)).map(c=>[c.dataset.id,c])).values()].map(card=>{
   const art=card.querySelector(".tt-visual");
   const note=card.querySelector(".tt-content");
   const title=card.querySelector(".tt-title");
