@@ -11,8 +11,8 @@ test("homepage is a physical card game, not a browser dungeon engine",async({pag
 test("all card specimen content fits within its physical card face",async({page})=>{
  await page.goto("/");
  await page.getByRole("button",{name:/PRINT QUANTITIES/}).click();
- await expect(page.locator(".tt-card")).toHaveCount(CATALOGUE.length);
- const overflowing=await page.locator(".tt-card").evaluateAll(cards=>cards.filter(card=>{
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(CATALOGUE.length);
+ const overflowing=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.filter(card=>{
    const body=card.querySelector(".tt-content");
    const title=card.querySelector(".tt-title");
    return body.scrollHeight>body.clientHeight+2||title.scrollHeight>title.clientHeight+2;
