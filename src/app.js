@@ -1,4 +1,5 @@
 import { HEROES, CATALOGUE, TYPES, EFFECTS, APPEARANCES, BEHAVIOURS, printDeck } from "./data.js";
+import { MAGIC_TYPES, MAGIC } from "./magic-data.js";
 import { illustration } from "./art.js";
 import { cardMarkup, printSheets, escapeHtml as esc } from "./card-view.js";
 import {
@@ -8,7 +9,7 @@ import {
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v2";
+const SAVE_KEY="rogue-cards-v3";
 let view="play";
 let filter="all";
 let kitMode=false;
@@ -31,7 +32,7 @@ function heroSelect() {
   return heading("01 / HERO SELECTION","CHOOSE YOUR BAD IDEA","A longer dungeon expedition. Two actions per turn, a shared monster-behaviour deck, and d6 combat.")+
     '<div class="hero-grid" aria-label="Choose an adventurer">'+HEROES.map(hero=>
       '<button class="hero-choice" type="button" data-hero="'+esc(hero.id)+'" aria-label="Start as '+esc(hero.title)+'">'+cardMarkup(hero)+'</button>').join("")+'</div>'+
-    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and potion-identity decks. This game stores the current run locally in your browser.</p>';
+    '<p class="fine-print">A new run shuffles room, monster, loot, event, behaviour, and four mystery-item identity sets. This game stores the current run locally in your browser.</p>';
 }
 function meter(label,value,max) {
   const percent=Math.max(0,Math.min(100,Math.round(value/max*100)));
@@ -56,9 +57,9 @@ function mapView(s) {
 }
 function inventoryView(s) {
   const held=s.inventory.map((item,index)=>{
-    const identified=item.kind==="potion" ? knownIdentity(s,item.id) : null;
+    const identified=item.kind==="potion" ? knownIdentity(s,item.id) : (s.magicKnown?.[item.kind]?.[item.id]||null);
     return '<li class="inventory__item"><span class="inventory__index">'+String(index+1).padStart(2,"0")+'</span>'+
-      '<span>'+esc(itemTitle(item))+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
+      '<span>'+esc(itemTitle(item))+(item.kind==="ring"?' <small>['+esc(item.blessing||"uncursed")+']</small>':'')+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
       '<span class="inventory__mark">'+(item.kind==="potion"&&!identified?'?':'+')+'</span></li>';
   }).join("");
   const identities=APPEARANCES.map(app=>
@@ -68,8 +69,13 @@ function inventoryView(s) {
     '<div class="equipped"><div class="panel-label">EQUIPMENT</div>'+
     '<div>WEAPON <b>'+esc(s.equipped.weapon||"None")+'</b></div>'+
     '<div>ARMOUR <b>'+esc(s.equipped.armour||"None")+'</b></div>'+
-    '<div>COMPANION <b>'+(s.equipped.companion?"DOG":"None")+'</b></div></div>'+
-    '<div class="identification"><div class="panel-label">POTION IDENTIFICATION</div>'+identities+'</div></section>';
+    '<div>COMPANION <b>'+(s.equipped.companion?"DOG":"None")+'</b></div>'+
+    '<div>RING <b>'+esc(s.equipped.ring?(s.equipped.ring.id+" / "+s.equipped.ring.blessing):"None")+'</b></div></div>'+
+    '<div class="identification"><div class="panel-label">POTION IDENTIFICATION</div>'+identities+'</div>'+
+    MAGIC_TYPES.map(type=>'<div class="identification"><div class="panel-label">'+type.toUpperCase()+' IDENTIFICATION</div>'+
+      MAGIC[type].appearances.map(([id,title])=>'<div class="identification__row"><span>'+esc(title)+'</span><b>'+
+        esc(MAGIC[type].effects.find(x=>x.id===s.magicKnown?.[type]?.[id])?.name||"???")+'</b></div>').join('')+'</div>').join('')+
+    '</section>';
 }
 function controls(s) {
   const terminal=s.phase==="won"||s.phase==="dead";
@@ -141,14 +147,14 @@ function galleryView() {
 }
 function rulesView() {
   return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
-    "Phase 2 physical rules. The browser follows the same setup, combat, monster behaviour and dungeon geometry.")+
-    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a></div>'+
+    "Phase 3: four unidentified magical families, fifteen shared properties, and printed interactions, alongside the Phase 2 dungeon rules.")+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a></div>'+
     '<div class="rules-grid">'+
     '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Depths 1–9 have one optional side chamber. Every side chamber connects only to its main-depth parent.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+
     '<article><span class="eyebrow">III / COMBAT</span><h2>ROLL ONE D6.</h2><p>Roll d6 + attack against 4 + defender defence. Natural 1 always misses. Natural 6 always hits and deals 3 damage. Other hits deal 2 damage.</p><p>Monster attacks use exactly the same roll. A living Floating Eye punishes melee attacks, even when you miss.</p></article>'+
     '<article><span class="eyebrow">IV / MONSTER DECK</span><h2>DRAW ONE CARD.</h2><p>Strike, Lunge, Guard, Frenzy, Drain and Recover make up a ten-card shared behaviour pile. Shuffle its discards when empty. Status effects may prevent a draw.</p><p>Guard grants +1 monster defence during your next two actions.</p></article>'+
-    '<article><span class="eyebrow">V / SECRET BOTTLES</span><h2>DISCOVER THE CONTENTS.</h2><p>Randomly pair potion appearances with identities at setup. An appearance retains its identity all run. Drink or throw to identify it. Note the result.</p><p>The physical kit has five potion appearances and five identities. Use the identification table in the playmat.</p></article>'+
+    '<article><span class="eyebrow">V / SECRET BOTTLES</span><h2>DISCOVER THE CONTENTS.</h2><p>Randomly pair potion appearances with identities at setup. An appearance retains its identity all run. Drink or throw to identify it. Note the result.</p><p>The physical kit includes identity cards for scrolls, wands and rings, plus potion slips. Use the separate magic identification guide.</p></article>'+
     '<article><span class="eyebrow">VI / PHYSICAL TABLE</span><h2>KEEP A SMALL MAP.</h2><p>Use the A4 dungeon sheet to track explored rooms, loot, wounds, and passages. Only the current large room and monster cards need to be displayed.</p><p>Print the physical kit with duplicate cards. The full intended run is 90–120 minutes, pending actual table-timed testing.</p></article>'+
     '</div>';
 }

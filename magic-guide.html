@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ROGUE CARDS / ISSUE 003 / THE UNKNOWN OBJECTS</title>
+<style>
+@page{size:A4 portrait;margin:10mm}
+*{box-sizing:border-box}
+:root{font-family:"Courier New",Courier,monospace;color:#111;background:#eae7e0}
+body{margin:0}.toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:190mm;margin:15px auto}
+.toolbar a{font-size:12px;font-weight:bold;color:inherit}
+.sheet{width:min(95%,190mm);min-height:277mm;background:#fff;border:3px solid #111;box-shadow:5px 5px #111;margin:16px auto;padding:11mm}
+.issue{font-size:10px;font-weight:900;letter-spacing:.1em;border-bottom:5px solid #111;padding-bottom:7px}
+h1{font:900 37px/.96 Impact,"Arial Black",sans-serif;margin:14px 0}
+h2{font:900 22px/1 Impact,"Arial Black",sans-serif;margin:21px 0 8px;border-bottom:3px solid #111}
+p,li,td,th{font-size:11px;line-height:1.55}ol{padding-left:20px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border:1px solid #111;padding:6px;text-align:left;vertical-align:top}
+th{background:#eee}
+.small{font-size:10px}.note{border:2px solid #111;padding:9px 12px;font-size:11px;font-weight:bold;line-height:1.5}
+.identities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.identity-set{border:2px solid #111;padding:11px}
+.identity-set b{font:900 18px Impact,"Arial Black",sans-serif}
+.identity-set label{display:block;font-size:10px;margin:9px 0;line-height:1.6}
+.identity-set label::after{content:"";display:block;border-bottom:1px dotted #111;height:11px}
+.properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 14px}
+.properties div{border-bottom:1px dotted #777;font-size:10px;padding:6px 0;line-height:1.4}
+.properties b{display:inline-block;min-width:85px}
+footer{border-top:2px solid #111;padding-top:7px;font-size:10px;font-weight:bold;display:flex;justify-content:space-between;margin-top:20px}
+@media(max-width:700px){.sheet{padding:17px;min-height:auto}.identities,.properties{grid-template-columns:1fr}.toolbar{padding:0 13px}}
+@media print{html,body{background:#fff}.toolbar{display:none}.sheet{border:0;box-shadow:none;width:190mm;height:277mm;min-height:277mm;max-height:277mm;margin:0;padding:0;break-after:page;page-break-after:always}.sheet:last-child{break-after:auto;page-break-after:auto}.identities,.properties{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head>
+<body><nav class="toolbar"><a href="./">← GAME</a><a href="./field-guide.html">TURN AND COMBAT RULES</a><a href="#" onclick="print();return false">PRINT / SAVE PDF ↗</a></nav>
+<main>
+<section class="sheet">
+<div class="issue">RC / FIELD GUIDE / SUPPLEMENT 003 / PAGE 01</div>
+<h1>NOTHING IS<br>WHAT IT SEEMS.</h1>
+<p>Phase 3 introduces four separate families of unidentified objects: <b>potions, scrolls, wands, and rings</b>. Only actions printed on an item are legal. There is no freeform spell combination, dipping or invented interaction.</p>
+<h2>SETUP / FOUR HIDDEN MAPPINGS</h2>
+<ol>
+<li>Set aside the <b>Identity</b> cards, grouped by family. These are reference cards, not loot. There are five potion identities (small cut-out slips on page 3 of the main Field Guide) and four each of Scroll, Wand and Ring identities.</li>
+<li>For each family separately, shuffle its identity cards <b>face down</b>. Place one under each named appearance in the order shown below. Do not peek. Every appearance receives exactly one identity.</li>
+<li>Shuffle ordinary appearance cards into the Object supply, while keeping Identity cards outside that supply. Rings have three printed copies per appearance, explicitly marked <b>UNCURSED / BLESSED / CURSED</b>; these markers are visible and do not change the hidden identity.</li>
+<li>When you use an unknown item, reveal its matching hidden identity card, perform the printed action, and write its identity below. Leave it face up. Other objects with the same appearance share the same identity for the entire run.</li>
+<li>Wands start with <b>three charges per individual wand card</b>. Mark each charge when ZAP is used; discard the wand after its third use. A Ring occupies the one Ring slot; exchanging rings takes one action. A scroll is discarded after READ.</li>
+</ol>
+<div class="identities">
+<div class="identity-set"><b>POTIONS</b><label>Smoky →</label><label>Milky →</label><label>Bubbling →</label><label>Black →</label><label>Cloudy →</label></div>
+<div class="identity-set"><b>SCROLLS</b><label>Ragged →</label><label>Sealed →</label><label>Waxed →</label><label>Crackling →</label></div>
+<div class="identity-set"><b>WANDS</b><label>Bone →</label><label>Copper →</label><label>Ash →</label><label>Glass →</label></div>
+<div class="identity-set"><b>RINGS</b><label>Etched →</label><label>Ivory →</label><label>Twisted →</label><label>Brass →</label></div>
+</div>
+<p class="small">The printed Identity cards disclose precise effects once discovered. Keep this sheet as the physical memory. The browser uses deterministic hidden mappings from its run seed.</p>
+<footer><span>SUPPLEMENT 01 / 02</span><span>NEVER SHUFFLE IDENTITIES MID-RUN</span></footer>
+</section>
+<section class="sheet">
+<div class="issue">RC / FIELD GUIDE / SUPPLEMENT 003 / PAGE 02</div>
+<h1>FIFTEEN<br>PROPERTIES.</h1>
+<p>Properties are a shared vocabulary, not fifteen independent subsystems. A card only triggers the interactions listed in the reference below or its own printed action. No effect is invented merely because two tags sound compatible.</p>
+<div class="properties">
+<div><b>FIRE</b> Flame: 4 damage; WATER reduces to 1, WOOD rooms increase to 6.</div>
+<div><b>WATER</b> +2 electricity and thrown frost damage; reduces FIRE.</div>
+<div><b>COLD</b> Frost wand: 2 damage and freeze one monster turn.</div>
+<div><b>ELECTRICITY</b> Sparks wand: 3 damage, +2 in WATER.</div>
+<div><b>ACID</b> Acid wand: 2 damage, +2 versus METAL.</div>
+<div><b>POISON</b> Thrown POISON deals +2 versus ORGANIC; Resistance prevents self-poison.</div>
+<div><b>METAL</b> Rust Monster and Warden; vulnerable to acid.</div>
+<div><b>WOOD</b> WOOD rooms amplify FIRE damage to 6.</div>
+<div><b>STONE</b> Trap and locked passages; Digging bypasses their effects.</div>
+<div><b>DARK</b> -1 to Hero attack in dark rooms, unless Light ring works.</div>
+<div><b>LIGHT</b> A functioning Light ring suppresses DARK penalty.</div>
+<div><b>HOLY</b> Warding scroll reduces two successful hits by 2 each; Warden resists Banishment.</div>
+<div><b>DIGGING</b> Wand charges bypass the next TRAP or LOCKED effect.</div>
+<div><b>TELEPORT</b> Banishment permanently removes a non-Warden monster.</div>
+<div><b>ORGANIC</b> ORGANIC monsters take +2 thrown POISON damage.</div>
+</div>
+<h2>SELECTIVE BLESSINGS AND CURSES</h2>
+<p>In this prototype, <b>only Rings</b> have the blessed/uncursed/cursed state. The symbol is printed on the physical Ring copy, so its state is always visible even while the magical identity is hidden.</p>
+<table><thead><tr><th>Ring identity</th><th>UNCURSED</th><th>BLESSED</th><th>CURSED</th></tr></thead><tbody>
+<tr><td>Protection</td><td>+1 DEF</td><td>+2 DEF</td><td>-1 DEF</td></tr>
+<tr><td>Light</td><td>Ignore DARK penalty</td><td>Same</td><td>No benefit</td></tr>
+<tr><td>Sustenance</td><td>No turn-end hunger loss</td><td>Same</td><td>No benefit</td></tr>
+<tr><td>Resistance</td><td>Prevent poison and Shade drain</td><td>Same</td><td>No benefit</td></tr>
+</tbody></table>
+<h2>IMPORTANT RESTRICTIONS</h2>
+<div class="note">DRINK / THROW only on Potions. READ only on Scrolls. ZAP only on Wands. WEAR only on Rings. One action per use. No unprinted combinations.</div>
+<p>Scroll Mapping peeks at the top Room card for an unexplored adjacent location; it does not explore or trigger that location. Wand Digging prepares one bypass for the next locked or trapped room you enter. No spontaneous passage is created. Attacking a Monster or ending a turn still uses the original Phase 2 rules.</p>
+<footer><span>SUPPLEMENT 02 / 02</span><span>PHYSICAL FIRST / ISSUE 003</span></footer>
+</section>
+</main></body></html>

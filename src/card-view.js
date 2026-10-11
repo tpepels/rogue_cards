@@ -26,6 +26,7 @@ export function cardMarkup(card, opts = {}) {
       '<span><b>' + Number(card.attack) + '</b> ATK</span>' +
       '<span><b>' + Number(card.defense) + '</b> DEF</span></div>'
     : "";
+  const blessingTag = card.blessing ? '<span class="game-card__tag">' + esc(card.blessing.toUpperCase()) + '</span>' : "";
   const tag = card.terrain
     ? '<span class="game-card__tag">' + esc(card.terrain) + '</span>'
     : "";
@@ -41,7 +42,7 @@ export function cardMarkup(card, opts = {}) {
     '<h3 class="game-card__title">' + esc(card.title) + '</h3>' +
     '<div class="game-card__picture">' + illustration(card.art) +
     '<span class="picture-index" aria-hidden="true">' + symbol + '</span></div>' +
-    stats + tag +
+    stats + tag + blessingTag +
     '<div class="game-card__rule">' + body + '</div>' +
     '<div class="game-card__flavor">“' + esc(card.flavor || "Here lies trouble.") + '”</div>' +
     '</article>';
