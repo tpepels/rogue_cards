@@ -24,7 +24,7 @@ footer{border-top:2px solid;margin-top:23px;padding-top:6px;display:flex;justify
 <h2>01 / AUTONOMOUS COMPANION</h2>
 <p>EQUIP the Faithful Dog as one action. At the end of every turn, before monster behaviour, check the Dog. Every third turn reduce Dog hunger by 1. If Dog hunger reaches 0 it wanders off. Feed a ration as one action to restore Dog hunger to 9 and raise loyalty by 1 (maximum 4).</p>
 <table><tr><th>Roll d6</th><th>Pet action, when present in the current room</th></tr>
-<tr><td>1–2</td><td>ROAM: loyalty -1 (minimum 0). Dog searches; does not move monsters.</td></tr>
+<tr><td>1–2</td><td>ROAM: loyalty -1. Dog moves to the first known adjacent room (BACK, FORWARD, SIDE, LINK); if none, it stays. Monsters never move.</td></tr>
 <tr><td>3–4</td><td>SNIFF: loyalty +1 (maximum 4). Can signal an old trap.</td></tr>
 <tr><td>5–6</td><td>ATTACK: if a monster is present, deal 1 damage. Otherwise rest.</td></tr></table>
 <p>When you change rooms the Dog catches up on its next turn-end instead of rolling. It is autonomous: do not add the previous Phase 2 passive +1 bonus to your melee attack.</p>
@@ -41,8 +41,8 @@ footer{border-top:2px solid;margin-top:23px;padding-top:6px;display:flex;justify
 <h1>THE GODS AND<br>THE DEAD.</h1>
 <h2>03 / INTRINSICS</h2>
 <table><tr><th>Intrinsic</th><th>Permanent benefit after eating its species</th></tr>
-<tr><td>Scent</td><td>When entering a monster room, identify its creature immediately.</td></tr>
-<tr><td>Scavenger</td><td>Once per run, one subsequent corpse meal restores 3 extra hunger.</td></tr>
+<tr><td>Scent</td><td>+1 ATK on the first melee attempt against each monster.</td></tr>
+<tr><td>Scavenger</td><td>Once per run, a subsequent corpse meal restores 3 extra hunger.</td></tr>
 <tr><td>Focus</td><td>Ignore DARK room attack penalties.</td></tr><tr><td>Rustproof</td><td>Rust Monster hits no longer reduce your defence.</td></tr>
 <tr><td>Shade</td><td>Restless Shade attacks no longer drain hunger.</td></tr>
 <tr><td>Regeneration</td><td>Every third completed turn, regain 1 HP (maximum your starting HP).</td></tr></table>
