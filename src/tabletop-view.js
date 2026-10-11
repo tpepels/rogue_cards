@@ -46,7 +46,7 @@ const rulify=rule=>esc(rule).replace(
 function visual(card){
  const asset=assetPath(card);
  const image=asset
-  ?'<img class="tt-art-image" src="'+esc(asset)+'" alt="" loading="lazy" decoding="async">'
+  ?'<img class="tt-art-image" src="'+esc(asset)+'" alt="" loading="eager" decoding="async">'
   :'<div class="tt-art-placeholder" aria-hidden="true">'+illustration(card.art)+'</div>';
  return '<div class="tt-illustration">'+image+'</div>';
 }
