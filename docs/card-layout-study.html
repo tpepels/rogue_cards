@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rogue Cards — Card Face Architecture Study</title>
+<style>
+:root{font-family:"Courier New",monospace;color:#15130f;background:#c9c3b5}*{box-sizing:border-box}
+body{margin:0}
+header{background:#15130f;color:#eee6d9;padding:28px max(20px,calc((100vw - 1140px)/2))}
+header h1{font:900 35px Georgia,serif;margin:0 0 9px;letter-spacing:-1px}
+header p{max-width:820px;font:13px/1.6 "Courier New",monospace;margin:0}
+header a{color:inherit}
+.notice{padding:13px 20px;background:#ece7dc;border-bottom:4px double #15130f;font-size:12px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));justify-items:center;gap:42px 20px;margin:35px auto;max-width:1270px}
+.study{max-width:95%;display:flex;align-items:center;flex-direction:column;gap:9px}
+.study>p{max-width:90mm;margin:0;font-size:11px;line-height:1.4}
+.card{position:relative;width:90mm;height:130mm;flex-shrink:0;border:2px solid #16130d;background:#eee7d8;display:flex;flex-direction:column;box-shadow:4px 5px 0 #736c60;padding:3.6mm 4mm 3mm;isolation:isolate;overflow:hidden}
+.card:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:repeating-linear-gradient(90deg,#00000007 0 1px,transparent 1px 5px),radial-gradient(ellipse at 20% 10%,#8a7f6326,transparent 55%)}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:4px;font-weight:bold;font-size:8.5pt;height:7mm;border-bottom:2px solid}
+.name{font:900 19pt/.92 Georgia,serif;letter-spacing:-.4px;min-height:11mm;margin:2mm 0 1mm}
+.art{height:49mm;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border:1.8px solid #17130e;background:repeating-linear-gradient(35deg,#eee8da 0 2px,#d7cfbd 2px 3px,#eee8da 3px 5px)}
+.art svg{height:93%;width:93%;filter:contrast(3);mix-blend-mode:multiply}
+.art:after{content:"ENGRAVED ARTWORK · PLACEHOLDER";position:absolute;bottom:0;right:0;background:#111;color:white;padding:2px 4px;font-size:6.4pt;letter-spacing:.04em}
+.text{flex:1;min-height:0;border-top:2px solid #13110e;margin-top:2mm;padding-top:2mm;font:9.8pt/1.24 "Courier New",monospace;overflow:hidden}
+.text strong,.text b{font-weight:900}
+.titleline{font-size:9pt;letter-spacing:.02em;border-bottom:1px solid #80786d;margin-bottom:2mm;padding-bottom:1mm;font-weight:bold}
+.foot{margin-top:1.4mm;border-top:1.6px solid #17130e;min-height:6mm;font:italic 9pt/1.13 Georgia,serif;display:flex;justify-content:space-between;gap:5px;align-items:end}
+.foot small{font:7pt "Courier New",monospace;white-space:nowrap}
+.rowlist{display:flex;flex-direction:column;gap:1mm}
+.line{display:grid;grid-template-columns:13mm 1fr;gap:2mm;padding:1.3mm 0;border-bottom:1px solid #b8afa0}
+.line strong{white-space:nowrap}
+.hero .art,.monster .art{display:grid;grid-template-columns:17mm 1fr}
+.stats{display:flex;flex-direction:column;border-right:2px solid;background:#eee7d8;z-index:1;height:100%}
+.stats div{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;border-bottom:1px solid;font:900 13pt Georgia,serif}
+.stats div:last-child{border-bottom:none}
+.stats span{font:7pt "Courier New",monospace}
+.hero .art{height:53mm}
+.hero .text{font-size:10pt}
+.monster .art{height:31mm}
+.monster .text{font-size:9.6pt}
+.monster .line{padding:1.1mm 0}
+.monster .drop{border:2px solid;margin-top:2mm;padding:1mm;font-size:8.5pt}
+.room .art,.trap .art{height:43mm}
+.combat .art,.ability .art,.spell .art{height:48mm}
+.item .art,.event .art,.reward .art,.companion .art{height:51mm}
+.block{border-bottom:1px solid #9e9485;padding:1.4mm 0}
+.block:last-child{border-bottom:0}
+.tag{background:#16130e;color:#f5efe4;font:8pt "Courier New",monospace;padding:1px 4px;display:inline-block;margin-right:3px;font-weight:bold}
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:2.5mm}
+.dual>div{border:1.2px solid;padding:2mm}
+.classlabel{font:8.5pt "Courier New",monospace;background:#16130e;color:#eee6d9;align-self:center;padding:1mm 2mm}
+.controls{margin-top:32px;padding:20px;max-width:1100px;margin-left:auto;margin-right:auto;background:#efe9dc;border:2px solid}
+.controls h2{font:900 25px Georgia,serif}
+.controls p{font-size:12px;line-height:1.6}
+@media(max-width:400px){.grid{grid-template-columns:1fr}.study{max-width:100%}.card{transform:scale(.96)}}
+@media print{@page{size:A4;margin:8mm}header,.notice,.controls,.study>p{display:none}.grid{display:block;margin:0}.study{display:inline-flex;vertical-align:top;margin:0 3mm 4mm}.card{box-shadow:none}}
+</style></head><body>
+<header><h1>Rogue Cards · Card-face layout study</h1><p>Eleven distinct physical roles, one family of borders and typography. This is an <strong>editable structural wireframe</strong>, not a deck redesign or an illustration approval. View at actual size to judge title, mechanics, d6 tables and card density. <a href="../docs/card-architecture-proposal.md">Read the architecture proposal →</a></p></header>
+<div class="notice"><strong>PRELIMINARY DESIGN / DO NOT PRINT AS FINAL CARDS:</strong> All illustrations are current sparse SVG stand-ins. Final art needs unique, textured black-and-white engraving in the style of your reference photograph. Body text shown here is example wording, not approved mechanics.</div>
+<main class="grid">
+<section class="study"><div class="classlabel">01 / CHARACTER ANCHOR</div>
+<article class="card hero"><div class="meta"><span>RC / HERO</span><span>STARTING CHARACTER</span></div><div class="name">Cave Delver</div><div class="art"><div class="stats"><div>22<span>HP</span></div><div>+4<span>ATK</span></div><div>+3<span>DEF</span></div><div>+3<span>WIT</span></div></div><div data-art="delver"></div></div><div class="text"><div class="titleline">EXPLORER / 1 HERO</div><div class="block">Choose this Hero and take its two Ability cards.</div><div class="block"><b>Slots:</b> 1 Weapon · 1 Armour · 1 Companion</div><div class="block">HP counters beside this card. The Hero itself is never exhausted.</div></div><div class="foot"><em>“Down is a kind of home.”</em><small>H-01</small></div></article>
+<p>Hero identity and core statistics only. Ability text moves to separate cards.</p></section>
+<section class="study"><div class="classlabel">02 / PERSONAL ABILITY</div>
+<article class="card ability"><div class="meta"><span>RC / ABILITY</span><span>DELVER ONLY</span></div><div class="name">Tunnel Sense</div><div class="art"><div data-art="delver"></div></div><div class="text"><div class="titleline">REACTION · ONCE PER ROOM</div><div class="block">After failing a WIT test, reroll your d20. You must use the second result.</div><div class="block"><b>USED:</b> Turn sideways. Ready when you enter the next Room.</div></div><div class="foot"><em>“A familiar wrong turn.”</em><small>A-01</small></div></article>
+<p>One self-contained class power; belongs beside a Hero, never inside a random deck.</p></section>
+<section class="study"><div class="classlabel">03 / TACTICAL ACTION</div>
+<article class="card combat"><div class="meta"><span>RC / COMBAT ACTION</span><span>ANY HERO</span></div><div class="name">Press the Attack</div><div class="art"><div data-art="knight"></div></div><div class="text"><div class="titleline">ACTION · ONCE PER ROOM</div><div class="block">Attack with <b>DIS</b>.</div><div class="block">On a hit, deal <b>2d6</b> damage instead of d6.</div><div class="block">Turn sideways after use.</div></div><div class="foot"><em>“There is no second chance.”</em><small>C-03</small></div></article>
+<p>Visible action choice with explicit risk. Common Strike remains repeatable.</p></section>
+<section class="study"><div class="classlabel">04 / PHYSICAL PLACE</div>
+<article class="card room"><div class="meta"><span>RC / ROOM</span><span>FLOODED HOLLOWS · MIDDLE</span></div><div class="name">Flooded Chamber</div><div class="art"><div data-art="water"></div></div><div class="text"><div class="block"><span class="tag">ENTER</span>Reveal one MIDDLE Threat.</div><div class="block"><span class="tag">HERE</span>All attacks have DIS unless a Hero carries a Rope.</div><div class="block"><span class="tag">CLEAR</span>Take one Find.</div></div><div class="foot"><em>“Something stirs below.”</em><small>R-08</small></div></article>
+<p>Three verbs explain a Room's temporal role. Scene/choice Rooms replace HERE with CHOOSE.</p></section>
+<section class="study"><div class="classlabel">05 / COMBATANT ONLY</div>
+<article class="card monster"><div class="meta"><span>RC / MONSTER</span><span>MIDDLE</span></div><div class="name">Floating Eye</div><div class="art"><div class="stats"><div>9<span>HP</span></div><div>+2<span>ATK</span></div><div>+4<span>DEF</span></div></div><div data-art="eye"></div></div><div class="text"><div class="titleline">BEHAVIOUR · AFTER EACH HERO ACTION</div><div class="rowlist"><div class="line"><strong>1–2</strong><span>Watch: do nothing.</span></div><div class="line"><strong>3–4</strong><span>Gaze: attack +2.</span></div><div class="line"><strong>5</strong><span>Stare: Hero's next d20 has DIS.</span></div><div class="line"><strong>6</strong><span>Flash: attack with ADV.</span></div></div><div class="drop"><b>DROP:</b> Draw one Find; no corpse text here.</div></div><div class="foot"><em>“It sees what you forget.”</em><small>M-07</small></div></article>
+<p>Stats, action table and drop only. Remains and other rewards move to Reward cards.</p></section>
+<section class="study"><div class="classlabel">06 / IMMEDIATE INCIDENT</div>
+<article class="card event"><div class="meta"><span>RC / EVENT</span><span>DEEP</span></div><div class="name">The Voice Below</div><div class="art"><div data-art="spiral"></div></div><div class="text"><div class="titleline">NOW · CHOOSE ONE</div><div class="dual"><div><b>ANSWER</b><p>Test WIT DC 15. Success: take a Find. Failure: suffer d6 HP.</p></div><div><b>IGNORE</b><p>Draw another DEEP Threat instead.</p></div></div></div><div class="foot"><em>“It knows your name.”</em><small>E-03</small></div></article>
+<p>A single unexpected decision, resolves immediately, then leaves the table.</p></section>
+<section class="study"><div class="classlabel">07 / ENVIRONMENTAL TEST</div>
+<article class="card trap"><div class="meta"><span>RC / TRAP</span><span>UPPER</span></div><div class="name">Iron Snare</div><div class="art"><div data-art="trap"></div></div><div class="text"><div class="titleline">TEST · d20 + WIT vs DC 13</div><div class="block"><span class="tag">PASS</span>Disarm the trap. Discard it.</div><div class="block"><span class="tag">FAIL</span>Suffer d6 damage, then discard it.</div><div class="block"><b>KEY:</b> Discard to pass automatically.</div></div><div class="foot"><em>“A rusted promise.”</em><small>T-02</small></div></article>
+<p>One complete physical test, no extra trap reference sheet or counters.</p></section>
+<section class="study"><div class="classlabel">08 / CARRIED OBJECT</div>
+<article class="card item"><div class="meta"><span>RC / ITEM</span><span>UNKNOWN POTION</span></div><div class="name">Smoky Potion</div><div class="art"><div data-art="potion"></div></div><div class="text"><div class="titleline">DRINK · DISCARD · FIRST USE ROLL d6</div><div class="rowlist"><div class="line"><strong>1–2</strong><span>Suffer d6 damage.</span></div><div class="line"><strong>3–4</strong><span>Heal d6 HP.</span></div><div class="line"><strong>5–6</strong><span>ADV on your next roll.</span></div></div><div class="block"><b>DISCOVERED:</b> keep first used card upright / sideways / inverted for the result band.</div></div><div class="foot"><em>“It smells of burned herbs.”</em><small>I-09</small></div></article>
+<p>Three outcome bands stay printed here. Orientation retains the learned identity without writing.</p></section>
+<section class="study"><div class="classlabel">09 / CASTABLE EFFECT</div>
+<article class="card spell"><div class="meta"><span>RC / SPELL</span><span>WIZARD / FIND</span></div><div class="name">Sigil of Frost</div><div class="art"><div data-art="wind"></div></div><div class="text"><div class="titleline">CAST · ACTION · ONCE PER ROOM</div><div class="block">Freeze the Monster; skip its next d6 response.</div><div class="block">Turn this card sideways. Ready it in the next Room.</div></div><div class="foot"><em>“Ice keeps its secrets.”</em><small>S-02</small></div></article>
+<p>A learned spell is a visible, reusable card; consumables explicitly say DISCARD.</p></section>
+<section class="study"><div class="classlabel">10 / FOLLOWER</div>
+<article class="card companion"><div class="meta"><span>RC / COMPANION</span><span>ONE SLOT</span></div><div class="name">Loyal Hound</div><div class="art"><div data-art="dog"></div></div><div class="text"><div class="block"><span class="tag">PASSIVE</span>You have ADV on WIT checks against hidden creatures.</div><div class="block"><span class="tag">ONCE</span>After you hit a Monster, add +d6 damage.</div><div class="block">Turn sideways after activation. Ready in next Room.</div></div><div class="foot"><em>“Its ears remember everything.”</em><small>P-01</small></div></article>
+<p>Persistent slot, one useful automatic interaction and a one-time activation. No pet HP.</p></section>
+<section class="study"><div class="classlabel">11 / DISTINCT REWARD</div>
+<article class="card reward"><div class="meta"><span>RC / REWARD</span><span>REMAINS</span></div><div class="name">Strange Flesh</div><div class="art"><div data-art="bones"></div></div><div class="text"><div class="titleline">EAT · ONE SAFE ACTION</div><div class="rowlist"><div class="line"><strong>1–2</strong><span>Suffer d6 damage.</span></div><div class="line"><strong>3–4</strong><span>Heal d6 HP.</span></div><div class="line"><strong>5–6</strong><span>Keep this card: +1 WIT until discarded.</span></div></div></div><div class="foot"><em>“The dungeon provides.”</em><small>F-05</small></div></article>
+<p>Remains, Treasure and Relic are Reward subtypes, not a second rules system.</p></section>
+</main>
+<section class="controls"><h2>Before final art or bulk printing</h2><p>Approve the shared frame, the 11 specialised interiors, the Room's ENTER / HERE / CLEAR verbs, the Monster's four-line behaviour panel, and how the three mystery identities are marked using only orientation. Then produce one *fully illustrated* card per type with unique woodcut artwork, verify print legibility in hand, and only afterward regenerate the rest of the deck. These eleven cards are exploratory wireframes, not new current cards.</p><p><a href="./card-architecture-proposal.md">Written architecture and repository audit →</a> · <a href="../">Current prototype (unchanged) →</a></p></section>
+<script type="module">import {illustration} from "../src/art.js";document.querySelectorAll("[data-art]").forEach(el=>{el.innerHTML=illustration(el.dataset.art)});</script>
+</body></html>
