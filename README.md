@@ -13,7 +13,7 @@ A solo-first card roguelike with oversized **90 × 140 mm** printable specimens,
 - **A few systemic effects**: Water amplifies frost; keys open locked doors and jam traps; the Floating Eye punishes melee; a Rust Monster damages defence; invisibility and blindness prevent attacks.
 - **Cards**: 34 large-format printable prototypes across heroes, monsters, items, potions, rooms and events. All drawings are original small SVG illustrations rendered in the browser, not raster art.
 - **Field notes**: A short playable manual and an honest description of missing mechanics.
-- **No framework / no dependency / no build step**. Browser persistence uses localStorage; no account is needed.
+- **No framework / no runtime dependency / no build step**. Browser persistence uses localStorage; no account is needed.
 
 ## GitHub Pages
 
@@ -34,6 +34,16 @@ Node.js 20+:
 
     npm test
 
+Optional **browser geometry tests** using Playwright + Chromium (development only):
+
+    npm install
+    npx playwright install chromium
+    npm run test:visual
+
+Browser checks cover 375–1440px widths, horizontal overflow, clipped card regions,
+mobile gameplay controls, and the physical dimensions and sheet count in print mode.
+These tests are not required for GitHub Pages deployment; the site has no runtime dependencies.
+
 Tests cover run initialization, deterministic appearance mappings, catalogue integrity, legal actions, exploration, potion discovery, win condition and death. The tests are intentionally **not a deployment gate** during rapid prototyping.
 
 ## Printing
@@ -44,6 +54,10 @@ Open **Cards** and select **Print / Save PDF**. The browser's print layout uses 
 
 - src/data.js — single source of truth for cards, monsters, rooms, heroes and potion effects
 - src/art.js — spare, hand-drawn-style SVG linework for every card
+- src/card-view.js — shared, HTML-escaped renderer and explicit print-sheet pagination
+- styles/phase1.css — adaptive large-card layout and 90 × 140 mm A4 print contracts
+- tests/presentation.test.mjs — lightweight markup and print-sheet tests
+- tests/visual.spec.mjs — optional headless Chromium visual geometry tests
 - src/engine.js — isolated, deterministic seeded run engine
 - src/app.js — DOM-based interface, catalogue, game and field notes
 - styles.css — responsive layout, 1980s xerox zine style and print rules
@@ -56,3 +70,15 @@ This release is a **vertical slice**, not a complete NetHack adaptation or final
 **Design direction:** Large readable typography; few marks per illustration; black ink; photocopy textures kept away from text; consistent top strips and action language; interesting interactions with very little rules overhead.
 
 This is an original roguelike card-game prototype and not an official NetHack product.
+
+## Phase 1 changes
+
+- Cards now retain a readable width across desktop/tablet/phone breakpoints instead of squeezing into narrow columns.
+- The mobile play screen shows health, hunger, floor, encounter, and available actions before the long session log.
+- Potion identifications remain visible in a notebook even after the last bottle of that type is consumed.
+- Starting another run asks for confirmation before deleting a living run.
+- Field Notes match the engine: newly revealed monsters attack after the player's **next** action.
+- Browsers print explicit four-card sheets rather than relying on CSS grid auto-pagination.
+- Screen and print modes share a pure, separately testable card renderer.
+
+See [the Phase 1 acceptance checklist](docs/phase-1-audit.md) for verification and known limitations.
