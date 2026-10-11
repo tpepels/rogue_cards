@@ -136,3 +136,26 @@ test("Phase 5 physical living-dungeon reference fits two A4 sheets",async({page}
   expect(sheet.overflow).toBeLessThanOrEqual(2);
  }
 });
+
+test("Phase 6 tactical cards are discoverable in the 90 x 140 mm physical kit",async({page})=>{
+ await page.goto("/");
+ await page.getByRole("button",{name:/\[\s*02\s*\]\s*CARDS/}).click();
+ await page.getByRole("button",{name:"TACTIC"}).click();
+ await expect(page.locator(".gallery .game-card")).toHaveCount(8);
+ await page.getByRole("button",{name:"PHYSICAL KIT"}).click();
+ await expect(page.locator(".gallery .game-card")).toHaveCount(8);
+});
+test("Phase 6 survival guide prints exactly two unclipped A4 sheets",async({page})=>{
+ await page.goto("/survival-guide.html");
+ await expect(page.locator("article.paper")).toHaveCount(2);
+ await page.emulateMedia({media:"print"});
+ const sizes=await page.locator("article.paper").evaluateAll(nodes=>nodes.map(el=>{
+   const rect=el.getBoundingClientRect();
+   return {width:rect.width,height:rect.height,overflow:el.scrollHeight-el.clientHeight};
+ }));
+ for(const pageSize of sizes){
+   expect(pageSize.width).toBeLessThanOrEqual(190*96/25.4+2);
+   expect(pageSize.height).toBeLessThanOrEqual(277*96/25.4+3);
+   expect(pageSize.overflow).toBeLessThanOrEqual(2);
+ }
+});
