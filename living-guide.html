@@ -27,7 +27,7 @@ footer{border-top:2px solid;margin-top:23px;padding-top:6px;display:flex;justify
 <tr><td>1–2</td><td>ROAM: loyalty -1. Dog moves to the first known adjacent room (BACK, FORWARD, SIDE, LINK); if none, it stays. Monsters never move.</td></tr>
 <tr><td>3–4</td><td>SNIFF: loyalty +1 (maximum 4). Can signal an old trap.</td></tr>
 <tr><td>5–6</td><td>ATTACK: if a monster is present, deal 1 damage. Otherwise rest.</td></tr></table>
-<p>When you change rooms the Dog catches up on its next turn-end instead of rolling. It is autonomous: do not add the previous Phase 2 passive +1 bonus to your melee attack.</p>
+<p>When you change rooms the Dog catches up on its next turn-end instead of rolling. If the Dog is present, hungry (5 or less), and a corpse lies in the room, it eats the corpse before rolling: remove the corpse, restore 3 pet hunger, and gain 1 loyalty. It is autonomous: do not add the previous passive +1 bonus to your melee attack.</p>
 <h2>02 / CORPSES: MEAT WITH CONSEQUENCES</h2>
 <p>When an ordinary monster dies, place one species Corpse marker in that room (unless it already has one). COLLECT it for one action; EAT it for another. Corpse freshness is measured in turns since death. After 6 turns a corpse is stale: restore two fewer hunger (minimum 1), and illness is more likely.</p>
 <table><tr><th>Species</th><th>Hunger restored</th><th>Ill on roll d6 ≤</th><th>Possible intrinsic</th></tr>
