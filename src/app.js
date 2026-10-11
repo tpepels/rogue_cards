@@ -5,11 +5,11 @@ import { cardMarkup, printSheets, escapeHtml as esc } from "./card-view.js";
 import {
   startRun, act, currentRoom, currentMonster, availableActions, validateSave,
   LAST_FLOOR, MAX_ACTIONS, MAX_HUNGER, heroAttack, heroDefense, knownIdentity,
-  nodeLabel, itemTitle, regionAt
+  nodeLabel, itemTitle, regionAt, nextBehaviour
 } from "./engine.js";
 
 const app=document.querySelector("#app");
-const SAVE_KEY="rogue-cards-v5";
+const SAVE_KEY="rogue-cards-v6";
 const BONES_KEY="rogue-cards-bones-v5";
 let view="play";
 let filter="all";
@@ -64,7 +64,7 @@ function inventoryView(s) {
   const held=s.inventory.map((item,index)=>{
     const identified=item.kind==="potion" ? knownIdentity(s,item.id) : (s.magicKnown?.[item.kind]?.[item.id]||null);
     return '<li class="inventory__item"><span class="inventory__index">'+String(index+1).padStart(2,"0")+'</span>'+
-      '<span>'+esc(itemTitle(item))+(item.kind==="ring"?' <small>['+esc(item.blessing||"uncursed")+']</small>':'')+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
+      '<span>'+esc(itemTitle(item))+(["sword","mail"].includes(item.kind)&&item.enchant!=null?" ["+(item.enchant>=0?"+":"")+item.enchant+(item.cursed?" CURSED":"")+"]":"")+(item.kind==="ring"?' <small>['+esc(item.blessing||"uncursed")+']</small>':'')+(identified?' <small>('+esc(identified)+')</small>':'')+'</span>'+
       '<span class="inventory__mark">'+(item.kind==="potion"&&!identified?'?':'+')+'</span></li>';
   }).join("");
   const identities=APPEARANCES.map(app=>
@@ -72,8 +72,8 @@ function inventoryView(s) {
   return '<section class="inventory"><div class="panel-label">BACKPACK / '+s.inventory.length+' OBJECTS</div>'+
     '<ul class="inventory-list">'+(held||'<li class="muted">Nothing in your pack.</li>')+'</ul>'+
     '<div class="equipped"><div class="panel-label">EQUIPMENT</div>'+
-    '<div>WEAPON <b>'+esc(s.equipped.weapon||"None")+'</b></div>'+
-    '<div>ARMOUR <b>'+esc(s.equipped.armour||"None")+'</b></div>'+
+    '<div>WEAPON <b>'+esc(s.equipped.weapon?(typeof s.equipped.weapon==="object"?s.equipped.weapon.kind+" "+(s.equipped.weapon.enchant>=0?"+":"")+s.equipped.weapon.enchant+(s.equipped.weapon.cursed?" CURSED":""):s.equipped.weapon):"None")+'</b></div>'+
+    '<div>ARMOUR <b>'+esc(s.equipped.armour?(typeof s.equipped.armour==="object"?s.equipped.armour.kind+" "+(s.equipped.armour.enchant>=0?"+":"")+s.equipped.armour.enchant+(s.equipped.armour.cursed?" CURSED":""):s.equipped.armour):"None")+'</b></div>'+
     '<div>COMPANION <b>'+(s.equipped.companion?"DOG":"None")+'</b></div>'+
     '<div>RING <b>'+esc(s.equipped.ring?(s.equipped.ring.id+" / "+s.equipped.ring.blessing):"None")+'</b></div></div>'+
     '<div class="identification"><div class="panel-label">POTION IDENTIFICATION</div>'+identities+'</div>'+
@@ -85,7 +85,7 @@ function inventoryView(s) {
 function controls(s) {
   const terminal=s.phase==="won"||s.phase==="dead";
   const actions=availableActions(s);
-  const mainIds=["attack","explore","travel","take","take-corpse","take-bones","claim"];
+  const mainIds=["attack","explore","travel","take","take-corpse","take-bones","claim","brace","feint","technique","solve","bargain","enchant","cleanse"];
   const renderButton=a=>{
     const attrs=(a.target!=null?' data-target="'+esc(a.target)+'"':'')+
       (a.index!=null?' data-index="'+a.index+'"':'');
@@ -99,6 +99,7 @@ function controls(s) {
     '<span>'+ (s.phase==="ascending"?"ESCAPE WITH THE AMULET":"FIND THE AMULET AT DEPTH 10") +'</span></div>'+
     (roll?'<div class="roll-report">LAST ROLL: '+esc(roll.label)+' · d6='+roll.roll+' · TOTAL '+roll.total+
       ' vs '+roll.threshold+' · '+(roll.hit?"HIT":"MISS")+'</div>':'')+
+    (currentMonster(s)?'<p class="behaviour-report">NEXT MONSTER INTENTION: <b>'+esc(nextBehaviour(s)==="reshuffle"?"UNKNOWN (RESHUFFLE)":byId(BEHAVIOURS,nextBehaviour(s))?.title||nextBehaviour(s))+'</b></p>':'')+
     (s.lastBehaviour?'<p class="behaviour-report">LAST MONSTER CARD: <b>'+esc(byId(BEHAVIOURS,s.lastBehaviour)?.title||s.lastBehaviour)+'</b></p>':'')+
     (terminal?'<p class="end-message">'+(s.phase==="won"?"YOU ASCEND. The Amulet has reached daylight.":"YOU DIE. Your possessions remain below.")+'</p>'+
       '<button class="action action--primary" type="button" data-choose="1">BEGIN ANOTHER RUN ↗</button>':
@@ -112,7 +113,7 @@ function runView() {
   const monsterDisplay=enemy?{...enemy,type:"monster",defense:enemy.defense+(enemy.guard||0)}:null;
   return heading("01 / THE EXPEDITION",s.phase==="ascending"?"FIND THE WAY BACK":
     s.phase==="won"?"ASCENSION":s.phase==="dead"?"YOU HAVE DIED":"DOWN INTO THE DARK",
-    "Explore three dungeon regions. Printed SIDE and LINK exits create branches and shortcuts; monsters never move.")+
+    "Phase 6: monster intentions, tactical techniques, enchanted equipment, environmental caches and escalating risks.")+
     '<div class="mobile-hud" role="group" aria-label="Character status">'+
     '<span>HP <b>'+s.hp+'/'+s.maxHp+'</b></span><span>HUNGER <b>'+s.hunger+'</b></span>'+
     '<span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span>'+
@@ -131,6 +132,7 @@ function runView() {
     '<p class="fine-print">DOG: '+esc(s.pet.active?"Hunger "+s.pet.hunger+" / "+(s.pet.lastAction||"following")+" / at "+s.pet.position:"No companion")+
     ' · FAVOUR '+s.prayer.favour+' · PRAYER IN '+s.prayer.cooldown+' TURNS</p>'+
     '<p class="fine-print">INTRINSICS: '+esc(s.intrinsics.join(", ")||"None")+'</p>'+
+    '<p class="fine-print">THREAT '+s.pressure+' · BARGAINS '+s.bargains+' · '+(s.tactics.used?"STANCE SPENT":"STANCE AVAILABLE")+'</p>'+
     '<div class="numeric-stats"><span>ATK <b>'+heroAttack(s)+'</b></span><span>DEF <b>'+heroDefense(s)+'</b></span><span>AMULET <b>'+(s.hasAmulet?"YES":"NO")+'</b></span></div>'+
     '<button class="outline-button" type="button" data-choose="1">NEW RUN</button></section>'+
     mapView(s)+inventoryView(s)+
@@ -157,7 +159,7 @@ function galleryView() {
 function rulesView() {
   return heading("03 / FIELD NOTES","THE TWO-ACTION DUNGEON",
     "Phase 5: autonomous pets, corpses, intrinsics, ecology, prayer and bones layered onto the Phase 2–4 dungeon and magical systems.")+
-    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a><a class="outline-button" href="./living-guide.html">PETS / CORPSES / GODS ↗</a></div>'+
+    '<div class="rules-cta"><a class="outline-button" href="./field-guide.html">OPEN PRINTABLE FIELD GUIDE ↗</a><a class="outline-button" href="./playmat.html">OPEN DUNGEON SHEET ↗</a><a class="outline-button" href="./magic-guide.html">MAGIC / IDENTIFICATION ↗</a><a class="outline-button" href="./living-guide.html">PETS / CORPSES / GODS ↗</a><a class="outline-button" href="./survival-guide.html">TACTICAL SURVIVAL ↗</a></div>'+
     '<div class="rules-grid">'+
     '<article><span class="eyebrow">I / OBJECTIVE</span><h2>DESCEND. RETURN.</h2><p>Explore the main passage to depth 10, defeat the Amulet Warden, claim the Amulet of Yendor, and retrace your route to depth 0. Death ends the run.</p><p>Room cards show their SIDE and LINK exits. SIDE opens a side chamber; adjacent explored LINK chambers connect into occasional loops. Three regions use separate Room piles.</p></article>'+
     '<article><span class="eyebrow">II / TWO ACTIONS</span><h2>YOU MOVE TWICE.</h2><p>On each turn take up to two actions: explore, move, attack, take loot, eat, use or equip an item, pray, or claim the Amulet. You may end early.</p><p>After the turn, spend 1 hunger and draw one shared monster-behaviour card if a living monster is present.</p></article>'+

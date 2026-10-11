@@ -1,8 +1,8 @@
-# ROGUE CARDS / ISSUE 005
+# ROGUE CARDS / ISSUE 006
 
 **Four kinds of unidentified magic. Two actions. One life.**
 
-**[PLAY IN YOUR BROWSER](https://tpepels.github.io/rogue_cards/)** · [Physical rules](https://tpepels.github.io/rogue_cards/field-guide.html) · [Dungeon sheets](https://tpepels.github.io/rogue_cards/playmat.html) · [Magic supplement](https://tpepels.github.io/rogue_cards/magic-guide.html)
+**[PLAY IN YOUR BROWSER](https://tpepels.github.io/rogue_cards/)** · [Physical rules](https://tpepels.github.io/rogue_cards/field-guide.html) · [Dungeon sheets](https://tpepels.github.io/rogue_cards/playmat.html) · [Magic supplement](https://tpepels.github.io/rogue_cards/magic-guide.html) · [Tactical survival](https://tpepels.github.io/rogue_cards/survival-guide.html)
 
 Rogue Cards is a solo-first, physical-first roguelike card-game prototype. All physical cards are **90 × 140 mm** with economical monochrome line drawings inspired by 1980s homemade zines. The browser game and printable field guide use the same fundamental rules. **90–120 minutes is the desired physical session length, not a measured claim.**
 
@@ -88,3 +88,15 @@ Older v3 saves remain untouched. New Phase 4 runs use save key `rogue-cards-v4`.
 ## Phase 5 — The Living Dungeon
 
 Autonomous pets act at turn end (d6), require food, and may follow, sniff, roam into known adjacent rooms or bite. Monster corpses are collected and eaten at risk of illness and can confer persistent intrinsic traits. Habitat affinity grants matching monsters +1 HP. Prayer now works anywhere with a six-turn cooldown, favour and Altar modifiers. The death of an adventurer can leave a recoverable Bones Record for the next run. These rules are documented in [The Living Dungeon](living-guide.html) and printed ecology cards. New runs use save key `rogue-cards-v5`; earlier saves remain separate.
+
+## Phase 6 — Tactical Survival and Expedition Depth
+
+- **Tactics and monster intention:** While facing a living monster, peek at the undrawn top Behaviour card. BRACE (+2 DEF this response) or FEINT (+2 ATK for the next melee attack) each use an ordinary action, mutually exclusive per turn. Each Hero has one distinctive technique per monster: Delver +3 next attack, Knight +3 defence, Wizard 2 direct damage, Rogue one-hit evasion.
+- **Enchanted and cursed gear:** Physical Sword and Mail Objects drawn in rooms, caches or bargains use one d6 for a modifier: 1 cursed -1; 2–5 +1; 6 +2. Cursed gear cannot be swapped. Once per Altar, ENCHANT an equipped piece (d6: 1 cursed; 2–4 +1; 5–6 +2; cap +3) or CLEANSE a curse (-2 HP, reset to +1). Keep the modifier and curse marker on the original item.
+- **Environmental puzzles:** Crypts, Fungal Nests and Flooded Chambers have a hidden cache. After the monster is gone, spend a key, one prepared Digging use, or 2 Hunger (one action) to take exactly one existing Object card. Once per room.
+- **Risk–reward exploration:** In Shops and Altars, pay 2 HP (one action, once per room) to take one Object from the finite supply. Side rooms retain increased loot odds (5/6 versus 4/6 on the main route) but cost travel and Hunger.
+- **Pressure:** Main encounters escalate by region as in Phase 4, while living monsters at depths 7–10 gain an additional +1 HP.
+- **Compatibility:** Two actions per turn, d6 combat, monster behaviour, all four magical item families, randomized identities, companions, corpses, prayer, bones, region routing and stationary monsters stay intact. The save schema and browser key are now v6; v5 storage and separate bones records remain untouched.
+- **Print kit:** Eight new oversize 90 × 140 mm tactile reference cards, plus [the two-page A4 Tactical Survival guide](survival-guide.html). Use the printed field guide and map with these additions. No new freeform object combinations are introduced.
+
+**Pacing:** The 90–120-minute physical run remains an *unverified target*. Simulated turns or computer execution time are not the same as physical session length. The test suite checks deterministic engine integrity; physical playtests should record total time, turns, optional rooms explored, decisions, and setup/cleanup overhead.

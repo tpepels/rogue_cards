@@ -1,12 +1,13 @@
+import {PHASE6_CARDS,PHASE6_COPIES} from "./phase6-data.js";
 import { ECOLOGY_CARDS, ECOLOGY_COPIES, INTRINSICS } from "./ecology.js";
 import { MAGICAL_CARDS, MAGIC_IDENTITIES, MAGIC_PRINT_COPIES } from "./magic-data.js";
 // One source of truth for both the playable prototype and printable card catalogue.
 // All artwork is keyed by a small reusable ink-drawing vocabulary.
 export const HEROES = [
-  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with two rations.", flavor:"The map is wrong. Again." },
-  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with three unidentified potions.", flavor:"Almost certainly harmless." },
-  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 defence (already included).", flavor:"An honourable way to die." },
-  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with a ration, a key, and a smoky potion.", flavor:"Every lock is a suggestion." }
+  { id:"delver", type:"hero", title:"Cave Delver", art:"delver", hp:12, attack:3, defense:1, rule:"Scavenge: Begin with 2 rations. TECHNIQUE: next melee attack +3 ATK (once per monster).", flavor:"The map is wrong. Again." },
+  { id:"wizard", type:"hero", title:"Hedge Wizard", art:"wizard", hp:10, attack:2, defense:1, rule:"Oddments: Begin with 3 mystery potions. TECHNIQUE: HEX deals 2 damage (once per monster).", flavor:"Almost certainly harmless." },
+  { id:"knight", type:"hero", title:"Wandering Knight", art:"knight", hp:14, attack:3, defense:2, rule:"Armoured: Begin with +1 DEF (included). TECHNIQUE: HOLD +3 DEF for this response (once per monster).", flavor:"An honourable way to die." },
+  { id:"rogue", type:"hero", title:"Cutpurse", art:"rogue", hp:11, attack:3, defense:1, rule:"Quick hands: Begin with ration, key, smoky potion. TECHNIQUE: EVADE next successful hit (once per monster).", flavor:"Every lock is a suggestion." }
 ];
 
 export const MONSTERS = [
@@ -21,12 +22,12 @@ export const MONSTERS = [
 
 export const ROOMS = [
   { id:"corridor", type:"room", title:"Crooked Corridor", art:"corridor", terrain:"PASSAGE", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. Safe passage; loot may be found.", flavor:"Neither arrow points out." },
-  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"Frost potions deal +2 damage here.", flavor:"Something stirs below." },
-  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"Once: Pray to restore 2 HP.", flavor:"The gods are not all absent." },
+  { id:"flood", type:"room", title:"Flooded Chamber", art:"water", terrain:"WATER", region:"MIDDLE", exits:["SIDE","LINK"], rule:"WATER: Thrown Frost / Electricity +2. CACHE: Key, DIGGING or 2 Hunger for Object.", flavor:"Something stirs below." },
+  { id:"altar", type:"room", title:"Abandoned Altar", art:"altar", terrain:"SACRED", region:"DEEP", exits:["SIDE"], rule:"PRAY +1. Once: ENCHANT/CLEANSE equipment. BARGAIN: -2 HP for Object.", flavor:"The gods are not all absent." },
   { id:"fountain", type:"room", title:"Questionable Fountain", art:"fountain", terrain:"WATER", region:"MIDDLE", exits:["SIDE"], rule:"Once: Drink from the fountain. Its effect is uncertain.", flavor:"It smells of copper." },
-  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"Search: Take the loot assigned to this room.", flavor:"NO CREDIT. NO EXCEPTIONS." },
-  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", region:"DEEP", exits:["SIDE","LINK"], rule:"Disturbing the dead is usually a bad idea.", flavor:"There are seven coffins. Six lids." },
-  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", region:"MIDDLE", exits:["SIDE","LINK"], rule:"The air tastes like old bread.", flavor:"Soft footsteps answer yours." },
+  { id:"shop", type:"room", title:"Ruined Shop", art:"shop", terrain:"DUST", region:"UPPER", exits:["SIDE"], rule:"BARGAIN: Once, lose 2 HP to draw one Object. May be fatal.", flavor:"NO CREDIT. NO EXCEPTIONS." },
+  { id:"crypt", type:"room", title:"Small Crypt", art:"crypt", terrain:"DARK", region:"DEEP", exits:["SIDE","LINK"], rule:"CACHE: Once, Key, DIGGING or 2 Hunger to draw one Object.", flavor:"There are seven coffins. Six lids." },
+  { id:"nest", type:"room", title:"Fungal Nest", art:"mushroom", terrain:"SPORES", region:"MIDDLE", exits:["SIDE","LINK"], rule:"CACHE: Once, Key, DIGGING or 2 Hunger to draw one Object.", flavor:"Soft footsteps answer yours." },
   { id:"locked", type:"room", title:"Locked Gallery", art:"door", terrain:"LOCKED", region:"DEEP", exits:[], rule:"Spend a key on entry, or lose 2 hunger forcing the door.", flavor:"The lock has been repaired." },
   { id:"stairs", type:"room", title:"Stairwell", art:"stairs", terrain:"STAIRS", region:"UPPER", exits:["SIDE","LINK"], rule:"SIDE / LINK. A passage descends onward.", flavor:"Further down. Always further down." },
   { id:"trap", type:"room", title:"Tiled Passage", art:"trap", terrain:"TRAP", region:"MIDDLE", exits:[], rule:"On first entry: Spend a key or lose 2 HP.", flavor:"One tile is cleaner than the rest." }
@@ -83,13 +84,13 @@ export const VAULT = {
 };
 
 export const EQUIPMENT = [
-  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"EQUIP (weapon): +1 ATK while equipped.", flavor:"Still sharp enough." },
-  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"EQUIP (armour): +1 DEF while equipped.", flavor:"It smells of another hero." },
+  { id:"sword", type:"item", title:"Notched Sword", art:"key", rule:"ON REVEAL: d6 1=CURSED -1, 2-5=+1, 6=+2. EQUIP: apply modifier; cursed locks.", flavor:"Still sharp enough." },
+  { id:"mail", type:"item", title:"Patchwork Mail", art:"knight", rule:"ON REVEAL: d6 1=CURSED -1, 2-5=+1, 6=+2. EQUIP: apply modifier; cursed locks.", flavor:"It smells of another hero." },
   { id:"charm", type:"item", title:"Lucky Bone", art:"bones", rule:"CONSUME: Restore 3 HP.", flavor:"A bit of somebody else." }
 ];
 
-export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES, ...ECOLOGY_CARDS, ...INTRINSICS.map(x=>({...x,type:"intrinsic",art:"bones",flavor:"A permanent taste of the dungeon."}))];
-export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity","ecology","intrinsic"];
+export const CATALOGUE = [...HEROES, ...MONSTERS, ...ITEMS, ...EQUIPMENT, ...APPEARANCES, ENTRANCE, VAULT, ...ROOMS, ...BEHAVIOURS, ...EVENTS, ...MAGICAL_CARDS, ...MAGIC_IDENTITIES, ...ECOLOGY_CARDS, ...INTRINSICS.map(x=>({...x,type:"intrinsic",art:"bones",flavor:"A permanent taste of the dungeon."})), ...PHASE6_CARDS];
+export const TYPES = ["all","hero","monster","item","potion","room","behaviour","event","scroll","wand","ring","identity","ecology","intrinsic","tactic"];
 
 // Print quantities describe a playable physical supply, not simply specimens.
 // Distinct decks are printed separately and shuffled at setup.
@@ -107,6 +108,7 @@ export const PRINT_COPIES = {
   ring:Object.fromEntries(MAGICAL_CARDS.filter(x=>x.type==="ring").map(x=>[x.id,3])),
   identity:Object.fromEntries(MAGIC_IDENTITIES.map(x=>[x.id,1])),
   ecology:ECOLOGY_COPIES,
+  tactic:PHASE6_COPIES,
   intrinsic:Object.fromEntries(INTRINSICS.map(x=>[x.id,1]))
 };
 export const printDeck = types => {

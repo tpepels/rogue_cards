@@ -6,10 +6,11 @@ import { MAGIC_TYPES } from "./magic-data.js";
 import { magicStock,setupMagic,actionList,magicAction,magicModifier,ignoresDark,ignoresHunger,resistsPoison,magicName,propertiesOf } from "./magic.js";
 import {initEcology,corpseFor,eatCorpse,pray,petTurn,bonesInRoom,buildBones,ECOLOGY} from "./ecology.js";
 
-export const VERSION = 5;
+export const VERSION = 6;
 export const LAST_FLOOR = 10;
 export const MAX_ACTIONS = 2;
 export const MAX_HUNGER = 24;
+export const nextBehaviour=state=>currentMonster(state)?state.decks.behaviour.draw.at(-1)||"reshuffle":"none";
 export const PHYSICAL_RULES = Object.freeze({
   die: 6, target: 4, normalDamage: 2, criticalDamage: 3,
   encounterSpine: 4, encounterBranch: 3
@@ -62,10 +63,17 @@ function lootStock() {
     ...stock("item", [...ITEMS, ...EQUIPMENT].filter(x=>!["amulet"].includes(x.id)))
       .map(id=>item(id))];
 }
+function decorateGear(state,thing){
+  if(!thing||!["sword","mail"].includes(thing.kind)||thing.enchant!=null)return thing;
+  const roll=d6(state);
+  thing.enchant=roll===6?2:roll===1?-1:1;
+  thing.cursed=roll===1;
+  return thing;
+}
 export const currentRoom = state => state.rooms[state.position];
 export const currentMonster = state => currentRoom(state)?.monster?.hp > 0 ? currentRoom(state).monster : null;
-export const heroAttack = state => state.attack + (state.equipped.weapon ? 1 : 0);
-export const heroDefense = state => state.defense + (state.equipped.armour ? 1 : 0) + magicModifier(state,"defense");
+export const heroAttack = state => state.attack + (state.equipped.weapon ? (state.equipped.weapon.enchant??1) : 0);
+export const heroDefense = state => state.defense + (state.equipped.armour ? (state.equipped.armour.enchant??1) : 0) + magicModifier(state,"defense") + (state.tactics.guard||0);
 export const appearanceTitle = id => find(APPEARANCES, id)?.title || "Unknown potion";
 export function itemTitle(thing) {
   if (!thing) return "Nothing";
@@ -118,6 +126,7 @@ export function startRun(heroId = "delver", seed = Date.now(), bones = null) {
     position:"0", rooms:{}, phase:"descending", hasAmulet:false,
     assignments:{}, known:{}, status:{invisible:0},
     inventory:[], equipped:{weapon:null,armour:null,companion:false},
+    tactics:{guard:0,feint:0,used:false}, pressure:0, bargains:0,
     decks:{}, lastBehaviour:null, lastRoll:null, log:[]
   };
   initEcology(s,bones);
@@ -189,7 +198,7 @@ function openRoom(state, target) {
     template=find(ROOMS,id);
   }
   const room={...template,nodeId:target,depth,branch,region:regionAt(depth),used:false,
-    monster:null,loot:null,bones:null,corpse:null,visited:true};
+    monster:null,loot:null,bones:null,corpse:null,puzzle:null,bargain:null,enchanted:false,visited:true};
   if (isVault) room.monster=spawnMonster(find(MONSTERS,"sentinel"));
   else {
     const encounterRoll=d6(state);
@@ -201,7 +210,12 @@ function openRoom(state, target) {
     }
     const lootRoll=d6(state);
     if (lootRoll <= (branch?5:4)) room.loot=draw(state,state.decks.loot);
+    decorateGear(state,room.loot);
+    if(["crypt","nest","flood"].includes(room.id))room.puzzle={solved:false};
+    if(["shop","altar"].includes(room.id))room.bargain={used:false};
   }
+  state.pressure=Math.max(state.pressure,Math.floor(depth/3)+(branch?1:0));
+  if(room.monster && depth>=7){room.monster.hp++;room.monster.maxHp++;}
   if(room.monster && ECOLOGY[room.monster.id]?.habitat===room.terrain){
     room.monster.hp++;room.monster.maxHp++;room.monster.habitatBonus=true;
   }
@@ -247,6 +261,7 @@ function monsterAttack(state, monster, modifier=0) {
   const attack=rollAttack(state,monster.attack,heroDefense(state),monster.title,modifier);
   if(!attack.hit) return;
   let damage=attack.damage;
+  if(state.status.evade){state.status.evade=0;log(state,"Rogue evades the hit.");return;}
   if(state.status.ward>0){state.status.ward--;damage=Math.max(0,damage-2);log(state,"Ward absorbs 2 damage.");}
   if(monster.id==="goblin" && !monster.ambushed) { damage++;monster.ambushed=true; }
   state.hp-=damage;
@@ -287,6 +302,8 @@ function finishTurn(state) {
   if(currentRoom(state).monster?.hp<=0 && currentRoom(state).corpse==null &&
      currentRoom(state).monster.id!=="sentinel")releaseMonster(state,currentRoom(state).monster);
   monsterTurn(state);
+  state.tactics.guard=0;state.tactics.feint=0;state.tactics.used=false;
+  state.status.evade=0;
   if(state.status.invisible>0) state.status.invisible--;
   if(state.prayer.lastTurn!==state.turn)state.prayer.cooldown=Math.max(0,state.prayer.cooldown-1);
   if(state.intrinsics.includes("regeneration") && state.turn%3===0)state.hp=Math.min(state.maxHp,state.hp+1);
@@ -340,8 +357,18 @@ export function availableActions(state) {
   const monster=currentMonster(state);
   if (monster) {
     actions.push({id:"attack",label:"Attack (roll d6)"});
+    if(!state.tactics.used)actions.push({id:"brace",label:"Brace: +2 DEF vs next response"},{id:"feint",label:"Feint: next melee attack +2 ATK"});
+    if(!monster.heroTechniqueUsed)actions.push({id:"technique",label:"Hero technique (once per encounter)"});
   } else {
     if(room.loot) actions.push({id:"take",label:"Take "+itemTitle(room.loot)});
+    if(room.puzzle&&!room.puzzle.solved)actions.push({id:"solve",label:"Unlock hidden cache: key, DIGGING or 2 hunger"});
+    if(room.bargain&&!room.bargain.used)actions.push({id:"bargain",label:"Risk bargain: lose 2 HP for one object"});
+    if(room.id==="altar"&&!room.enchanted)for(const slot of ["weapon","armour"]){
+      if(state.equipped[slot]){
+        if(state.equipped[slot].cursed)actions.push({id:"cleanse",target:slot,label:"Cleanse cursed "+slot+" (-2 HP)"});
+        else actions.push({id:"enchant",target:slot,label:"Enchant "+slot+" (d6; curse on 1)"});
+      }
+    }
     if(room.corpse)actions.push({id:"take-corpse",label:"Collect "+room.corpse.id+" corpse"});
     if(room.bones)actions.push({id:"take-bones",label:"Recover remains: "+itemTitle(room.bones)});
 
@@ -374,8 +401,8 @@ export function availableActions(state) {
     if(thing.kind==="corpse")actions.push({id:"eat-corpse",index,label:"Eat "+thing.id+" corpse"});
     if(thing.kind==="ration"&&state.pet.active&&state.pet.hunger<9)actions.push({id:"feed-pet",index,label:"Feed dog ration"});
     if(thing.kind==="charm") actions.push({id:"consume",index,label:"Use lucky bone"});
-    if(["sword","mail","dog"].includes(thing.kind))
-      actions.push({id:"equip",index,label:"Equip "+itemTitle(thing)});
+    if(["sword","mail","dog"].includes(thing.kind) && !(thing.kind==="sword"&&state.equipped.weapon?.cursed) && !(thing.kind==="mail"&&state.equipped.armour?.cursed))
+      actions.push({id:"equip",index,label:"Equip "+itemTitle(thing)+(thing.enchant===2?" (+2)":thing.cursed?" (cursed)":"")});
   });
   actions.push({id:"end",label:"End turn (monster reacts)"});
   return actions;
@@ -398,11 +425,21 @@ export function act(previous, id, argument=null) {
       log(state,"YOU ASCEND! The Amulet reaches daylight.");
     }
   }
+  if(id==="brace"){state.tactics.guard=2;state.tactics.used=true;log(state,"Brace: +2 defence until next monster response.");}
+  if(id==="feint"){state.tactics.feint=2;state.tactics.used=true;log(state,"Feint: next melee attack +2.");}
+  if(id==="technique"&&mon){
+    mon.heroTechniqueUsed=true;
+    if(state.heroId==="knight"){state.tactics.guard=3;log(state,"Knight HOLD: +3 DEF this response.");}
+    if(state.heroId==="wizard"){mon.hp-=2;log(state,"Wizard HEX: 2 magical damage.");if(mon.hp<=0)releaseMonster(state,mon);}
+    if(state.heroId==="rogue"){state.status.evade=1;log(state,"Rogue EVADE: ignore the next successful monster hit.");}
+    if(state.heroId==="delver"){state.tactics.feint=3;log(state,"Delver READ WEAKNESS: +3 next melee attack.");}
+  }
   if(id==="attack" && mon) {
     const darkPenalty=currentRoom(state).terrain==="DARK"&&!ignoresDark(state)&&!state.intrinsics.includes("focus")?-1:0;
     const scentBonus=state.intrinsics.includes("scent")&&!mon.scentUsed?1:0;
     mon.scentUsed=true;
-    const hit=rollAttack(state,heroAttack(state)+darkPenalty+scentBonus,mon.defense+mon.guard,"Hero");
+    const hit=rollAttack(state,heroAttack(state)+darkPenalty+scentBonus+state.tactics.feint,mon.defense+mon.guard,"Hero");
+    state.tactics.feint=0;
     if(hit.hit) {
       const petBonus=0; // Autonomous companion resolves at turn end, never on Hero attack.
       if(petBonus) {mon.petUsed=true; log(state,"Your companion assists (+1).");}
@@ -411,7 +448,29 @@ export function act(previous, id, argument=null) {
     if(mon.id==="eye" && mon.hp>0) {state.hp--;log(state,"The eye's gaze costs 1 HP.");}
     if(mon.hp<=0) releaseMonster(state,mon);
   }
-  if(id==="take") {state.inventory.push(room.loot);log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
+  if(id==="solve"){
+    const i=state.inventory.findIndex(x=>x.kind==="key");
+    if(state.status.passage){state.status.passage--;log(state,"DIGGING bypasses the obstacle.");}
+    else if(i>=0){state.inventory.splice(i,1);log(state,"A key opens the hidden cache.");}
+    else{state.hunger=Math.max(0,state.hunger-2);log(state,"Forced the cache; hunger -2.");}
+    room.puzzle.solved=true;
+    const gift=state.decks.loot.draw.pop();
+    if(gift)state.inventory.push(decorateGear(state,gift));
+    log(state,gift?"Cache recovered: "+itemTitle(gift)+".":"The cache is empty.");
+  }
+  if(id==="enchant"){
+    const gear=state.equipped[argument];
+    room.enchanted=true;
+    const roll=d6(state);
+    if(roll===1){gear.cursed=true;gear.enchant=-1;log(state,"The altar curses your "+gear.kind+" (-1).");}
+    else {gear.enchant=Math.min(3,(gear.enchant??1)+(roll>=5?2:1));log(state,"Enchanted "+gear.kind+" to "+gear.enchant+".");}
+  }
+  if(id==="cleanse"){
+    const gear=state.equipped[argument];room.enchanted=true;state.hp-=2;gear.cursed=false;gear.enchant=1;
+    log(state,"Cleansed "+gear.kind+" (-2 HP).");
+  }
+  if(id==="bargain"){state.hp-=2;room.bargain.used=true;state.bargains++;const gift=state.decks.loot.draw.pop();if(gift)state.inventory.push(gift);log(state,"A costly bargain: -2 HP"+(gift?", gained "+itemTitle(gift):", no objects remain")+".");}
+  if(id==="take") {state.inventory.push(decorateGear(state,room.loot));log(state,"Found "+itemTitle(room.loot)+".");room.loot=null;}
   if(id==="take-corpse"){state.inventory.push(room.corpse);log(state,"Collected "+room.corpse.id+" corpse.");room.corpse=null;}
   if(id==="take-bones"){state.inventory.push(room.bones);log(state,"Recovered lost equipment.");room.bones=null;}
   if(id==="claim") {state.hasAmulet=true;state.phase="ascending";log(state,"The Amulet is yours. Return to the entrance.");}
@@ -464,9 +523,9 @@ export function act(previous, id, argument=null) {
       state.inventory.splice(argument,1);
       const slot=thing.kind==="sword"?"weapon":thing.kind==="mail"?"armour":"companion";
       const old=state.equipped[slot];
-      if(old && old!==true) state.inventory.push(item(old));
+      if(old && old!==true)state.inventory.push(typeof old==="object"?{kind:old.kind,id:old.kind,enchant:old.enchant,cursed:old.cursed}:item(old));
       if(slot==="companion" && old) state.inventory.push(item("dog"));
-      state.equipped[slot]=slot==="companion"?true:thing.kind;
+      state.equipped[slot]=slot==="companion"?true:slot==="weapon"||slot==="armour"?{kind:thing.kind,enchant:thing.enchant??1,cursed:!!thing.cursed}:thing.kind;
       if(slot==="companion"){state.pet.active=true;state.pet.alive=true;state.pet.position=state.position;state.pet.hunger=9;}
       log(state,"Equipped "+itemTitle(thing)+".");
     }
@@ -482,7 +541,7 @@ export function validateSave(s) {
       !["descending","ascending","won","dead"].includes(s.phase)) return false;
   if (!s.rooms || !s.rooms[s.position] || !Array.isArray(s.inventory) ||
       !s.equipped || !s.decks?.behaviour || !s.decks?.loot ||
-      !s.assignments || !s.known || !s.pet || !s.prayer || !Array.isArray(s.intrinsics) || !s.rooms["0"]?.exits || !s.magicAssignments || !s.magicKnown || s.equipped.ring===undefined) return false;
+      !s.tactics || !Number.isInteger(s.pressure) || !s.assignments || !s.known || !s.pet || !s.prayer || !Array.isArray(s.intrinsics) || !s.rooms["0"]?.exits || !s.magicAssignments || !s.magicKnown || s.equipped.ring===undefined) return false;
   if (!Number.isInteger(s.actionsLeft) || s.actionsLeft<1 || s.actionsLeft>MAX_ACTIONS) return false;
   if (!Array.isArray(s.log) || !Number.isInteger(s.turn)) return false;
   return true;
