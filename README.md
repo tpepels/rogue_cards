@@ -1,108 +1,34 @@
-# PRINT & PLAY: https://tpepels.github.io/rogue_cards/print-and-play.html
+# ROGUE CARDS — tabletop edition
 
-# ROGUE CARDS / ISSUE 007
+**A real card game for 1–2 players. One A4 page of core rules. All other rules printed on the cards.**
 
-**Four kinds of unidentified magic. Two actions. One life.**
+[Card gallery & physical print kit](https://tpepels.github.io/rogue_cards/) · [One A4 of rules](https://tpepels.github.io/rogue_cards/rules.html) · [Print instructions](https://tpepels.github.io/rogue_cards/print-and-play.html)
 
-**[PLAY IN YOUR BROWSER](https://tpepels.github.io/rogue_cards/)** · [Physical rules](https://tpepels.github.io/rogue_cards/field-guide.html) · [Dungeon sheets](https://tpepels.github.io/rogue_cards/playmat.html) · [Magic supplement](https://tpepels.github.io/rogue_cards/magic-guide.html) · [Tactical survival](https://tpepels.github.io/rogue_cards/survival-guide.html)
+## The game, not a digital reproduction
 
-Rogue Cards is a solo-first, physical-first roguelike card-game prototype. All physical cards are **90 × 140 mm** with economical monochrome line drawings inspired by 1980s homemade zines. The browser game and printable field guide use the same fundamental rules. **90–120 minutes is the desired physical session length, not a measured claim.**
+The browser dungeon of earlier prototypes was the wrong product. This edition **does not require a computer for gameplay**. The website is a card preview and four-per-A4 printing surface. It no longer launches the Phase 1–7 turn engine. The earlier engine, source and supplements remain in repository history for reference, but are not part of the physical edition.
 
-## Phase 3 — Magic and material interactions
+- **Solo or cooperative for one or two Heroes.**
+- **One sequential Room at a time, no map**: three UPPER, three MIDDLE, three DEEP, then the fixed Amulet Vault at Room ten.
+- **No return journey**: defeating the Warden and claiming the Amulet wins.
+- **One meaningful action per Hero per round**; after each Hero action, a surviving Monster responds using **its own d6 behaviour table**, printed on its card.
+- **Opposed d20 combat**: attacker d20+ATK versus defender d20+DEF, ties defend, natural 1 misses, natural 20 hits critically, successful attacks deal d6 damage. WIT saves use d20 versus a printed DC. Advantage and disadvantage use two d20s.
+- **The cards own their effects**: equipment, pets, corpse eating, curses, prayer, spellcasting, traps, room rewards and mystery potions all live on the printed cards.
+- **No hunger and no cross-run bones files.** Potions remember a first-use d6 discovery within a run, via the consumed Potion card itself.
+- **90–120 minutes remains an unmeasured playtest target.** No simulation results are being presented as human game times.
 
-- Four unidentified families: **Potions (5 appearances), Scrolls (4), Wands (4), Rings (4)**.
-- Potion identities come from the original five slips; the other families have **12 large-format identity cards**. Each family is shuffled separately at setup, so all copies of one appearance have a stable identity for that run.
-- 15 shared properties: FIRE, WATER, COLD, ELECTRICITY, ACID, POISON, METAL, WOOD, STONE, DARK, LIGHT, HOLY, DIGGING, TELEPORT, ORGANIC. Properties are a rule vocabulary: only interactions explicitly named in a card or reference sheet resolve. Some material tags remain descriptive pending Phase 4.
-- **Only explicitly printed verbs:** Potions DRINK/THROW; Scrolls READ; Wands ZAP (three charges per card); Rings WEAR (one slot).
-- **Selective blessing/curse:** only Rings in this prototype. Every ring appearance has one Uncursed, one Blessed and one Cursed printed copy. State is visible; hidden identity is still randomized.
-- 48 additional printed cards: 12 Scrolls, 12 Wands, 12 Rings, and 12 Identity references. The updated print kit contains 166 physical cards total.
-- Browser inventory shows discovered identities for all four families and maintains a ring slot. New runs use schema v3; previous v2 saves remain in local storage untouched.
-- [The Unknown Objects](magic-guide.html) is the printable identification notebook, property glossary and exact-action reference.
+## Physical components and source of truth
 
-## Phase 2 game
+`src/tabletop-data.js` defines the entire tabletop catalogue and real print quantities. `src/tabletop-view.js` renders those cards (90 × 130 mm) in the gallery and four-up A4 print sheets. `src/tabletop-app.js` is only a browsing/printing tool. `rules.html` is the **sole shared rules sheet**. `print-and-play.html` is optional pre-game preparation, **not** a second rulebook.
 
-- **A hybrid dungeon:** Ten main depths (0–10), exit-gated side chambers, and loops between adjacent explored side rooms bearing LINK exits; explored rooms and wounded monsters persist.
-- **Two actions per turn:** Move, reveal, attack, eat, use or equip an item, take loot, pray, claim the Amulet; end early if needed. At the end of the turn, lose one hunger and activate the monster.
-- **Dice-based combat:** Roll a single d6 + attack against 4 + defence. A natural 1 misses, a natural 6 hits critically for three damage, and an ordinary hit deals two.
-- **Shared ten-card monster behaviour deck:** Strike ×3, Lunge ×2, Guard ×2, Frenzy, Drain, Recover. Shuffle its discards once the pile empties.
-- **Loot and equipment:** Rations, keys, mystery potions, a Notched Sword, Patchwork Mail, a Lucky Bone and a companion Dog. One weapon, one armour and one companion slot.
-- **Identifying potions:** Five potion appearances are randomly mapped to five hidden effects each run.
-- **Objective:** Defeat the Amulet Warden at depth 10, take the Amulet of Yendor and return by explored rooms to the entrance.
-- **Physical kit:** Print full card quantities, field guide, dungeon/map sheets and potion identity slips. Requires a six-sided die and pencil.
+The older `src/engine.js`, `src/data.js`, `src/app.js` and phase supplements are retained temporarily as legacy implementation files but do not govern the tabletop edition. Do not add gameplay mechanics exclusively to the browser: update the physical card and the one-page rules first.
 
-## Run locally
+## Verification
 
-No framework, no build process and no server-side dependencies are needed for the website. Use a local static server for ES modules:
+Run npm install, npm test, and npm run test:visual.
 
-    python3 -m http.server 8000
-    # http://localhost:8000
+The active tests verify print stock, monster behaviour tables, absence of external lookup requirements, one-page rules, responsive preview, and A4/card print geometry. Former engine-phase tests are archival and are not run against the redesigned tabletop rules.
 
-Saved games are browser-local (key \`rogue-cards-v2\`). Phase 1 saves are not migrated automatically: the two-action rules are incompatible with v1 saved runs. Legacy saves are not overwritten.
+## Playtest priorities
 
-## Tests
-
-Run the engine and presentation tests with Node 22+:
-
-    npm test
-
-The browser geometry and print suite uses Playwright (only a development dependency):
-
-    npm install
-    npx playwright install chromium
-    npm run test:visual
-
-These checks cover deterministic deck setup, physical map topology, turns, dice, status effects, victory/death, seeded simulations, HTML-escaped rendering, responsive cards, and A4 print layout. They deliberately **do not block GitHub Pages deployment** during rapid prototyping.
-
-## Print-and-play
-
-1. Open **Cards** and select **PHYSICAL KIT** rather than **SPECIMENS**.
-2. Select **PRINT CARDS / SAVE PDF**; print on A4 at 100% scale, with browser headers and footers off.
-3. Each page contains up to four **90 × 140 mm** cards. Separate the physical Room, Monster, Object, Behaviour, and Event piles after cutting.
-4. Print [field-guide.html](field-guide.html) (includes potion identity slips), [playmat.html](playmat.html) (dungeon map), and [magic-guide.html](magic-guide.html) (the three new mystery-family mappings and property reference).
-5. Keep all 12 new Identity cards separate from the Object deck. Shuffle face down within each family and assign one per appearance; leave it hidden until discovered. Reserve starting items and fixed Vault/Warden, and follow the field guide. Record monster wounds and uncollected loot in the map grid to avoid needing to display all cards at once.
-
-**Print size still requires confirmation on the user's actual printer; browser/PDF scaling may vary.**
-
-## Repository
-
-- \`src/data.js\` — all physical card definitions, copies and monster behaviours
-- \`src/engine.js\` — seeded, presentation-agnostic, two-action roguelike engine
-- \`src/app.js\` — browser play, discovery map, inventory/identifications and printable catalogue
-- \`src/card-view.js\` — shared pure card renderer and four-card A4 pagination
-- \`src/art.js\` — original simple SVG pen artwork
-- \`styles.css\`, \`styles/phase1.css\`, \`styles/phase2.css\` — monochrome style, responsive layout and print rules
-- \`field-guide.html\` — standalone rules and potion identification slips
-- \`playmat.html\` — writable dungeon and character sheets
-- \`tests/\` — native unit tests and optional Playwright browser tests
-
-## Scope and limitations
-
-The prototype is solo and follows a main-route topology with printed SIDE and LINK exits, three themed room piles, and randomly revealed rooms, monsters, objects and events. It does not yet have true spatial line-of-sight, AI pathfinding, priest shops, curses, corpse eating, a full item physics engine, or persistent bones levels. Some exploratory card effects may be rebalanced later. Session length and game economy are not validated by timed physical playtests. The system is not an official NetHack product.
-
-See [Phase 2 implementation](docs/phase-2-audit.md) and [Phase 3 implementation](docs/phase-3-audit.md).
-
-## Phase 4 — Procedural dungeon
-
-The Upper Works (depths 1–3), Flooded Hollows (4–6) and Black Crypts (7–9) each use their own printed Room pile. Reveal the next matching room **only on entry**. All main rooms connect forward and back; printed SIDE exits open optional rooms and LINK on two adjacent explored side rooms joins them in a loop. Monsters remain stationary. The browser map and physical map sheet use these same rules.
-
-Older v3 saves remain untouched. New Phase 4 runs use save key `rogue-cards-v4`.
-
-## Phase 5 — The Living Dungeon
-
-Autonomous pets act at turn end (d6), require food, and may follow, sniff, roam into known adjacent rooms or bite. Monster corpses are collected and eaten at risk of illness and can confer persistent intrinsic traits. Habitat affinity grants matching monsters +1 HP. Prayer now works anywhere with a six-turn cooldown, favour and Altar modifiers. The death of an adventurer can leave a recoverable Bones Record for the next run. These rules are documented in [The Living Dungeon](living-guide.html) and printed ecology cards. New runs use save key `rogue-cards-v5`; earlier saves remain separate.
-
-## Phase 6 — Tactical Survival and Expedition Depth
-
-- **Tactics and monster intention:** While facing a living monster, peek at the undrawn top Behaviour card. BRACE (+2 DEF this response) or FEINT (+2 ATK for the next melee attack) each use an ordinary action, mutually exclusive per turn. Each Hero has one distinctive technique per monster: Delver +3 next attack, Knight +3 defence, Wizard 2 direct damage, Rogue one-hit evasion.
-- **Enchanted and cursed gear:** Physical Sword and Mail Objects drawn in rooms, caches or bargains use one d6 for a modifier: 1 cursed -1; 2–5 +1; 6 +2. Cursed gear cannot be swapped. Once per Altar, ENCHANT an equipped piece (d6: 1 cursed; 2–4 +1; 5–6 +2; cap +3) or CLEANSE a curse (-2 HP, reset to +1). Keep the modifier and curse marker on the original item.
-- **Environmental puzzles:** Crypts, Fungal Nests and Flooded Chambers have a hidden cache. After the monster is gone, spend a key, one prepared Digging use, or 2 Hunger (one action) to take exactly one existing Object card. Once per room.
-- **Risk–reward exploration:** In Shops and Altars, pay 2 HP (one action, once per room) to take one Object from the finite supply. Side rooms retain increased loot odds (5/6 versus 4/6 on the main route) but cost travel and Hunger.
-- **Pressure:** Main encounters escalate by region as in Phase 4, while living monsters at depths 7–10 gain an additional +1 HP.
-- **Compatibility:** Two actions per turn, d6 combat, monster behaviour, all four magical item families, randomized identities, companions, corpses, prayer, bones, region routing and stationary monsters stay intact. The save schema and browser key are now v6; v5 storage and separate bones records remain untouched.
-- **Print kit:** Eight new oversize 90 × 140 mm tactile reference cards, plus [the two-page A4 Tactical Survival guide](survival-guide.html). Use the printed field guide and map with these additions. No new freeform object combinations are introduced.
-
-**Pacing:** The 90–120-minute physical run remains an *unverified target*. Simulated turns or computer execution time are not the same as physical session length. The test suite checks deterministic engine integrity; physical playtests should record total time, turns, optional rooms explored, decisions, and setup/cleanup overhead.
-
-## Phase 7 — Consolidated print-and-play
-
-The [print-and-play hub](print-and-play.html) provides a single setup order, printable kit entry point, tracking sheets, and links to the consolidated reference hierarchy. Delver and Wizard gain 2 starting HP; Wizard also gains 1 ATK, retaining both heroes' unique techniques and magic. A multi-strategy deterministic benchmark now compares direct, cautious and exploratory policies independently across all four heroes. These computer simulations are balance diagnostics, not measurements of 90–120-minute tabletop sessions. All prior core and tactical mechanics remain in place. The browser now writes v7 saves without replacing v6 progress.
+Validate 1-player and 2-player difficulty, 90–120-minute target, on-card text readability, printed component counts, and whether the d20 opposed/d6 behaviour resolution feels dynamic without slowing physical combat. Avoid developing a new digital engine until the physical playtest is successful.

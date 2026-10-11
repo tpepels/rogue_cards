@@ -1,14 +1,12 @@
 {
   "name": "rogue-cards",
-  "version": "0.2.0",
+  "version": "1.0.0-tabletop",
   "private": true,
   "type": "module",
-  "description": "Black-and-white xerox zine-style card roguelike playable on GitHub Pages",
+  "description": "Physical-first d20/d6 Rogue Cards print-and-play tabletop game",
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/tabletop.test.mjs",
     "test:visual": "playwright test",
-    "sim:phase6": "node scripts/phase6-sim.mjs 80",
-    "sim:phase7": "node scripts/phase6-sim.mjs 80",
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {
