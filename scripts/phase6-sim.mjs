@@ -22,6 +22,8 @@ for(const hero of heroes){
     if(!a&&s.hp<s.maxHp-3)a=find("consume");
     if(!a&&s.hp<7)a=find("drink",x=>s.assignments[s.inventory[x.index].id]==="healing");
     if(!a)a=find("take")||find("take-bones");
+    if(!a&&s.phase==="descending"&&seed%3===0&&s.hunger>=10)a=find("solve");
+    if(!a&&s.phase==="descending"&&seed%5===0&&s.hp>=9)a=find("bargain");
     if(!a&&s.phase==="descending"&&s.position==="10")a=find("claim");
     const depth=nodeDepth(s.position);
     if(!a&&s.phase==="descending"){
