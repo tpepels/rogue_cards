@@ -1,0 +1,157 @@
+/* Canonical physical compositions. Deliberately separate from the game's rules.
+   The paper stock, dimensions and legibility guarantees are in tabletop.css.
+   Here each family receives a distinct found-object silhouette and illustration
+   treatment. Marks are deterministic, print-safe and never cover effect text. */
+
+/* Portrait: one exposed photographic plate, with a visibly pinned stat rail. */
+.tt-card.tt-layout-v2-hero .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:2mm 2mm 4mm 7mm;
+ border:1px solid #e9e0cb91;
+ box-shadow:inset 0 0 0 1.2mm #0a080645,inset 0 0 0 1.5mm #eee4d080;
+ pointer-events:none;transform:rotate(.6deg);
+}
+.tt-card.tt-layout-v2-hero .tt-v2-hero-start{
+ border-left:3px solid #c4ae8d;
+ box-shadow:inset 1px 0 #eee3d0;
+}
+.tt-card.tt-layout-v2-hero .tt-v2-result b{
+ border:1px solid #24190e;
+}
+
+/* Bestiary: a stark cropped specimen plate and individually cut behaviour slips. */
+.tt-card.tt-layout-v2-monster .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:2mm 2mm 3mm 16mm;
+ pointer-events:none;
+ border:1.5px dashed #e8deca9c;
+ border-bottom:4px solid #e7dbc69c;
+ transform:rotate(-.8deg);
+}
+.tt-card.tt-layout-v2-monster .tt-v2-monster-rows .tt-v2-result{
+ clip-path:polygon(0 5%,17% 1%,35% 4%,55% 0,76% 3%,100% 0,100% 97%,82% 100%,57% 98%,32% 100%,0 97%);
+}
+.tt-card.tt-layout-v2-monster .tt-v2-monster-rows .tt-v2-result:nth-child(3){
+ margin-left:.7mm;transform:rotate(.44deg);
+}
+
+/* Room dossier: thin survey lines sit BEHIND the pasted choices. */
+.tt-card.tt-layout-v2-room .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:4mm 4mm 17mm;
+ pointer-events:none;opacity:.42;
+ border:1px solid #f0e5c6;
+ background:linear-gradient(90deg,transparent 49.6%,#f0e3ca88 50%,transparent 50.4%),
+ linear-gradient(0deg,transparent 49.6%,#f0e3ca88 50%,transparent 50.4%);
+}
+.tt-card[data-v2-kind="HAZARD"] .tt-illustration::before{
+ inset:2mm 2mm 14mm;border:2px dashed #f1e9d17a;
+ background:repeating-linear-gradient(135deg,transparent 0 16px,#eee5d421 16px 18px);
+}
+.tt-card[data-v2-kind="SHRINE"] .tt-illustration::before{
+ inset:11mm 19mm 25mm;border:3px double #f2e7d0a8;border-radius:50%;
+ background:radial-gradient(circle,transparent 38%,#f2e7d01e 48%,transparent 68%);
+}
+.tt-card[data-v2-kind="ENCOUNTER"] .tt-illustration::before{
+ inset:3mm 5mm 25mm;border:1px dotted #efe4d0a3;
+ transform:rotate(.65deg);background:none;
+}
+
+/* Tools: stamped inventory plate, the functional instruction slip off-centre. */
+.tt-card[data-v2-kind="TOOL"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:5mm 10mm 30mm;
+ pointer-events:none;border:2px dashed #e9dec79c;
+ transform:rotate(-2deg);
+}
+.tt-card[data-v2-kind="TOOL"] .tt-card-kind{
+ border-width:2px;transform:rotate(-3deg);
+}
+.tt-card[data-v2-kind="EQUIPMENT"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:3mm 4mm 27mm;
+ border:3px double #eee1c1a1;pointer-events:none;
+}
+.tt-card[data-v2-kind="EQUIPMENT"] .tt-card-kind{
+ border-radius:0;box-shadow:.6mm .6mm 0 #0e0b07;
+}
+
+/* Familiar: like an animal portrait lifted from a field journal. */
+.tt-card[data-v2-kind="COMPANION"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:4mm 9mm 23mm;
+ border:2px solid #e9ddc78c;border-radius:48% 49% 9% 10%;
+ pointer-events:none;transform:rotate(1.4deg);
+}
+.tt-card[data-v2-kind="COMPANION"] .tt-card-kind{font-family:Georgia,serif;font-style:italic}
+
+/* Relic: an inner shrine-like frame and black ownership seal. */
+.tt-card[data-v2-kind="RELIC"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:6mm 7mm 28mm;
+ border:4px double #f0e0c7a8;
+ pointer-events:none;transform:rotate(2deg);
+}
+.tt-card[data-v2-kind="RELIC"] .tt-title{
+ border-left:2mm solid #18120d;
+}
+
+/* Spell scroll: narrow illuminated roll against a tall torn page. */
+.tt-card[data-v2-kind="SCROLL"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:5mm 15mm 24mm;
+ border-left:4px double #f6ead89c;border-right:4px double #f6ead89c;
+ pointer-events:none;
+ transform:rotate(-1.6deg);
+ background:repeating-linear-gradient(0deg,transparent 0 17px,#e7dcc71f 17px 18px);
+}
+.tt-card[data-v2-kind="SCROLL"] .tt-card-kind{
+ writing-mode:vertical-rl;top:3.8mm;right:1.3mm;
+ max-width:none;padding:1.6mm .9mm;
+ transform:rotate(180deg);letter-spacing:.14em;
+}
+.tt-card[data-v2-kind="SCROLL"] .tt-title{max-width:calc(100% - 11mm)}
+.tt-card[data-v2-kind="SCROLL"] .tt-v2-trigger{
+ font-family:Georgia,serif;font-style:italic;font-weight:700;
+}
+
+/* Rings: the central object sits in a deliberately circular impression. */
+.tt-card[data-v2-kind="RING"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:10mm 17mm 30mm;
+ border:4px double #e8dbc2c9;border-radius:50%;
+ pointer-events:none;box-shadow:0 0 0 2px #120e0a59;
+ transform:rotate(-1deg);
+}
+.tt-card[data-v2-kind="RING"] .tt-card-kind{
+ font-family:Georgia,serif;font-style:italic;border-radius:50%;
+ padding:1.1mm 2mm;
+}
+.tt-card[data-v2-kind="RING"] .tt-collage>.tt-content--v2-object{
+ clip-path:polygon(1% 0,97% 0,100% 6%,99% 95%,94% 100%,3% 99%,0 95%,0 5%);
+}
+
+/* Wands: diagonal, unstable etched energy motif, with a separate hazard ticket. */
+.tt-card[data-v2-kind="WAND"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:2mm 9mm 20mm;
+ border-left:2px solid #f3e5c890;border-right:1px dashed #e9dac68c;
+ transform:skewX(-11deg) rotate(-2deg);
+ pointer-events:none;
+ background:repeating-linear-gradient(132deg,transparent 0 26px,#f4e4c633 26px 27px,transparent 27px 47px);
+}
+.tt-card[data-v2-kind="WAND"] .tt-card-kind{
+ transform:rotate(3deg);border-left:3px solid #0e0c0a;
+}
+.tt-card[data-v2-kind="WAND"] .tt-v2-alternative{
+ border-left:3px solid #221910;
+}
+
+/* Potions: a bottle silhouette framed as a stained apothecary specimen;
+   identification lives on the separate ragged receipt below. */
+.tt-card[data-v2-kind="POTION"] .tt-illustration::before{
+ content:"";position:absolute;z-index:2;inset:9mm 19mm 20mm;
+ border:2px solid #e8d9beb1;border-radius:38% 38% 17% 17%;
+ pointer-events:none;transform:rotate(1deg);
+ background:radial-gradient(ellipse at 45% 75%,#e8dcc31e,transparent 65%);
+}
+.tt-card[data-v2-kind="POTION"] .tt-collage>.tt-content--v2-object{
+ clip-path:polygon(0 1%,15% 0,33% 2%,49% 0,67% 1%,84% 0,100% 2%,100% 97%,91% 100%,81% 96%,70% 100%,59% 96%,48% 100%,37% 96%,26% 100%,15% 96%,5% 100%,0 96%);
+}
+.tt-card[data-v2-kind="POTION"] .tt-v2-identity{
+ letter-spacing:-.06em;border-top:1.5px dashed #21180e;
+}
+@media print{
+ .tt-card .tt-illustration::before,
+ .tt-card .tt-card-kind{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}

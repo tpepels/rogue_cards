@@ -116,3 +116,27 @@ test("every unique card has legible ink, a physical type stamp and unclipped pas
   expect(card.h).toBeLessThan(130*96/25.4+2);
  }
 });
+
+test("physical card families have distinct illustration frames and artifact layouts",async({page})=>{
+ await page.goto("/");
+ const metrics=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>{
+  const families=["HERO","MONSTER","HAZARD","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"];
+  return families.map(family=>{
+   const card=cards.find(c=>c.dataset.v2Kind===family);
+   if(!card)return {family,missing:true};
+   const plate=card.querySelector(".tt-illustration");
+   const slip=card.querySelector(".tt-collage>.tt-content");
+   const stamp=card.querySelector(".tt-card-kind");
+   return {family,frame:getComputedStyle(plate,"::before").border,
+    frameShape:getComputedStyle(plate,"::before").borderRadius,
+    frameTransform:getComputedStyle(plate,"::before").transform,
+    titleLeft:getComputedStyle(card.querySelector(".tt-title")).left,
+    slipWidth:Math.round(slip.getBoundingClientRect().width),
+    stampDirection:getComputedStyle(stamp).writingMode};
+  });
+ });
+ expect(metrics.every(m=>!m.missing)).toBeTruthy();
+ expect(new Set(metrics.map(m=>[m.frame,m.frameShape,m.frameTransform,m.slipWidth,m.stampDirection].join("|"))).size)
+  .toBeGreaterThanOrEqual(9);
+ expect(metrics.find(m=>m.family==="SCROLL").stampDirection).toBe("vertical-rl");
+});
