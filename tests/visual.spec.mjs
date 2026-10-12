@@ -341,3 +341,26 @@ test("canonical cards have no top masthead and begin with artwork and pasted tit
  expect(size.width).toBeGreaterThan(90*96/25.4-2);
  expect(size.height).toBeLessThan(130*96/25.4+2);
 });
+
+
+test("V2 playtest rulebook is one A4, retains opposed rolls and prints dice-range examples",async({page})=>{
+ await page.goto("/rules-v2.html");
+ await expect(page.getByRole("heading",{name:/ROGUE CARDS V2/i})).toBeVisible();
+ await expect(page.getByText(/d20 \+ ATK/)).toBeVisible();
+ await expect(page.getByText(/d20 \+ DEF/)).toBeVisible();
+ await expect(page.getByText(/After each Hero turn/)).toBeVisible();
+ await expect(page.getByText(/1–2: Suffer 2 damage/)).toBeVisible();
+ await expect(page.getByText(/3–4: Heal d6 HP/)).toBeVisible();
+ await expect(page.getByText(/5–6: Draw 1 Item/)).toBeVisible();
+ await expect(page.getByText(/NOT YET COMPATIBLE WITH EVERY CURRENT V1 CARD/)).toBeVisible();
+ await page.emulateMedia({media:"print"});
+ const dims=await page.locator(".sheet").evaluate(el=>{
+   const rect=el.getBoundingClientRect();
+   return {w:rect.width,h:rect.height,overflowY:el.scrollHeight-el.clientHeight,
+     overflowX:el.scrollWidth-el.clientWidth};
+ });
+ expect(dims.w).toBeLessThanOrEqual(192*96/25.4+2);
+ expect(dims.h).toBeLessThanOrEqual(279*96/25.4+2);
+ expect(dims.overflowY,"V2 rulebook exceeds one A4").toBeLessThanOrEqual(2);
+ expect(dims.overflowX,"V2 rulebook horizontal overflow").toBeLessThanOrEqual(2);
+});
