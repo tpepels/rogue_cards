@@ -203,7 +203,7 @@ function tableMarkup(s){
  const room=s.room?card('room',s.room):'<div class="tut-empty">Reveal one UPPER Room to begin</div>';
  const monster=s.monster?card('monster',s.monster):'<div class="tut-empty">Monsters go here when a card draws one</div>';
  const h=s.hp===null?'CURRENT HP':s.hp+' / 20';
- const monsterHealth=s.monster?'<p class="tut-slotmeta">Monster HP counter: '+(s.monsterHp??(s.final?20:6))+'</p>':'';
+ const monsterHealth=s.monster?'<div class="tut-health" style="margin-top:9px"><span class="tut-die tut-die--monster">'+(s.monsterHp??(s.final?20:6))+'</span><span>MONSTER HP DIE</span></div>':'';
  return '<div class="tut-topline"><div class="tut-progress">'+progress(s.progress)+'</div><div class="tut-health">HERO HP <span class="tut-die">'+(s.hp===null?'?':s.hp)+'</span><span>'+h+'</span></div></div>'+
  '<div class="tut-board">'+
  '<div class="tut-zone"><p class="tut-zone-title">01 · HERO</p>'+card('hero','warrior')+'<p class="tut-slotmeta">Veteran Warrior</p></div>'+
