@@ -17,7 +17,7 @@ const tools=[
   "",["u-fall","m-flood","m-bridge","d-bridge"],"The knots count the dead.",3],
  ["torch","Pitch Torch","wind","TOOL",["FIRE","TOOL"],
   "KEEP: Use any Room option marked 'With Pitch Torch'.",null,
-  "ACTION: Discard to skip the next Monster response in a dark Room.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
+  "ACTION: In Lamp-Eater, Opened Crypt or Lightless Hall, discard to skip the next Monster response.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
  ["crowbar","Dented Crowbar","key","TOOL",["METAL","TOOL"],
   "AT A LOCKED ROOM: Use this roll instead of the Room’s lock roll.",
   [["1–2","The bar slips: lose 2 HP."],["3–4","Open it; draw 1 Item."],["5–6","Open it; draw 2 Items."]],
@@ -45,7 +45,7 @@ const equipment=[
   [["1–2","Blade catches: lose 1 HP. With FIRE gear, the Monster's next 6 becomes 1–2."],["3–4","Deal +2 damage."],["5–6","Deal +d6 damage."]],
   "Turn sideways after rolling; straighten on entering a new Room.",["m-crypt","d-bones"],"Still sharp in the gaps.",2],
  ["staff","Ashwood Staff","wizard","EQUIPMENT",["WOOD","MAGIC","WEAPON"],
-  "WEAPON: +1 ATK. Spell attacks made with WIT deal +1 damage.",null,
+  "WEAPON: +1 ATK. If a spell attacks with d20+WIT, deal +1 damage.",null,
   "At a SHRINE, skip its choice to heal 2 HP or straighten a Wand.",["u-shrine","m-altar","d-mirror"],"Its knots are watching.",2],
  ["cursed-blade","Whispering Blade","key","EQUIPMENT",["METAL","CURSED","WEAPON"],
   "CURSED WEAPON: +4 ATK; lose 1 HP after each successful hit.",null,
@@ -184,7 +184,7 @@ const wands=[
   [["1–2","Backfire: lose 2 HP."],["3–4","Freeze its tongue: next Monster behaviour 6 becomes 1–2."],["5–6","Monster skips next response; heal 2 HP."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
-  "AT A LOCKED ROOM: If upright, roll d6; turn sideways until recharged.",
+  "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","Misfire: lose d6 HP."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose that Room's 5–6 outcome."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];

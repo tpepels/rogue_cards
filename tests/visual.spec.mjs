@@ -183,3 +183,35 @@ test("physical card families have distinct illustration frames and artifact layo
 });
 
 
+
+
+test("north-east notes and footer depth marks are consistent across all 111 cards",async({page})=>{
+ test.setTimeout(180000);
+ await page.goto("/");
+ const checks=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const collage=card.querySelector(".tt-collage").getBoundingClientRect();
+  const lead=card.querySelector(".tt-slip--lead").getBoundingClientRect();
+  const result=card.querySelector(".tt-slip--results")?.getBoundingClientRect();
+  const depth=card.querySelector(".tt-depth");
+  return {id:card.dataset.id,titleBand:card.dataset.titleBand,
+   stage:card.dataset.type==="room"||card.dataset.type==="monster",
+   depth:depth?.textContent||null,depthInFooter:depth?.closest(".tt-footer")!==null,
+   leadEast:(lead.left+lead.right)/2>(collage.left+collage.right)/2,
+   leadTopMm:(lead.top-collage.top)*25.4/96,
+   resultWest:result?(result.left+result.right)/2<(collage.left+collage.right)/2:null,
+   aboveTitle:lead.top<card.querySelector(".tt-title").getBoundingClientRect().bottom
+  };
+ }));
+ expect(checks).toHaveLength(111);
+ for(const x of checks){
+  expect(x.leadEast,x.id+" first note not north-east").toBe(true);
+  expect(x.leadTopMm,x.id+" first note too high").toBeGreaterThan(26);
+  expect(x.leadTopMm,x.id+" first note too low").toBeLessThan(45);
+  expect(x.aboveTitle,x.id+" upper note collides with title").toBe(false);
+  if(x.resultWest!==null)expect(x.resultWest,x.id+" second note not opposite").toBe(true);
+  if(x.stage){
+   expect(x.depthInFooter,x.id+" depth mark not moved to footer").toBe(true);
+   expect(["UPPER","MIDDLE","DEEP","FINAL"]).toContain(x.depth);
+  }else expect(x.depth,x.id+" unwanted dungeon depth").toBe(null);
+ }
+});

@@ -208,23 +208,25 @@ export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
  const index=card.v2?.number??(CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1);
  const type=esc(card.type), layout=composition(card),asset=assetPath(card),plate=printPlate(card);
- const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
+ const stage=card.stage?'<span class="tt-depth" aria-label="Depth '+esc(card.stage)+'">'+esc(card.stage)+'</span>':"";
+ const titleBand=card.title.length>22?"long":"short";
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
  const typeStamp='<span class="tt-card-kind" aria-hidden="true">'+esc(card.v2?.kind||card.type).replaceAll("EQUIPMENT","GEAR")+'</span>';
  let middle;
  // The print plate and paste-on rule paper share one overlapping collage plane.
  // Neither is a browser background: the art is a genuine illustrated card layer.
  middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
-   '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
+   '<div class="tt-visual">'+visual(card)+stats(card)+'</div>'+
    content(card)+'</div>';
  return '<article class="tt-card tt-paper-collage tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
-  '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-paste="'+plate+'" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-title-band="'+titleBand+'" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-paste="'+plate+'" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-file="'+esc(asset||"")+'" data-art-status="'+(asset?'generated':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   label+typeStamp+middle+
-  '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+
-  String(index).padStart(2,"0")+'</span></footer></article>';
+  '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i>'+
+  '<span class="tt-footer-meta">'+stage+'<span class="tt-footer-number">No. '+
+  String(index).padStart(2,"0")+'</span></span></footer></article>';
 }
 export function printSheets(cards=printDeck("all")){
  if(!Array.isArray(cards))throw new TypeError("Expected a physical card list");

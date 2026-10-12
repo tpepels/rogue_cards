@@ -17,10 +17,10 @@ const upper=make("UPPER",[
   [["1–2","A rat answers. Draw an UPPER Monster."],["3–4","Peek at the next Room."],["5","Draw 1 Item."],["6","Draw 1 Item; peek at the next Room."]],[],"The pipes know everyone."],
  ["u-gate","Rusty Gate","door","HAZARD","Something knocks from the other side.",
   [["UNLOCK","Roll d6. Discard Rusty Key to choose 5–6 instead."],["FORCE","Opposed d20+ATK vs d20+3: win, draw 1 Item; lose, lose 2 HP."]],"UNLOCK",
-  [["1–2","A trap! Lose d6 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"A lock with opinions."],
+  [["1–2","TRAP: Lose d6 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"A lock with opinions."],
  ["u-supply","Forgotten Supplies","shop","TREASURE","A storehouse still has its proprietor.",
   [["SEARCH","Roll d6."],["BARTER","Discard 1 Item to draw 2 Items, or discard a MAGIC Item to recharge a Wand."]],"SEARCH",
-  [["1–2","A thief! Draw an UPPER Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items; keep 1, return 1."]],["Loyal Hound"],"The dust has a price."],
+  [["1–2","A thief! Draw an UPPER Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items; keep 1, discard 1."]],["Loyal Hound"],"The dust has a price."],
  ["u-nest","Rat Nest","rat","LAIR","Draw an UPPER Monster. Its family wants a snack.",
   [["SOOTHE","Roll d6 before combat. With Loyal Hound, choose 5–6."],["FIGHT","After victory, draw 1 Item."]],"SOOTHE",
   [["1–2","It attacks! Fight the Monster."],["3–4","It leaves. Discard the Monster."],["5–6","Discard Monster; draw 1 Item."]],["Loyal Hound"],"They consider you enormous."],
@@ -29,7 +29,7 @@ const upper=make("UPPER",[
   [["1–2","The god bites. Lose d6 HP."],["3–4","It forgives. Heal d6 HP."],["5–6","Cleanse one cursed Item and heal 2 HP."]],["cursed Items","Antidote"],"Even silence expects a gift."],
  ["u-fall","Collapsing Stairs","stairs","HAZARD","The bottom step has no bottom.",
   [["JUMP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose 1 HP; peek at the next Room."]],"JUMP",
-  [["1–2","Fall. Lose d6 HP."],["3–4","Land hard. Lose 2 HP."],["5–6","Catch a satchel. Draw 1 Item."]],["Knotted Rope"],"Stairs should be trustworthy."],
+  [["1–2","TRAP: Fall; lose d6 HP."],["3–4","TRAP: Land hard; lose 2 HP."],["5–6","Catch a satchel. Draw 1 Item."]],["Knotted Rope"],"Stairs should be trustworthy."],
  ["u-fountain","Laughing Fountain","water","MYSTERY","Its reflection smiles a little late.",
   [["DRINK","Roll d6. You may lose 2 HP to roll twice and choose either result."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if it has ALCHEMY."]],"DRINK",
   [["1–2","The water laughs. Lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP and draw 1 Item."]],["Bandages"],"Do not smile back."],
@@ -47,7 +47,7 @@ const upper=make("UPPER",[
   [["1–2","It bites. Lose d6 HP."],["3–4","Peek at the next Room."],["5","Draw 1 Item."],["6","Draw 1 Item and heal 2 HP."]],["Pitch Torch","Tunnel Raven"],"The ending is missing."],
  ["u-mimic","Chest with a Pulse","door","TREASURE","The chest is breathing.",
   [["OPEN","Roll d6. Discard Rusty Key to choose 5–6."],["WALK AWAY","Heal 1 HP."]],"OPEN",
-  [["1–2","Mimic! Draw an UPPER Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"It has learned to wink."]
+  [["1–2","TRAP: Draw an UPPER Monster (mimic)."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"It has learned to wink."]
 ]);
 const middle=make("MIDDLE",[
  ["m-flood","Flooded Chamber","water","HAZARD","Something stirs below the waterline.",
@@ -58,7 +58,7 @@ const middle=make("MIDDLE",[
   [["1–2","The stone refuses. Lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Draw 2 Items; keep one."]],["cursed Items"],"It has moved since yesterday."],
  ["m-vault","Buried Lockbox","door","TREASURE","A keyhole watches you approach.",
   [["PICK","Roll d6. Discard Rusty Key to choose 5–6."],["SMASH","Lose d6 HP; draw 1 Item."]],"PICK",
-  [["1–2","Needle trap. Become POISONED."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key","Antidote"],"The lock remembers you."],
+  [["1–2","TRAP: Become POISONED."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key","Antidote"],"The lock remembers you."],
  ["m-crypt","Opened Crypt","crypt","LAIR","Draw a MIDDLE Monster. It remembers its name.",
   [["WHISPER","Roll d6 before combat. With Pitch Torch or a FIRE Item, choose 5–6."],["FIGHT","After victory, draw 2 Items."]],"WHISPER",
   [["1–2","It charges. Fight the Monster."],["3–4","Discard the Monster."],["5–6","Discard Monster; draw 1 Item."]],["Pitch Torch"],"Someone left recently."],
@@ -70,7 +70,7 @@ const middle=make("MIDDLE",[
   [["1–2","Become POISONED."],["3–4","Heal d6 HP."],["5–6","Remove a status and draw 1 Item."]],["cursed Items","Antidote"],"Wax drips upward."],
  ["m-bridge","Bridge of Whispering Rope","stairs","HAZARD","A bridge offers helpful advice.",
   [["CROSS","Roll d6. With Knotted Rope, choose 5–6."],["ARGUE","Opposed d20+WIT vs d20+4: win, heal 2 HP; lose, lose d6 HP."]],"CROSS",
-  [["1–2","Lose d6 HP and discard 1 Item."],["3–4","Cross. No further effect."],["5–6","Find a bundle. Draw 2 Items."]],["Knotted Rope"],"The bridge can count."],
+  [["1–2","TRAP: Lose d6 HP; discard 1 Item."],["3–4","Cross. No further effect."],["5–6","Find a bundle. Draw 2 Items."]],["Knotted Rope"],"The bridge can count."],
  ["m-well","The Bottomless Well","water","MYSTERY","A coin takes a long time to land.",
   [["DROP","Discard 1 Item; roll d6. Discard another to reroll once. If first was CURSED, choose 6."],["LISTEN","Peek at the next Room."]],"DROP",
   [["1–2","Something climbs out. Draw a MIDDLE Monster."],["3–4","Heal d6 HP."],["5","Draw 2 Items."],["6","Draw 3 Items."]],["Tunnel Raven"],"The echo is older than you."],
@@ -90,13 +90,13 @@ const middle=make("MIDDLE",[
 const deep=make("DEEP",[
  ["d-shadow","Lightless Hall","crypt","HAZARD","The light makes no shadow here.",
   [["PROCEED","Roll d6. With FIRE gear, choose 5–6. With ICE gear, use 3–4."],["WAIT","Lose 2 HP; peek at the next Room."]],"PROCEED",
-  [["1–2","Draw a DEEP Monster with ADV on its first attack."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Pitch Torch"],"The dark is watching."],
+  [["1–2","TRAP: Draw a DEEP Monster; first attack has ADV."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Pitch Torch"],"The dark is watching."],
  ["d-bridge","Broken Bridge","stairs","HAZARD","The far side looks almost reachable.",
   [["LEAP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose d6 HP; draw 1 Item."]],"LEAP",
-  [["1–2","Fall. Lose 2d6 HP."],["3–4","Lose d6 HP."],["5–6","Draw 1 Item."]],["Knotted Rope"],"Do not look down."],
+  [["1–2","TRAP: Fall; lose 2d6 HP."],["3–4","TRAP: Lose d6 HP."],["5–6","Draw 1 Item."]],["Knotted Rope"],"Do not look down."],
  ["d-reliquary","Lost Reliquary","amulet","TREASURE","A shining reliquary needs one more sacrifice.",
   [["TAKE","Roll d6."],["GIVE","Discard 2 Items; draw 3. If one was MAGIC, heal 2 HP."]],"TAKE",
-  [["1–2","Lose d6 HP; draw 1 Item."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; keep this Room to ignore the next trap, then discard it."]],["Rusty Key"],"It feels strangely warm."],
+  [["1–2","Lose d6 HP; draw 1 Item."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; keep this Room to ignore the next TRAP result, then discard it."]],["Rusty Key"],"It feels strangely warm."],
  ["d-bones","Hall of Teeth","bones","LAIR","Piles of teeth are arranged by size.",
   [["SEARCH","Roll d6."],["RATTLE","Draw a DEEP Monster. After victory, draw 3 Items."]],"SEARCH",
   [["1–2","Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items, then heal 2 HP."]],["Loyal Hound"],"Many mouths, no answers."],
@@ -123,7 +123,7 @@ const deep=make("DEEP",[
   [["1–2","Lose d6 HP; become POISONED."],["3–4","Remove POISONED."],["5","Heal d6 HP; remove POISONED."],["6","Keep this Room: +2 DEF through the next Room; then discard."]],["cursed Items"],"It does not fit anyone."],
  ["d-last-chest","The Last Chest","door","TREASURE","A box contains exactly what you fear.",
   [["OPEN","Roll d6; you may reroll once after losing d6 HP. Discard Rusty Key to choose 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
-  [["1–2","Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
+  [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
 export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map((c,i)=>({
  ...c,v2:{...c.v2,number:i+1}

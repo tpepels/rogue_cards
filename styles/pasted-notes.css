@@ -238,3 +238,84 @@
   print-color-adjust:exact;-webkit-print-color-adjust:exact;
  }
 }
+
+/* NORTH-EAST PAPER EDITION
+   The scene is the card; the first clipped rule goes near its upper-right.
+   Depth is metadata in the bottom colophon, not an opaque image badge. */
+.tt-card.tt-paper-collage .tt-slip--lead,
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead,
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead,
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead{
+ top:29mm;
+ right:.9mm;
+ bottom:auto;
+ left:auto;
+ --paper-angle:.48deg;
+}
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead{
+ top:31mm;right:1.5mm;--paper-angle:-.68deg;
+}
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead{
+ top:33mm;right:.7mm;--paper-angle:.85deg;
+}
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead{
+ top:30mm;right:1.2mm;--paper-angle:-.9deg;
+}
+.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead{
+ top:39mm;
+}
+.tt-card.tt-paper-collage .tt-slip--results,
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results,
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results,
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results{
+ top:auto;
+ bottom:7.4mm;
+ left:1.1mm;
+ right:auto;
+ --paper-angle:-.4deg;
+}
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results{
+ bottom:8mm;left:.9mm;--paper-angle:.65deg;
+}
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results{
+ bottom:7.2mm;left:.7mm;--paper-angle:-.75deg;
+}
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results{
+ bottom:7.5mm;left:1.5mm;--paper-angle:.6deg;
+}
+/* A single small notice still belongs in the image's north-east.
+   Do not expand it across the entire artwork merely because it is alone. */
+.tt-card.tt-paper-collage .tt-slip--lead:only-child{
+ top:30mm;bottom:auto;
+ --paper-width:45mm;
+}
+.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead:only-child{
+ top:39mm;
+}
+.tt-card.tt-paper-collage .tt-footer{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:1mm;
+}
+.tt-card.tt-paper-collage .tt-footer i{
+ min-width:0;flex:1 1 auto;max-width:none;
+}
+.tt-card.tt-paper-collage .tt-footer-meta{
+ flex:0 0 auto;
+ display:flex;align-items:center;gap:1.5mm;
+ font:900 9px/1 "Courier New",monospace;
+ white-space:nowrap;
+}
+.tt-card.tt-paper-collage .tt-footer-meta .tt-depth{
+ display:inline-block;
+ position:static;
+ padding:.35mm .65mm;
+ color:#eee2d1;background:#21180f;
+ border:0;box-shadow:none;transform:none;
+ font:900 9px/1 "Courier New",monospace;
+ letter-spacing:.03em;
+}
+.tt-card.tt-paper-collage .tt-footer-meta .tt-footer-number{
+ font:8.5px/1 "Courier New",monospace;
+}
