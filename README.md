@@ -55,7 +55,7 @@ The game now has explicit handlers for all **52 Object cards** and all **37 Room
 ```sh
 npm run audit
 npm run balance -- 2000
-npm run balance -- 10000 --json > detailed-results.json
+npm run --silent balance -- 10000 --json > detailed-results.json
 npm run balance:baseline -- 120
 ```
 
@@ -80,9 +80,9 @@ These commands test **scripted simulation policies**, not optimal or human win r
 
 ```sh
 npm test
-npm run balance:matched -- 1000 > matched-vault.json
-npm run balance:rooms -- 500 > room-policies.json
-npm run balance:diagnostics -- 1000 > diagnostics.json
+npm run --silent balance:matched -- 1000 > matched-vault.json
+npm run --silent balance:rooms -- 500 > room-policies.json
+npm run --silent balance:diagnostics -- 1000 > diagnostics.json
 ```
 
 - **`balance:matched`** replays identical seeds, Heroes, Room decisions,
@@ -144,8 +144,8 @@ Run these two independent, controlled balance experiments:
 
 ```sh
 npm test
-npm run balance:items -- 200 > item-balance.json
-npm run balance:room-cards -- 200 > room-card-balance.json
+npm run --silent balance:items -- 200 > item-balance.json
+npm run --silent balance:room-cards -- 200 > room-card-balance.json
 ```
 
 - **Item balance:** all **52 Objects**, over 8 solo Heroes + 4 representative
@@ -199,8 +199,8 @@ is displayed in the workflow run.
 ```sh
 npm test
 npm run verify:items
-npm run verify:game -- 70 --compare tests/fixtures/game-baseline.json > game-verification.json
-npm run verify:game -- 1000 > full-game-verification.json
+npm run --silent verify:game -- 70 --compare tests/fixtures/game-baseline.json > game-verification.json
+npm run --silent verify:game -- 1000 > full-game-verification.json
 ```
 
 - **Printed Item effects:** tests exercise each of the **133 printed d6 outcome
@@ -236,9 +236,9 @@ not the earlier per-card figures measured at commit 276e9c9.
 Three reproducible studies are available:
 
 ```sh
-npm run study:items -- 200 > post-hp-items.json
-npm run study:rooms -- 200 > post-hp-rooms.json
-npm run study:strategies -- 400 > post-hp-strategies.json
+npm run --silent study:items -- 200 > post-hp-items.json
+npm run --silent study:rooms -- 200 > post-hp-rooms.json
+npm run --silent study:strategies -- 400 > post-hp-strategies.json
 ```
 
 - **Items:** one extra existing Item moved from the deck into the starting

@@ -28,7 +28,7 @@ jobs:
       - name: Compare complete-effect strategies across solo and cooperative expeditions
         run: npm run balance -- 2000
       - name: Verify all Item behaviors and compare whole-game outcomes
-        run: npm run verify:game -- 70 --compare tests/fixtures/game-baseline.json > game-verification.json
+        run: node scripts/verify-game.mjs 70 --compare tests/fixtures/game-baseline.json > game-verification.json
       - name: Summarize mechanical checks and balance drift
         if: always()
         run: |
