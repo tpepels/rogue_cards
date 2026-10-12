@@ -874,3 +874,428 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  .tt-sheet:last-child{break-after:auto;page-break-after:auto}
  .tt-card{box-shadow:none!important;margin:0!important;break-inside:avoid;page-break-inside:avoid;border-width:1.5px}
 }
+
+
+/* ========================================================================
+   CANONICAL TYPE-SPECIFIC XEROX CARDS — October 2026
+   A shared distressed print-process, NEVER a shared internal layout.
+   These compositions apply to the existing 111 designs and print copies.
+   All marks are deterministic: no JS geometry or pseudo-random rendering.
+   ======================================================================== */
+
+/* Hand-cut labels, imperfect paper registration and deep halftone blacks. */
+.tt-card{
+ --paper:#eee5d5;--charcoal:#15110d;
+ background-color:#e6dccb;
+ border:2px solid var(--charcoal);
+ border-radius:2.1mm 2.5mm 1.6mm 2.8mm;
+ box-shadow:1px 2px 0 #817562,inset 0 0 0 .55mm #b2a48e;
+}
+.tt-card:before{
+ opacity:.9;
+ background:
+  repeating-linear-gradient(88deg,#100e0b09 0 .5px,transparent .5px 13px),
+  radial-gradient(circle at 4px 7px,#24180d33 0 .6px,transparent 1.1px) 0 0/17px 13px,
+  radial-gradient(ellipse at 80% 15%,#21170d28,transparent 58%);
+}
+.tt-card:after{
+ border-radius:2mm 2.5mm 1.6mm 2.6mm;
+ border:1px solid #241c14;
+ box-shadow:inset 0 0 0 .3mm #33281c56;
+ opacity:.75;
+}
+.tt-card .tt-title{
+ z-index:9;
+ top:9.4mm;
+ padding:1.05mm 1.5mm 1.1mm;
+ font:900 21px/.99 "Courier New",Courier,monospace;
+ letter-spacing:-.8px;
+ background:#f2eadc;
+ box-shadow:.65mm .7mm 0 #17120e;
+}
+.tt-card-kind{
+ position:absolute;z-index:10;
+ right:3.1mm;top:2.9mm;
+ max-width:33mm;overflow-wrap:anywhere;
+ font:900 9px/1.03 "Courier New",monospace;
+ letter-spacing:.02em;text-align:center;
+ color:#16110c;background:#e9dfcc;
+ padding:.8mm 1.3mm .7mm;
+ border:1px solid #18130d;
+ box-shadow:.45mm .45mm 0 #18130d;
+ transform:rotate(calc(var(--plate-turn) * -1.3));
+ clip-path:polygon(0 5%,17% 1%,37% 4%,62% 0,84% 4%,100% 2%,99% 95%,78% 100%,52% 96%,25% 100%,0 94%);
+}
+.tt-card .tt-collage>.tt-visual{
+ top:0;
+ left:-1mm;right:-.7mm;
+ bottom:2mm;
+ background:#12100c;
+}
+.tt-card .tt-art-image{
+ filter:url("#tt-xerox-ink") grayscale(1) contrast(2.65) brightness(.94);
+}
+.tt-card .tt-art-placeholder .ink-art{
+ filter:url("#tt-xerox-ink") grayscale(1) contrast(2.85) brightness(.93);
+}
+.tt-card .tt-visual:after{
+ opacity:.34;
+ background:
+  radial-gradient(circle at 3px 8px,#ece5d45b 0 .65px,transparent 1.1px) 0 0/13px 17px,
+  repeating-linear-gradient(115deg,transparent 0 29px,#e8dfcc22 29px 30px,transparent 30px 59px),
+  radial-gradient(ellipse at 54% 35%,transparent 32%,#05040380 100%);
+}
+.tt-card .tt-collage>.tt-content{
+ border:0;
+ background:#efe6d6;
+ background-image:
+  radial-gradient(ellipse at 15% 10%,#fff8e566,transparent 48%),
+  repeating-linear-gradient(175deg,transparent 0 21px,#3928180c 21px 22px);
+ box-shadow:.55mm .75mm 0 #18130d;
+ max-height:calc(100% - 21mm);
+ padding:1.65mm 2mm 1.9mm;
+ clip-path:polygon(0 1.2%,13% .1%,27% 1.1%,41% 0,55% 1%,72% .1%,89% 1.1%,100% 0,99.5% 96%,88% 100%,72% 98.9%,53% 100%,34% 98.9%,16% 100%,0 98%);
+}
+.tt-card .tt-collage>.tt-content:before{height:.5px;top:.45mm;opacity:.6}
+.tt-card .tt-footer{
+ background:#e9ddca;
+ height:4.2mm;min-height:4.2mm;bottom:1.4mm;
+ left:3mm;right:3mm;padding:.3mm .8mm;
+ box-shadow:none;
+ border-top:1px solid #19130d;
+ font-size:9px;
+ transform:rotate(calc(var(--slip-tilt) * -.5));
+}
+.tt-card .tt-footer i{white-space:nowrap;max-width:83%}
+.tt-card .tt-v2-result{border-bottom:0}
+.tt-card .tt-v2-result b{
+ font-family:"Courier New",Courier,monospace;
+ font-weight:900;
+ letter-spacing:-.3px;
+}
+/* A numbered result is a distinct xerox scrap, not a striped HTML table. */
+.tt-card .tt-v2-results>.tt-v2-result:nth-child(odd){
+ background:#d8cbb44d;
+ transform:rotate(-.16deg);
+}
+.tt-card .tt-v2-results>.tt-v2-result:nth-child(even){transform:rotate(.13deg)}
+.tt-card .tt-v2-results>.tt-v2-result{
+ padding:.55mm .5mm .6mm;
+ border-left:1.5px solid #241a14;
+ margin-top:.3mm;
+}
+.tt-card .tt-v2-results>.tt-v2-result b{
+ color:#f5ecdb;background:#211b14;
+ width:max-content;min-width:10.1mm;
+ display:inline-block;text-align:center;padding:.35mm .5mm .25mm;
+}
+
+/* HEROES — portrait nearly full-bleed, pinned stat rail, one large ability note. */
+.tt-card.tt-layout-v2-hero{
+ --rail-height:60mm;--slip-bottom:7.5mm;
+ --slip-left:1mm;--slip-right:1.2mm;
+}
+.tt-layout-v2-hero .tt-title{left:16mm;max-width:calc(100% - 20mm);font-size:22px}
+.tt-layout-v2-hero .tt-card-kind{right:3mm;top:3mm}
+.tt-layout-v2-hero .tt-collage>.tt-visual{bottom:8mm}
+.tt-layout-v2-hero .tt-collage .tt-stats{
+ top:14mm;left:-.7mm;width:15.9mm;height:57mm;
+ background:#e9dec9;z-index:6;
+ border:2px solid #1b1510;
+ box-shadow:.5mm .55mm 0 #16110d;
+}
+.tt-layout-v2-hero .tt-stat{padding:1.1mm .3mm;min-height:0}
+.tt-layout-v2-hero .tt-stat b{font-size:18px}
+.tt-layout-v2-hero .tt-stat-symbol{font-size:15px}
+.tt-card.tt-layout-v2-hero .tt-collage>.tt-content--v2-hero{
+ max-height:calc(100% - 23mm);
+ bottom:7.3mm;left:2mm;right:1mm;
+ padding:1.7mm 2.3mm 1.8mm;
+ transform:rotate(calc(var(--slip-tilt) * .75));
+}
+.tt-content--v2-hero .tt-v2-hero-start{
+ display:inline-block;background:#19140e;color:#f2e8d5;
+ padding:.6mm 1mm;max-width:100%;
+ font-size:9.9px;
+ border:0;
+}
+.tt-content--v2-hero .tt-v2-hero-trigger{
+ font-size:10.7px;line-height:1.16;margin:1.1mm 0 .6mm;
+}
+.tt-content--v2-hero .tt-v2-result{font-size:10.6px;line-height:1.14}
+
+/* MONSTERS — compressed silhouette above several separately pasted behaviour slips. */
+.tt-card.tt-layout-v2-monster{
+ --rail-height:39mm;--slip-bottom:7.4mm;
+}
+.tt-layout-v2-monster .tt-title{left:15.3mm;max-width:calc(100% - 19mm);font-size:21px}
+.tt-layout-v2-monster .tt-collage>.tt-visual{bottom:29mm}
+.tt-layout-v2-monster .tt-collage .tt-stats{
+ top:17mm;left:-.5mm;width:14.5mm;height:38mm;
+ background:#e8ddcb;
+}
+.tt-card.tt-layout-v2-monster .tt-collage>.tt-content--v2-monster{
+ bottom:7.1mm;left:1mm;right:.45mm;
+ max-height:calc(100% - 20mm);
+ background:#eee3d2;
+ padding:1.2mm 1.6mm 1.3mm;
+ transform:rotate(calc(var(--slip-tilt) * -.55));
+}
+.tt-v2-monster-head{font-size:8.9px;padding:0 0 .5mm;border-bottom:2px solid #231910}
+.tt-v2-monster-rows{display:block}
+.tt-v2-monster-rows .tt-v2-result{
+ display:grid;grid-template-columns:11mm 1fr;
+ background:#d9cebc80;
+ border:0;border-left:2px solid #231910;
+ margin:.35mm 0;padding:.4mm .55mm;
+ line-height:1.16;font-size:9.9px;
+ transform:rotate(.12deg);
+}
+.tt-v2-monster-rows .tt-v2-result:nth-child(even){
+ margin-left:1.6mm;background:#eee5d6;
+ transform:rotate(-.23deg);
+}
+.tt-v2-monster-rows .tt-v2-result b{
+ color:#1b140d;background:transparent;
+ font-size:10.9px;font-weight:900;
+}
+.tt-v2-monster-rule{
+ border-top:1px solid #55483c;
+ font-size:9.4px;line-height:1.16;
+ margin:.55mm 0 0;padding:.45mm .2mm 0;
+}
+.tt-v2-monster-rule:nth-last-of-type(2){
+ border-top:2px solid #22170f;
+}
+.tt-v2-monster-remains{
+ font-size:9.35px;line-height:1.14;
+ border-top:1px dashed #261b13;
+ margin:.65mm 0 0;padding:.55mm .2mm 0;
+}
+
+/* ROOMS — torn location dossier. Encounters, shrines and lairs do not share a
+   generic rectangle: choices read as clipped tabs and rolls as field notes. */
+.tt-card.tt-layout-v2-room{--slip-bottom:7.5mm}
+.tt-layout-v2-room .tt-title{font-size:21px}
+.tt-card.tt-layout-v2-room .tt-collage>.tt-content--v2{
+ bottom:7.3mm;left:1mm;right:.6mm;
+ padding:1.35mm 1.7mm 1.65mm;
+ max-height:calc(100% - 20mm);
+}
+.tt-content--v2 .tt-v2-kind{
+ display:flex;justify-content:space-between;
+ border-bottom:2px solid #21180f;
+ padding-bottom:.5mm;font-size:9px;
+}
+.tt-content--v2 .tt-v2-kind span{
+ background:#1a1510;color:#f1e7d6;
+ padding:.3mm .75mm;font-size:8px;
+}
+.tt-content--v2 .tt-v2-prompt{
+ font:italic 11px/1.13 Georgia,serif;
+ margin:.7mm 0 1mm;
+}
+.tt-content--v2 .tt-v2-choices{gap:.25mm}
+.tt-content--v2 .tt-v2-choice{
+ border:0;border-left:2px solid #1f170f;
+ padding:.4mm .6mm;margin:.15mm 0;
+ background:#ddd1bd7a;
+ grid-template-columns:17mm 1fr;gap:.8mm;
+ font:10.2px/1.14 "Courier New",monospace;
+}
+.tt-content--v2 .tt-v2-choice:nth-child(2){
+ margin-left:1.5mm;background:#eee4d5;
+}
+.tt-content--v2 .tt-v2-choice b{
+ box-shadow:none;background:#1d1711;
+ padding:.25mm .6mm;
+ font-size:9.6px;
+}
+.tt-content--v2 .tt-v2-roll-heading{
+ font:900 10px/1.13 "Courier New",monospace;
+ background:#1d1812;color:#f1e7d5;
+ border:0;margin:.9mm -.2mm .55mm;
+ padding:.6mm 1mm;
+}
+.tt-content--v2 .tt-v2-result{font-size:10.1px;line-height:1.13}
+/* Environmental hazards use a broad inset map, while shrine ledgers are
+   narrow central notes and social encounters use staggered choice tickets. */
+.tt-card[data-v2-kind="HAZARD"] .tt-collage>.tt-content--v2{
+ left:2mm;right:.25mm;transform:rotate(.35deg);
+}
+.tt-card[data-v2-kind="SHRINE"] .tt-collage>.tt-content--v2{
+ left:2.2mm;right:1.4mm;
+ border-top:2px double #21170f;
+}
+.tt-card[data-v2-kind="SHRINE"] .tt-v2-kind{
+ font-family:Georgia,serif;font-size:11px;letter-spacing:.1em;
+}
+.tt-card[data-v2-kind="ENCOUNTER"] .tt-v2-choice{
+ margin-left:0;transform:rotate(-.15deg);
+}
+.tt-card[data-v2-kind="ENCOUNTER"] .tt-v2-choice:nth-child(2){
+ margin-left:2.5mm;transform:rotate(.26deg);
+}
+.tt-card[data-v2-kind="LAIR"] .tt-v2-roll-heading{
+ background:#252019;color:#f1e6d4;
+}
+/* Reference-like cartography: split a few short locations into a painted map
+   at left and a tall fieldnote at right; most Rooms keep full-width effects
+   to preserve legible long d6 tables. */
+.tt-card[data-id="u-passage"] .tt-collage>.tt-content--v2,
+.tt-card[data-id="m-flood"] .tt-collage>.tt-content--v2{
+ left:auto;right:.3mm;width:48mm;
+ bottom:7.4mm;max-height:calc(100% - 21mm);
+ padding:1.25mm 1.3mm 1.5mm;
+ transform:rotate(.28deg);
+}
+.tt-card[data-id="u-passage"] .tt-v2-choice,
+.tt-card[data-id="m-flood"] .tt-v2-choice{
+ grid-template-columns:12mm 1fr;gap:.65mm;
+ font-size:9.4px;
+}
+.tt-card[data-id="u-passage"] .tt-v2-result,
+.tt-card[data-id="m-flood"] .tt-v2-result{font-size:9.3px;line-height:1.13;grid-template-columns:10mm 1fr;gap:.6mm}
+.tt-card[data-id="u-passage"] .tt-v2-prompt,
+.tt-card[data-id="m-flood"] .tt-v2-prompt{font-size:10px}
+
+/* FOUND OBJECTS — common frame, distinct paper/ink grammar per family. */
+.tt-card.tt-layout-v2-object .tt-title{font-size:21.5px}
+.tt-card.tt-layout-v2-object .tt-collage>.tt-content--v2-object{
+ padding:1.5mm 1.8mm 1.8mm;
+ bottom:7.6mm;max-height:calc(100% - 20mm);
+}
+.tt-v2-object .tt-v2-tags{gap:.4mm}
+.tt-content--v2-object .tt-v2-tag{
+ font-size:7.8px;background:#272017;
+ padding:.3mm .6mm;
+}
+.tt-content--v2-object .tt-v2-kind{
+ font-size:9px;border:0;
+ justify-content:space-between;gap:.8mm;
+}
+.tt-content--v2-object .tt-v2-trigger{
+ margin:.8mm 0 .7mm;padding-bottom:.55mm;
+ font-size:10.9px;line-height:1.21;
+ border-bottom:2px solid #281e16;
+}
+.tt-content--v2-object .tt-v2-roll-heading{
+ background:transparent;color:#21170f;
+ border-top:1px solid #21170f;border-bottom:0;
+ margin:.5mm 0;padding:.5mm .15mm;
+ font:900 10px "Courier New",monospace;
+}
+.tt-content--v2-object .tt-v2-result{
+ font-size:10px;line-height:1.17;
+ padding:.55mm .4mm;
+}
+.tt-content--v2-object .tt-v2-alternative{
+ border-top:1px dashed #241b13;
+ margin-top:.65mm;padding-top:.75mm;
+ font-size:10px;line-height:1.19;
+}
+.tt-content--v2-object .tt-v2-identity{
+ font-size:8.5px;margin:.6mm 0 0;
+}
+
+/* Tools: an enormous found object with a narrow lower-right instruction note. */
+.tt-card[data-v2-kind="TOOL"] .tt-collage>.tt-content{
+ left:auto;right:.2mm;width:77mm;max-width:calc(100% - .5mm);
+ transform:rotate(.55deg);
+}
+
+/* Weapons/armour: image remains above an ink-heavy equipment ledger. */
+.tt-card[data-v2-kind="EQUIPMENT"] .tt-collage>.tt-content{
+ left:1mm;right:1.8mm;
+ border-top:3px solid #17120d;
+ transform:rotate(-.14deg);
+}
+.tt-card[data-v2-kind="EQUIPMENT"] .tt-v2-kind{font-weight:900;letter-spacing:.06em}
+
+/* Companions: a creature portrait, then a lighter field-observation scrap. */
+.tt-card[data-v2-kind="COMPANION"] .tt-collage>.tt-content{
+ left:2mm;right:1.4mm;
+ transform:rotate(-.48deg);
+}
+.tt-card[data-v2-kind="COMPANION"] .tt-v2-kind{
+ font:900 10px Georgia,serif;font-style:italic;
+}
+
+/* Relics: ceremonial ink seal around the object, the written curse below. */
+.tt-card[data-v2-kind="RELIC"] .tt-collage>.tt-visual{
+ left:3mm;right:3mm;bottom:3mm;
+ border:2px double #e7dbc7;
+}
+.tt-card[data-v2-kind="RELIC"] .tt-collage>.tt-content{
+ left:1.8mm;right:1.7mm;transform:rotate(.2deg);
+ border:1px double #17110c;
+}
+.tt-card[data-v2-kind="RELIC"] .tt-card-kind{background:#1c1712;color:#f0e4d1}
+.tt-card[data-v2-kind="RELIC"] .tt-title{font-size:22px}
+
+/* Scrolls: occult printing with a long paper strip, bold spell trigger and
+   ragged individual result snippets rather than a software table. */
+.tt-card[data-v2-kind="SCROLL"] .tt-collage>.tt-content{
+ left:.3mm;right:1.6mm;
+ border-left:3px solid #1f150f;
+ transform:rotate(-.42deg);
+}
+.tt-card[data-v2-kind="SCROLL"] .tt-v2-trigger{font-style:italic}
+.tt-card[data-v2-kind="SCROLL"] .tt-v2-result:nth-child(even){background:#d7cab478}
+.tt-card[data-v2-kind="SCROLL"] .tt-card-kind{background:#19140e;color:#f5e8d6}
+
+/* Rings: centered object icon, much smaller asymmetric scrap at the bottom. */
+.tt-card[data-v2-kind="RING"] .tt-collage>.tt-visual{
+ left:2mm;right:2mm;bottom:3.5mm;
+}
+.tt-card[data-v2-kind="RING"] .tt-collage>.tt-content{
+ left:1mm;right:3.1mm;transform:rotate(.47deg);
+}
+.tt-card[data-v2-kind="RING"] .tt-title{font-size:22px;top:9mm}
+.tt-card[data-v2-kind="RING"] .tt-v2-kind{font-family:Georgia,serif;font-style:italic}
+
+/* Wands: volatile arcane instrument; clear separate overcharge notice. */
+.tt-card[data-v2-kind="WAND"] .tt-collage>.tt-visual{
+ left:0;right:-1.6mm;
+}
+.tt-card[data-v2-kind="WAND"] .tt-collage>.tt-content{
+ left:1.5mm;right:.3mm;
+ transform:rotate(-.3deg);
+}
+.tt-card[data-v2-kind="WAND"] .tt-v2-alternative{
+ background:#dacebb;
+ border:1px dashed #1a130d;
+ padding:.85mm .9mm;
+ margin:.75mm -.2mm 0;
+ font-weight:bold;
+}
+.tt-card[data-v2-kind="WAND"] .tt-v2-alternative::first-line{
+ font-weight:900;
+}
+
+/* Potions: smoky black image, torn receipt and identifying strip at the edge. */
+.tt-card[data-v2-kind="POTION"] .tt-collage>.tt-visual{
+ left:-.4mm;right:-.4mm;bottom:1mm;
+}
+.tt-card[data-v2-kind="POTION"] .tt-collage>.tt-content{
+ left:.7mm;right:1.6mm;
+ transform:rotate(-.65deg);
+}
+.tt-card[data-v2-kind="POTION"] .tt-v2-identity{
+ border-top:1px solid #271c14;
+ padding:.6mm .25mm .1mm;
+ font-size:9px;
+}
+.tt-card[data-v2-kind="POTION"] .tt-card-kind{
+ background:#efe2cb;
+ transform:rotate(1.2deg);
+}
+
+/* Print at true dimensions; keep ink and all collage geometry intact. */
+@media print{
+ .tt-card,.tt-card .tt-collage>.tt-content,
+ .tt-card .tt-title,.tt-card-kind{
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+ }
+ .tt-card{box-shadow:none!important}
+}
