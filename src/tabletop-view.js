@@ -42,6 +42,7 @@ const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquar
 const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
 export function composition(card){
  if(card.v2&&card.type==="room")return "v2-room";
+ if(card.v2&&card.type==="monster")return "v2-monster";
  if(card.v2&&(card.type==="item"||card.type==="potion"))return "v2-object";
  if(card.type==="hero")return "portrait-stats";
  if(card.type==="monster")return DENSE_MONSTERS.has(card.id)?"monster-dense":"monster";
@@ -69,6 +70,16 @@ function stats(card){
   '<div class="tt-stat"><span class="tt-stat-symbol" aria-hidden="true">'+mark+'</span><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
 }
 function content(card,{sidebar=false}={}){
+ if(card.type==="monster"&&card.v2){
+  const v=card.v2;
+  return '<section class="tt-content tt-content--v2-monster" aria-label="Monster dice, weakness and bargain">'+
+   '<div class="tt-v2-monster-head">BEHAVIOUR · ROLL d6 AFTER EACH HERO TURN</div>'+
+   '<div class="tt-v2-monster-rows">'+card.behavior.map((effect,i)=>
+     '<div class="tt-v2-result"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(effect)+'</span></div>').join("")+'</div>'+
+   '<p class="tt-v2-monster-rule"><b>WEAKNESS — </b>'+esc(v.weakness)+'</p>'+
+   '<p class="tt-v2-monster-rule"><b>PARLEY — </b>'+esc(v.parley)+'</p>'+
+   '<p class="tt-v2-monster-remains"><b>REMAINS — </b>'+esc(v.remains)+'</p></section>';
+ }
  if(card.v2&&(card.type==="item"||card.type==="potion")){
   const v=card.v2;
   const tags=v.tags.map(tag=>'<span class="tt-v2-tag">'+esc(tag)+'</span>').join("");
