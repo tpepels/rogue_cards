@@ -163,3 +163,19 @@ test("generated card illustrations retain spot colours in catalogue and print",(
  assert.doesNotMatch(printSheets(CATALOGUE),/tt-needs-art|tt-art-placeholder|ink-art/,
   "No card should fall back to the old SVG illustrations");
 });
+
+test("learn-to-play tutorial uses the canonical physical cards and is linked from the site",()=>{
+ const page=readFileSync("tutorial.html","utf8");
+ assert.match(page,/from "\.\/src\/tabletop-data\.js"/);
+ assert.match(page,/from "\.\/src\/tabletop-view\.js"/);
+ assert.match(page,/cardMarkup\(found\)/);
+ for(const [type,id] of [["hero","warrior"],["room","u-passage"],["room","u-nest"],["monster","rat"],["room","vault"],["monster","warden"],["item","sword"],["item","rope"],["item","key"]]){
+  assert.ok(CATALOGUE.some(c=>c.type===type&&c.id===id),type+":"+id);
+  assert.ok(page.includes('"'+id+'"')||page.includes("'"+id+"'"),"Tutorial reference: "+id);
+ }
+ assert.match(page,/3 UPPER.*3 MIDDLE.*3 DEEP/s);
+ assert.match(page,/one action in combat/i);
+ assert.match(page,/tut-scroll/);
+ assert.match(readFileSync("src/tabletop-app.js","utf8"),/tutorial\.html/);
+ assert.match(readFileSync("rules.html","utf8"),/tutorial\.html/);
+});
