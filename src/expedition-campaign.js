@@ -46,16 +46,27 @@ function setupPrepared(s){
  for(const x of s.heroes){
   if(x.hp<=0)continue;
   for(const id of ["raven","ring-eye","skull","chalk"]){
-   const o=itemIn(s,x,id);if(o&&!x.used.has(o)&&(s.strategy==="treasure"||s.strategy==="seal"))
+   const o=itemIn(s,x,id);if(o&&!x.used.has(o)&&
+    (o.v2.kind!=="RING"||x.slots.ring===o)&&
+    (s.strategy==="treasure"||s.strategy==="seal"))
     rollItem(s,x,o);
   }
   const gp=itemIn(s,x,"goblin-pet"),br=itemIn(s,x,"ring-bargain");
   if(s.room.v2.kind==="ENCOUNTER"){
    if(gp&&x.slots.companion===gp)rollItem(s,x,gp);
+   const coin=itemIn(s,x,"coin");
+   if(coin&&s.strategy!=="seal"){rollItem(s,x,coin);if(x.inventory.includes(coin))s.consume(x,coin);}
    if(br&&x.slots.ring===br)rollItem(s,x,br);
    const wm=itemIn(s,x,"wand-market");
    if(wm&&!s.exhausted.has(wm)&&s.strategy!=="seal")rollItem(s,x,wm);
   }
+  if(s.room.v2.kind==="SHRINE"&&s.anyEquippedTag("CURSED")){
+   const needle=itemIn(s,x,"needle");
+   if(needle&&s.strategy==="survival"){s.consume(x,needle);s.apply("CLEANSE",[],null);}
+  }
+  const sight=itemIn(s,x,"scroll-reveal");
+  if(sight&&(s.strategy==="treasure"||s.strategy==="seal")&&s.room.stage!=="FINAL")
+   rollItem(s,x,sight);
   if(x.poison){
    for(const id of ["moth","ring-spores","needle"]){
     const o=itemIn(s,x,id);if(o&&(!["ring-spores"].includes(id)||x.slots.ring===o))
@@ -95,12 +106,29 @@ function actRoom(s){
  s.metrics.roomChoices[room.id+":"+n]=(s.metrics.roomChoices[room.id+":"+n]||0)+1;
  const ops=ROOM_EFFECTS[room.id].choices[n];
  s.setActor(s.chooseActor());
+ // The Staff or the printed Shrine option replaces the single Room choice:
+ // it cannot grant both Room rewards and a Wand recharge.
+ if(room.v2.kind==="SHRINE"&&s.exhaustedWand()&&s.strategy==="magic"){
+  if(s.has("staff")||!ops.some(op=>op==="RECHARGE")){s.recharge();return;}
+ }
+ // A reusable crowbar, one-use Scroll, or exhausted-on-use Wand can
+ // replace the printed lock roll, never add an extra Room result.
+ const locked=["u-gate","u-mimic","m-vault","d-last-chest"];
+ if(n===0&&locked.includes(room.id)&&["treasure","magic"].includes(s.strategy)){
+  for(const id of ["scroll-unlock","wand-door","crowbar"]){
+   const owner=s.own(id),card=owner&&itemIn(s,owner,id);
+   if(card&&!(card.v2.kind==="WAND"&&s.exhausted.has(card))){
+    s.activate(owner,card);return;
+   }
+  }
+ }
+ if(room.id==="m-fungus"&&n===0&&s.has("spore-jar")&&s.strategy==="survival"){
+  const owner=s.own("spore-jar"),card=itemIn(s,owner,"spore-jar");
+  s.consume(owner,card);s.heal(owner,s.die());return;
+ }
  for(const op of ops){
   const [kind,...args]=op.split(":");s.apply(kind,args,room);
  }
- // Alternate printed option at shrines: surrender Room choice to recharge Wand.
- if(room.v2.kind==="SHRINE"&&s.exhaustedWand()&&s.strategy==="magic"&&
-   !ops.some(op=>op.startsWith("RECHARGE")))s.recharge();
 }
 // Deliberately require the printed parley cost/roll, and never grant a corpse.
 function attemptParley(s,m){
@@ -115,7 +143,8 @@ function attemptParley(s,m){
  case "goblin":success=pay(2);if(success){
   const owner=s.chooseActor();if(!owner.slots.companion){owner.recruitedGoblin=true;s.temporaryCompanions.push("goblin");}
  }break;
- case "crawler":success=pay(1,"ALCHEMY");break;
+ case "crawler":{const potion=s.heroes.find(x=>x.inventory.some(o=>o.v2.kind==="POTION"));
+  if(potion){s.consume(potion,potion.inventory.find(o=>o.v2.kind==="POTION"));success=true;}break;}
  case "bat":case "wisp":{
   const difficulty=m.id==="bat"?3:5;
   const r=rollD20(s,{dis:h.poison||h.slots.armour?.id==="mail"});
@@ -126,7 +155,8 @@ function attemptParley(s,m){
  }
  case "troll":success=pay(2);break;
  case "eye":success=pay(1);break;
- case "mold":success=pay(1,"ALCHEMY");break;
+ case "mold":{const potion=s.heroes.find(x=>x.inventory.some(o=>o.v2.kind==="POTION"));
+  if(potion){s.consume(potion,potion.inventory.find(o=>o.v2.kind==="POTION"));success=true;}break;}
  case "wraith":success=s.anyEquippedTag("CURSED");
   if(success)s.hurt(h,s.die());break;
  case "rust":success=pay(1,"METAL");if(success)s.draw();break;
@@ -247,6 +277,16 @@ function useItemsInCombat(s,h){
  }
  if(s.strategy==="survival"&&s.monsterHP<8)return false;
  const monsterThreat=s.monster.hp>=10||s.monster.stage==="FINAL";
+ if(s.strategy==="magic"&&["u-lamp","d-shadow","m-crypt"].includes(s.room?.id)){
+  const torch=itemIn(s,h,"torch");
+  if(torch&&s.monsterSkip===0){
+   s.consume(h,torch);s.monsterSkip++;return true;
+  }
+ }
+ if(s.strategy==="magic"&&s.exhaustedWand()){
+  const lantern=itemIn(s,h,"lantern-heart");
+  if(lantern){s.consume(h,lantern);s.recharge();return true;}
+ }
  if(!monsterThreat&&s.strategy!=="magic")return false;
  const names=s.strategy==="seal"?
   ["wand-sparks","wand-frost","wand-turn","wand-morph","spore-jar"]:
@@ -398,7 +438,7 @@ function finishMonsters(s){
 }
 function seal(s){
  const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=magic>=3;
- if(magic<3)return false;
+ if(!s.discardable(3,"MAGIC"))return false;
  s.metrics.sealAttempt=true;
  s.discard(3,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
