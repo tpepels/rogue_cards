@@ -51,7 +51,7 @@ export class ExpeditionState {
   this.lastSpent=null;this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
   this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
-  this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();
+  this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
    activated:0,magicActions:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
@@ -73,8 +73,9 @@ export class ExpeditionState {
  setActor(h){this.actor=h;return h;}
  own(id){return this.heroes.find(h=>h.inventory.some(o=>o.id===id))||null;}
  has(id){return !!this.own(id);}
+ cursed(card){return !!card&&can(card,"CURSED")&&!this.cleansed.has(card);}
  equipped(h,id){return Object.values(h.slots).some(o=>o?.id===id);}
- equippedTag(h,tag){return Object.values(h.slots).some(o=>can(o,tag));}
+ equippedTag(h,tag){return Object.values(h.slots).some(o=>tag==="CURSED"?this.cursed(o):can(o,tag));}
  itemOfTag(tag){return this.heroes.find(h=>h.inventory.some(o=>can(o,tag)))||null;}
  anyEquippedTag(tag){return this.heroes.some(h=>this.equippedTag(h,tag));}
  partyCount(tag){return this.heroes.reduce((n,h)=>n+h.inventory.filter(o=>can(o,tag)).length,0);}
@@ -86,7 +87,7 @@ export class ExpeditionState {
   else if(card.v2.kind==="RING")slot="ring";
   else if(card.v2.kind==="COMPANION")slot="companion";
   if(!slot)return;
-  const old=h.slots[slot];if(old&&can(old,"CURSED"))return;
+  const old=h.slots[slot];if(old&&this.cursed(old))return;
   if(!old||scoreItem(card,this.strategy)>scoreItem(old,this.strategy))h.slots[slot]=card;
  }
  remove(h,card){
@@ -102,7 +103,7 @@ export class ExpeditionState {
   for(let i=0;i<n;i++){
    const options=this.heroes.flatMap(h=>h.inventory
     .filter(o=>(!tag||can(o,tag))&&o!==exclude&&
-     (!this.equipped(h,o.id)||!can(o,"CURSED")))
+     (!this.equipped(h,o.id)||!this.cursed(o)))
     .map(o=>({hero:h,item:o})))
     .sort((a,b)=>scoreItem(a.item,this.strategy)-scoreItem(b.item,this.strategy));
    if(!options.length)return last;
@@ -184,8 +185,8 @@ export class ExpeditionState {
    this.consume(h,card);
   if(h.card.id==="witch"&&!h.used.has("witch-ability")&&
    ["SCROLL","POTION"].includes(card.v2.kind))this.witchReaction(h);
-  if(h.slots.ring?.id==="ring-hunger"&&can(card,"MAGIC")&&!h.used.has("ring-hunger")){
-   h.used.add("ring-hunger");this.activate(h,h.slots.ring);
+  if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
+   this.activate(h,h.slots.ring);
   }
   return true;
  }
@@ -224,7 +225,7 @@ export class ExpeditionState {
   case "DEF_ADV":h.nextDefenseAdv=true;return;
   case "VULNERABLE":h.damageVulnerability+=n();return;
   case "BLOCK":this.pendingDamage=v==="ALL"?0:Math.max(0,this.pendingDamage-n());return;
-  case "REFLECT":this.pendingDamage=0;if(this.monster)this.monsterHP-=n();return;
+  case "REFLECT":this.pendingReflect=true;this.pendingDamage=0;if(this.monster)this.monsterHP-=n();return;
   case "MONSTER_DIS":this.monsterDis=true;return;
   case "MONSTER_ADV":this.monsterAdv=true;return;
   case "SKIP":this.monsterSkip+=n();return;
@@ -258,12 +259,12 @@ export class ExpeditionState {
   case "BANISH":if(this.monster){this.monster=null;this.monsterHP=0;this.banished=true;this.metrics.banishments++;}return;
   case "RECHARGE":this.recharge();return;
   case "CURSED_RECHARGE":if(can(this.lastSpent,"CURSED"))this.recharge();return;
-  case "CLEANSE":{const owner=this.heroes.find(x=>Object.values(x.slots).some(y=>can(y,"CURSED")));
-    if(owner){const slot=Object.entries(owner.slots).find(([k,y])=>can(y,"CURSED"));
-      if(slot)delete owner.slots[slot[0]];}return;}
-  case "CLEANSE_COST":if(this.discardable(1,"CURSED")){this.discard(1,{tag:"CURSED"});this.apply("CLEANSE",[],null);}
-    return;
-  case "ALCHEMY_HEAL":if(can(this.lastSpent,"ALCHEMY"))this.heal(h,this.die());return;
+  case "CLEANSE":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
+    if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);}return;}
+  case "CLEANSE_COST":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
+    if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);
+      this.consume(owner,target);}return;}
+  case "ALCHEMY_HEAL":if(can(this.lastSpent,"ALCHEMY"))this.heal(h,Math.max(0,this.die()-2));return;
   case "MAGIC_HEAL":if(can(this.lastSpent,"MAGIC"))this.heal(h,n());return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
   case "NEXT_WIT":this.witBonus+=n();return;
@@ -327,10 +328,10 @@ export class ExpeditionState {
   if((this.has("torch")||this.has("lantern-heart")||this.anyEquippedTag("FIRE"))&&
     ["u-lamp","m-crypt","d-shadow"].includes(this.room.id))face=6;
   if(this.anyEquippedTag("ICE")&&this.room.id==="d-shadow")face=4;
-  if(this.has("ring-eye")&&this.room.id==="d-oracle")face=6;
-  if(this.has("ring-spores")&&this.room.id==="m-fungus")face=6;
-  if(this.has("ring-ashes")&&this.room.id==="u-lamp")face=6;
-  if(this.has("ring-hunger")&&this.room.id==="d-crown")face=5;
+  if(this.heroes.some(h=>this.equipped(h,"ring-eye"))&&this.room.id==="d-oracle")face=6;
+  if(this.heroes.some(h=>this.equipped(h,"ring-spores"))&&this.room.id==="m-fungus")face=6;
+  if(this.heroes.some(h=>this.equipped(h,"ring-ashes"))&&this.room.id==="u-lamp")face=6;
+  if(this.heroes.some(h=>this.equipped(h,"ring-hunger"))&&this.room.id==="d-crown")face=5;
   if(this.room.id==="m-statue"&&can(this.lastSpent,"MAGIC"))face=6;
   if(this.room.id==="m-auction"&&can(this.lastSpent,"MAGIC"))face=6;
   if(this.room.id==="m-well"&&can(this.lastSpent,"CURSED"))face=6;
