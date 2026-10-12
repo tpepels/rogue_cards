@@ -121,3 +121,31 @@ test("before-print verification prevents source drift across new full-effect eng
  assert.equal(s.heroes.length,2);
  assert.equal(s.metrics.unresolved,0);
 });
+
+
+test("held boons and cards survive Room boundaries until consumed or explicitly expired",()=>{
+ const s=new ExpeditionState({seed:2401,heroes:["monk"],strategy:"survival"});
+ const h=s.heroes[0];s.beginRoom(ROOMS.find(r=>r.id==="d-crown"));
+ s.setActor(h);s.apply("SAVE_DEF",["2"],null);
+ h.nextAdv++;h.nextAtk=2;h.kept.push("reroll");s.trapGuard=true;
+ s.endRoom();
+ assert.equal(h.nextDefenseBonus,2);assert.equal(h.defDuration,1);
+ s.beginRoom(ROOMS.find(r=>r.id==="u-gate"));
+ assert.equal(h.nextAdv,1);assert.equal(h.nextAtk,2);
+ assert.equal(h.nextDefenseBonus,2);
+ assert.equal(s.trapGuard,true);
+ // A stored reliquary protection is discarded when the first printed trap occurs.
+ const before=h.hp;s.roomRoll(1);
+ assert.equal(h.hp,before);assert.equal(s.trapGuard,false);
+ s.endRoom();assert.equal(h.nextDefenseBonus,0);
+ assert.equal(h.nextAdv,1);
+ h.kept.splice(0);assert.equal(h.kept.length,0);
+});
+test("the Coffin Moth ignores the first Fungal Garden poisoning only",()=>{
+ const s=new ExpeditionState({seed:12,heroes:["witch"],strategy:"survival"});
+ const h=s.heroes[0],moth=OBJECTS.find(o=>o.id==="moth");
+ s.add(h,moth);h.slots.companion=moth;
+ s.beginRoom(ROOMS.find(r=>r.id==="m-fungus"));
+ s.setActor(h);s.apply("POISON",[],null);assert.equal(h.poison,false);
+ s.apply("POISON",[],null);assert.equal(h.poison,true);
+});
