@@ -361,6 +361,7 @@ function seal(state){
  if(!state.sealAvailable)return false;
  state.sealAttempt=true;for(let i=0;i<3;i++)spendItem(state,{magic:true});
  const highest=[...healthy(state.heroes)].sort((a,b)=>b.card.wit-a.card.wit)[0];
+ if(!highest){state.sealAttempt=false;return false;}
  state.sealWin=opposedWit(state.rng,highest.card.wit,6);
  return state.sealWin;
 }
@@ -377,11 +378,12 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",
    if(!partyAlive(state.heroes))return summary(state);
    if(state.activeMonster){
     const card=state.activeMonster;
-    if(!fight(state,card))return summary(state);
+    if(!fight(state,card)||!partyAlive(state.heroes))return summary(state);
    }
    state.cleared++;
   }
  }
+ if(!partyAlive(state.heroes))return summary(state);
  const omen=rng.die(6);
  if(omen>=5)state.heroAdv=true;
  if(bossChoice==="seal"&&seal(state)){state.won=true;return summary(state);}
