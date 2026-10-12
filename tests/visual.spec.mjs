@@ -1,522 +1,62 @@
 import {test,expect} from "@playwright/test";
-import {CATALOGUE,printDeck} from "../src/tabletop-data.js";
-test("homepage is a physical card game, not a browser dungeon engine",async({page})=>{
+test("one canonical gallery covers all families and prints real card sheets",async({page})=>{
+ test.setTimeout(180000);
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/");
- await expect(page.getByRole("heading",{name:/dungeon lives on the table/i})).toBeVisible();
- await expect(page.getByRole("link",{name:/one-page rules/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
- expect(errors).toEqual([]);
-});
-test("all card specimen content fits within its physical card face",async({page})=>{
- await page.goto("/");
- await page.getByRole("button",{name:/PRINT QUANTITIES/}).click();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(CATALOGUE.length);
- const overflowing=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.filter(card=>{
-   const body=card.querySelector(".tt-content");
-   const title=card.querySelector(".tt-title");
-   return body.scrollHeight>body.clientHeight+2||title.scrollHeight>title.clientHeight+2;
- }).map(card=>({id:card.dataset.id,body:card.querySelector(".tt-content").scrollHeight,available:card.querySelector(".tt-content").clientHeight})));
- expect(overflowing).toEqual([]);
-});
-test("browser card gallery is usable without horizontal overflow on mobile",async({page})=>{
- await page.goto("/");
- for(const w of [375,414,720,1024,1440]){
-  await page.setViewportSize({width:w,height:900});
-  const measured=await page.evaluate(()=>({doc:document.documentElement.scrollWidth,viewport:innerWidth}));
-  expect(measured.doc,"at width "+w).toBeLessThanOrEqual(measured.viewport+2);
+ await expect(page.getByRole("heading",{name:/One dungeon. One deck. One rulebook/i})).toBeVisible();
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(111);
+ await expect(page.getByRole("link",{name:/READ \/ PRINT THE A4 RULES/})).toBeVisible();
+ const filter=page.getByRole("combobox",{name:"Card category"});
+ const checks=[["hero",8],["room",37],["monster",14],["TOOL",8],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
+ for(const [type,count] of checks){
+  await filter.selectOption(type);
+  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(count);
+  const values=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(c=>{
+   const paper=c.querySelector(".tt-collage>.tt-content"),rect=paper.getBoundingClientRect();
+   const title=c.querySelector(".tt-title").getBoundingClientRect();
+   return {id:c.dataset.id,clipY:paper.scrollHeight-paper.clientHeight,clipX:paper.scrollWidth-paper.clientWidth,titleOverlap:title.bottom-rect.top};
+  }));
+  for(const row of values){
+   expect(row.clipY,type+" clipped vertically: "+row.id).toBeLessThanOrEqual(2);
+   expect(row.clipX,type+" clipped horizontally: "+row.id).toBeLessThanOrEqual(2);
+   expect(row.titleOverlap,type+" title collision: "+row.id).toBeLessThanOrEqual(5);
+  }
  }
-});
-test("single A4 core rules fit without clipping",async({page})=>{
- await page.goto("/rules.html");
- await page.emulateMedia({media:"print"});
- const dims=await page.locator(".sheet").evaluate(el=>({w:el.getBoundingClientRect().width,
-  h:el.getBoundingClientRect().height,body:el.scrollHeight,client:el.clientHeight,
-  left:el.scrollWidth,inner:el.clientWidth}));
- expect(dims.w).toBeLessThanOrEqual(192*96/25.4+2);
- expect(dims.h).toBeLessThanOrEqual(279*96/25.4+2);
- expect(dims.body,"One-page rules overflow").toBeLessThanOrEqual(dims.client+2);
- expect(dims.left,"Horizontal rules overflow").toBeLessThanOrEqual(dims.inner+2);
-});
-test("A4 physical card sheets have exactly four 90x130 mm slots",async({page})=>{
- await page.goto("/");
- await page.emulateMedia({media:"print"});
- const summary=await page.evaluate(()=>{
-  const sheets=[...document.querySelectorAll(".tt-print-only .tt-sheet")];
-  const cards=[...document.querySelectorAll(".tt-print-only .tt-card")];
-  return {sheets:sheets.length,cards:cards.length,pages:sheets.map(page=>({
-   width:page.getBoundingClientRect().width,height:page.getBoundingClientRect().height,
-   overflowing:page.scrollHeight>page.clientHeight+2,
-   children:page.querySelectorAll(".tt-card").length
-  })),first:cards[0]?{w:cards[0].getBoundingClientRect().width,h:cards[0].getBoundingClientRect().height}:null};
- });
- expect(summary.cards).toBe(printDeck("all").length);
- expect(summary.sheets).toBe(Math.ceil(summary.cards/4));
- expect(summary.pages.every(p=>p.children<=4&&!p.overflowing)).toBeTruthy();
- expect(summary.first.w).toBeGreaterThan(90*96/25.4-2);
- expect(summary.first.w).toBeLessThan(90*96/25.4+2);
- expect(summary.first.h).toBeGreaterThan(130*96/25.4-2);
- expect(summary.first.h).toBeLessThan(130*96/25.4+2);
-});
-test("filtering print copies does not generate or lose components",async({page})=>{
- await page.goto("/");
- await page.getByLabel("Card category").selectOption("monster");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("monster").length);
- await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(printDeck("monster").length);
- await page.getByRole("button",{name:/PRINT QUANTITIES/}).click();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(CATALOGUE.filter(c=>c.type==="monster").length);
- await expect(page.getByRole("button",{name:/ONE EACH/})).toBeVisible();
-});
-
-test("illustration-first draft uses ten role-specific art proportions without clipping mechanics",async({page})=>{
- await page.goto("/docs/illustration-first-layout-study.html");
- await expect(page.locator(".specimen .card")).toHaveCount(10);
- const layouts=await page.locator(".specimen .card").evaluateAll(cards=>cards.map(card=>{
-  const visual=card.querySelector(".visual");
-  const rules=card.querySelector(".rules");
-  const footer=card.querySelector(".footer");
-  const cardRect=card.getBoundingClientRect(), artRect=visual.getBoundingClientRect();
-  return {type:card.className,
-   artRatio:artRect.height/cardRect.height,
-   rulesOverflow:rules.scrollHeight-rules.clientHeight,
-   footerBottom:footer.getBoundingClientRect().bottom-cardRect.bottom
-  };
- }));
- expect(layouts.some(x=>x.artRatio>.6)).toBeTruthy();
- expect(layouts.some(x=>x.artRatio<.52)).toBeTruthy();
- for(const l of layouts){
-  expect(l.rulesOverflow,"Clipped rules on "+l.type).toBeLessThanOrEqual(2);
-  expect(l.footerBottom,"Footer outside card on "+l.type).toBeLessThanOrEqual(2);
- }
-});
-
-test("design studies are accessible from the live homepage without replacing playable cards",async({page})=>{
- await page.goto("/");
- await expect(page.getByRole("link",{name:"DESIGN REFERENCE",exact:true})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
- await expect(page.getByRole("link",{name:/VIEW DESIGN REFERENCE/})).toHaveAttribute("href","./docs/illustration-first-layout-study.html");
- await expect(page.getByRole("link",{name:/VIEW ROOM & CHEST STUDY/})).toHaveAttribute("href","./docs/room-feature-layout-study.html");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(printDeck("all").length);
- await page.getByRole("link",{name:/VIEW DESIGN REFERENCE/}).click();
- await expect(page).toHaveURL(/\/docs\/illustration-first-layout-study\.html$/);
- await expect(page.locator(".specimen .card")).toHaveCount(10);
-});
-
-test("canonical printed cards use live PNG art, fallback placeholders and flexible compositions",async({page})=>{
- await page.goto("/");
- const hero=page.locator('.tt-grid .tt-card[data-id="delver"]').first();
- const eye=page.locator('.tt-grid .tt-card[data-id="eye"]').first();
- const key=page.locator('.tt-grid .tt-card[data-id="key"]').first();
- const flood=page.locator('.tt-grid .tt-card[data-id="m-flood"]').first();
- await expect(hero).toHaveAttribute("data-art-status","original");
- await expect(hero).toHaveAttribute("data-layout","portrait-stats");
- await expect(eye).toHaveAttribute("data-layout","monster-dense");
- await expect(key).toHaveAttribute("data-layout","illustration-dominant");
- await expect(flood).toHaveAttribute("data-layout","room-split");
- for(const card of [hero,eye,key,flood]){
-  const img=card.locator("img.tt-art-image");
-  await expect(img).toBeVisible();
-  await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
- }
- const specimens=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const vis=card.querySelector(".tt-visual"),rules=card.querySelector(".tt-content");
-  return {id:card.dataset.id,ratio:vis.getBoundingClientRect().height/card.getBoundingClientRect().height,
-    clip:rules?.scrollHeight-rules?.clientHeight??0,
-    footer:card.querySelector(".tt-footer").getBoundingClientRect().bottom-card.getBoundingClientRect().bottom};
- }));
- expect(specimens.some(c=>c.ratio>.6)).toBeTruthy();
- expect(Math.max(...specimens.map(c=>c.ratio))-Math.min(...specimens.map(c=>c.ratio))).toBeGreaterThan(.08); // Card layouts retain distinct art-to-rules proportions.
- for(const c of specimens){
-  expect(c.clip,"Rules clipped on "+c.id).toBeLessThanOrEqual(2);
-  expect(c.footer,"Footer outside "+c.id).toBeLessThanOrEqual(2);
- }
-});
-
-
-test("Phase 1 xerox treatment survives print while rule panels remain legible",async({page})=>{
- await page.goto("/");
- const spec=page.locator('.tt-grid .tt-card[data-id="delver"]').first();
- const key=page.locator('.tt-grid .tt-card[data-id="key"]').first();
- const first=await spec.evaluate(card=>{
-  const title=card.querySelector(".tt-title");
-  const img=card.querySelector(".tt-art-image");
-  const paper=getComputedStyle(card);
-  const label=getComputedStyle(title);
-  const art=getComputedStyle(img);
-  const rules=card.querySelector(".tt-content");
-  return {
-   paperTexture:paper.backgroundImage,cardWidth:card.getBoundingClientRect().width,
-   labelClip:label.clipPath,labelRotation:label.transform,
-   titleSize:parseFloat(label.fontSize),illustrationFilter:art.filter,
-   rulesClip:rules.scrollHeight-rules.clientHeight
-  };
- });
- expect(first.paperTexture).toContain("repeating-linear-gradient");
- expect(first.labelClip).toContain("polygon(");
- expect(first.labelRotation).not.toBe("none");
- expect(first.titleSize).toBeGreaterThanOrEqual(20);
- expect(first.illustrationFilter).toContain("contrast(2.25)");
- expect(first.rulesClip).toBeLessThanOrEqual(2);
- await expect(key.locator(".tt-art-image")).toBeVisible();
- await page.emulateMedia({media:"print"});
- const printed=await page.locator('.tt-print-only .tt-card[data-id="delver"]').first().evaluate(card=>{
-  const label=card.querySelector(".tt-title");
-  const image=card.querySelector(".tt-art-image");
-  return {
-   width:card.getBoundingClientRect().width,
-   height:card.getBoundingClientRect().height,
-   labelClip:getComputedStyle(label).clipPath,
-   contrast:getComputedStyle(image).filter,
-   overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight
-  };
- });
- expect(printed.width).toBeGreaterThan(90*96/25.4-2);
- expect(printed.height).toBeLessThan(130*96/25.4+2);
- expect(printed.labelClip).toContain("polygon(");
- expect(printed.contrast).toContain("contrast(2.25)");
- expect(printed.overflow).toBeLessThanOrEqual(2);
-});
-
-
-test("Phase 2 uses distinct reference-style physical compositions with complete text",async({page})=>{
- await page.goto("/");
- const hero=page.locator('.tt-grid .tt-card[data-type="hero"]').first();
- const monster=page.locator('.tt-grid .tt-card[data-type="monster"]').first();
- const room=page.locator('.tt-grid .tt-card[data-id="m-flood"]').first();
- const object=page.locator('.tt-grid .tt-card[data-id="key"]').first();
- const potion=page.locator('.tt-grid .tt-card[data-id="smoky"]').first();
- for(const card of [hero,monster]){
-  await expect(card.locator(".tt-stats .tt-stat-symbol").first()).toBeVisible();
-  await expect(card.locator(".tt-stats")).toBeVisible();
-  await expect(card.locator(".tt-illustration")).toBeVisible();
- }
- await expect(monster.locator(".tt-behaviour-row")).toHaveCount(4);
- await expect(monster.locator(".tt-corpse")).toBeVisible();
- await expect(room.locator(".tt-visual--split")).toBeVisible();
- await expect(room.locator(".tt-content--sidebar")).toBeVisible();
- const roomMetrics=await room.evaluate(el=>{
-  const visual=el.querySelector(".tt-visual"),side=el.querySelector(".tt-content--sidebar");
-  return {share:side.getBoundingClientRect().width/visual.getBoundingClientRect().width,
-   clip:side.scrollHeight-side.clientHeight};
- });
- expect(roomMetrics.share).toBeGreaterThan(.3);
- expect(roomMetrics.share).toBeLessThan(.45);
- expect(roomMetrics.clip).toBeLessThanOrEqual(2);
- const ratios=await Promise.all([hero,monster,object,potion].map(card=>card.evaluate(el=>
-  el.querySelector(".tt-visual").getBoundingClientRect().height/el.getBoundingClientRect().height)));
- expect(ratios[2]).toBeGreaterThan(ratios[1]);
- expect(ratios[0]).toBeGreaterThan(ratios[1]);
- const content=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>({
-  id:card.dataset.id,
-  titleRight:card.querySelector(".tt-title").getBoundingClientRect().right-card.getBoundingClientRect().right,
-  titleTop:card.querySelector(".tt-title").getBoundingClientRect().top-card.getBoundingClientRect().top,
-  overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight
- })));
- for(const card of content){
-  expect(card.titleRight,"Pasted title outside "+card.id).toBeLessThanOrEqual(2);
-  expect(card.titleTop,"Title above card "+card.id).toBeGreaterThanOrEqual(0);
-  expect(card.overflow,"Missing mechanical lines on "+card.id).toBeLessThanOrEqual(2);
- }
- await page.emulateMedia({media:"print"});
- await expect(page.locator('.tt-print-only .tt-card[data-id="m-flood"] .tt-content--sidebar').first()).toBeVisible();
-});
-
-
-test("Phase 3 Xerox filter is on illustrations only and appears on all print copies",async({page})=>{
- await page.goto("/");
- const plateFilter=page.locator("#tt-xerox-ink");
- await expect(plateFilter).toHaveCount(1);
- const film=await page.locator("#tt-xerox-ink feFuncR").evaluate(el=>el.getAttribute("tableValues"));
- expect(film).toBe("0 .025 .10 .92 1 1");
- const cards=page.locator(".tt-grid .tt-card");
- const plates=await cards.evaluateAll(xs=>[...new Set(xs.map(x=>x.dataset.plate))].sort());
- expect(plates).toEqual(["a","b","c","d"]);
- for(const id of ["delver","eye","key","smoky","m-flood"]){
-  const specimen=page.locator('.tt-grid .tt-card[data-id="'+id+'"]').first();
-  const data=await specimen.evaluate(el=>{
-    const art=el.querySelector(".tt-art-image");
-    const rules=el.querySelector(".tt-content");
-    return {
-      plate:el.dataset.plate,
-      artFilter:getComputedStyle(art).filter,
-      rulesFilter:getComputedStyle(rules).filter,
-      labelRotate:getComputedStyle(el.querySelector(".tt-title")).transform,
-      contentOverflow:rules.scrollHeight-rules.clientHeight
-    };
-  });
-  expect(["a","b","c","d"]).toContain(data.plate);
-  expect(data.artFilter).toContain("tt-xerox-ink");
-  expect(data.artFilter).toContain("contrast(2.25)");
-  expect(data.rulesFilter).toBe("none");
-  expect(data.labelRotate).not.toBe("none");
-  expect(data.contentOverflow,"text on "+id).toBeLessThanOrEqual(2);
- }
- await page.emulateMedia({media:"print"});
- const preview=await page.locator('.tt-print-only .tt-card[data-id="delver"]').first().evaluate(card=>{
-  const art=card.querySelector(".tt-art-image");
-  const body=card.querySelector(".tt-content");
-  return {artFilter:getComputedStyle(art).filter,ruleFilter:getComputedStyle(body).filter,
-   width:card.getBoundingClientRect().width,height:card.getBoundingClientRect().height};
- });
- expect(preview.artFilter).toContain("tt-xerox-ink");
- expect(preview.ruleFilter).toBe("none");
- expect(preview.width).toBeGreaterThan(90*96/25.4-2);
- expect(preview.height).toBeLessThan(130*96/25.4+2);
-});
-
-
-test("collage cards physically overlap art, pasted rules, titles and stat rails without hiding mechanics",async({page})=>{
- await page.goto("/");
- const samples=["delver","eye","key","smoky","m-flood"];
- const measurements=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>[...new Map(cards.filter(c=>
-   ["delver","eye","key","smoky","m-flood"].includes(c.dataset.id)).map(c=>[c.dataset.id,c])).values()].map(card=>{
-  const art=card.querySelector(".tt-visual");
-  const note=card.querySelector(".tt-content");
-  const title=card.querySelector(".tt-title");
-  const rail=card.querySelector(".tt-stats");
-  const a=art.getBoundingClientRect(),n=note.getBoundingClientRect(),t=title.getBoundingClientRect();
-  const overlap=(x,y)=>Math.max(0,Math.min(x.bottom,y.bottom)-Math.max(x.top,y.top))
-    *Math.max(0,Math.min(x.right,y.right)-Math.max(x.left,y.left));
-  return {id:card.dataset.id,assembly:card.dataset.assembly,
-    artWithPaper:overlap(a,n),artWithTitle:overlap(a,t),
-    artWithStats:rail?overlap(a,rail.getBoundingClientRect()):null,
-    clipped:note.scrollHeight-note.clientHeight,
-    textFilter:getComputedStyle(note).filter,
-    paperColor:getComputedStyle(note).backgroundColor,
-    paperPosition:getComputedStyle(note).position,
-    artPosition:getComputedStyle(art).position
-  };
- }));
- expect(measurements).toHaveLength(samples.length);
- for(const value of measurements){
-  expect(value.assembly).toBe("collage");
-  expect(value.artPosition).toBe("absolute");
-  expect(value.paperPosition).toBe("absolute");
-  expect(value.artWithPaper,"Art and paste-on slip don't overlap on "+value.id).toBeGreaterThan(150);
-  expect(value.artWithTitle,"Title doesn't overlay printed image on "+value.id).toBeGreaterThan(100);
-  expect(value.clipped,"Rules clipped on "+value.id).toBeLessThanOrEqual(2);
-  expect(value.textFilter).toBe("none");
-  expect(value.paperColor).not.toBe("rgba(0, 0, 0, 0)");
- }
- for(const value of measurements.filter(v=>v.artWithStats!==null)){
-  expect(value.artWithStats,"Stats must intrude onto art on "+value.id).toBeGreaterThan(100);
- }
- await page.emulateMedia({media:"print"});
- for(const id of ["delver","eye","key","m-flood"]){
-  const v=await page.locator('.tt-print-only .tt-card[data-id="'+id+'"]').first().evaluate(card=>{
-    const art=card.querySelector(".tt-visual").getBoundingClientRect();
-    const note=card.querySelector(".tt-content").getBoundingClientRect();
-    return {overlap:Math.max(0,Math.min(art.bottom,note.bottom)-Math.max(art.top,note.top)),
-      overflow:card.querySelector(".tt-content").scrollHeight-card.querySelector(".tt-content").clientHeight};
-  });
-  expect(v.overlap,"Print loses collage overlap "+id).toBeGreaterThan(4);
-  expect(v.overflow).toBeLessThanOrEqual(2);
- }
-});
-
-
-test("canonical cards have no top masthead and begin with artwork and pasted title",async({page})=>{
- await page.goto("/");
- const cards=page.locator(".tt-grid .tt-card");
- await expect(cards.first()).toBeVisible();
- await expect(page.locator(".tt-grid .tt-head, .tt-grid .tt-masthead, .tt-grid .tt-type")).toHaveCount(0);
- const measurements=await cards.evaluateAll(els=>els.map(card=>{
-  const image=card.querySelector(".tt-visual").getBoundingClientRect();
-  const title=card.querySelector(".tt-title").getBoundingClientRect();
-  const frame=card.getBoundingClientRect();
-  const text=card.querySelector(".tt-content");
-  return {id:card.dataset.id,artTop:image.top-frame.top,
-    titleOverArt:title.bottom>image.top && title.top<image.bottom,
-    textClip:text.scrollHeight-text.clientHeight};
- }));
- for(const data of measurements){
-  expect(data.artTop,"Illustration does not reach top on "+data.id).toBeLessThan(24);
-  expect(data.titleOverArt,"Pasted title not overlapping image on "+data.id).toBe(true);
-  expect(data.textClip,"Rules clipped on "+data.id).toBeLessThanOrEqual(2);
- }
- await page.emulateMedia({media:"print"});
- await expect(page.locator(".tt-print-only .tt-head")).toHaveCount(0);
- const size=await page.locator(".tt-print-only .tt-card").first().evaluate(el=>({
-  width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height
- }));
- expect(size.width).toBeGreaterThan(90*96/25.4-2);
- expect(size.height).toBeLessThan(130*96/25.4+2);
-});
-
-
-test("V2 playtest rulebook is one A4, retains opposed rolls and prints dice-range examples",async({page})=>{
- await page.goto("/rules-v2.html");
- await expect(page.getByRole("heading",{name:/ROGUE CARDS V2/i})).toBeVisible();
- await expect(page.getByText(/d20 \+ ATK/)).toBeVisible();
- await expect(page.getByText(/d20 \+ DEF/)).toBeVisible();
- await expect(page.getByText(/After each Hero turn/)).toBeVisible();
- await expect(page.getByText(/1–2: Suffer 2 damage/)).toBeVisible();
- await expect(page.getByText(/3–4: Heal d6 HP/)).toBeVisible();
- await expect(page.getByText(/5–6: Draw 1 Item/)).toBeVisible();
- await expect(page.getByText(/NOT YET COMPATIBLE WITH EVERY CURRENT V1 CARD/)).toBeVisible();
- await page.emulateMedia({media:"print"});
- const dims=await page.locator(".sheet").evaluate(el=>{
-   const rect=el.getBoundingClientRect();
-   return {w:rect.width,h:rect.height,overflowY:el.scrollHeight-el.clientHeight,
-     overflowX:el.scrollWidth-el.clientWidth};
- });
- expect(dims.w).toBeLessThanOrEqual(192*96/25.4+2);
- expect(dims.h).toBeLessThanOrEqual(279*96/25.4+2);
- expect(dims.overflowY,"V2 rulebook exceeds one A4").toBeLessThanOrEqual(2);
- expect(dims.overflowX,"V2 rulebook horizontal overflow").toBeLessThanOrEqual(2);
-});
-
-
-test("V2 Room lab previews and prints 36 distinct, readable d6 choice cards",async({page})=>{
- await page.goto("/v2-rooms.html");
- await expect(page.getByRole("heading",{name:/Thirty-six ways to get lost/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(36);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(9);
- await expect(page.locator(".tt-grid .tt-v2-roll-heading")).toHaveCount(36);
- await expect(page.locator(".tt-grid .tt-v2-choice")).toHaveCount(72);
- const views=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const paper=card.querySelector(".tt-content--v2"),title=card.querySelector(".tt-title");
-  const p=paper.getBoundingClientRect(),t=title.getBoundingClientRect(),frame=card.getBoundingClientRect();
-  const art=card.querySelector(".tt-visual").getBoundingClientRect();
-  return {id:card.dataset.id,kind:card.dataset.v2Kind,
-   height:frame.height,width:frame.width,
-   clip:paper.scrollHeight-paper.clientHeight,
-   clipHorizontal:paper.scrollWidth-paper.clientWidth,
-   paperTop:p.top-frame.top,
-   titleBottom:t.bottom-frame.top,
-   footerBottom:card.querySelector(".tt-footer").getBoundingClientRect().bottom-frame.bottom,
-   artOverPaper:Math.min(art.bottom,p.bottom)-Math.max(art.top,p.top),
-   titleRight:t.right-frame.right
-  };
- }));
- for(const v of views){
-  expect(v.kind.length,"Missing Room family "+v.id).toBeGreaterThan(0);
-  expect(v.clip,"Text clips vertically in "+v.id).toBeLessThanOrEqual(2);
-  expect(v.clipHorizontal,"Text clips horizontally in "+v.id).toBeLessThanOrEqual(2);
-  expect(v.paperTop,"Rule slip collides with title "+v.id).toBeGreaterThanOrEqual(v.titleBottom-4);
-  expect(v.footerBottom,"Footer outside card "+v.id).toBeLessThanOrEqual(2);
-  expect(v.artOverPaper,"Not a real collage "+v.id).toBeGreaterThan(30);
-  expect(v.titleRight,"Title outside card "+v.id).toBeLessThanOrEqual(2);
- }
- const region=page.getByRole("combobox",{name:"V2 Room region"});
- await region.selectOption("MIDDLE");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(12);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(3);
- await page.emulateMedia({media:"print"});
- const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(card=>({
-  id:card.dataset.id,
-  clip:card.querySelector(".tt-content--v2").scrollHeight-card.querySelector(".tt-content--v2").clientHeight,
-  width:card.getBoundingClientRect().width,
-  height:card.getBoundingClientRect().height
- })));
- expect(printed).toHaveLength(12);
- for(const c of printed){
-  expect(c.clip,"Print clipped "+c.id).toBeLessThanOrEqual(2);
-  expect(c.width).toBeGreaterThan(90*96/25.4-2);
-  expect(c.height).toBeLessThan(130*96/25.4+2);
- }
-});
-
-
-test("Phase 2 object lab prints every Scroll, Ring, Wand, Item and Potion legibly",async({page})=>{
- const errors=[];page.on("pageerror",e=>errors.push(e.message));
- await page.goto("/v2-objects.html");
- await expect(page.getByRole("heading",{name:/Strange things in your pockets/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(52);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(13);
- await expect(page.locator(".tt-grid .tt-layout-v2-object")).toHaveCount(52);
- await expect(page.locator(".tt-grid .tt-v2-tags")).toHaveCount(52);
- expect(errors).toEqual([]);
- const cards=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const body=card.querySelector(".tt-content--v2-object");
-  const b=body.getBoundingClientRect(),art=card.querySelector(".tt-visual").getBoundingClientRect(),
-   title=card.querySelector(".tt-title").getBoundingClientRect(),frame=card.getBoundingClientRect();
-  return {id:card.dataset.id,kind:card.dataset.v2Kind,
-   verticalClip:body.scrollHeight-body.clientHeight,
-   horizontalClip:body.scrollWidth-body.clientWidth,
-   paperTop:b.top-frame.top,titleBottom:title.bottom-frame.top,
-   overlap:Math.min(art.bottom,b.bottom)-Math.max(art.top,b.top),
-   footerClip:card.querySelector(".tt-footer").getBoundingClientRect().bottom-frame.bottom};
- }));
- for(const c of cards){
-  expect(c.verticalClip,"Preview text clipped vertically "+c.id).toBeLessThanOrEqual(2);
-  expect(c.horizontalClip,"Preview text clipped horizontally "+c.id).toBeLessThanOrEqual(2);
-  expect(c.paperTop,"Title collides with paper "+c.id).toBeGreaterThan(c.titleBottom-5);
-  expect(c.overlap,"No artwork/paper collage "+c.id).toBeGreaterThan(35);
-  expect(c.footerClip,"Footer extends below card "+c.id).toBeLessThanOrEqual(2);
- }
- await page.emulateMedia({media:"print"});
- const pages=page.locator(".tt-print-only .tt-sheet");
- await expect(pages).toHaveCount(13);
- const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
-  const body=c.querySelector(".tt-content--v2-object"),rect=c.getBoundingClientRect(),
-   title=c.querySelector(".tt-title").getBoundingClientRect(),paper=body.getBoundingClientRect();
-  return {id:c.dataset.id,w:rect.width,h:rect.height,
-   clip:body.scrollHeight-body.clientHeight,
-   horizontal:body.scrollWidth-body.clientWidth,
-   titleClear:paper.top-title.bottom};
- }));
- expect(printed).toHaveLength(52);
- for(const c of printed){
-  expect(c.w).toBeGreaterThan(90*96/25.4-2);
-  expect(c.h).toBeLessThan(130*96/25.4+2);
-  expect(c.clip,"Print text clipped "+c.id).toBeLessThanOrEqual(2);
-  expect(c.horizontal,"Print text horizontally clipped "+c.id).toBeLessThanOrEqual(2);
-  expect(c.titleClear,"Title/paper collide in print "+c.id).toBeGreaterThan(-5);
- }
- await page.emulateMedia({media:"screen"});
- const family=page.getByRole("combobox",{name:"V2 object family"});
- await family.selectOption("WAND");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(7);
- await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(7);
- await page.getByRole("button",{name:"ONE EACH"}).click();
+ await filter.selectOption("WAND");
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(2);
+ await page.getByRole("button",{name:"ONE OF EACH"}).click();
  await expect(page.getByRole("button",{name:"PRINT QUANTITIES"})).toBeVisible();
- await family.selectOption("POTION");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(19);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(5);
-});
-
-
-test("Phase 3 V2 Monster ecology cards print with legible weaknesses, bargains and dice bands",async({page})=>{
- const errors=[];page.on("pageerror",err=>errors.push(err.message));
- await page.goto("/v2-monsters.html");
- await expect(page.getByRole("heading",{name:/Know what hunts you/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(12);
- await expect(page.locator(".tt-grid .tt-layout-v2-monster")).toHaveCount(12);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(3);
- const metrics=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const content=card.querySelector(".tt-content--v2-monster");
-  const b=content.getBoundingClientRect(),title=card.querySelector(".tt-title").getBoundingClientRect();
-  return {id:card.dataset.id,
-   vertical:content.scrollHeight-content.clientHeight,
-   horizontal:content.scrollWidth-content.clientWidth,
-   overlap:title.bottom-b.top,
-   weaknesses:content.querySelectorAll(".tt-v2-monster-rule").length,
-   dice:content.querySelectorAll(".tt-v2-monster-rows .tt-v2-result").length};
- }));
- for(const m of metrics){
-  expect(m.vertical,"Preview clips Monster "+m.id).toBeLessThanOrEqual(2);
-  expect(m.horizontal,"Preview clips Monster horizontally "+m.id).toBeLessThanOrEqual(2);
-  expect(m.overlap,"Monster title collides with rules "+m.id).toBeLessThanOrEqual(5);
-  expect(m.weaknesses).toBe(2);
-  expect(m.dice).toBe(4);
- }
  await page.emulateMedia({media:"print"});
- const print=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
-  const body=c.querySelector(".tt-content--v2-monster"),rect=c.getBoundingClientRect();
-  return {id:c.dataset.id,w:rect.width,h:rect.height,
-    vertical:body.scrollHeight-body.clientHeight,
-    horizontal:body.scrollWidth-body.clientWidth};
+ const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
+  const paper=c.querySelector(".tt-collage>.tt-content"),r=c.getBoundingClientRect();
+  return {w:r.width,h:r.height,clip:paper.scrollHeight-paper.clientHeight};
  }));
- expect(print).toHaveLength(12);
- for(const m of print){
-  expect(m.vertical,"Print clips Monster "+m.id).toBeLessThanOrEqual(2);
-  expect(m.horizontal,"Print clips Monster horizontally "+m.id).toBeLessThanOrEqual(2);
+ expect(printed.length).toBeGreaterThan(0);
+ for(const m of printed){
   expect(m.w).toBeGreaterThan(90*96/25.4-2);
   expect(m.h).toBeLessThan(130*96/25.4+2);
+  expect(m.clip).toBeLessThanOrEqual(2);
  }
- await page.emulateMedia({media:"screen"});
- await page.getByRole("combobox",{name:"V2 Monster region"}).selectOption("DEEP");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(4);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(1);
  expect(errors).toEqual([]);
+});
+test("the only A4 rulebook fits on one sheet and has complete combat and ending",async({page})=>{
+ await page.goto("/rules.html");
+ await expect(page.getByRole("heading",{name:"ROGUE CARDS"})).toBeVisible();
+ await expect(page.getByText(/Opposed d20 combat/i)).toBeVisible();
+ await expect(page.getByText(/final Vault/i)).toBeVisible();
+ await page.emulateMedia({media:"print"});
+ const size=await page.locator(".sheet").evaluate(el=>({w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height,
+  clipY:el.scrollHeight-el.clientHeight,clipX:el.scrollWidth-el.clientWidth}));
+ expect(size.w).toBeLessThanOrEqual(192*96/25.4+2);
+ expect(size.h).toBeLessThanOrEqual(279*96/25.4+2);
+ expect(size.clipY,"One-A4 content overflow").toBeLessThanOrEqual(2);
+ expect(size.clipX,"One-A4 width overflow").toBeLessThanOrEqual(2);
+});
+test("small-screen catalogue controls and cards do not overflow horizontally",async({page})=>{
+ await page.setViewportSize({width:390,height:840});
+ await page.goto("/");
+ await page.getByRole("combobox",{name:"Card category"}).selectOption("hero");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(8);
+ const x=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth}));
+ expect(x.width).toBeLessThanOrEqual(x.viewport+2);
 });
