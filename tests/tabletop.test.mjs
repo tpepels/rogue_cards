@@ -1,123 +1,113 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
-import {CATALOGUE,PRINT_DECK,HEROES,ROOMS,MONSTERS,VAULT,WARDEN,POTIONS,ITEMS,CARD_WIDTH_MM,CARD_HEIGHT_MM,printDeck} from "../src/tabletop-data.js";
-import {cardMarkup,printSheets,CARDS_PER_SHEET,esc} from "../src/tabletop-view.js";
-import {illustration} from "../src/art.js";
-test("entire printable game is physical-first and uses no browser engine",()=>{
- const index=readFileSync("index.html","utf8");
- assert.match(index,/tabletop-app\.js/);
- assert.doesNotMatch(index,/src\/app\.js/);
- assert.equal(HEROES.length,4);
- assert.equal(CARD_WIDTH_MM,90);
- assert.equal(CARD_HEIGHT_MM,130);
- assert.equal(CARDS_PER_SHEET,4);
+import {existsSync,readFileSync} from "node:fs";
+import {HEROES,ROOMS,MONSTERS,ITEMS,POTIONS,OBJECTS,VAULT,WARDEN,WARDEN_FURY,PRINT_DECK,CATALOGUE,ITEM_FAMILIES,CARD_WIDTH_MM,CARD_HEIGHT_MM,catalogue,printDeck} from "../src/tabletop-data.js";
+import {cardMarkup,printSheets,CARDS_PER_SHEET,CARD_ART,assetPath,composition,esc} from "../src/tabletop-view.js";
+const faces=range=>{const [a,b=a]=range.split("–").map(Number);assert.ok(a>=1&&b<=6&&Number.isInteger(a)&&Number.isInteger(b));return Array.from({length:b-a+1},(_,i)=>a+i)};
+const dice=table=>{assert.ok([3,4].includes(table.outcomes.length));const facesFound=table.outcomes.flatMap(r=>{assert.ok(r.effect);return faces(r.range)});assert.deepEqual(facesFound.sort(),[1,2,3,4,5,6])};
+test("exactly one complete canonical physical edition",()=>{
+ assert.equal(HEROES.length,8);assert.equal(ROOMS.length,36);assert.equal(MONSTERS.length,12);
+ assert.equal(ITEMS.length,44);assert.equal(POTIONS.length,8);assert.equal(OBJECTS.length,52);
+ assert.equal(CATALOGUE.length,8+36+1+12+2+52);
+ assert.equal(new Set(CATALOGUE.map(c=>c.type+":"+c.id)).size,CATALOGUE.length);
+ assert.equal(CARD_WIDTH_MM,90);assert.equal(CARD_HEIGHT_MM,130);assert.equal(CARDS_PER_SHEET,4);
+ assert.equal(PRINT_DECK.length,CATALOGUE.reduce((n,c)=>n+c.copies,0));
+ assert.equal(PRINT_DECK.length,printDeck().length);
+ assert.ok(PRINT_DECK.length>CATALOGUE.length);
+ assert.equal(catalogue("room").length,37);
+ assert.equal(catalogue("monster").length,14);
+ assert.equal(catalogue("all","SCROLL").length,8);
+ assert.equal(catalogue("all","RING").length,7);
+ assert.equal(catalogue("all","WAND").length,7);
+ assert.equal(catalogue("all","POTION").length,8);
+ for(const family of ITEM_FAMILIES)assert.ok(catalogue("all",family).length>0,family);
+ const homepage=readFileSync("src/tabletop-app.js","utf8");
+ assert.doesNotMatch(homepage,/v2-(rooms|objects|monsters)\.html|print-and-play\.html/);
+ assert.match(homepage,/rules\.html/);
 });
-test("sequential dungeon has three regional room piles and exactly one fixed Vault",()=>{
- assert.deepEqual([...new Set(ROOMS.map(r=>r.stage))],["UPPER","MIDDLE","DEEP"]);
- for(const stage of ["UPPER","MIDDLE","DEEP"])assert.ok(ROOMS.filter(x=>x.stage===stage).length>=5);
- assert.equal(VAULT.stage,"FINAL");
- assert.equal(VAULT.copies,1);
- assert.equal(WARDEN.stage,"FINAL");
- assert.equal(WARDEN.copies,1);
- const rules=readFileSync("rules.html","utf8");
- assert.match(rules,/three of each/);
- assert.match(rules,/tenth Room/);
- assert.match(rules,/No return journey/);
-});
-test("the d20 opposed system, d6 damage and monster behaviour are on the single core sheet",()=>{
- const rules=readFileSync("rules.html","utf8");
- assert.match(rules,/OPPOSED d20 COMBAT/);
- assert.match(rules,/d20 \+ ATK/);
- assert.match(rules,/d20 \+ DEF/);
- assert.match(rules,/d6 damage/);
- assert.match(rules,/d6 MONSTER BEHAVIOUR/);
- assert.match(rules,/ONE ACTION PER HERO/);
- assert.match(rules,/POISONED/);
- assert.match(rules,/Both Heroes and Monsters/);
- assert.equal((rules.match(/<main class="sheet">/g)||[]).length,1);
-});
-test("every monster includes four exact d6 behaviours and an edible or excluded corpse effect",()=>{
- for(const monster of [...MONSTERS,WARDEN]){
-  assert.equal(monster.behavior.length,4,monster.id);
-  assert.ok(monster.behavior.every(s=>s&&typeof s==="string"&&s.length<90),monster.id);
-  assert.ok(monster.corpse?.length,monster.id);
-  assert.ok(monster.hp>0&&monster.atk>=0&&monster.def>=0);
-  const html=cardMarkup(monster);
-  for(const roll of ["1–2","3–4","5","6"])assert.ok(html.includes(roll),monster.id);
-  assert.match(html,/CORPSE/);
+test("eight archetypes have unique starting Objects, valid stats and complete d6 skills",()=>{
+ const starts=new Set();
+ for(const h of HEROES){
+  assert.ok(h.hp>=16&&h.hp<=28);
+  assert.ok(h.atk>=0&&h.def>=0&&h.wit>=0);
+  assert.ok(h.v2.starter&&OBJECTS.some(o=>o.id===h.v2.starter),h.id);
+  assert.ok(!starts.has(h.v2.starter),"Duplicate starter "+h.id);
+  starts.add(h.v2.starter);
+  assert.match(h.v2.trigger,/ONCE PER ROOM/);
+  dice(h.v2.roll);
+  assert.match(cardMarkup(h),/tt-layout-v2-hero/);
+  assert.ok(cardMarkup(h).includes("START WITH"));
  }
 });
-test("all core abilities, items and mysteries are actual cards rather than off-card references",()=>{
- for(const hero of HEROES)assert.ok(hero.rule&&hero.wit>=0&&hero.hp>0);
- for(const card of [...ROOMS,VAULT,...ITEMS,...POTIONS])assert.ok(card.rule&&card.rule.length<300,card.id);
- assert.equal(POTIONS.length,3);
- for(const potion of POTIONS){assert.match(potion.rule,/FIRST USE/);assert.match(potion.rule,/d6/);}
- assert.ok(ITEMS.some(c=>c.rule.includes("COMPANION")));
- assert.ok(ITEMS.some(c=>c.rule.includes("CURSED")));
- assert.ok(ROOMS.some(c=>c.rule.includes("PRAY")));
- assert.ok(MONSTERS.some(c=>c.corpse.includes("EAT d6")));
- assert.ok(!readFileSync("rules.html","utf8").toLowerCase().includes("hunger"));
-});
-test("all printed copies are represented exactly once with distinct card numbering",()=>{
- const total=CATALOGUE.reduce((n,c)=>n+c.copies,0);
- assert.equal(printDeck("all").length,total);
- assert.equal(PRINT_DECK.length,total);
- for(const type of ["hero","room","monster","item","potion"])
-  assert.equal(printDeck(type).length,CATALOGUE.filter(c=>c.type===type).reduce((n,c)=>n+c.copies,0));
- assert.equal((printSheets().match(/class="tt-sheet"/g)||[]).length,Math.ceil(total/4));
- for(const card of CATALOGUE){
-  const html=cardMarkup(card);
-  assert.match(html,/tt-card/);
-  assert.match(html,/tt-footer/);
-  assert.ok(html.includes(esc(card.title)),card.id);
-  assert.match(illustration(card.art),/^<svg/);
+test("all 36 regional Rooms and the final Vault provide complete d6 choices",()=>{
+ assert.equal(ROOMS.filter(r=>r.stage==="UPPER").length,12);
+ assert.equal(ROOMS.filter(r=>r.stage==="MIDDLE").length,12);
+ assert.equal(ROOMS.filter(r=>r.stage==="DEEP").length,12);
+ assert.equal(VAULT.stage,"FINAL");assert.equal(VAULT.copies,1);
+ for(const r of [...ROOMS,VAULT]){
+  assert.equal(r.v2.choices.length,2,r.id);
+  assert.ok(r.v2.prompt.length>4,r.id);
+  dice(r.v2.roll);
+  assert.match(cardMarkup(r),/tt-layout-v2-room/);
  }
 });
-test("print hub leads only to the one canonical rules sheet",()=>{
- const hub=readFileSync("print-and-play.html","utf8");
- assert.match(hub,/rules\.html/);
- assert.match(hub,/four per A4/);
- assert.doesNotMatch(hub,/magic-guide\.html|field-guide\.html|living-guide\.html/);
+test("objects contain complete on-card outcomes, scrolls/rings/wands have safe finite resources",()=>{
+ for(const o of OBJECTS){
+  assert.ok(o.v2.kind&&o.v2.trigger&&o.v2.tags.length,o.id);
+  assert.ok(o.copies>0);
+  if(o.v2.roll)dice(o.v2.roll);
+  assert.match(cardMarkup(o),/tt-layout-v2-object/);
+  if(o.v2.kind==="SCROLL")assert.match(o.v2.trigger,/discard/i);
+  if(o.v2.kind==="WAND"){
+   assert.match(o.v2.trigger,/sideways until/i);
+   assert.match(o.v2.alternative,/SHRINE:.*recharge/i);
+   assert.match(o.v2.alternative,/OVERCHARGE: discard Wand, lose d6 HP;/i);
+   assert.ok(o.v2.alternative.endsWith("choose "+o.v2.roll.outcomes.at(-1).range+"."));
+  }
+  if(o.v2.kind==="POTION")assert.match(o.v2.trigger,/FIRST USE/);
+ }
 });
-
-test("canonical illustration-first renderer matches ten real assets, never external images",async()=>{
- const {CARD_ART,assetPath,composition}=await import("../src/tabletop-view.js");
- const {existsSync}=await import("node:fs");
+test("Monsters have distinctive four-band responses, weaknesses and defined negotiation",()=>{
+ assert.equal(WARDEN.hp,24);assert.equal(WARDEN_FURY.hp,12);
+ assert.equal(WARDEN.stage,"FINAL");assert.equal(WARDEN_FURY.stage,"FINAL");
+ for(const m of [...MONSTERS,WARDEN,WARDEN_FURY]){
+  assert.equal(m.behavior.length,4,m.id);
+  assert.ok(m.behavior.every(x=>x.length>4));
+  assert.ok(m.v2.weakness&&m.v2.parley&&m.v2.remains);
+  assert.ok(m.hp>0&&m.atk>=0&&m.def>=0);
+  const html=cardMarkup(m);
+  assert.match(html,/tt-layout-v2-monster/);
+  assert.ok(html.includes(esc(m.v2.weakness)),m.id);
+  assert.ok(html.includes("1–2")&&html.includes("3–4")&&html.includes(">5</b>")&&html.includes(">6</b>"));
+ }
+ assert.match(WARDEN.v2.weakness,/12 HP/);
+ assert.match(WARDEN_FURY.v2.weakness,/0 HP/);
+ assert.match(MONSTERS.find(m=>m.id==="bat").v2.parley,/Opposed d20/);
+ assert.match(MONSTERS.find(m=>m.id==="goblin").v2.parley,/RECRUIT/);
+});
+test("one A4 rulebook describes entire adventure and alternate boss victory",()=>{
+ const html=readFileSync("rules.html","utf8");
+ assert.match(html,/@page\{size:A4 portrait/);
+ assert.match(html,/opposed d20|d20 \+ ATK/i);assert.match(html,/d20 \+ DEF/);
+ assert.match(html,/WIT/);assert.match(html,/POISONED/);
+ assert.match(html,/SEAL/);assert.match(html,/Phase II/);
+ assert.match(html,/PARLEY/);assert.match(html,/OVERCHARGE/);
+ assert.match(html,/Scrolls/);assert.match(html,/Rings/);
+ assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
+});
+test("every physical card prints deterministically with correct images and A4 quantities",()=>{
+ for(const c of CATALOGUE){
+  const a=cardMarkup(c);assert.equal(a,cardMarkup(c),c.id);
+  assert.match(a,/data-assembly="collage"/);assert.match(a,/tt-content/);
+  assert.ok(a.includes(esc(c.title)));
+ }
+ assert.equal((printSheets(CATALOGUE).match(/class="tt-sheet"/g)||[]).length,Math.ceil(CATALOGUE.length/4));
+ assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
  assert.equal(Object.keys(CARD_ART).length,10);
- for(const [key,file] of Object.entries(CARD_ART)){
-  const [type,id]=key.split(":");
-  const card=CATALOGUE.find(x=>x.type===type&&x.id===id);
-  assert.ok(card,"Artwork orphaned: "+key);
-  assert.ok(existsSync("assets/illustrations/"+file),"Missing uploaded art: "+file);
-  const html=cardMarkup(card);
-  assert.ok(html.includes('src="./assets/illustrations/'+file+'"'),key);
-  assert.match(html,/data-art-status="original"/);
-  assert.ok(assetPath(card)?.endsWith(file));
-  assert.ok(composition(card));
+ for(const [key,name] of Object.entries(CARD_ART)){
+  const [type,id]=key.split(":");const card=CATALOGUE.find(c=>c.type===type&&c.id===id);
+  assert.ok(card,"Orphaned illustration: "+key);
+  assert.ok(existsSync("assets/illustrations/"+name),name);
+  assert.ok(assetPath(card)?.includes(name));
  }
- assert.match(cardMarkup(HEROES[0]),/tt-layout-portrait-stats/);
- assert.match(cardMarkup(MONSTERS.find(x=>x.id==="eye")) ,/tt-layout-monster-dense/);
- assert.match(cardMarkup(ROOMS.find(x=>x.id==="m-flood")) ,/tt-layout-room-split/);
- assert.match(cardMarkup(ITEMS.find(x=>x.id==="key")),/tt-layout-illustration-dominant/);
- const remaining=CATALOGUE.find(c=>!CARD_ART[c.type+":"+c.id]);
- assert.ok(remaining);
- assert.match(cardMarkup(remaining),/data-art-status="placeholder"/);
-});
-
-
-test("Phase 3 xerox plates vary by card identity, never by render or copy number",async()=>{
- const {printPlate}=await import("../src/tabletop-view.js");
- const used=new Set(CATALOGUE.map(printPlate));
- assert.deepEqual([...used].sort(),["a","b","c","d"]);
- for(const card of CATALOGUE){
-  const first=cardMarkup(card),second=cardMarkup(card);
-  const plate=printPlate(card);
-  assert.equal(first,second,"Card markup must print deterministically: "+card.id);
-  assert.match(first,new RegExp('tt-plate-'+plate));
-  assert.ok(first.includes('data-plate="'+plate+'"'));
-  assert.match(first,/tt-content/);
- }
- const sheets=printSheets();
- assert.equal((sheets.match(/class="tt-sheet"/g)||[]).length,Math.ceil(printDeck("all").length/4));
 });
