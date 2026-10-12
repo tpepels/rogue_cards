@@ -24,7 +24,7 @@ const SPEC=Object.freeze({
  rust:{tags:["METAL"],weakness:"Without METAL equipment, its 5 becomes 1–2.",
    parley:"FEED: Discard a METAL Item. It leaves; draw 1 Item.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 gain ADV on next DEF."},
  cultist:{tags:["CURSED","BARGAIN"],weakness:"MAGIC: Turn its next 6 into 1–2 once.",
-   parley:"BARGAIN: With equipped CURSED gear, lose d6 HP; it leaves; draw 1 Item.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 cleanse a CURSED Item."},
+   parley:"BARGAIN: With equipped CURSED gear, lose d6 HP; it leaves; draw 1 Item.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},
  sentinel:{tags:["METAL","LIGHTNING"],weakness:"LIGHTNING damage deals +d6; ICE turns its next 6 into 1–2.",
    parley:"BRIBE: Discard 2 METAL Items to bypass it. No loot.",remains:"No edible corpse."}
 });
