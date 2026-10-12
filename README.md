@@ -17,6 +17,14 @@ The browser dungeon of earlier prototypes was the wrong product. This edition **
 - **No hunger and no cross-run bones files.** Potions remember a first-use d6 discovery within a run, via the consumed Potion card itself.
 - **90–120 minutes remains an unmeasured playtest target.** No simulation results are being presented as human game times.
 
+## V2 — dice-first playtest draft (not yet the playable deck)
+
+[**Print V2 rules, one A4**](https://tpepels.github.io/rogue_cards/rules-v2.html) · [V2 roll-range card design standard](docs/v2-roll-range-card-standard.md)
+
+V2 deliberately retains opposed **d20+ATK vs d20+DEF** combat (including natural 1/20 and damage d6) and **d6 Monster behaviour after each Hero turn**. The shared rules become shorter: unlimited carried cards, free between-combat equipment and Item management, one attempt per printed Room interaction, fewer enduring status rules, and no universal corpse-eating procedure. The cards should feature meaningful **printed d6 outcome ranges** across Rooms, Monsters, Items, Potions and objects, rather than extra common rules.
+
+**Do not substitute `rules-v2.html` for `rules.html` yet.** Current `src/tabletop-data.js` still holds the V1 printed cards and some effects have not been rewritten for V2. V2 is a separate, printable review draft until the complete physical deck has been migrated and checked.
+
 ## Canonical illustration-first card faces
 
 The **production card gallery and A4 print sheets** now use the flexible illustration-first card design, not the earlier generic mini-art template. Hero/Monster cards place a stat rail inside a large ink illustration, short-effect Items devote most of the card to the image, and the Flooded Chamber demonstrates the optional Room-with-sidebar layout. The title overlays the image as an ivory paper strip. Mechanical wording stays on clean paper.
