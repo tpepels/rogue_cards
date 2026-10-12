@@ -793,6 +793,40 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-v2-object-gallery .tt-v2-family-group{margin:12px 0}
 .tt-v2-object-gallery .tt-v2-family-label{font:bold 13px "Courier New",monospace}
 
+
+/* Phase 3 Monster ecology: strong d6 bands and three compact paste-on slips. */
+.tt-layout-v2-monster{--art-bottom:2mm;--slip-bottom:6.5mm;--title-shift:13mm}
+.tt-layout-v2-monster .tt-title{font-size:20px}
+.tt-layout-v2-monster .tt-collage>.tt-content--v2-monster{
+ padding:1.35mm 1.9mm 1.5mm;
+ max-height:calc(100% - 20mm);
+ background:linear-gradient(170deg,#f6eddd,#e9ddca);
+ border-top:2px solid #1b1711;
+}
+.tt-v2-monster-head{
+ font:900 9px/1.15 "Courier New",monospace;
+ border-bottom:1px solid #564c40;
+ padding-bottom:.65mm;
+}
+.tt-v2-monster-rows{display:grid;gap:0}
+.tt-v2-monster-rows .tt-v2-result{
+ display:grid;grid-template-columns:11.5mm 1fr;gap:1.1mm;
+ padding:.42mm .15mm;border-bottom:1px solid #40372d3c;
+ font:10px/1.15 "Courier New",monospace
+}
+.tt-v2-monster-rows .tt-v2-result b{font:900 10.7px/1.13 "Courier New",monospace}
+.tt-v2-monster-rule{
+ margin:.8mm 0 0;padding:.55mm 0 0;
+ border-top:1px solid #66594c;
+ font:9.7px/1.18 "Courier New",monospace
+}
+.tt-v2-monster-remains{
+ margin:.8mm 0 0;padding:.7mm 0 0;
+ border-top:2px solid #1b1711;
+ font:9.5px/1.15 "Courier New",monospace
+}
+.tt-v2-monster-rule b,.tt-v2-monster-remains b{font-weight:900}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
