@@ -67,6 +67,48 @@ have been rarely drawn.
 
 `npm run balance` is the complete-effect, five-policy benchmark; `balance:baseline` is an older reduced-mechanics comparison. CI has verified **120,000 seeded expeditions** with zero unresolved operations or stalls, but the simulated choices are scripted, not optimised human play. Do not treat these win rates as established physical-game balance: real solo/cooperative sessions and focused interactions still need testing before final print.
 
+
+## Focused balance experiments (Phase 5 diagnostics)
+
+The default `npm run balance` command and printed game rules are unchanged.
+These commands test **scripted simulation policies**, not optimal or human win rates.
+
+```sh
+npm test
+npm run balance:matched -- 1000 > matched-vault.json
+npm run balance:rooms -- 500 > room-policies.json
+npm run balance:diagnostics -- 1000 > diagnostics.json
+```
+
+- **`balance:matched`** replays identical seeds, Heroes, Room decisions,
+  and inventory up to the Vault, then chooses to fight or attempt a seal if
+  affordable. It verifies that pre-Vault snapshots match and reports
+  paired differences for all arrivals and the seal-eligible subset, including
+  discordant outcomes. It **does not** prove a given policy is optimal.
+- **`balance:rooms`** independently tests `scripted`, `contextual`,
+  `uniform` and `second-when-legal` decision rules on the same
+  starting seeds. Paths may use different random draws after choices diverge;
+  do not treat each difference as an otherwise-identical counterfactual.
+- **`balance:diagnostics`** tests all eight solo Heroes and all **28
+  distinct** two-Hero pairings under all five strategies. It exports
+  failure stages/causes, Vault HP, available magic, per-Object acquisition
+  and activation, held/equipped exposure at Room entry, and whether a run
+  ever acquired an Object before winning/losing.
+
+Each command defaults to aggregate JSON for manageable uploads; add
+`--jsonl` to export **one JSON line per individual expedition**
+(one record containing both alternatives for a Vault comparison).
+These JSONL files can be large. Commands return nonzero on unresolved
+effects or stalled expeditions.
+
+**Interpretation:** Object `objectRoomExposures` count an owned copy at the
+start of a Room; conditional trigger eligibility is narrower than exposure.
+`objectSeenWins/objectSeenRuns` is an observational association, not the
+causal benefit of an Item. Fatal causes are the Monster or Room active
+when the last surviving Hero died; phase-specific deaths are recorded
+separately. All 28 pairs are included, but balance still needs tabletop
+validation and better optimized decision policies.
+
 ## Verification
 
 ```sh
