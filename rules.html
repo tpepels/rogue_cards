@@ -16,9 +16,9 @@ h1{font:900 33px/.93 Georgia,serif;letter-spacing:-1px;margin:0}
 .edition{text-align:right;font:bold 10px/1.45 "Courier New",monospace;white-space:nowrap}
 .subtitle{margin:5px 0 10px;border-bottom:1px solid #3b3025;padding-bottom:7px;font:bold 11px/1.35 "Courier New",monospace;letter-spacing:.015em}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:8mm}
-section{margin:0 0 10px;break-inside:avoid}
-h2{font:900 15px/1.1 Georgia,serif;border-bottom:2px solid #191511;margin:0 0 5px;padding-bottom:4px}
-p,li{font-size:11.4px;line-height:1.35;margin:4px 0}
+section{margin:0 0 9px;break-inside:avoid}
+h2{font:900 15.5px/1.15 Georgia,serif;border-bottom:2px solid #191511;margin:0 0 5px;padding-bottom:4px}
+p,li{font-size:12px;line-height:1.4;margin:4px 0}
 ol{padding-left:18px;margin:5px 0 0}
 strong{font-weight:900}
 .quick{border:2px solid #211b15;padding:7px 9px;margin:7px 0;font:11px/1.45 "Courier New",monospace}
@@ -38,38 +38,46 @@ strong{font-weight:900}
 <nav><a href="./">← CARD CATALOGUE</a><a href="#" onclick="print();return false">PRINT ONE A4 ↗</a></nav>
 <main class="sheet">
 <div class="mast"><h1>ROGUE CARDS</h1><div class="edition">CANONICAL RULES<br>1–2 HEROES · d20 + d6</div></div>
-<div class="subtitle">ONE ROOM AT A TIME. ROLL FOR THE UNKNOWN. THE CARDS TELL THE REST.</div>
+<div class="subtitle">NINE ROOMS. ONE VAULT. THE CARDS TELL THE REST.</div>
 <div class="cols"><div>
 <section><h2>1 · The quest</h2>
-<p>Play solo or together. Reveal <strong>3 UPPER, 3 MIDDLE and 3 DEEP Rooms</strong>, then enter the fixed tenth Room, <strong>the Amulet Vault</strong>. Defeat the Warden or seal it to claim the Amulet and win. If no Hero can act, the expedition ends. No map or return journey.</p></section>
+<p>Play solo or together. Explore <strong>3 UPPER, 3 MIDDLE and 3 DEEP Rooms</strong>, then <strong>the Amulet Vault</strong>. Defeat or seal the Warden to win. If no Hero can act, you lose.</p></section>
 <section><h2>2 · Set up</h2>
-<ol><li>Choose a Hero each. Set HP as printed. Find and take the Hero's printed starting Object, then draw <strong>1 random Object</strong> from the remaining deck. Equip anything you can.</li>
-<li>Shuffle UPPER, MIDDLE and DEEP Room piles separately; shuffle their matching Monster piles. Set the Vault and both Warden phases aside.</li>
-<li>Shuffle remaining Items, Scrolls, Rings, Wands and Potions together as the <strong>Object deck</strong>. “Draw Item” means draw from this deck. Take a d20, d6 and HP counters.</li></ol></section>
+<ol>
+<li>Choose one Hero each. Take their starting Object and set HP as printed.</li>
+<li>Shuffle the remaining Items and Potions into the <strong>Object deck</strong>. Each Hero draws <strong>1 Object</strong>; equip if desired. “Draw Item” always uses this deck.</li>
+<li>Shuffle Room and Monster piles separately by region (UPPER / MIDDLE / DEEP). Set aside the Vault and Warden phases. Bring a d20, d6 and HP counters.</li>
+</ol></section>
 <section><h2>3 · In each Room</h2>
-<ol><li><strong>REVEAL:</strong> Read and roll any entry effect. Follow printed instructions, including drawing Monsters.</li>
-<li><strong>CHOOSE:</strong> Take exactly <strong>one</strong> printed Room option for the whole party. If a Monster is present, you may instead use its printed PARLEY before combat.</li>
-<li><strong>FIGHT:</strong> Surviving Monsters must be fought unless the chosen option says otherwise. After combat take printed rewards and resolve safe effects.</li>
-<li><strong>DESCEND:</strong> Discard the Room. End Room effects; straighten once-per-Room abilities. Reveal the next regional Room. After Room 9, reveal the Vault.</li></ol></section>
+<ol>
+<li><strong>REVEAL:</strong> Draw the next Room. Resolve its entry text, including Monster draws.</li>
+<li><strong>CHOOSE:</strong> As a party, resolve <strong>one</strong> printed Room option. Pay its cost, if any.</li>
+<li><strong>ENCOUNTER:</strong> PARLEY with a remaining Monster or fight it. Collect combat rewards only after victory.</li>
+<li><strong>DESCEND:</strong> End Room effects, discard the Room and reset once-per-Room abilities. After Room 9, enter the Vault.</li>
+</ol></section>
 <section><h2>4 · Combat turns</h2>
-<p>Heroes act in either order each round. Each takes <strong>one action</strong>: attack, play a Scroll, use a Wand or Object, or a printed action; passing is allowed. A Hero ability used <em>in response</em> to its printed trigger is not an extra action. <strong>After every Hero turn</strong>, a living Monster rolls its d6 behaviour. Dead Monsters never respond.</p>
-<p>Outside combat, trade Items, equip gear, and heal freely. Each Hero can equip <strong>1 Weapon, 1 Armour, 1 Ring, 1 Companion</strong>; carry any number of other cards.</p></section>
+<p>Heroes act in either order. On each turn, take <strong>one action</strong>: attack, use a printed action on a card, or pass. Triggered abilities resolve when stated; they cost no action.</p>
+<p><strong>After each Hero turn,</strong> if the Monster survives, roll its <strong>d6 behaviour</strong>. Continue until it leaves, falls, or no Hero can act.</p>
+<p><strong>PARLEY:</strong> Follow the Monster’s printed alternative to fighting. If it leaves, take no combat reward unless the card says otherwise.</p></section>
 </div><div>
 <section><h2>5 · Opposed d20 combat</h2>
-<div class="dice"><div class="die">d20 + ATK<small>Attacker rolls</small></div><div class="die">d20 + DEF<small>Defender rolls</small></div></div>
-<p>The higher total attacks successfully; a tie defends. On a hit, roll <strong>d6 damage</strong>. An attacking natural <strong>1 misses</strong>; a natural <strong>20 hits</strong> and deals <strong>+d6 damage</strong>. Monsters use the same rules. Printed card changes override normal results.</p>
-<p><strong>WIT:</strong> Roll d20 + WIT against printed DC (meet or beat it), or against an opposed d20 when printed. Natural 1 fails and natural 20 succeeds. <strong>ADV / DIS:</strong> roll 2d20, keep highest / lowest; they cancel.</p></section>
-<section><h2>6 · Roll ranges, magic, Monsters</h2>
-<p><strong>ROLL d6:</strong> Find the result's printed band (1–2, 3–4, 5–6 or a printed four-band table). Resolve that effect once. Monster behaviours use 1–2 / 3–4 / 5 / 6.</p>
-<p><strong>Scrolls</strong> are discarded on use. <strong>Rings</strong> use one equipped slot. <strong>Wands</strong> turn sideways after use and stay exhausted until a card recharges them. <strong>OVERCHARGE</strong> means discard the upright Wand and lose d6 HP to take its stated result. Named properties such as FIRE and CURSED matter only when a card says so.</p>
-<p>Monster <strong>PARLEY</strong> is an alternative to combat; pay the printed cost or roll the printed opposed d20. No combat reward or edible corpse unless it says so. Defeated Monsters may be eaten only when they print an EAT result.</p></section>
-<section><h2>7 · Things that stay</h2>
-<p>Use only HP counters and face-up, sideways or kept cards as reminders. <strong>POISONED:</strong> DIS on Hero d20 until cured or Room end. Once-per-Room abilities turn sideways; their passive bonuses still apply. Heal up to printed starting HP. <strong>Potions:</strong> roll on first use; keep one consumed Potion face up so identical names share its result this expedition.</p>
-<p>At <strong>0 HP</strong>, a Hero cannot act. An ally may heal them before leaving; if no Hero can act, you lose.</p></section>
+<div class="dice"><div class="die">d20 + ATK<small>Attacker</small></div><div class="die">d20 + DEF<small>Defender</small></div></div>
+<p>Both sides roll. The attack hits only if the attacker’s total is <strong>higher</strong>; ties defend. A hit deals <strong>d6 damage</strong>. An attacking natural <strong>1 always misses</strong>; a natural <strong>20 always hits</strong> and adds <strong>+d6 damage</strong>. Monsters attack the same way.</p>
+<p><strong>WIT:</strong> Roll d20 + WIT against a printed DC (meet or beat it), or an opposed d20 as stated. Natural 1 fails; natural 20 succeeds.</p>
+<p><strong>ADV / DIS:</strong> Roll 2d20; keep the higher / lower result. They cancel each other.</p></section>
+<section><h2>6 · Objects and d6</h2>
+<p><strong>d6:</strong> Find your roll in the printed result range and resolve it once. Monster behaviour uses 1–2 / 3–4 / 5 / 6.</p>
+<p>Each Hero may equip <strong>1 Weapon, 1 Armour, 1 Ring and 1 Companion</strong>. Carry other Objects freely. Outside combat, trade and equip freely; healing still needs a printed effect.</p>
+<p><strong>Scrolls</strong> are discarded after use. <strong>Wands</strong> turn sideways until recharged. <strong>OVERCHARGE:</strong> Discard an upright Wand and lose d6 HP for its stated result. Tags such as FIRE and CURSED matter when a card says so.</p></section>
+<section><h2>7 · What stays</h2>
+<p><strong>POISONED:</strong> DIS on Hero d20 until cured or Room end. Once-per-Room abilities reset between Rooms; passive bonuses remain. HP cannot exceed starting HP.</p>
+<p><strong>Potions:</strong> Roll on first use. Keep a used Potion face up as a reminder; all Potions with the same name use that result this expedition.</p>
+<p>At <strong>0 HP</strong>, a Hero cannot act, but an ally may heal them before leaving. If nobody can act, you lose.</p></section>
 <section><h2>8 · The final Vault</h2>
-<p>Roll the Vault's d6 OMEN. Choose <strong>FIGHT</strong> or attempt its one-time <strong>SEAL</strong> bargain. In combat the Warden begins in <strong>Phase I</strong>; at <strong>12 HP or fewer</strong>, replace its card with Phase II, keeping the same HP. Defeat Phase II at 0 HP to win. If SEAL succeeds, win without fighting.</p></section>
+<p>Roll the Vault’s <strong>OMEN d6</strong>. Choose <strong>FIGHT</strong> or a one-time <strong>SEAL</strong> attempt. Follow the printed costs and consequences.</p>
+<p>The Warden starts in <strong>Phase I</strong>. At <strong>12 HP or fewer</strong>, switch to Phase II without restoring HP. Reduce it to 0 HP to win. A successful SEAL wins immediately; a failed SEAL leads to the printed fight.</p></section>
 </div></div>
-<div class="end">ONLY UNIVERSAL RULES ARE HERE. ALL SPECIAL CHOICES, MONSTER BEHAVIOURS AND ROLL RANGES ARE ON THE CARDS. PRINT AT 100%.</div>
+<div class="end">CARDS OVERRIDE THESE RULES WHEN THEY SAY SO. SPECIAL EFFECTS AND RESULTS ARE PRINTED ON THE CARDS. PRINT AT 100%.</div>
 </main>
 </body>
 </html>

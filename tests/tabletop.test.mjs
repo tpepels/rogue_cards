@@ -94,6 +94,15 @@ test("one A4 rulebook describes entire adventure and alternate boss victory",()=
  assert.match(html,/PARLEY/);assert.match(html,/OVERCHARGE/);
  assert.match(html,/Scrolls/);assert.match(html,/Rings/);
  assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
+ assert.equal((html.match(/<section><h2>/g)||[]).length,8);
+ assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
+ assert.match(html,/After each Hero turn/);
+ assert.match(html,/healing still needs a printed effect/);
+ assert.match(html,/without restoring HP/);
+ assert.doesNotMatch(html,/heal freely/i);
+ const page=html.match(/<main class="sheet">([\s\S]*?)<\/main>/)?.[1]||"";
+ const wordCount=page.replace(/<[^>]+>/g," ").trim().split(/\s+/).length;
+ assert.ok(wordCount<650,"Rulebook should remain brief: "+wordCount+" words");
 });
 test("every physical card prints deterministically with correct images and A4 quantities",()=>{
  for(const c of CATALOGUE){
