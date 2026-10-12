@@ -31,7 +31,7 @@ const upper=make("UPPER",[
   [["JUMP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose 1 HP; peek at the next Room."]],"JUMP",
   [["1–2","Fall. Lose d6 HP."],["3–4","Land hard. Lose 2 HP."],["5–6","Catch a satchel. Draw 1 Item."]],["Knotted Rope"],"Stairs should be trustworthy."],
  ["u-fountain","Laughing Fountain","water","MYSTERY","Its reflection smiles a little late.",
-  [["DRINK","Roll d6. Roll again once if you lose 2 HP first."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if it has ALCHEMY."]],"DRINK",
+  [["DRINK","Roll d6. You may lose 2 HP to roll twice and choose either result."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if it has ALCHEMY."]],"DRINK",
   [["1–2","The water laughs. Lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP and draw 1 Item."]],["Bandages"],"Do not smile back."],
  ["u-merchant","Merchant in a Sack","shop","ENCOUNTER","A sack demands to see your inventory.",
   [["TRADE","Roll d6."],["PAY","Discard 2 Items; draw 3 Items."]],"TRADE",
@@ -63,10 +63,10 @@ const middle=make("MIDDLE",[
   [["WHISPER","Roll d6 before combat. With Pitch Torch or a FIRE Item, choose 5–6."],["FIGHT","After victory, draw 2 Items."]],"WHISPER",
   [["1–2","It charges. Fight the Monster."],["3–4","It rests. Discard the Monster."],["5–6","It flees. Discard Monster; draw 1 Item."]],["Pitch Torch"],"Someone left recently."],
  ["m-fungus","Fungal Garden","mushroom","HAZARD","Mushrooms mimic familiar faces.",
-  [["PICK","Roll d6."],["BURN","With Pitch Torch, heal d6 HP; or discard a FIRE Item to heal. Otherwise leave."]],"PICK",
+  [["PICK","Roll d6."],["BURN","With Pitch Torch, heal d6 HP; or discard 1 FIRE Item to heal d6 HP. Otherwise leave."]],"PICK",
   [["1–2","POISONED; draw a MIDDLE Monster."],["3–4","Heal d6 HP."],["5–6","Draw 1 Item; remove POISONED."]],["Pitch Torch","Antidote"],"They grow toward conversation."],
  ["m-altar","Candle Altar","altar","SHRINE","The candles are lit without flames.",
-  [["PRAY","Roll d6."],["CLEANSE","Discard 1 Item to cleanse a cursed Item."]],"PRAY",
+  [["PRAY","Roll d6."],["CLEANSE","Discard 1 other Item to cleanse an equipped CURSED Item."]],"PRAY",
   [["1–2","Become POISONED."],["3–4","Heal d6 HP."],["5–6","Remove a status and draw 1 Item."]],["cursed Items","Antidote"],"Wax drips upward."],
  ["m-bridge","Bridge of Whispering Rope","stairs","HAZARD","A bridge offers helpful advice.",
   [["CROSS","Roll d6. With Knotted Rope, choose 5–6."],["ARGUE","Opposed d20+WIT vs d20+4: win, heal 2 HP; lose, lose d6 HP."]],"CROSS",
@@ -84,7 +84,7 @@ const middle=make("MIDDLE",[
   [["BARGAIN","Roll d6. With Loyal Hound, choose 6. Or discard a METAL Item to choose 6."],["STEAL","Draw a MIDDLE Monster. After victory, draw 2 Items."]],"BARGAIN",
   [["1–2","They charge. Lose 2 HP."],["3–4","Trade 1 Item for 2 Items."],["5","They give you 1 Item."],["6","They give you 2 Items."]],["Loyal Hound"],"Their driver is a moth."],
  ["m-treasure","Treasure That Sings","amulet","TREASURE","Coins hum whenever you look away.",
-  [["POCKET","Roll d6. Roll again once if you lose 2 HP first."],["QUIET THEM","Discard 1 Item; heal d6 HP."]],"POCKET",
+  [["POCKET","Roll d6. You may lose 2 HP to roll twice and choose either result."],["QUIET THEM","Discard 1 Item; heal d6 HP."]],"POCKET",
   [["1–2","The song summons a MIDDLE Monster."],["3–4","Draw 1 Item."],["5–6","Draw 3 Items; discard 1 of them."]],["Pitch Torch"],"The melody follows you."]
 ]);
 const deep=make("DEEP",[
