@@ -15,7 +15,7 @@ export const VAULT={
  ]}}
 };
 const beast=(id,title,flavor,behavior,phase,extra)=>({
- id,type:"monster",title,art:"warden",stage:"FINAL",hp:24,atk:phase===1?6:7,def:5,copies:1,flavor,
+ id,type:"monster",title,art:"warden",stage:"FINAL",hp:phase===1?24:12,atk:phase===1?6:7,def:5,copies:1,flavor,
  behavior,v2:{kind:"WARDEN",number:phase===1?13:14,phase,
  tags:["MAGIC","CURSED"],weakness:extra,parley:"No bribery or recruitment. Only the Vault's SEAL choice can bypass this fight.",
  remains:"No edible corpse. Win the Amulet when Phase II falls."}
