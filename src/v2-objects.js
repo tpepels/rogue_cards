@@ -133,7 +133,7 @@ const rings=[
  ["ring-luck","Ring of Crooked Luck","amulet","RING",["MAGIC","LUCK"],
   "RING: ONCE PER ROOM after your d20 roll, roll d6.",
   [["1–2","Subtract 2 from that roll."],["3–4","Add 2 to that roll."],["5–6","Reroll that d20; keep the higher."]],
-  "At a SHRINE, cleanse and discard a CURSED Item to choose 5–6 once.",["m-clock","d-oracle"],"It rolls off your finger.",1],
+  "At a SHRINE, cleanse and discard a CURSED Item to heal d6 HP.",["m-clock","d-oracle"],"It rolls off your finger.",1],
  ["ring-bargain","Ring of Small Deals","shop","RING",["MAGIC","BARGAIN"],
   "RING: At an ENCOUNTER, ONCE PER ROOM roll d6.",
   [["1–2","The dealer takes 1 Item, if you have one."],["3–4","Draw 1 Item."],["5–6","Discard 1 Item to draw 3."]],
