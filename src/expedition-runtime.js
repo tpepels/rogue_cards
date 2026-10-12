@@ -72,6 +72,11 @@ export class ExpeditionState {
  chooseActor(){const a=this.living().sort((a,b)=>a.hp/a.card.hp-b.hp/b.card.hp);
   return a[0]||this.heroes[0];}
  setActor(h){this.actor=h;return h;}
+ rerollIfKept(h,value){
+  const i=h.kept.indexOf("reroll");
+  if(i>=0&&value<=10){h.kept.splice(i,1);return this.die(20);}
+  return value;
+ }
  own(id){return this.heroes.find(h=>h.inventory.some(o=>o.id===id))||null;}
  has(id){return !!this.own(id);}
  cursed(card){return !!card&&can(card,"CURSED")&&!this.cleansed.has(card);}
@@ -330,7 +335,7 @@ export class ExpeditionState {
    else{adv=true;h.poison=false;}
   }
   const roll=()=>this.die(20),a=roll();
-  let d=adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a;
+  let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
   const ring=h.slots.ring;
   if(ring?.id==="ring-luck"&&!h.used.has(ring)){
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,ring);
