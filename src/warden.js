@@ -3,22 +3,22 @@
 export const VAULT={
  id:"vault",type:"room",stage:"FINAL",title:"The Amulet Vault",art:"amulet",copies:1,
  flavor:"The prize was never unattended.",rule:"Face the Warden.",
- v2:{kind:"FINAL",number:37,prompt:"Roll OMEN d6 upon entry; then choose FIGHT or SEAL.",
+ v2:{kind:"FINAL",number:37,prompt:"On entry, roll OMEN d6. Choose FIGHT or SEAL.",
  choices:[
   {label:"FIGHT",effect:"Face the Warden, Phase I. At 10 HP switch to Phase II."},
   {label:"SEAL",effect:"Discard 3 MAGIC Items (6 with two Heroes). Opposed d20+WIT vs d20+6. Win: Amulet. Lose: fight Warden; its first attack has ADV."}
  ],
  roll:{die:"d6",label:"OMEN",outcomes:[
   {range:"1–2",effect:"Warden's first attack has ADV."},
-  {range:"3–4",effect:"The Warden watches. No extra effect."},
+  {range:"3–4",effect:"No extra effect."},
   {range:"5–6",effect:"First Hero attack has ADV."}
  ]}}
 };
 const beast=(id,title,flavor,behavior,phase,extra)=>({
  id,type:"monster",title,art:"warden",stage:"FINAL",hp:phase===1?20:10,atk:6,def:5,copies:1,flavor,
  behavior,v2:{kind:"WARDEN",number:phase===1?13:14,phase,
- tags:["MAGIC","CURSED"],weakness:extra,parley:"No bribery or recruitment. Only the Vault's SEAL choice can bypass this fight.",
- remains:"No edible corpse. Win the Amulet when Phase II falls."}
+ tags:["MAGIC","CURSED"],weakness:extra,parley:"No PARLEY. Only the Vault's SEAL can bypass this fight.",
+ remains:"No corpse to eat. Defeat Phase II to win the Amulet."}
 });
 export const WARDEN=beast("warden","Amulet Warden","It hears your heartbeat.",[
  "Watch: no attack.","Blade: ATTACK each Hero.","Command: next Hero d20 has DIS.","Judgment: ATTACK with ADV."

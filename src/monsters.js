@@ -16,13 +16,13 @@ const BASE=[
 ];
 
 const SPEC=Object.freeze({
- rat:{tags:["BEAST"],weakness:"With a BEAST Companion, treat this Monster's d6 6 as 1–2.",
+ rat:{tags:["BEAST"],weakness:"With a BEAST Companion, behaviour 6 becomes 1–2.",
    parley:"FEED: Discard 1 Item to send it away. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 heal d6 HP."},
- goblin:{tags:["BEAST","BARGAIN"],weakness:"With Pocket Goblin, treat this Monster's d6 6 as 1–2.",
+ goblin:{tags:["BEAST","BARGAIN"],weakness:"With Pocket Goblin, behaviour 6 becomes 1–2.",
    parley:"RECRUIT: Discard 2 Items. Keep this as Companion (+1 ATK); no corpse.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},
  crawler:{tags:["ACID"],weakness:"Discard an ALCHEMY Item to turn its next 5 into 1–2.",
    parley:"DISTRACT: Discard a POTION. It flees; no loot.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 remove POISONED."},
- bat:{tags:["BEAST","DARK"],weakness:"With FIRE gear, treat this Monster's 6 as 1–2.",
+ bat:{tags:["BEAST","DARK"],weakness:"With FIRE gear, behaviour 6 becomes 1–2.",
    parley:"SNEAK: Opposed d20+WIT vs d20+3. Win: pass safely; fail: fight.",remains:"EAT d6: 1–2 lose 2 HP; 3–4 heal 2 HP; 5–6 peek next Room."},
  troll:{tags:["BEAST","REGEN"],weakness:"FIRE cancels its next Regenerate behaviour (5).",
    parley:"TOLL: Discard 2 Items to avoid this fight.",remains:"EAT d6: 1–2 POISONED; 3–4 heal d6 HP; 5–6 draw 1 Item."},
@@ -32,9 +32,9 @@ const SPEC=Object.freeze({
    parley:"COVER EYES: Discard 1 Item; it leaves. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 peek next Room."},
  mold:{tags:["ALCHEMY","PLANT"],weakness:"FIRE: Its 6 becomes 1–2; ICE: its 5 becomes 1–2.",
    parley:"FEED: Discard a POTION; skip this fight. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal d6 HP; 5–6 remove POISONED."},
- wraith:{tags:["CURSED","MAGIC"],weakness:"With MAGIC gear, treat this Monster's 5 as 1–2.",
+ wraith:{tags:["CURSED","MAGIC"],weakness:"With MAGIC gear, behaviour 5 becomes 1–2.",
    parley:"APPEASE: While wearing CURSED gear, lose d6 HP; it leaves. No loot.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},
- rust:{tags:["METAL"],weakness:"Without METAL equipment, its 5 becomes 1–2.",
+ rust:{tags:["METAL"],weakness:"Without METAL equipment, behaviour 5 becomes 1–2.",
    parley:"FEED: Discard a METAL Item. It leaves; draw 1 Item.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 gain ADV on next DEF."},
  cultist:{tags:["CURSED","BARGAIN"],weakness:"MAGIC: Turn its next 6 into 1–2 once.",
    parley:"BARGAIN: With equipped CURSED gear, lose d6 HP; it leaves; draw 1 Item.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},

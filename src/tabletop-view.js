@@ -188,7 +188,7 @@ function content(card,{sidebar=false}={}){
    '<p class="tt-v2-trigger">'+esc(v.trigger)+'</p></div>'+
    ((dice||v.alternative||card.type==="potion")?'<div class="tt-slip tt-slip--results">'+
    dice+(v.alternative?'<div class="tt-v2-alternative">'+esc(v.alternative)+'</div>':"")+
-   (card.type==="potion"?'<div class="tt-v2-identity">IDENTIFY: keep one spent copy face up.</div>':"")+
+
    '</div>':"")+'</section>';
  }
  if(card.v2&&card.type==="room"){
