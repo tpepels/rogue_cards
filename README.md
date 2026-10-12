@@ -25,6 +25,14 @@ V2 deliberately retains opposed **d20+ATK vs d20+DEF** combat (including natural
 
 **Do not substitute `rules-v2.html` for `rules.html` yet.** Current `src/tabletop-data.js` still holds the V1 printed cards and some effects have not been rewritten for V2. V2 is a separate, printable review draft until the complete physical deck has been migrated and checked.
 
+### Phase 1 implementation — 36 choice-driven V2 Rooms
+
+[**Preview and print 36 V2 Rooms**](https://tpepels.github.io/rogue_cards/v2-rooms.html) · [Room ecology / interactions](docs/v2-phase1-room-ecology.md)
+
+Phase 1 implements **36 unique Rooms**: reworked versions of all 18 existing Rooms plus 18 new ones, arranged 12 UPPER / 12 MIDDLE / 12 DEEP. Each is a printable 90 × 130 mm collage card with a visible **CHOOSE ONE** decision and a complete d6 result table. Rooms cover hazards, shrines, mysteries, encounters, lairs and treasure. Selected Rooms have four-outcome tables (1–2, 3–4, 5, 6), push-your-luck rerolls, opposed d20 object checks, guaranteed Monster encounters with negotiate-or-fight choices, and kept-card consequences. Rusty Key, Knotted Rope, Pitch Torch, companions, curses and antidotes have targeted interactions.
+
+This experimental deck lives in `src/v2-rooms.js`, separate from the playable V1 `src/tabletop-data.js`. The preview `v2-rooms.html` has region filters and physical four-per-A4 printing. The original V1 deck, card counts, Vault, and `rules.html` are unchanged. V2-only card text is **not fully compatible with V1 Items/Monsters yet**; these are prototypes, not a certified complete V2 game. Original art is reused where IDs match; uncommitted illustrations are not claimed.
+
 ## Canonical illustration-first card faces
 
 The **production card gallery and A4 print sheets** now use the flexible illustration-first card design, not the earlier generic mini-art template. Hero/Monster cards place a stat rail inside a large ink illustration, short-effect Items devote most of the card to the image, and the Flooded Chamber demonstrates the optional Room-with-sidebar layout. The title overlays the image as an ivory paper strip. Mechanical wording stays on clean paper.
