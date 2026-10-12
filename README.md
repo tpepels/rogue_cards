@@ -43,6 +43,16 @@ The source is `src/v2-objects.js` and the independent prototype gallery is `v2-o
 
 **V1 remains canonical and unchanged.** Neither the original V1 deck nor its rules were migrated. The combined V2 game still needs its Monster/Hero redesign, card-network audit, playtests and balance pass before replacing the original playable edition.
 
+### Phase 3 implementation — Mechanical ecology and Monster interactions
+
+[**V2 Monster gallery and print sheets**](https://tpepels.github.io/rogue_cards/v2-monsters.html) · [Phase 3 audit and interaction matrix](docs/v2-phase3-ecology-audit.md)
+
+Phase 3 strengthens the interactions between the **36 V2 Rooms, 52 V2 Objects and 12 Monster prototypes**. Scrolls can manipulate rooms and Monster behaviour; Rings change dice outcomes or exploit creature weaknesses; Wands can be **overcharged** by losing d6 HP and discarding the Wand to choose its strongest printed result. Shrines, cursed equipment, companions, elemental properties, bargains and alternate recharge choices have printed effects rather than relying on hidden data links.
+
+The twelve V2 Monster prototypes add weaknesses, negotiation and corporeal rewards while **reusing V1 Monster statistics and behavioural dice tables without touching V1**. They can be browsed and printed by dungeon region in `v2-monsters.html`.
+
+**V1 is still the canonical playable edition.** The V2 Warden/Hero pass, comprehensive balancing, print artwork and full campaign playtests remain unfinished.
+
 ## Canonical illustration-first card faces
 
 The **production card gallery and A4 print sheets** now use the flexible illustration-first card design, not the earlier generic mini-art template. Hero/Monster cards place a stat rail inside a large ink illustration, short-effect Items devote most of the card to the image, and the Flooded Chamber demonstrates the optional Room-with-sidebar layout. The title overlays the image as an ivory paper strip. Mechanical wording stays on clean paper.
