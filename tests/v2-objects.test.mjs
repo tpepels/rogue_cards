@@ -4,7 +4,7 @@ import {readFileSync} from "node:fs";
 import {V2_ITEMS,V2_POTIONS,V2_OBJECTS,V2_OBJECT_COPIES,V2_ITEM_FAMILIES,V2_OBJECTS_BY_FAMILY,V2_TAGS} from "../src/v2-objects.js";
 import {V2_ROOMS} from "../src/v2-rooms.js";
 import {PRINT_DECK as V1_DECK,ITEMS as V1_ITEMS,POTIONS as V1_POTIONS} from "../src/tabletop-data.js";
-import {cardMarkup,printSheets} from "../src/tabletop-view.js";
+import {cardMarkup,printSheets,esc} from "../src/tabletop-view.js";
 test("Phase 2 is 44 distinct V2 Items and 8 distinct mystery Potions, apart from V1",()=>{
  assert.equal(V2_ITEMS.length,44);assert.equal(V2_POTIONS.length,8);
  assert.equal(V2_OBJECTS.length,52);
@@ -55,7 +55,7 @@ test("Every die table is completely printed with non-overlapping faces and 3 or 
     covered.add(f);
    }
    assert.ok(html.includes(range),card.id);
-   assert.ok(html.includes(effect.replaceAll("&","&amp;")),card.id);
+   assert.ok(html.includes(esc(effect)),card.id);
   }
   assert.deepEqual([...covered].sort(),[1,2,3,4,5,6],card.id);
  }
