@@ -25,5 +25,5 @@ export const WARDEN=beast("warden","Amulet Warden","It hears your heartbeat.",[
 ],1,"At 12 HP or less, replace this card with Phase II. Keep HP and afflictions.");
 export const WARDEN_FURY=beast("warden-fury","Warden Unbound","The vault cracks open.",[
  "Sunder: ATTACK.","Bleed: ATTACK; on hit discard an Item.","Ruin: all Heroes lose 2 HP.","Judgment: ATTACK with ADV; +2 damage on hit."
-],2,"FIRE or LIGHTNING: treat its next behaviour 6 as 1–2. At 0 HP the party wins.");
+],2,"After a FIRE or LIGHTNING effect hits the Warden, its next behaviour 6 is skipped. At 0 HP, win.");
 export const WARDEN_CARDS=Object.freeze([WARDEN,WARDEN_FURY]);
