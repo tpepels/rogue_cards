@@ -228,6 +228,55 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Advanced, risk-aware decision planning (opt-in)
+
+This is the most detailed automated player model. It does **not**
+change any printed card, legal action, battle rule or old simulator baseline.
+
+Run from a current repository checkout:
+
+```sh
+git pull --ff-only
+npm test
+mkdir -p analysis
+npm run --silent study:planner -- 100 --progress > analysis/planner-study.json
+npm run --silent study:planner:report -- analysis/planner-study.json > analysis/planner-study.md
+```
+
+The default studies 8 solo Heroes plus 4 illustrative Hero pairs, each
+under Magic and Treasure, and compares baseline / legacy-adaptive /
+planner-balanced / planner-cautious / planner-bold. At 100 seeds each
+this performs **12,000 full expeditions**. All 28 two-Hero combinations:
+
+```sh
+npm run --silent study:planner -- 300 --all --progress > analysis/planner-all.json
+npm run --silent study:planner:report -- analysis/planner-all.json > analysis/planner-all.md
+```
+
+The full study above runs 108,000 expeditions. To reproduce
+another independent random batch, append `--seed 123456`.
+
+**What the planner evaluates:**
+
+- Enumerates all six printed Room outcome faces and both affordable choices;
+  values expected healing, draw, hazards, encounter risk and opportunity cost.
+- Computes opposed d20 attack chances and approximate per-Monster combat
+  danger, with risk preferences (balanced, cautious and bold).
+- Evaluates printed Scroll and Wand outcomes versus a regular attack,
+  including likely damage, effects that skip Monster turns, healing, and
+  scarcity of Magic resources needed for the Vault.
+- Compares PARLEY success probabilities and printed payment costs
+  against estimated losses from fighting.
+- Estimates the chance to Seal and the danger of fighting both Warden
+  phases instead, including the Crown's possible self-damage.
+
+Reports include win rates, paired approximate confidence intervals,
+Vault arrivals, Items spent, damage, spell activations, every solo Hero
+and an auditable sample of up to 12 decisions per run. This is bounded
+expected-utility planning, **not exhaustive game-tree search**; it
+cannot prove the policy optimal or the game well-balanced. Interventions
+may alter subsequent dice sequences even with matching starting seeds.
+
 ## Improving the simulated decisions (local, opt-in)
 
 The original five scripted strategies are preserved unchanged for regression
