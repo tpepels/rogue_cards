@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {existsSync,readFileSync,readdirSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync,openSync,readSync,closeSync} from "node:fs";
 import {HEROES,ROOMS,MONSTERS,ITEMS,POTIONS,OBJECTS,VAULT,WARDEN,WARDEN_FURY,PRINT_DECK,CATALOGUE,ITEM_FAMILIES,CARD_WIDTH_MM,CARD_HEIGHT_MM,catalogue,printDeck} from "../src/tabletop-data.js";
 import {cardMarkup,printSheets,CARDS_PER_SHEET,CARD_ART,assetPath,composition,esc} from "../src/tabletop-view.js";
 const faces=range=>{const [a,b=a]=range.split("–").map(Number);assert.ok(a>=1&&b<=6&&Number.isInteger(a)&&Number.isInteger(b));return Array.from({length:b-a+1},(_,i)=>a+i)};
@@ -122,28 +122,44 @@ test("every physical card prints deterministically with correct images and A4 qu
  }
  assert.equal((printSheets(CATALOGUE).match(/class="tt-sheet"/g)||[]).length,Math.ceil(CATALOGUE.length/4));
  assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
- assert.equal(Object.keys(CARD_ART).length,40);
+ assert.equal(Object.keys(CARD_ART).length,CATALOGUE.length);
  const uploaded=readdirSync("assets/illustrations").filter(name=>name.endsWith(".png")).sort();
- assert.deepEqual(Object.values(CARD_ART).sort(),uploaded,"Each uploaded PNG must be shown on exactly one canonical card");
- for(const [key,name] of Object.entries(CARD_ART)){
-  const [type,id]=key.split(":");const card=CATALOGUE.find(c=>c.type===type&&c.id===id);
-  assert.ok(card,"Orphaned illustration: "+key);
-  assert.ok(existsSync("assets/illustrations/"+name),name);
-  assert.ok(assetPath(card)?.includes(name));
+ assert.equal(uploaded.length,111,"One generated PNG per canonical card");
+ assert.deepEqual(Object.values(CARD_ART).sort(),uploaded,
+  "Each PNG must appear on exactly one canonical card");
+ const slug=title=>title.toLowerCase().normalize("NFKD")
+  .replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+ for(const [i,card] of CATALOGUE.entries()){
+  const key=card.type+":"+card.id,name=CARD_ART[key];
+  assert.ok(name,"Missing illustration for "+key);
+  assert.equal(name,String(i+1).padStart(3,"0")+"_"+slug(card.title)+".png",
+   "Illustration assignment does not match card "+key);
+  const path="assets/illustrations/"+name;
+  assert.ok(existsSync(path),path);
+  assert.equal(assetPath(card),"./"+path);
+  // PNG signature and header dimensions, without reading 245 MB of pixels.
+  const fd=openSync(path,"r");
+  const head=Buffer.alloc(24);
+  try{assert.equal(readSync(fd,head,0,head.length,0),24);}
+  finally{closeSync(fd);}
+  assert.equal(head.subarray(0,8).toString("hex"),"89504e470d0a1a0a",path);
+  assert.ok(head.readUInt32BE(16)>0&&head.readUInt32BE(20)>0,path);
  }
 });
 
 test("generated card illustrations retain spot colours in catalogue and print",()=>{
  const css=readFileSync("styles/tabletop.css","utf8");
  assert.match(css,/\.tt-card \.tt-art-image\{\s*filter:none;/);
- for(const card of CATALOGUE.filter(card=>CARD_ART[card.type+":"+card.id])){
+ for(const card of CATALOGUE){
   const markup=cardMarkup(card);
   assert.match(markup,/tt-has-art/);
   assert.match(markup,/data-art-status="generated"/);
   assert.match(markup,/<img class="tt-art-image"/);
   assert.ok(markup.includes(CARD_ART[card.type+":"+card.id]),card.id);
  }
- const fallback=CATALOGUE.find(c=>c.type==="monster"&&c.id==="cultist");
- assert.ok(fallback&&!assetPath(fallback),"Unuploaded art must not be referenced");
- assert.match(cardMarkup(fallback),/tt-needs-art/);
+ assert.equal(CATALOGUE.filter(c=>assetPath(c)).length,111);
+ assert.equal((printSheets(CATALOGUE).match(/class="tt-art-image"/g)||[]).length,111,
+  "Printed sheets must include all new images");
+ assert.doesNotMatch(printSheets(CATALOGUE),/tt-needs-art|tt-art-placeholder|ink-art/,
+  "No card should fall back to the old SVG illustrations");
 });

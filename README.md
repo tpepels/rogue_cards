@@ -21,6 +21,19 @@ All cards, dice ranges, behaviours, rewards and strange exceptions are printed o
 
 The catalogue can show **one of each** or **full physical print quantities**, filter by card family and dungeon depth, and print four **90 × 130 mm** cards per A4.
 
+## Generated card illustrations
+
+Every one of the **111 unique cards** now uses its corresponding PNG in
+`assets/illustrations/`. The source of truth for the card-to-file assignment
+is `CARD_ART` in `src/tabletop-view.js`. Numeric prefixes (001-111)
+preserve the catalogue order; the rest of each filename follows the printed
+card title. Some filenames differ from older artwork names.
+
+The same PNG is used in the on-screen gallery and A4 print sheets.
+The old generic SVG drawings are no longer substituted. `npm test`
+checks all 111 mappings for missing, duplicated, wrongly named or
+invalid PNG files.
+
 ## Gameplay
 
 Select a Hero, take the named starting Object and draw one more. Shuffle UPPER, MIDDLE and DEEP Rooms and matching Monsters into regional piles. Descend through three Rooms of each level, one at a time, then the Amulet Vault.

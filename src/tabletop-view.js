@@ -1,55 +1,124 @@
 import {CATALOGUE,CARD_WIDTH_MM,CARD_HEIGHT_MM,printDeck} from "./tabletop-data.js";
-import {illustration} from "./art.js";
 export {CARD_WIDTH_MM,CARD_HEIGHT_MM};
 export const CARDS_PER_SHEET=4;
 export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-/** A PNG mapping for every uploaded illustration in assets/illustrations/.
- * Keep this in sync with the folder: tests fail if uploaded art is not assigned.
- * Unillustrated cards use the temporary SVG fallback until their PNG exists.
- * Some legacy images have different filenames from canonical card titles.
+/** Exact canonical card-to-art assignment (111 unique cards, 111 PNGs).
+ * Artwork filenames are intentionally numbered, while card ids remain stable.
+ * All entries must refer to a real file; tests enforce one-to-one coverage.
  */
 export const CARD_ART=Object.freeze({
- "hero:warrior":"cave_delver.png",
- "hero:knight":"wandering_knight.png",
- "hero:wizard":"hedge_wizard.png",
- "hero:witch":"marsh_witch.png",
- "hero:rogue":"cutpurse.png",
- "hero:thief":"tunnel_thief.png",
- "hero:priest":"ash_priest.png",
- "hero:monk":"roadless_monk.png",
- "monster:rat":"giant_rat.png",
- "monster:goblin":"goblin_scavenger.png",
- "monster:crawler":"sewer_crawler.png",
- "monster:bat":"cave_bat_swarm.png",
- "monster:troll":"bridge_troll.png",
- "monster:wisp":"will_o_wisp.png",
- "monster:eye":"floating_eye.png",
- "monster:mold":"living_mold.png",
- "monster:wraith":"restless_shade.png",
- "monster:sentinel":"iron_sentinel.png",
- "room:u-passage":"dripping_passage.png",
- "room:u-gate":"rusty_gate.png",
- "room:u-supply":"abandoned_storeroom.png",
- "room:u-nest":"rat_nest.png",
- "room:u-shrine":"abandoned_shrine.png",
- "room:u-fall":"collapsing_stairs.png",
- "room:u-fountain":"laughing_fountain.png",
- "room:u-merchant":"merchant_in_a_sack.png",
- "room:u-lamp":"lamp_eater.png",
- "room:u-puppet":"the_puppet_judge.png",
- "room:u-bookcase":"bookcase_of_teeth.png",
- "room:u-mimic":"chest_with_a_pulse.png",
- "room:m-flood":"flooded_chamber.png",
- "room:m-statue":"cracked_oracle.png",
- "room:m-vault":"ironbound_chest.png",
- "room:m-crypt":"opened_crypt.png",
- "room:m-altar":"candle_altar.png",
- "room:d-oracle":"strange_feeling.png",
- "item:key":"rusty_key.png",
- "item:rope":"knotted_rope.png",
- "item:torch":"pitch_torch.png",
- "potion:smoky":"smoky_potion.png"
+ "hero:warrior":"001_veteran_warrior.png",
+ "hero:knight":"002_wandering_knight.png",
+ "hero:wizard":"003_hedge_wizard.png",
+ "hero:witch":"004_marsh_witch.png",
+ "hero:rogue":"005_cutpurse.png",
+ "hero:thief":"006_tunnel_thief.png",
+ "hero:priest":"007_ash_priest.png",
+ "hero:monk":"008_roadless_monk.png",
+ "room:u-passage":"009_dripping_passage.png",
+ "room:u-gate":"010_rusty_gate.png",
+ "room:u-supply":"011_forgotten_supplies.png",
+ "room:u-nest":"012_rat_nest.png",
+ "room:u-shrine":"013_abandoned_shrine.png",
+ "room:u-fall":"014_collapsing_stairs.png",
+ "room:u-fountain":"015_laughing_fountain.png",
+ "room:u-merchant":"016_merchant_in_a_sack.png",
+ "room:u-lamp":"017_lamp_eater.png",
+ "room:u-puppet":"018_the_puppet_judge.png",
+ "room:u-bookcase":"019_bookcase_of_teeth.png",
+ "room:u-mimic":"020_chest_with_a_pulse.png",
+ "room:m-flood":"021_flooded_chamber.png",
+ "room:m-statue":"022_stone_watcher.png",
+ "room:m-vault":"023_buried_lockbox.png",
+ "room:m-crypt":"024_opened_crypt.png",
+ "room:m-fungus":"025_fungal_garden.png",
+ "room:m-altar":"026_candle_altar.png",
+ "room:m-bridge":"027_bridge_of_whispering_rope.png",
+ "room:m-well":"028_the_bottomless_well.png",
+ "room:m-auction":"029_ghostly_auction.png",
+ "room:m-clock":"030_clockwork_confessional.png",
+ "room:m-beetle":"031_beetle_caravan.png",
+ "room:m-treasure":"032_treasure_that_sings.png",
+ "room:d-shadow":"033_lightless_hall.png",
+ "room:d-bridge":"034_broken_bridge.png",
+ "room:d-reliquary":"035_lost_reliquary.png",
+ "room:d-bones":"036_hall_of_teeth.png",
+ "room:d-oracle":"037_broken_oracle.png",
+ "room:d-gate":"038_warden_s_threshold.png",
+ "room:d-mirror":"039_mirror_of_regrets.png",
+ "room:d-mouth":"040_the_talking_door.png",
+ "room:d-choir":"041_choir_of_mushrooms.png",
+ "room:d-bazaar":"042_midnight_bazaar.png",
+ "room:d-crown":"043_crown_of_the_unking.png",
+ "room:d-last-chest":"044_the_last_chest.png",
+ "room:vault":"045_the_amulet_vault.png",
+ "monster:rat":"046_giant_rat.png",
+ "monster:goblin":"047_goblin_raider.png",
+ "monster:crawler":"048_sewer_crawler.png",
+ "monster:bat":"049_cave_bat_swarm.png",
+ "monster:troll":"050_bridge_troll.png",
+ "monster:wisp":"051_will_o_wisp.png",
+ "monster:eye":"052_floating_eye.png",
+ "monster:mold":"053_living_mold.png",
+ "monster:wraith":"054_restless_shade.png",
+ "monster:rust":"055_rust_monster.png",
+ "monster:cultist":"056_forgotten_acolyte.png",
+ "monster:sentinel":"057_iron_sentinel.png",
+ "monster:warden":"058_amulet_warden.png",
+ "monster:warden-fury":"059_warden_unbound.png",
+ "item:key":"060_rusty_key.png",
+ "item:rope":"061_knotted_rope.png",
+ "item:torch":"062_pitch_torch.png",
+ "item:crowbar":"063_dented_crowbar.png",
+ "item:chalk":"064_chalk_of_detours.png",
+ "item:spore-jar":"065_spore_jar.png",
+ "item:coin":"066_ghost_coin.png",
+ "item:needle":"067_bone_needle.png",
+ "item:sword":"068_notched_sword.png",
+ "item:staff":"069_ashwood_staff.png",
+ "item:cursed-blade":"070_whispering_blade.png",
+ "item:mail":"071_patchwork_mail.png",
+ "item:shield":"072_warded_shield.png",
+ "item:cursed-mail":"073_burial_mail.png",
+ "item:dog":"074_loyal_hound.png",
+ "item:raven":"075_tunnel_raven.png",
+ "item:moth":"076_coffin_moth.png",
+ "item:goblin-pet":"077_pocket_goblin.png",
+ "item:mirror":"078_mirror_shard_of_yesterday.png",
+ "item:skull":"079_very_helpful_skull.png",
+ "item:lantern-heart":"080_lantern_heart.png",
+ "item:crown-relic":"081_crown_of_rehearsals.png",
+ "item:scroll-flame":"082_scroll_of_cinder.png",
+ "item:scroll-frost":"083_scroll_of_hush.png",
+ "item:scroll-lightning":"084_scroll_of_storm_teeth.png",
+ "item:scroll-unlock":"085_scroll_of_unsealing.png",
+ "item:scroll-reveal":"086_scroll_of_third_sight.png",
+ "item:scroll-banish":"087_scroll_of_go_away.png",
+ "item:scroll-mischief":"088_scroll_of_misprint.png",
+ "item:scroll-last":"089_scroll_of_the_last_word.png",
+ "item:ring-luck":"090_ring_of_crooked_luck.png",
+ "item:ring-bargain":"091_ring_of_small_deals.png",
+ "item:ring-eye":"092_ring_of_the_sideways_eye.png",
+ "item:ring-spores":"093_ring_of_the_mold_king.png",
+ "item:ring-hunger":"094_hungry_ring.png",
+ "item:ring-ashes":"095_ring_of_embers.png",
+ "item:ring-echo":"096_ring_of_echoes.png",
+ "item:wand-sparks":"097_wand_of_impolite_sparks.png",
+ "item:wand-undo":"098_wand_of_undoing.png",
+ "item:wand-morph":"099_wand_of_questionable_shapes.png",
+ "item:wand-turn":"100_wand_of_turning.png",
+ "item:wand-market":"101_wand_of_bad_trades.png",
+ "item:wand-frost":"102_wand_of_cold_shoulders.png",
+ "item:wand-door":"103_wand_of_almost_doors.png",
+ "potion:smoky":"104_smoky_potion.png",
+ "potion:milky":"105_milky_potion.png",
+ "potion:amber":"106_amber_potion.png",
+ "potion:fizzy":"107_fizzy_potion.png",
+ "potion:mushroom":"108_mushroom_tea.png",
+ "potion:midnight":"109_midnight_ink.png",
+ "potion:antidote":"110_antidote.png",
+ "potion:laughing":"111_laughing_water.png"
 });
 /** Fixed plate offsets for print reproducibility, not CSS randomness or game state.
  * Identical cards share an intentional slightly imperfect edition mark.
@@ -74,10 +143,11 @@ export function composition(card){
 }
 function visual(card){
  const asset=assetPath(card);
- const image=asset
-  ?'<img class="tt-art-image" src="'+esc(asset)+'" alt="" loading="eager" decoding="async">'
-  :'<div class="tt-art-placeholder" aria-hidden="true">'+illustration(card.art)+'</div>';
- return '<div class="tt-illustration">'+image+'</div>';
+ if(!asset)throw new Error("Missing card illustration: "+card.type+":"+card.id);
+ // The illustrations themselves already carry the intentionally rough
+ // spot-color print texture. Never substitute the legacy ink SVGs.
+ return '<div class="tt-illustration"><img class="tt-art-image" src="'+esc(asset)+
+  '" alt="" loading="eager" decoding="async"></div>';
 }
 function stats(card){
  if(card.type!=="hero"&&card.type!=="monster")return "";

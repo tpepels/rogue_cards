@@ -5,6 +5,10 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await page.goto("/");
  await expect(page.getByRole("heading",{name:/One dungeon. One deck. One rulebook/i})).toBeVisible();
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(111);
+ await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(111);
+ await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(111);
+ await expect(page.locator(".tt-grid .tt-needs-art")).toHaveCount(0);
+ await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
  await expect(page.getByRole("link",{name:/READ \/ PRINT THE A4 RULES/})).toBeVisible();
  const filter=page.getByRole("combobox",{name:"Card category"});
  const checks=[["hero",8],["room",37],["monster",14],["TOOL",8],["EQUIPMENT",6],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];

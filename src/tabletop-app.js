@@ -1,5 +1,5 @@
 import {CATALOGUE,PRINT_DECK,catalogue,printDeck,EDITION,ITEM_FAMILIES} from "./tabletop-data.js";
-import {cardMarkup,printSheets} from "./tabletop-view.js?v=illustrations-20261012";
+import {cardMarkup,printSheets} from "./tabletop-view.js?v=artwork-111-20261012";
 const mount=document.getElementById("tabletop-app");
 const ink='<svg class="tt-print-filter-defs" width="0" height="0" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tt-xerox-ink" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncG type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncB type="discrete" tableValues="0 .025 .10 .92 1 1"/></feComponentTransfer></filter></defs></svg>';
 const options=[
