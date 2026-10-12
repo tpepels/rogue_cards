@@ -42,6 +42,7 @@ const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquar
 const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
 export function composition(card){
  if(card.v2&&card.type==="room")return "v2-room";
+ if(card.v2&&card.type==="hero")return "v2-hero";
  if(card.v2&&card.type==="monster")return "v2-monster";
  if(card.v2&&(card.type==="item"||card.type==="potion"))return "v2-object";
  if(card.type==="hero")return "portrait-stats";
@@ -70,6 +71,14 @@ function stats(card){
   '<div class="tt-stat"><span class="tt-stat-symbol" aria-hidden="true">'+mark+'</span><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
 }
 function content(card,{sidebar=false}={}){
+ if(card.type==="hero"&&card.v2){
+  const v=card.v2;
+  return '<section class="tt-content tt-content--v2-hero" aria-label="Hero ability and starting equipment">'+
+   '<div class="tt-v2-hero-start">START WITH: '+esc(v.starter.toUpperCase())+' + 1 RANDOM OBJECT</div>'+
+   '<p class="tt-v2-hero-trigger">'+esc(v.trigger)+'</p>'+
+   '<div class="tt-v2-results">'+v.roll.outcomes.map(o=>
+    '<div class="tt-v2-result"><b>'+esc(o.range)+'</b><span>'+esc(o.effect)+'</span></div>').join("")+'</div></section>';
+ }
  if(card.type==="monster"&&card.v2){
   const v=card.v2;
   return '<section class="tt-content tt-content--v2-monster" aria-label="Monster dice, weakness and bargain">'+
