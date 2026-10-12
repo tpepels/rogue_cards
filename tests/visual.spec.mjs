@@ -81,7 +81,8 @@ test("every unique card has legible ink, a physical type stamp and unclipped pas
    vertical:paper.scrollHeight-paper.clientHeight,
    horizontal:paper.scrollWidth-paper.clientWidth,
    titleOverlap:title.bottom-slip.top,
-   stampBelowTitle:kind.bottom-title.top,
+   stampOverlapX:Math.max(0,Math.min(kind.right,title.right)-Math.max(kind.left,title.left)),
+   stampOverlapY:Math.max(0,Math.min(kind.bottom,title.bottom)-Math.max(kind.top,title.top)),
    stampOutside:kind.right-bounds.right,
    illustrationAboveSlip:slip.top-art.top,
    noteWidth:slip.width,
@@ -95,7 +96,8 @@ test("every unique card has legible ink, a physical type stamp and unclipped pas
   expect(card.horizontal,"Rules horizontally clipped on "+card.type+"/"+card.id).toBeLessThanOrEqual(2);
   expect(card.titleOverlap,"Title is obscured by notes: "+card.id).toBeLessThanOrEqual(5);
   expect(card.stampOutside,"Type stamp extends outside card: "+card.id).toBeLessThanOrEqual(2);
-  expect(card.stampBelowTitle,"Type stamp overlaps title: "+card.id).toBeLessThanOrEqual(9);
+  expect(Math.min(card.stampOverlapX,card.stampOverlapY),
+   "Type stamp intersects title: "+card.id).toBeLessThanOrEqual(5);
   expect(card.illustrationAboveSlip,"No visible art above notes: "+card.id).toBeGreaterThan(24);
  }
  for(const family of ["HERO","MONSTER","WARDEN","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION","HAZARD","SHRINE","ENCOUNTER"]){
