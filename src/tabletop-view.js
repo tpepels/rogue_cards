@@ -35,27 +35,13 @@ export const assetPath=card=>{
  return file?"./assets/illustrations/"+file:null;
 };
 
-/** Choose an art/text composition deliberately; never hide overflowing text by scaling the font. */
-const SPLIT_ROOMS=new Set(["m-flood"]);
-const DENSE_MONSTERS=new Set(["rat","goblin","crawler","bat","troll","eye","mold","wraith","cultist","rust","sentinel","warden","wisp"]);
-const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquary","m-fungus","u-nest"]);
-const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
+/** The one physical edition uses one renderer per card family. */
 export function composition(card){
- if(card.v2&&card.type==="room")return "v2-room";
- if(card.v2&&card.type==="hero")return "v2-hero";
- if(card.v2&&card.type==="monster")return "v2-monster";
- if(card.v2&&(card.type==="item"||card.type==="potion"))return "v2-object";
- if(card.type==="hero")return "portrait-stats";
- if(card.type==="monster")return DENSE_MONSTERS.has(card.id)?"monster-dense":"monster";
- if(card.type==="room")return SPLIT_ROOMS.has(card.id)?"room-split":DENSE_ROOMS.has(card.id)?"scene-compact":"room-scene";
- if(card.type==="potion")return "mystery";
- if(card.type==="item")return DENSE_ITEMS.has(card.id)?"item-compact":"illustration-dominant";
- return "illustration-dominant";
+ if(!card?.v2)throw new TypeError("Unknown canonical card");
+ const layout={hero:"v2-hero",room:"v2-room",monster:"v2-monster",item:"v2-object",potion:"v2-object"}[card.type];
+ if(!layout)throw new TypeError("Unknown card type: "+card.type);
+ return layout;
 }
-const rulify=rule=>esc(rule).replace(
- /(^|(?:\.\s+))((?:REVEAL|QUIET|ALTAR|AFTER VICTORY|FIRST USE|ONCE PER ROOM|ACTION|DRINK|EQUIP|CONSUME|SPELL|WEAPON|ARMOUR|GEAR|COMPANION|CURSED WEAPON|CURSED ARMOUR|RELIC)(?:\s*\([^)]*\))?)(\s*[—:])/g,
- (_,prefix,verb,sep)=>prefix+'<strong class="tt-rule-key">'+verb+sep+'</strong>'
-);
 function visual(card){
  const asset=assetPath(card);
  const image=asset
@@ -115,21 +101,7 @@ function content(card,{sidebar=false}={}){
    '<div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
    '<div class="tt-v2-results">'+results+'</div></section>';
  }
- if(card.type==="monster"){
-  return '<section class="tt-content tt-content--monster tt-record" aria-label="Monster behaviour and remains">'+
-   '<div class="tt-label">BEHAVIOUR <span>ROLL d6 AFTER EACH HERO ACTION</span></div>'+
-   '<div class="tt-behaviours">'+card.behavior.map((line,i)=>
-    '<div class="tt-behaviour-row"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(line)+'</span></div>').join("")+'</div>'+
-   '<p class="tt-corpse"><b>CORPSE — </b>'+esc(card.corpse)+'</p>'+
-   '</section>';
- }
- const cls='tt-content'+(sidebar?' tt-content--sidebar':'')+
-  (card.type==="room"?' tt-content--room':card.type==="potion"?' tt-content--potion':
-   card.type==="item"?' tt-content--item':' tt-content--hero');
- return '<section class="'+cls+'" aria-label="Card effect">'+
-  '<p class="tt-rule">'+rulify(card.rule)+'</p>'+
-  (card.mystery?'<div class="tt-identified">FIRST USE: keep this card as the identification reminder.</div>':"")+
-  '</section>';
+ throw new TypeError("No canonical card effects: "+card.type);
 }
 export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
@@ -140,15 +112,9 @@ export function cardMarkup(card){
  let middle;
  // The print plate and paste-on rule paper share one overlapping collage plane.
  // Neither is a browser background: the art is a genuine illustrated card layer.
- if(layout==="room-split"){
-   middle='<div class="tt-collage" aria-label="Illustration with pasted room instructions">'+
-    '<div class="tt-visual tt-visual--split">'+
-    visual(card)+content(card,{sidebar:true})+stage+'</div></div>';
- }else{
-   middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
-     '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
-     content(card)+'</div>';
- }
+ middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
+   '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
+   content(card)+'</div>';
  return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
   '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
