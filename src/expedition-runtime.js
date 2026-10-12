@@ -179,6 +179,9 @@ export class ExpeditionState {
   if(card.v2.kind==="WAND")this.exhausted.add(card);
   if(/ONCE PER ROOM/i.test(card.v2.trigger))h.used.add(card);
   if(face==null)face=this.die();
+  if(card.id==="ring-echo"&&face<=2&&this.anyEquippedTag("CURSED")){
+   this.hurt(h,this.die());face=6;
+  }
   this.lastDamage=0;this.damageElement=null;
   applyCardRoll({apply:(kind,args,c)=>this.apply(kind,args,c)},card,face);
   if(consume&&["SCROLL","POTION"].includes(card.v2.kind)&&h.inventory.includes(card))
@@ -189,6 +192,12 @@ export class ExpeditionState {
    this.activate(h,h.slots.ring);
   }
   return true;
+ }
+ thiefReward(){const thief=this.living().find(x=>x.card.id==="thief"&&!x.used.has("hero"));
+  if(!thief)return;thief.used.add("hero");const d=this.die();
+  if(d<=2)this.hurt(thief,2);
+  else if(d<=4){this.draw();this.discard();}
+  else{this.draw(2);this.discard();}
  }
  witchReaction(h){
   h.used.add("witch-ability");const d=this.die();
@@ -212,7 +221,7 @@ export class ExpeditionState {
   case "POISON":if(!h.immune)h.poison=true;return;
   case "CURE":h.poison=false;return;
   case "POISON_IMMUNE":h.immune=true;return;
-  case "DRAW":this.draw(n());return;
+  case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "DISCARD":this.discard(n());return;
   case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");this.discard(n());return;
   case "TRADE":if(this.discardable(Number(v))){this.discard(Number(v));this.draw(Number(args[1]));}return;
@@ -337,7 +346,8 @@ export class ExpeditionState {
   if(this.room.id==="m-well"&&can(this.lastSpent,"CURSED"))face=6;
   const scrollSub={
    "m-fungus":"scroll-flame","d-choir":"scroll-flame","m-flood":"scroll-frost",
-   "m-beetle":"scroll-lightning","u-gate":"scroll-unlock"
+   "m-beetle":"scroll-lightning","u-gate":"scroll-unlock","m-vault":"scroll-unlock",
+   "u-mimic":"scroll-unlock","d-last-chest":"scroll-unlock"
   };
   if(this.strategy==="magic"&&scrollSub[this.room.id]&&this.has(scrollSub[this.room.id])){
    const h=this.own(scrollSub[this.room.id]),card=byId(h.inventory,scrollSub[this.room.id]);
