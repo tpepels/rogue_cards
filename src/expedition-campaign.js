@@ -407,9 +407,9 @@ function monsterRespond(s,h){
   else if(band===2)s.apply("POISON",[],m);else hit({adv:true});break;
  case "sentinel":if(band===0)a.nextDis++;else if(band===1)hit();
   else if(band===2)hit({damageBonus:2});else hit({adv:true});break;
- case "warden":if(band===1)hit();else if(band===2)a.nextDis++;
+ case "warden":if(band===1)s.living().forEach(x=>monsterAttack(s,x));else if(band===2)a.nextDis++;
   else if(band===3)hit({adv:true});break;
- case "warden-fury":if(band===0)hit();else if(band===1)hit({drain:true});
+ case "warden-fury":if(band===0)s.living().forEach(x=>monsterAttack(s,x));else if(band===1)hit({drain:true});
   else if(band===2)s.living().forEach(x=>s.hurt(x,2));else hit({adv:true,damageBonus:2});break;
  default:throw Error("Unimplemented Monster behaviour "+m.id);
  }
@@ -459,10 +459,11 @@ function finishMonsters(s){
  return s.alive();
 }
 function seal(s){
- const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(3,"MAGIC");
+ const cost=s.heroes.length===2?5:3;
+ const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(cost,"MAGIC");
  if(!s.metrics.sealAvailable)return false;
  s.metrics.sealAttempt=true;
- s.discard(3,{tag:"MAGIC"});
+ s.discard(cost,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
  const boon=blessBeforeD20(s,h);
  let atk=rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"});
@@ -488,7 +489,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  }
  if(!s.alive())return report(s);
  s.beginRoom(VAULT);s.roomRoll();
- s.metrics.sealAvailable=s.discardable(3,"MAGIC");
+ s.metrics.sealAvailable=s.discardable(s.heroes.length===2?5:3,"MAGIC");
  const preferSeal=strategy==="seal"||(strategy==="survival"&&
   s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
