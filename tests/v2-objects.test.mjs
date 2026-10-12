@@ -136,3 +136,30 @@ test("Shared properties are used by real Room options, not just decorative tags"
   assert.ok(V2_ROOMS.some(r=>r.id===id&&/FIRE|MAGIC|ALCHEMY|METAL/.test(JSON.stringify(r.v2.choices))),id);
  }
 });
+
+
+test("Named item overrides select a real outcome band on their referenced Room",()=>{
+ const byId=new Map(V2_ROOMS.map(r=>[r.id,r]));
+ const checks=[
+  ["skull","u-puppet","6"],
+  ["scroll-frost","m-flood","6"],
+  ["ring-eye","d-oracle","6"],
+  ["ring-spores","m-fungus","5–6"],
+  ["ring-ashes","u-lamp","5–6"],
+  ["mirror","d-mirror","5–6"]
+ ];
+ for(const [itemId,roomId,band] of checks){
+  const object=V2_ITEMS.find(c=>c.id===itemId),room=byId.get(roomId);
+  assert.ok(object&&room,itemId+" links "+roomId);
+  assert.ok(object.v2.links.includes(roomId),itemId+" missing room reference");
+  assert.ok(room.v2.roll.outcomes.some(o=>o.range===band),roomId+" missing real "+band+" outcome");
+  assert.ok(object.v2.alternative.includes(band),itemId+" does not name "+band);
+ }
+ for(const room of V2_ROOMS){
+  if(room.v2.roll.outcomes.length!==4)continue;
+  for(const choice of room.v2.choices){
+   assert.ok(!/choose 5–6/.test(choice.effect),room.id+" has 5 and 6 separately");
+  }
+ }
+ assert.match(V2_ITEMS.find(c=>c.id==="spore-jar").v2.alternative,/discard/i);
+});
