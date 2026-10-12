@@ -55,6 +55,12 @@ test("Rooms embed interesting interactions, danger and genuinely distinct choice
  assert.ok(all.filter(s=>/POISONED|curse|cursed/i.test(s)).length>=6);
  assert.ok(all.filter(s=>/discard 1 Item|Discard 2 Items/i.test(s)).length>=10);
  assert.ok(all.filter(s=>/heal/i.test(s)).length>=20);
+ assert.ok(V2_ROOMS.filter(r=>r.v2.roll.outcomes.length===4).length>=10,
+  "At least ten Rooms need four-result tables (1–2, 3–4, 5, 6)");
+ assert.ok(V2_ROOMS.filter(r=>r.v2.choices.some(c=>/opposed d20/i.test(c.effect))).length>=4,
+  "Obstacles and NPCs need meaningful opposed d20 rolls");
+ assert.ok(V2_ROOMS.filter(r=>r.v2.choices.some(c=>/roll again|reroll once/i.test(c.effect))).length>=3,
+  "Risky Rooms should allow deliberate push-your-luck rolls");
  assert.ok(V2_ROOMS.filter(r=>r.v2.links.length).length>=25);
  for(const named of ["Rusty Key","Knotted Rope","Pitch Torch","Tunnel Raven","Loyal Hound","Antidote","cursed Items"]){
   assert.ok(V2_ROOMS.some(r=>r.v2.links.includes(named)),named);
