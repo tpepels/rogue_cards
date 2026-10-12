@@ -1335,3 +1335,12 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-card[data-id="d-bones"] .tt-v2-result{
  font-size:9.5px;grid-template-columns:10mm 1fr;gap:.7mm;
 }
+
+/* Uploaded art already contains its halftone and spot-color ink. Do not
+   grayscale or threshold it again: this erased orange, magenta, cyan and green.
+   Retain the existing deterministic paper scratches above the image. */
+.tt-card .tt-art-image{
+ filter:none;
+ -webkit-print-color-adjust:exact;
+ print-color-adjust:exact;
+}

@@ -4,22 +4,52 @@ export {CARD_WIDTH_MM,CARD_HEIGHT_MM};
 export const CARDS_PER_SHEET=4;
 export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-/** Curated art assignments. Assets are part of this repository, and never loaded from an external server.
- * Some illustration subjects represent existing cards with different printed titles:
- * e.g. Abandoned Storeroom illustrates Forgotten Supplies, and the Ironbound Chest
- * illustrates Buried Lockbox. This changes presentation ONLY, not physical rules.
+/** A PNG mapping for every uploaded illustration in assets/illustrations/.
+ * Keep this in sync with the folder: tests fail if uploaded art is not assigned.
+ * Unillustrated cards use the temporary SVG fallback until their PNG exists.
+ * Some legacy images have different filenames from canonical card titles.
  */
 export const CARD_ART=Object.freeze({
  "hero:warrior":"cave_delver.png",
- "monster:eye":"floating_eye.png",
- "item:key":"rusty_key.png",
- "potion:smoky":"smoky_potion.png",
- "room:m-flood":"flooded_chamber.png",
- "room:u-supply":"abandoned_storeroom.png",
+ "hero:knight":"wandering_knight.png",
+ "hero:wizard":"hedge_wizard.png",
+ "hero:witch":"marsh_witch.png",
+ "hero:rogue":"cutpurse.png",
+ "hero:thief":"tunnel_thief.png",
+ "hero:priest":"ash_priest.png",
+ "hero:monk":"roadless_monk.png",
+ "monster:rat":"giant_rat.png",
  "monster:goblin":"goblin_scavenger.png",
+ "monster:crawler":"sewer_crawler.png",
+ "monster:bat":"cave_bat_swarm.png",
+ "monster:troll":"bridge_troll.png",
+ "monster:wisp":"will_o_wisp.png",
+ "monster:eye":"floating_eye.png",
+ "monster:mold":"living_mold.png",
+ "monster:wraith":"restless_shade.png",
+ "monster:sentinel":"iron_sentinel.png",
+ "room:u-passage":"dripping_passage.png",
+ "room:u-gate":"rusty_gate.png",
+ "room:u-supply":"abandoned_storeroom.png",
+ "room:u-nest":"rat_nest.png",
+ "room:u-shrine":"abandoned_shrine.png",
+ "room:u-fall":"collapsing_stairs.png",
+ "room:u-fountain":"laughing_fountain.png",
+ "room:u-merchant":"merchant_in_a_sack.png",
+ "room:u-lamp":"lamp_eater.png",
+ "room:u-puppet":"the_puppet_judge.png",
+ "room:u-bookcase":"bookcase_of_teeth.png",
+ "room:u-mimic":"chest_with_a_pulse.png",
+ "room:m-flood":"flooded_chamber.png",
+ "room:m-statue":"cracked_oracle.png",
  "room:m-vault":"ironbound_chest.png",
+ "room:m-crypt":"opened_crypt.png",
+ "room:m-altar":"candle_altar.png",
  "room:d-oracle":"strange_feeling.png",
- "room:m-statue":"cracked_oracle.png"
+ "item:key":"rusty_key.png",
+ "item:rope":"knotted_rope.png",
+ "item:torch":"pitch_torch.png",
+ "potion:smoky":"smoky_potion.png"
 });
 /** Fixed plate offsets for print reproducibility, not CSS randomness or game state.
  * Identical cards share an intentional slightly imperfect edition mark.
@@ -119,7 +149,7 @@ export function cardMarkup(card){
  return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
   '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
-  '" data-art-status="'+(asset?'original':'placeholder')+
+  '" data-art-file="'+esc(asset||"")+'" data-art-status="'+(asset?'generated':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   label+typeStamp+middle+
   '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {existsSync,readFileSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {HEROES,ROOMS,MONSTERS,ITEMS,POTIONS,OBJECTS,VAULT,WARDEN,WARDEN_FURY,PRINT_DECK,CATALOGUE,ITEM_FAMILIES,CARD_WIDTH_MM,CARD_HEIGHT_MM,catalogue,printDeck} from "../src/tabletop-data.js";
 import {cardMarkup,printSheets,CARDS_PER_SHEET,CARD_ART,assetPath,composition,esc} from "../src/tabletop-view.js";
 const faces=range=>{const [a,b=a]=range.split("–").map(Number);assert.ok(a>=1&&b<=6&&Number.isInteger(a)&&Number.isInteger(b));return Array.from({length:b-a+1},(_,i)=>a+i)};
@@ -103,11 +103,28 @@ test("every physical card prints deterministically with correct images and A4 qu
  }
  assert.equal((printSheets(CATALOGUE).match(/class="tt-sheet"/g)||[]).length,Math.ceil(CATALOGUE.length/4));
  assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
- assert.equal(Object.keys(CARD_ART).length,10);
+ assert.equal(Object.keys(CARD_ART).length,40);
+ const uploaded=readdirSync("assets/illustrations").filter(name=>name.endsWith(".png")).sort();
+ assert.deepEqual(Object.values(CARD_ART).sort(),uploaded,"Each uploaded PNG must be shown on exactly one canonical card");
  for(const [key,name] of Object.entries(CARD_ART)){
   const [type,id]=key.split(":");const card=CATALOGUE.find(c=>c.type===type&&c.id===id);
   assert.ok(card,"Orphaned illustration: "+key);
   assert.ok(existsSync("assets/illustrations/"+name),name);
   assert.ok(assetPath(card)?.includes(name));
  }
+});
+
+test("generated card illustrations retain spot colours in catalogue and print",()=>{
+ const css=readFileSync("styles/tabletop.css","utf8");
+ assert.match(css,/\.tt-card \.tt-art-image\{\s*filter:none;/);
+ for(const card of CATALOGUE.filter(card=>CARD_ART[card.type+":"+card.id])){
+  const markup=cardMarkup(card);
+  assert.match(markup,/tt-has-art/);
+  assert.match(markup,/data-art-status="generated"/);
+  assert.match(markup,/<img class="tt-art-image"/);
+  assert.ok(markup.includes(CARD_ART[card.type+":"+card.id]),card.id);
+ }
+ const fallback=CATALOGUE.find(c=>c.type==="monster"&&c.id==="cultist");
+ assert.ok(fallback&&!assetPath(fallback),"Unuploaded art must not be referenced");
+ assert.match(cardMarkup(fallback),/tt-needs-art/);
 });
