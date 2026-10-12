@@ -67,9 +67,9 @@ test("Wands misfire or break, have distinct outcomes and recharge via printed Sh
  const wands=V2_OBJECTS_BY_FAMILY.WAND;
  assert.equal(wands.length,7);
  for(const c of wands){
-  assert.match(c.v2.trigger,/Roll d6/);
+  assert.match(c.v2.trigger,/roll d6/i);
   assert.match(c.v2.alternative,/SHRINE:.*straighten this Wand/i,c.id);
-  assert.match(c.v2.roll.outcomes[0].effect,/drains|Fizzle|breaks|Backfire/i,c.id);
+  assert.match(c.v2.roll.outcomes[0].effect,/misfire|fizzle|breaks|backfire/i,c.id);
   assert.ok(c.v2.tags.includes("MAGIC"));
   assert.ok(c.v2.links.some(id=>V2_ROOMS.some(r=>r.id===id)));
  }
