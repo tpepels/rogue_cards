@@ -187,6 +187,47 @@ These health changes can affect win rates; pre-change balance reports are
 not post-change difficulty estimates. Printed cards and both simulation
 engines have corresponding changes.
 
+
+## Automated checks after every game change
+
+The push/PR workflow now runs the full mechanical test suite and a
+**deterministic 12,600-expedition comparison** (all eight solo Heroes,
+all 28 two-Hero parties, five strategies, 70 seeds per configuration).
+A JSON report is saved as a GitHub Actions artifact and a summary
+is displayed in the workflow run.
+
+```sh
+npm test
+npm run verify:items
+npm run verify:game -- 70 --compare tests/fixtures/game-baseline.json > game-verification.json
+npm run verify:game -- 1000 > full-game-verification.json
+```
+
+- **Printed Item effects:** tests exercise each of the **133 printed d6 outcome
+  bands** across **43 rolled Objects** and check observable changes to damage,
+  healing, resources, attacks, poison, card exhaustion, and similar operations.
+  All **nine non-dice Objects** have a dedicated equipped/Room/Seal example.
+  Existing tests cover every printed Room choice/die result, basic interaction
+  pairings, once-per-Room constraints, Potion identity, Wand recharge,
+  curses and Warden transitions.
+- **Campaign stability:** unrecoverable effect errors or stalled expeditions
+  fail the verification. The report also shows Item acquisition and activation
+  coverage. An Item with zero activations is not necessarily broken: passive
+  Items have no activate() event.
+- **Change impact:** the repository keeps a reviewed, reproducible
+  `tests/fixtures/game-baseline.json`. Whenever the game changes,
+  the report shows exactly which Hero/strategy win, Vault, Seal or damage
+  figures have changed. Differences are **warnings for review**, not automatic
+  evidence of bugs, and don't block the separate website deployment.
+  After deliberately accepting a balance change, regenerate and review the
+  baseline explicitly; do not overwrite it merely to make the diff disappear.
+
+**Limitations:** These are scripted simulated decisions, not human players.
+Passing proves the tested mechanical contracts hold in those conditions; it
+does **not** prove every free-form interaction, card-text nuance, alternative
+trigger timing or high-order combination is correct, or that Items are balanced.
+Situational cards still need targeted tabletop playtesting.
+
 ## Verification
 
 ```sh

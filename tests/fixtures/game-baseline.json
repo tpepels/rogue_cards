@@ -1,0 +1,1267 @@
+{
+  "seed": 539365394,
+  "runsPerSetup": 70,
+  "commit": "98d967a0f1d2b807b45c8449dcc842cd66952037",
+  "groups": [
+    {
+      "id": "warrior / survival",
+      "won": 39,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 17.629
+    },
+    {
+      "id": "warrior / treasure",
+      "won": 26,
+      "vault": 48,
+      "sealWins": 0,
+      "meanDamage": 22.643
+    },
+    {
+      "id": "warrior / magic",
+      "won": 34,
+      "vault": 58,
+      "sealWins": 0,
+      "meanDamage": 19
+    },
+    {
+      "id": "warrior / seal",
+      "won": 37,
+      "vault": 60,
+      "sealWins": 19,
+      "meanDamage": 17.886
+    },
+    {
+      "id": "warrior / negotiation",
+      "won": 29,
+      "vault": 62,
+      "sealWins": 0,
+      "meanDamage": 19.814
+    },
+    {
+      "id": "knight / survival",
+      "won": 46,
+      "vault": 66,
+      "sealWins": 2,
+      "meanDamage": 17.171
+    },
+    {
+      "id": "knight / treasure",
+      "won": 28,
+      "vault": 56,
+      "sealWins": 0,
+      "meanDamage": 21.843
+    },
+    {
+      "id": "knight / magic",
+      "won": 34,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 19.629
+    },
+    {
+      "id": "knight / seal",
+      "won": 38,
+      "vault": 59,
+      "sealWins": 17,
+      "meanDamage": 17.243
+    },
+    {
+      "id": "knight / negotiation",
+      "won": 38,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 18.457
+    },
+    {
+      "id": "wizard / survival",
+      "won": 18,
+      "vault": 55,
+      "sealWins": 2,
+      "meanDamage": 19.1
+    },
+    {
+      "id": "wizard / treasure",
+      "won": 5,
+      "vault": 26,
+      "sealWins": 0,
+      "meanDamage": 22
+    },
+    {
+      "id": "wizard / magic",
+      "won": 16,
+      "vault": 45,
+      "sealWins": 0,
+      "meanDamage": 20.271
+    },
+    {
+      "id": "wizard / seal",
+      "won": 30,
+      "vault": 50,
+      "sealWins": 22,
+      "meanDamage": 16.614
+    },
+    {
+      "id": "wizard / negotiation",
+      "won": 20,
+      "vault": 56,
+      "sealWins": 0,
+      "meanDamage": 19.471
+    },
+    {
+      "id": "witch / survival",
+      "won": 20,
+      "vault": 60,
+      "sealWins": 1,
+      "meanDamage": 20.857
+    },
+    {
+      "id": "witch / treasure",
+      "won": 14,
+      "vault": 39,
+      "sealWins": 0,
+      "meanDamage": 24.986
+    },
+    {
+      "id": "witch / magic",
+      "won": 15,
+      "vault": 51,
+      "sealWins": 0,
+      "meanDamage": 23.457
+    },
+    {
+      "id": "witch / seal",
+      "won": 31,
+      "vault": 53,
+      "sealWins": 20,
+      "meanDamage": 18.7
+    },
+    {
+      "id": "witch / negotiation",
+      "won": 23,
+      "vault": 58,
+      "sealWins": 0,
+      "meanDamage": 20.729
+    },
+    {
+      "id": "rogue / survival",
+      "won": 31,
+      "vault": 61,
+      "sealWins": 6,
+      "meanDamage": 19.286
+    },
+    {
+      "id": "rogue / treasure",
+      "won": 22,
+      "vault": 41,
+      "sealWins": 0,
+      "meanDamage": 23.643
+    },
+    {
+      "id": "rogue / magic",
+      "won": 25,
+      "vault": 53,
+      "sealWins": 0,
+      "meanDamage": 20.771
+    },
+    {
+      "id": "rogue / seal",
+      "won": 34,
+      "vault": 59,
+      "sealWins": 17,
+      "meanDamage": 18.171
+    },
+    {
+      "id": "rogue / negotiation",
+      "won": 27,
+      "vault": 62,
+      "sealWins": 0,
+      "meanDamage": 20.143
+    },
+    {
+      "id": "thief / survival",
+      "won": 25,
+      "vault": 55,
+      "sealWins": 3,
+      "meanDamage": 19.914
+    },
+    {
+      "id": "thief / treasure",
+      "won": 12,
+      "vault": 37,
+      "sealWins": 0,
+      "meanDamage": 24.343
+    },
+    {
+      "id": "thief / magic",
+      "won": 16,
+      "vault": 49,
+      "sealWins": 0,
+      "meanDamage": 22.914
+    },
+    {
+      "id": "thief / seal",
+      "won": 31,
+      "vault": 53,
+      "sealWins": 19,
+      "meanDamage": 18.871
+    },
+    {
+      "id": "thief / negotiation",
+      "won": 22,
+      "vault": 58,
+      "sealWins": 0,
+      "meanDamage": 20.457
+    },
+    {
+      "id": "priest / survival",
+      "won": 27,
+      "vault": 61,
+      "sealWins": 2,
+      "meanDamage": 20.471
+    },
+    {
+      "id": "priest / treasure",
+      "won": 17,
+      "vault": 37,
+      "sealWins": 0,
+      "meanDamage": 24.329
+    },
+    {
+      "id": "priest / magic",
+      "won": 17,
+      "vault": 50,
+      "sealWins": 0,
+      "meanDamage": 22.2
+    },
+    {
+      "id": "priest / seal",
+      "won": 33,
+      "vault": 54,
+      "sealWins": 20,
+      "meanDamage": 19.143
+    },
+    {
+      "id": "priest / negotiation",
+      "won": 23,
+      "vault": 58,
+      "sealWins": 0,
+      "meanDamage": 21.4
+    },
+    {
+      "id": "monk / survival",
+      "won": 27,
+      "vault": 57,
+      "sealWins": 1,
+      "meanDamage": 21.9
+    },
+    {
+      "id": "monk / treasure",
+      "won": 16,
+      "vault": 39,
+      "sealWins": 0,
+      "meanDamage": 24.871
+    },
+    {
+      "id": "monk / magic",
+      "won": 16,
+      "vault": 48,
+      "sealWins": 0,
+      "meanDamage": 23.086
+    },
+    {
+      "id": "monk / seal",
+      "won": 27,
+      "vault": 53,
+      "sealWins": 12,
+      "meanDamage": 19.914
+    },
+    {
+      "id": "monk / negotiation",
+      "won": 26,
+      "vault": 61,
+      "sealWins": 0,
+      "meanDamage": 20.829
+    },
+    {
+      "id": "warrior+knight / survival",
+      "won": 62,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 22.986
+    },
+    {
+      "id": "warrior+knight / treasure",
+      "won": 58,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 29.971
+    },
+    {
+      "id": "warrior+knight / magic",
+      "won": 60,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 26.929
+    },
+    {
+      "id": "warrior+knight / seal",
+      "won": 63,
+      "vault": 70,
+      "sealWins": 7,
+      "meanDamage": 25.5
+    },
+    {
+      "id": "warrior+knight / negotiation",
+      "won": 65,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 23.143
+    },
+    {
+      "id": "warrior+wizard / survival",
+      "won": 56,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 28.329
+    },
+    {
+      "id": "warrior+wizard / treasure",
+      "won": 43,
+      "vault": 62,
+      "sealWins": 0,
+      "meanDamage": 34.343
+    },
+    {
+      "id": "warrior+wizard / magic",
+      "won": 52,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 28.129
+    },
+    {
+      "id": "warrior+wizard / seal",
+      "won": 52,
+      "vault": 69,
+      "sealWins": 11,
+      "meanDamage": 25.686
+    },
+    {
+      "id": "warrior+wizard / negotiation",
+      "won": 55,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 26.743
+    },
+    {
+      "id": "warrior+witch / survival",
+      "won": 52,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 28.714
+    },
+    {
+      "id": "warrior+witch / treasure",
+      "won": 43,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 35.871
+    },
+    {
+      "id": "warrior+witch / magic",
+      "won": 46,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 32.4
+    },
+    {
+      "id": "warrior+witch / seal",
+      "won": 52,
+      "vault": 66,
+      "sealWins": 13,
+      "meanDamage": 27.543
+    },
+    {
+      "id": "warrior+witch / negotiation",
+      "won": 58,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 28.986
+    },
+    {
+      "id": "warrior+rogue / survival",
+      "won": 62,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 27.614
+    },
+    {
+      "id": "warrior+rogue / treasure",
+      "won": 49,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 35.329
+    },
+    {
+      "id": "warrior+rogue / magic",
+      "won": 51,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 31.129
+    },
+    {
+      "id": "warrior+rogue / seal",
+      "won": 56,
+      "vault": 70,
+      "sealWins": 9,
+      "meanDamage": 27.271
+    },
+    {
+      "id": "warrior+rogue / negotiation",
+      "won": 61,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 27.629
+    },
+    {
+      "id": "warrior+thief / survival",
+      "won": 56,
+      "vault": 69,
+      "sealWins": 1,
+      "meanDamage": 29.386
+    },
+    {
+      "id": "warrior+thief / treasure",
+      "won": 51,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 35.2
+    },
+    {
+      "id": "warrior+thief / magic",
+      "won": 51,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 32
+    },
+    {
+      "id": "warrior+thief / seal",
+      "won": 58,
+      "vault": 70,
+      "sealWins": 23,
+      "meanDamage": 24.086
+    },
+    {
+      "id": "warrior+thief / negotiation",
+      "won": 61,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 27.986
+    },
+    {
+      "id": "warrior+priest / survival",
+      "won": 58,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 28.8
+    },
+    {
+      "id": "warrior+priest / treasure",
+      "won": 49,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 34.786
+    },
+    {
+      "id": "warrior+priest / magic",
+      "won": 50,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 35
+    },
+    {
+      "id": "warrior+priest / seal",
+      "won": 53,
+      "vault": 68,
+      "sealWins": 16,
+      "meanDamage": 27.971
+    },
+    {
+      "id": "warrior+priest / negotiation",
+      "won": 57,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 29.371
+    },
+    {
+      "id": "warrior+monk / survival",
+      "won": 58,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 26.229
+    },
+    {
+      "id": "warrior+monk / treasure",
+      "won": 42,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 36.286
+    },
+    {
+      "id": "warrior+monk / magic",
+      "won": 50,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 31.657
+    },
+    {
+      "id": "warrior+monk / seal",
+      "won": 55,
+      "vault": 69,
+      "sealWins": 7,
+      "meanDamage": 29.514
+    },
+    {
+      "id": "warrior+monk / negotiation",
+      "won": 57,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 28.386
+    },
+    {
+      "id": "knight+wizard / survival",
+      "won": 56,
+      "vault": 68,
+      "sealWins": 1,
+      "meanDamage": 26.043
+    },
+    {
+      "id": "knight+wizard / treasure",
+      "won": 49,
+      "vault": 63,
+      "sealWins": 0,
+      "meanDamage": 33.257
+    },
+    {
+      "id": "knight+wizard / magic",
+      "won": 54,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 30.386
+    },
+    {
+      "id": "knight+wizard / seal",
+      "won": 59,
+      "vault": 70,
+      "sealWins": 18,
+      "meanDamage": 23.9
+    },
+    {
+      "id": "knight+wizard / negotiation",
+      "won": 48,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 27.514
+    },
+    {
+      "id": "knight+witch / survival",
+      "won": 48,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 31.186
+    },
+    {
+      "id": "knight+witch / treasure",
+      "won": 51,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 35.686
+    },
+    {
+      "id": "knight+witch / magic",
+      "won": 53,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 31.386
+    },
+    {
+      "id": "knight+witch / seal",
+      "won": 52,
+      "vault": 69,
+      "sealWins": 17,
+      "meanDamage": 26.943
+    },
+    {
+      "id": "knight+witch / negotiation",
+      "won": 49,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 30.229
+    },
+    {
+      "id": "knight+rogue / survival",
+      "won": 57,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 28.671
+    },
+    {
+      "id": "knight+rogue / treasure",
+      "won": 45,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 33.386
+    },
+    {
+      "id": "knight+rogue / magic",
+      "won": 57,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 28.271
+    },
+    {
+      "id": "knight+rogue / seal",
+      "won": 54,
+      "vault": 70,
+      "sealWins": 10,
+      "meanDamage": 25.6
+    },
+    {
+      "id": "knight+rogue / negotiation",
+      "won": 60,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 26.871
+    },
+    {
+      "id": "knight+thief / survival",
+      "won": 57,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 27.3
+    },
+    {
+      "id": "knight+thief / treasure",
+      "won": 44,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 35.414
+    },
+    {
+      "id": "knight+thief / magic",
+      "won": 54,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 33.343
+    },
+    {
+      "id": "knight+thief / seal",
+      "won": 62,
+      "vault": 70,
+      "sealWins": 28,
+      "meanDamage": 24.2
+    },
+    {
+      "id": "knight+thief / negotiation",
+      "won": 55,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 29.371
+    },
+    {
+      "id": "knight+priest / survival",
+      "won": 55,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 29.671
+    },
+    {
+      "id": "knight+priest / treasure",
+      "won": 45,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 34.243
+    },
+    {
+      "id": "knight+priest / magic",
+      "won": 54,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 32.614
+    },
+    {
+      "id": "knight+priest / seal",
+      "won": 58,
+      "vault": 69,
+      "sealWins": 17,
+      "meanDamage": 26.143
+    },
+    {
+      "id": "knight+priest / negotiation",
+      "won": 57,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 28.257
+    },
+    {
+      "id": "knight+monk / survival",
+      "won": 52,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 29.1
+    },
+    {
+      "id": "knight+monk / treasure",
+      "won": 51,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 35.886
+    },
+    {
+      "id": "knight+monk / magic",
+      "won": 52,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 32.271
+    },
+    {
+      "id": "knight+monk / seal",
+      "won": 51,
+      "vault": 70,
+      "sealWins": 8,
+      "meanDamage": 30.043
+    },
+    {
+      "id": "knight+monk / negotiation",
+      "won": 54,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 28.186
+    },
+    {
+      "id": "wizard+witch / survival",
+      "won": 48,
+      "vault": 68,
+      "sealWins": 1,
+      "meanDamage": 30.471
+    },
+    {
+      "id": "wizard+witch / treasure",
+      "won": 38,
+      "vault": 63,
+      "sealWins": 0,
+      "meanDamage": 37.571
+    },
+    {
+      "id": "wizard+witch / magic",
+      "won": 40,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 34.571
+    },
+    {
+      "id": "wizard+witch / seal",
+      "won": 49,
+      "vault": 68,
+      "sealWins": 16,
+      "meanDamage": 28.086
+    },
+    {
+      "id": "wizard+witch / negotiation",
+      "won": 50,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 30.886
+    },
+    {
+      "id": "wizard+rogue / survival",
+      "won": 48,
+      "vault": 69,
+      "sealWins": 2,
+      "meanDamage": 30.486
+    },
+    {
+      "id": "wizard+rogue / treasure",
+      "won": 36,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 36.514
+    },
+    {
+      "id": "wizard+rogue / magic",
+      "won": 47,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 31.643
+    },
+    {
+      "id": "wizard+rogue / seal",
+      "won": 50,
+      "vault": 70,
+      "sealWins": 11,
+      "meanDamage": 29.257
+    },
+    {
+      "id": "wizard+rogue / negotiation",
+      "won": 49,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 29.1
+    },
+    {
+      "id": "wizard+thief / survival",
+      "won": 52,
+      "vault": 68,
+      "sealWins": 1,
+      "meanDamage": 29.7
+    },
+    {
+      "id": "wizard+thief / treasure",
+      "won": 27,
+      "vault": 60,
+      "sealWins": 0,
+      "meanDamage": 39.229
+    },
+    {
+      "id": "wizard+thief / magic",
+      "won": 44,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 33.457
+    },
+    {
+      "id": "wizard+thief / seal",
+      "won": 58,
+      "vault": 70,
+      "sealWins": 35,
+      "meanDamage": 24.171
+    },
+    {
+      "id": "wizard+thief / negotiation",
+      "won": 52,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 28.9
+    },
+    {
+      "id": "wizard+priest / survival",
+      "won": 43,
+      "vault": 69,
+      "sealWins": 1,
+      "meanDamage": 32.657
+    },
+    {
+      "id": "wizard+priest / treasure",
+      "won": 37,
+      "vault": 62,
+      "sealWins": 0,
+      "meanDamage": 37.771
+    },
+    {
+      "id": "wizard+priest / magic",
+      "won": 47,
+      "vault": 63,
+      "sealWins": 0,
+      "meanDamage": 34.471
+    },
+    {
+      "id": "wizard+priest / seal",
+      "won": 50,
+      "vault": 68,
+      "sealWins": 21,
+      "meanDamage": 28.5
+    },
+    {
+      "id": "wizard+priest / negotiation",
+      "won": 46,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 30.029
+    },
+    {
+      "id": "wizard+monk / survival",
+      "won": 50,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 31.229
+    },
+    {
+      "id": "wizard+monk / treasure",
+      "won": 35,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 37.629
+    },
+    {
+      "id": "wizard+monk / magic",
+      "won": 44,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 33.657
+    },
+    {
+      "id": "wizard+monk / seal",
+      "won": 50,
+      "vault": 68,
+      "sealWins": 9,
+      "meanDamage": 29.757
+    },
+    {
+      "id": "wizard+monk / negotiation",
+      "won": 57,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 27.6
+    },
+    {
+      "id": "witch+rogue / survival",
+      "won": 52,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 31.543
+    },
+    {
+      "id": "witch+rogue / treasure",
+      "won": 37,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 39.671
+    },
+    {
+      "id": "witch+rogue / magic",
+      "won": 44,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 34.586
+    },
+    {
+      "id": "witch+rogue / seal",
+      "won": 41,
+      "vault": 69,
+      "sealWins": 6,
+      "meanDamage": 33.329
+    },
+    {
+      "id": "witch+rogue / negotiation",
+      "won": 44,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 32
+    },
+    {
+      "id": "witch+thief / survival",
+      "won": 45,
+      "vault": 68,
+      "sealWins": 1,
+      "meanDamage": 34.457
+    },
+    {
+      "id": "witch+thief / treasure",
+      "won": 39,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 40.857
+    },
+    {
+      "id": "witch+thief / magic",
+      "won": 42,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 38.643
+    },
+    {
+      "id": "witch+thief / seal",
+      "won": 53,
+      "vault": 70,
+      "sealWins": 30,
+      "meanDamage": 26.514
+    },
+    {
+      "id": "witch+thief / negotiation",
+      "won": 48,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 31.771
+    },
+    {
+      "id": "witch+priest / survival",
+      "won": 45,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 34.614
+    },
+    {
+      "id": "witch+priest / treasure",
+      "won": 40,
+      "vault": 61,
+      "sealWins": 0,
+      "meanDamage": 40.014
+    },
+    {
+      "id": "witch+priest / magic",
+      "won": 41,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 37.1
+    },
+    {
+      "id": "witch+priest / seal",
+      "won": 50,
+      "vault": 70,
+      "sealWins": 19,
+      "meanDamage": 30.6
+    },
+    {
+      "id": "witch+priest / negotiation",
+      "won": 46,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 34.986
+    },
+    {
+      "id": "witch+monk / survival",
+      "won": 48,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 34.4
+    },
+    {
+      "id": "witch+monk / treasure",
+      "won": 44,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 40.857
+    },
+    {
+      "id": "witch+monk / magic",
+      "won": 47,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 35.329
+    },
+    {
+      "id": "witch+monk / seal",
+      "won": 47,
+      "vault": 69,
+      "sealWins": 8,
+      "meanDamage": 32.514
+    },
+    {
+      "id": "witch+monk / negotiation",
+      "won": 51,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 32.371
+    },
+    {
+      "id": "rogue+thief / survival",
+      "won": 49,
+      "vault": 67,
+      "sealWins": 1,
+      "meanDamage": 32.071
+    },
+    {
+      "id": "rogue+thief / treasure",
+      "won": 41,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 38.3
+    },
+    {
+      "id": "rogue+thief / magic",
+      "won": 40,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 36.043
+    },
+    {
+      "id": "rogue+thief / seal",
+      "won": 59,
+      "vault": 69,
+      "sealWins": 29,
+      "meanDamage": 24.114
+    },
+    {
+      "id": "rogue+thief / negotiation",
+      "won": 46,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 30.671
+    },
+    {
+      "id": "rogue+priest / survival",
+      "won": 42,
+      "vault": 67,
+      "sealWins": 0,
+      "meanDamage": 31.971
+    },
+    {
+      "id": "rogue+priest / treasure",
+      "won": 37,
+      "vault": 63,
+      "sealWins": 0,
+      "meanDamage": 39.129
+    },
+    {
+      "id": "rogue+priest / magic",
+      "won": 37,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 36.429
+    },
+    {
+      "id": "rogue+priest / seal",
+      "won": 52,
+      "vault": 70,
+      "sealWins": 16,
+      "meanDamage": 30.414
+    },
+    {
+      "id": "rogue+priest / negotiation",
+      "won": 49,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 31.743
+    },
+    {
+      "id": "rogue+monk / survival",
+      "won": 46,
+      "vault": 67,
+      "sealWins": 1,
+      "meanDamage": 31.671
+    },
+    {
+      "id": "rogue+monk / treasure",
+      "won": 35,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 39.443
+    },
+    {
+      "id": "rogue+monk / magic",
+      "won": 43,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 34.714
+    },
+    {
+      "id": "rogue+monk / seal",
+      "won": 52,
+      "vault": 70,
+      "sealWins": 11,
+      "meanDamage": 29.271
+    },
+    {
+      "id": "rogue+monk / negotiation",
+      "won": 52,
+      "vault": 70,
+      "sealWins": 0,
+      "meanDamage": 31.171
+    },
+    {
+      "id": "thief+priest / survival",
+      "won": 42,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 35.4
+    },
+    {
+      "id": "thief+priest / treasure",
+      "won": 33,
+      "vault": 63,
+      "sealWins": 0,
+      "meanDamage": 41.557
+    },
+    {
+      "id": "thief+priest / magic",
+      "won": 39,
+      "vault": 65,
+      "sealWins": 0,
+      "meanDamage": 39.071
+    },
+    {
+      "id": "thief+priest / seal",
+      "won": 47,
+      "vault": 70,
+      "sealWins": 24,
+      "meanDamage": 29.229
+    },
+    {
+      "id": "thief+priest / negotiation",
+      "won": 52,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 32.4
+    },
+    {
+      "id": "thief+monk / survival",
+      "won": 42,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 33.271
+    },
+    {
+      "id": "thief+monk / treasure",
+      "won": 32,
+      "vault": 62,
+      "sealWins": 0,
+      "meanDamage": 40.171
+    },
+    {
+      "id": "thief+monk / magic",
+      "won": 38,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 38.529
+    },
+    {
+      "id": "thief+monk / seal",
+      "won": 50,
+      "vault": 69,
+      "sealWins": 22,
+      "meanDamage": 28.886
+    },
+    {
+      "id": "thief+monk / negotiation",
+      "won": 49,
+      "vault": 69,
+      "sealWins": 0,
+      "meanDamage": 33.343
+    },
+    {
+      "id": "priest+monk / survival",
+      "won": 46,
+      "vault": 68,
+      "sealWins": 0,
+      "meanDamage": 34.086
+    },
+    {
+      "id": "priest+monk / treasure",
+      "won": 36,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 40.329
+    },
+    {
+      "id": "priest+monk / magic",
+      "won": 38,
+      "vault": 64,
+      "sealWins": 0,
+      "meanDamage": 36.4
+    },
+    {
+      "id": "priest+monk / seal",
+      "won": 47,
+      "vault": 68,
+      "sealWins": 16,
+      "meanDamage": 30.514
+    },
+    {
+      "id": "priest+monk / negotiation",
+      "won": 39,
+      "vault": 66,
+      "sealWins": 0,
+      "meanDamage": 35.943
+    }
+  ]
+}

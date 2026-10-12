@@ -27,6 +27,21 @@ jobs:
           npm run balance:baseline -- 120
       - name: Compare complete-effect strategies across solo and cooperative expeditions
         run: npm run balance -- 2000
+      - name: Verify all Item behaviors and compare whole-game outcomes
+        run: npm run verify:game -- 70 --compare tests/fixtures/game-baseline.json > game-verification.json
+      - name: Summarize mechanical checks and balance drift
+        if: always()
+        run: |
+          if [ -f game-verification.json ]; then
+            node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync("game-verification.json"));const rows=["## Rogue Cards verification","Expeditions: "+r.totals.expeditions,"Unresolved effects: "+r.totals.unresolvedEffects,"Stalls: "+r.totals.stalledExpeditions,"Baseline groups changed: "+(r.comparison?.changedGroups??"N/A"),"Solo win rate: "+(100*r.soloWinRate).toFixed(1)+"%","Duo win rate: "+(100*r.duoWinRate).toFixed(1)+"%"];fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n\n")+"\n");'
+          fi
+      - name: Upload per-edit whole-game verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whole-game-verification
+          path: game-verification.json
+          if-no-files-found: ignore
       - name: Verify physical card print, A4 and responsive preview
         run: npm run test:visual
       - name: Upload browser report on failure
