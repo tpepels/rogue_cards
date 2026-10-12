@@ -25,6 +25,8 @@ jobs:
         run: |
           npm run audit
           npm run balance -- 120
+      - name: Compare complete-effect strategies across solo and cooperative expeditions
+        run: npm run balance:full -- 400
       - name: Verify physical card print, A4 and responsive preview
         run: npm run test:visual
       - name: Upload browser report on failure
