@@ -39,7 +39,7 @@ export class ExpeditionState {
    const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
     nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,nextDefenseAdv:false,nextDefenseBonus:0,
-    damageVulnerability:0,scouting:0,kept:[],alive:true};
+    damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
   this.deck=copyDeck(this.rng,OBJECTS);
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s)).slice(0,3)]));
@@ -140,16 +140,19 @@ export class ExpeditionState {
   this.metrics.spent++;}
  beginRoom(room){
   this.room=room;this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
-  this.pendingFightHeal=null;this.trapGuard=false;this.extraMonsterAdv=false;
+  this.pendingFightHeal=null;this.extraMonsterAdv=false;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites.clear();
   this.heroes.forEach(h=>{
-   h.used.clear();h.immune=false;h.poison=false;h.nextAdv=0;h.nextDis=0;
-   h.nextAtk=0;h.nextDamage=0;h.damageVulnerability=0;
-   h.nextDefenseAdv=false;
+   h.used.clear();h.immune=false;h.poison=false;
+   // NEXT effects stay on the card/hero until consumed, even across Rooms.
+   h.damageVulnerability=0;
   });
  }
  endRoom(){
-  this.heroes.forEach(h=>{h.poison=false;h.immune=false;h.used.clear();});
+  this.heroes.forEach(h=>{
+   h.poison=false;h.immune=false;h.used.clear();
+   if(h.defDuration>0&&--h.defDuration===0)h.nextDefenseBonus=0;
+  });
   this.monster=null;this.monsterHP=0;
  }
  nextMonster(region=this.room?.stage){
@@ -219,7 +222,13 @@ export class ExpeditionState {
   case "HURT":this.hurt(h,n());return;
   case "HEAL":this.heal(h,n());return;
   case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n());return;
-  case "POISON":if(!h.immune)h.poison=true;return;
+  case "POISON":if(!h.immune){
+    const moth=h.slots.companion?.id==="moth";
+    if(moth&&this.room?.id==="m-fungus"&&!h.used.has("moth-garden")){
+      h.used.add("moth-garden");return;
+    }
+    h.poison=true;
+   }return;
   case "CURE":h.poison=false;return;
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
@@ -285,7 +294,7 @@ export class ExpeditionState {
   case "SAVE_TRAP":this.trapGuard=true;return;
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
   case "SAVE_D20_REROLL":h.kept.push("reroll");return;
-  case "SAVE_DEF":h.nextDefenseBonus+=n();return;
+  case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;return;
   case "ROLL_ROOM":this.roomRoll();return;
   case "ROLL_ROOM_RISK":this.roomRoll({risk:"2"});return;
   case "ROLL_ROOM_RISK_D6":this.roomRoll({risk:"d6"});return;
@@ -393,6 +402,12 @@ export class ExpeditionState {
   if(owner){this.activate(owner,owner.slots.ring);face=this.pendingRoomFace;}
   this.pendingRoomFace=null;
   const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
+  // A kept Reliquary can ignore one printed trap, then must be discarded.
+  const traps={"u-gate":[0],"u-fall":[0,1],"u-mimic":[0],"m-vault":[0],
+   "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0]};
+  if(this.trapGuard&&traps[this.room.id]?.includes(band)){
+   this.trapGuard=false;return;
+  }
   this.metrics.cardCounts[this.room.id]=(this.metrics.cardCounts[this.room.id]||0)+1;
   for(const op of ops){const [name,...args]=op.split(":");this.apply(name,args,this.room);}
  }
