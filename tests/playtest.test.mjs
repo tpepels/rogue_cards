@@ -3,9 +3,14 @@ import assert from "node:assert/strict";
 import {HEROES,ROOMS,MONSTERS,OBJECTS,WARDEN,WARDEN_FURY,VAULT} from "../src/tabletop-data.js";
 import {
  MODEL_VERSION,MONSTER_IDS,randomSource,outcome,d20Attack,opposedWit,
- simulateExpedition,simulateBatch,effectiveStats
+ simulateExpedition,simulateBatch,effectiveStats,verifyPrintedData,REVIEWED_CARD_HASHES
 } from "../src/playtest.js";
 
+test("the partial simulator detects drift in the reviewed physical card source",()=>{
+ assert.equal(verifyPrintedData(),true);
+ assert.deepEqual(Object.keys(REVIEWED_CARD_HASHES).sort(),["heroes","monsters","objects","rooms","warden"]);
+ for(const value of Object.values(REVIEWED_CARD_HASHES))assert.match(value,/^[0-9a-f]{8}$/);
+});
 test("seeded die generator and full printed d6 intervals are deterministic",()=>{
  const a=randomSource(2026),b=randomSource(2026);
  assert.deepEqual(Array.from({length:200},()=>a.die(20)),Array.from({length:200},()=>b.die(20)));
