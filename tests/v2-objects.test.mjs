@@ -68,6 +68,7 @@ test("Wands misfire or break, have distinct outcomes and recharge via printed Sh
  assert.equal(wands.length,7);
  for(const c of wands){
   assert.match(c.v2.trigger,/roll d6/i);
+  assert.match(c.v2.trigger,/turn sideways|recharges it/i,c.id);
   assert.match(c.v2.alternative,/SHRINE:.*straighten this Wand/i,c.id);
   assert.match(c.v2.roll.outcomes[0].effect,/misfire|fizzle|breaks|backfire/i,c.id);
   assert.ok(c.v2.tags.includes("MAGIC"));
@@ -103,8 +104,6 @@ test("Items genuinely connect to V2 Room IDs and familiar Room-named tools survi
  assert.ok(linkedRooms.size>=26,"too few Rooms referenced by the Objects");
  const names=new Set(V2_OBJECTS.map(c=>c.title));
  for(const name of ["Rusty Key","Knotted Rope","Pitch Torch","Loyal Hound","Tunnel Raven","Antidote"]){
-  // Antidote is a legacy room dependency, and must be present in V2's successor suite.
-  if(name==="Antidote")continue;
   assert.ok(names.has(name),"Room's named Item needs a direct V2 successor: "+name);
  }
  assert.ok(V2_OBJECTS.some(c=>c.v2.tags.includes("ALCHEMY")&&/POISONED/.test(JSON.stringify(c.v2))));
@@ -121,5 +120,19 @@ test("All 52 physical cards render, 4 per A4 with deterministic titles, no arbit
   assert.match(html,/data-assembly="collage"/);
   assert.ok(html.includes('data-v2-kind="'+c.v2.kind+'"'),c.id);
   assert.ok(html.includes('No. '+String(c.v2.number).padStart(2,"0")),c.id);
+ }
+});
+
+
+test("Shared properties are used by real Room options, not just decorative tags",()=>{
+ const triggers=V2_ROOMS.flatMap(r=>r.v2.choices.map(x=>x.effect));
+ for(const tag of ["FIRE","MAGIC","METAL","ALCHEMY"]){
+  assert.ok(V2_OBJECTS.filter(c=>c.v2.tags.includes(tag)).length>=2,tag);
+  assert.ok(triggers.filter(t=>t.includes(tag)).length>=1,tag+" never appears as a real Room interaction");
+ }
+ const fireRooms=V2_ROOMS.filter(r=>r.v2.choices.some(c=>c.effect.includes("FIRE")));
+ assert.ok(fireRooms.length>=3);
+ for(const id of ["u-lamp","m-fungus","d-choir","u-fountain","m-auction","m-beetle","d-reliquary","d-mirror"]){
+  assert.ok(V2_ROOMS.some(r=>r.id===id&&/FIRE|MAGIC|ALCHEMY|METAL/.test(JSON.stringify(r.v2.choices))),id);
  }
 });
