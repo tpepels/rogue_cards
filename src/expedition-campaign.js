@@ -351,11 +351,14 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  s.pendingDamage=damage;
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour))
   s.activate(h,h.slots.armour);
- if(h.card.id==="knight"&&!h.used.has("hero")){
-  h.used.add("hero");const d=s.die();
-  if(d<=2)s.pendingDamage=2;
-  else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
-  else s.pendingDamage=0;
+ const knight=s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero"));
+ if(knight){
+  knight.used.add("hero");const d=s.die();
+  if(d<=2){
+   if(knight===h)s.pendingDamage=2;
+   else{s.hurt(knight,2);s.pendingDamage=0;}
+  } else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
+  else{s.pendingDamage=0;s.forcedBehavior=1;}
  }
  const done=s.hurt(h,s.pendingDamage);
  if(poison&&done>0&&!h.immune)h.poison=true;
@@ -370,17 +373,18 @@ function monsterRespond(s,h){
  if(m.id==="rat"&&s.anyEquippedTag("BEAST")&&face===6)face=1;
  if(m.id==="goblin"&&s.has("goblin-pet")&&face===6)face=1;
  if(m.id==="bat"&&s.anyEquippedTag("FIRE")&&face===6)face=1;
- if(m.id==="eye"&&s.has("ring-eye")&&face===6)face=1;
+ if(m.id==="eye"&&s.heroes.some(x=>s.equipped(x,"ring-eye"))&&face===6)face=1;
  if(m.id==="mold"&&s.anyEquippedTag("FIRE")&&face===6)face=1;
  if(m.id==="wraith"&&s.anyEquippedTag("MAGIC")&&face===5)face=1;
  if(m.id==="rust"&&!s.anyEquippedTag("METAL")&&face===5)face=1;
  const a=h.hp>0?h:s.chooseActor();s.setActor(a);
  // Monk may transform the revealed monster result BEFORE the result happens.
- if(a.card.id==="monk"&&!a.used.has("hero")){
-  a.used.add("hero");const d=s.die();
-  if(d<=2)s.hurt(a,2);
+ const monk=s.living().find(x=>x.card.id==="monk"&&!x.used.has("hero"));
+ if(monk){
+  monk.used.add("hero");const d=s.die();
+  if(d<=2)s.hurt(monk,2);
   else if(d<=4&&face>=5)face=4;
-  else if(d>=5){face=1;s.heal(a,2);}
+  else if(d>=5){face=1;s.heal(monk,2);}
  }
  const band=face<=2?0:face<=4?1:face===5?2:3;
  const hit=(o={})=>monsterAttack(s,a,o);
@@ -396,7 +400,10 @@ function monsterRespond(s,h){
  case "wisp":if(band===0)a.nextDis++;else if(band===1)hit();
   else if(band===2)s.hurt(a,2);else hit({adv:true});break;
  case "eye":if(band===1)hit({bonus:2-m.atk});
-  else if(band===2){if(!s.has("raven"))a.nextDis++;}else if(band===3)hit({adv:true});break;
+  else if(band===2){
+   const raven=s.living().find(x=>s.equipped(x,"raven")&&!x.used.has("raven-freeze"));
+   if(raven)raven.used.add("raven-freeze");else a.nextDis++;
+  }else if(band===3)hit({adv:true});break;
  case "mold":if(band===0)a.nextDis++;else if(band===1)s.apply("POISON",[],m);
   else if(band===2)hit();else hit({adv:true});break;
  case "wraith":if(band===0)a.nextDis++;else if(band===1)hit();
