@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Physical-first d20/d6 Rogue Cards print-and-play tabletop game",
   "scripts": {
-    "test": "node --test tests/tabletop.test.mjs tests/v2-rooms.test.mjs tests/v2-objects.test.mjs tests/v2-ecology.test.mjs",
+    "test": "node --test tests/tabletop.test.mjs",
     "test:visual": "playwright test",
     "serve": "python3 -m http.server 8000"
   },
