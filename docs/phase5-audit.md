@@ -98,3 +98,11 @@ npm run test:visual
 Before saying the game is fully balanced, verify interaction parity against real card reads and representative **solo and co-op tabletop sessions**, especially Crown-of-Rehearsals/seal decisions, multi-Hero targeting, high-value magic conversions, late-dungeon consumable availability, resource loops, and the large solo-versus-duo performance gap. Record session outcomes and perceived decision quality. Then make a targeted final balance pass and physical print proof.
 
 Do **not** add website sections or new cards to compensate for incomplete validation; retain the one-A4 rules limit.
+
+## Post-d20 HP causal balance experiments
+
+The `scripts/post-hp-study.mjs` experiments use revised HP values,
+paired seeds, legal Room alternatives, per-Hero Item effects, and
+simulator-only PARLEY/SEAL strategy ablations. Experimental PARLEY is
+opt-in and defaults to false. Card text and normal strategy behavior
+remain unchanged.

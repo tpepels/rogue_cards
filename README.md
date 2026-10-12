@@ -228,6 +228,39 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Post-d20 HP balance study
+
+The post-health-revision research runs on the **current canonical deck**,
+not the earlier per-card figures measured at commit 276e9c9.
+
+Three reproducible studies are available:
+
+```sh
+npm run study:items -- 200 > post-hp-items.json
+npm run study:rooms -- 200 > post-hp-rooms.json
+npm run study:strategies -- 400 > post-hp-strategies.json
+```
+
+- **Items:** one extra existing Item moved from the deck into the starting
+  hand, for all 52 Items, eight solo Heroes and four two-Hero parties,
+  under Survival, Magic and Seal. Per-Hero comparisons show whether
+  Knight, Wizard, and others benefit differently from each Item.
+- **Rooms:** compares both options for every regional Room only where
+  both are legal, verifying equal HP, inventory and Monster at the choice.
+- **Strategies:** five policies across all solo Heroes and 28 pairs.
+  For Magic and Treasure, separately tries **Monster PARLEY**, the
+  **affordable Vault SEAL**, and **both together**, on paired seeds.
+
+The GitHub Actions workflow **Post-HP card and policy research** runs
+all three studies on its triggering push and can be manually dispatched.
+It uploads the complete JSON results as separate artifacts. The
+research-only `researchAllowParley` flag defaults to false and does not
+change the printed game or normal simulator behavior.
+
+These results are strategy-dependent. Approximate confidence intervals
+are uncorrected for multiple comparisons; consider playtests before
+declaring Items or Room options intrinsically strong or weak.
+
 ## Verification
 
 ```sh

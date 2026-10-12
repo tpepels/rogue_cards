@@ -1,0 +1,60 @@
+name: Post-HP card and policy research
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/post-hp-study.mjs"
+      - ".github/workflows/post-hp-study.yml"
+
+jobs:
+  study:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: items
+            runs: 200
+          - mode: rooms
+            runs: 200
+          - mode: strategies
+            runs: 400
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Simulate current game on paired seeds
+        run: node scripts/post-hp-study.mjs ${{ matrix.mode }} ${{ matrix.runs }} > post-hp-${{ matrix.mode }}.json
+      - name: Print compact findings
+        run: |
+          node - <<'NODE'
+          const fs=require("node:fs");
+          const r=JSON.parse(fs.readFileSync("post-hp-${{ matrix.mode }}.json"));
+          const out=["## Post-HP "+r.mode+" results",
+            "Commit: "+r.commit,"Expeditions: "+r.simulations,
+            "Errors: "+r.unresolved+"; stalls: "+r.stalls];
+          if(r.results){
+            const rank=[...r.results].filter(x=>x.overall.n>=100)
+              .sort((a,b)=>b.overall.winDelta-a.overall.winDelta);
+            for(const row of rank.slice(0,7))out.push("+ "+row.id+": "+(100*row.overall.winDelta).toFixed(2)+"pp, n="+row.overall.n);
+            for(const row of rank.slice(-7))out.push("- "+row.id+": "+(100*row.overall.winDelta).toFixed(2)+"pp, n="+row.overall.n);
+          } else {
+            for(const s of ["magic","treasure"]){
+              for(const n of ["solo","duo"]){
+                const x=r.interventions[s].groups[n];
+                out.push(s+" "+n+": seal "+(100*x.seal.winDelta).toFixed(2)+"pp, parley "+(100*x.parley.winDelta).toFixed(2)+"pp, both "+(100*x.both.winDelta).toFixed(2)+"pp");
+              }
+            }
+          }
+          console.log(out.join("\n"));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out.join("\n\n")+"\n");
+          NODE
+      - name: Preserve full analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-hp-${{ matrix.mode }}
+          path: post-hp-${{ matrix.mode }}.json
+          retention-days: 90

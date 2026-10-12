@@ -166,7 +166,7 @@ function actRoom(s){
 }
 // Deliberately require the printed parley cost/roll, and never grant a corpse.
 function attemptParley(s,m){
- if(!["negotiation","survival","seal"].includes(s.strategy)||m.stage==="FINAL")return false;
+ if((!["negotiation","survival","seal"].includes(s.strategy)&&!s.researchAllowParley)||m.stage==="FINAL")return false;
  const h=bestWit(s);if(!h)return false;
  s.setActor(h);
  const cost=(n,tag=null)=>s.discardable(n,tag);
@@ -530,7 +530,7 @@ export function seal(s){
 }
 export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
- roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null}={}){
+ roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,researchAllowParley=false}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(forceRoomChoice!==null&&
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
@@ -538,6 +538,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   throw Error("Invalid forced Room choice");
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy,extraObjectId});
  s.forceRoomChoice=forceRoomChoice;
+ s.researchAllowParley=researchAllowParley;
  s.choiceComparison=null;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
   while(s.rooms[stage].length){
