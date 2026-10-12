@@ -33,6 +33,16 @@ Phase 1 implements **36 unique Rooms**: reworked versions of all 18 existing Roo
 
 This experimental deck lives in `src/v2-rooms.js`, separate from the playable V1 `src/tabletop-data.js`. The preview `v2-rooms.html` has region filters and physical four-per-A4 printing. The original V1 deck, card counts, Vault, and `rules.html` are unchanged. V2-only card text is **not fully compatible with V1 Items/Monsters yet**; these are prototypes, not a certified complete V2 game. Original art is reused where IDs match; uncommitted illustrations are not claimed.
 
+### Phase 2 implementation — Scrolls, Rings, Wands and Potions
+
+[**Preview and print V2 objects**](https://tpepels.github.io/rogue_cards/v2-objects.html) · [Phase 2 object ecology](docs/v2-phase2-object-ecology.md)
+
+V2 now includes **44 unique Items** across seven families — 8 Tools, 6 Equipment, 4 Companions, 4 Relics, **8 Scrolls, 7 Rings, 7 Wands** — plus **8 distinct mystery Potions**. All 52 card faces have their own full effects, plus an 84-copy printable deck. Most Items use complete three- or four-outcome d6 tables, while selected tools and cursed equipment deliberately remain reliable or passive. Scrolls are spent on use. Rings occupy one equipped slot. Wands can misfire, break or drain; spent Wands lie sideways until a Shrine or another card recharges them. Potion identity is remembered with the first consumed copy.
+
+The source is `src/v2-objects.js` and the independent prototype gallery is `v2-objects.html`. Named Item/Room links and printed FIRE, MAGIC, METAL and ALCHEMY property interactions connect the Items to the 36 V2 Rooms. The V2 one-page rules have been clarified for Rings and drained Wands.
+
+**V1 remains canonical and unchanged.** Neither the original V1 deck nor its rules were migrated. The combined V2 game still needs its Monster/Hero redesign, card-network audit, playtests and balance pass before replacing the original playable edition.
+
 ## Canonical illustration-first card faces
 
 The **production card gallery and A4 print sheets** now use the flexible illustration-first card design, not the earlier generic mini-art template. Hero/Monster cards place a stat rail inside a large ink illustration, short-effect Items devote most of the card to the image, and the Flooded Chamber demonstrates the optional Room-with-sidebar layout. The title overlays the image as an ivory paper strip. Mechanical wording stays on clean paper.
