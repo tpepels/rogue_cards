@@ -3,3 +3,14 @@ balance-results.tsv
 commit.txt
 detailed-results.json
 tests.log
+full-game-verification.json
+game-verification.json
+package-lock.json
+analysis/decision-study.json
+analysis/decision-study.md
+analysis/items.json
+analysis/planner-all.json
+analysis/planner-all.md
+analysis/planner-study.json
+analysis/planner-study.md
+analysis/rooms.json
