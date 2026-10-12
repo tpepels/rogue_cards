@@ -228,6 +228,45 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Improving the simulated decisions (local, opt-in)
+
+The original five scripted strategies are preserved unchanged for regression
+comparison. A separate set of experimental policies explores what happens
+when Magic and Treasure players make different decisions. **No printed
+card effects or tabletop rules are changed.**
+
+Run on your own computer from the project root:
+
+```sh
+git pull --ff-only
+npm test
+npm run --silent study:decisions -- 50 > decision-study.json
+npm run --silent study:report -- decision-study.json > decision-study.md
+```
+
+`50` seeds per party/strategy generates 7,200 expeditions (8 solo Heroes
++ 4 representative pairs, Magic and Treasure; the baseline and five
+alternatives). Use `200` for 28,800 expeditions or `1000` for 144,000.
+Study output is JSON only when called through `node` or `npm run --silent`.
+
+The five opt-in experiments are:
+
+- `parley`: tries a risk/resource-sensitive Monster PARLEY when sensible
+- `seal`: attempts an affordable Vault Seal if WIT is high or party HP is low
+- `conserve`: saves MAGIC combat items against near-dead regional Monsters
+- `rooms`: uses existing contextual Room-choice scores
+- `adaptive`: combines all four changes
+
+The report shows paired victory-rate changes, approximate 95% intervals,
+changes in Vault access, damage, spent resources, spell actions, PARLEY
+attempts and Seal attempts, and results by each solo Hero.
+
+These are **research heuristics**, not an optimal human-playing agent.
+Comparisons use paired initial seeds, but after a decision changes,
+later random rolls may no longer be matched. The intervals are not
+corrected for testing many configurations. Keep the original baseline;
+evaluate these experiments before choosing a new standard policy.
+
 ## Post-d20 HP balance study
 
 The post-health-revision research runs on the **current canonical deck**,

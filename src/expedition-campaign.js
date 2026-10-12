@@ -8,6 +8,23 @@ import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
 const isAlive=s=>s.alive();
+export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive"]);
+const researchUses=(s,feature)=>s.researchPolicy===feature||s.researchPolicy==="adaptive";
+const partyHpFraction=s=>s.living().reduce((t,h)=>t+h.hp,0)/
+ Math.max(1,s.living().reduce((t,h)=>t+h.card.hp,0));
+// This is an experimental decision heuristic, not an additional tabletop rule.
+function shouldTryResearchParley(s,m){
+ const hp=partyHpFraction(s);
+ if(hp>.85&&m.atk<5&&m.hp<12)return false;
+ if(["rat","eye","rust"].includes(m.id))return s.discardable(2);
+ if(["goblin","troll"].includes(m.id))return s.discardable(3);
+ if(m.id==="sentinel")return s.discardable(3,"METAL");
+ if(["bat","wisp"].includes(m.id))return bestWit(s)?.card.wit>=2;
+ if(["crawler","mold"].includes(m.id))return hp<.45&&
+  s.living().some(h=>h.inventory.some(o=>o.v2.kind==="POTION"));
+ if(["wraith","cultist"].includes(m.id))return hp>.65&&s.anyEquippedTag("CURSED");
+ return false;
+}
 const bestWit=s=>[...s.living()].sort((a,b)=>b.card.wit-a.card.wit)[0];
 const rollD20=(s,{adv=false,dis=false}={})=>{
  const a=s.die(20);return adv&&!dis?Math.max(a,s.die(20)):
@@ -166,7 +183,15 @@ function actRoom(s){
 }
 // Deliberately require the printed parley cost/roll, and never grant a corpse.
 function attemptParley(s,m){
- if((!["negotiation","survival","seal"].includes(s.strategy)&&!s.researchAllowParley)||m.stage==="FINAL")return false;
+ const defaultParley=["negotiation","survival","seal"].includes(s.strategy);
+ const heuristicParley=!defaultParley&&["magic","treasure"].includes(s.strategy)&&
+  researchUses(s,"parley");
+ if(m.stage==="FINAL"||(!defaultParley&&!s.researchAllowParley&&!heuristicParley))return false;
+ if(heuristicParley){
+  s.researchDecisions.parleyConsidered++;
+  if(!shouldTryResearchParley(s,m))return false;
+  s.researchDecisions.parleySelected++;
+ }
  const h=bestWit(s);if(!h)return false;
  s.setActor(h);
  const cost=(n,tag=null)=>s.discardable(n,tag);
@@ -320,6 +345,11 @@ function useItemsInCombat(s,h){
   }
  }
  if(s.strategy==="survival"&&s.monsterHP<8)return false;
+ if(s.strategy==="magic"&&researchUses(s,"conserve")&&
+  s.monster.stage!=="FINAL"&&s.monsterHP<=6&&h.hp>=h.card.hp*.4){
+  s.researchDecisions.spellsReserved++;
+  return false;
+ }
  const monsterThreat=s.monster.hp>=10||s.monster.stage==="FINAL";
  if(s.strategy==="magic"&&["u-lamp","d-shadow","m-crypt"].includes(s.room?.id)){
   const torch=itemIn(s,h,"torch");
@@ -530,13 +560,20 @@ export function seal(s){
 }
 export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
- roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,researchAllowParley=false}={}){
+ roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
+ researchAllowParley=false,researchPolicy="none"}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
+ if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(forceRoomChoice!==null&&
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
    ![0,1].includes(forceRoomChoice.choice)))
   throw Error("Invalid forced Room choice");
- const s=new ExpeditionState({seed,heroes,strategy,roomPolicy,extraObjectId});
+ const appliedRoomPolicy=(researchPolicy==="rooms"||researchPolicy==="adaptive")&&
+  roomPolicy==="scripted"?"contextual":roomPolicy;
+ const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
+ s.researchPolicy=researchPolicy;
+ s.researchDecisions={parleyConsidered:0,parleySelected:0,
+  spellsReserved:0,sealConsidered:0,sealSelected:0};
  s.forceRoomChoice=forceRoomChoice;
  s.researchAllowParley=researchAllowParley;
  s.choiceComparison=null;
@@ -567,8 +604,17 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   exhaustedWands:s.exhausted.size
  };
  if(!s.alive())return report(s);
- const preferSeal=vaultChoice==="seal-if-available"||(vaultChoice==="policy"&&
-  (strategy==="seal"||(strategy==="survival"&&
+ const tacticalSeal=vaultChoice==="policy"&&["magic","treasure"].includes(strategy)&&
+  researchUses(s,"seal");
+ if(tacticalSeal){
+  s.researchDecisions.sealConsidered++;
+ }
+ const sealAffordable=s.metrics.sealAvailable;
+ const sealPreferred=tacticalSeal&&sealAffordable&&
+  (bestWit(s).card.wit>=3||partyHpFraction(s)<.75);
+ if(sealPreferred)s.researchDecisions.sealSelected++;
+ const preferSeal=vaultChoice==="seal-if-available"||sealPreferred||
+  (vaultChoice==="policy"&&(strategy==="seal"||(strategy==="survival"&&
    s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
  if(s.metrics.sealAttempt)s.monsterAdv=true;
@@ -592,6 +638,7 @@ function report(s){
   vaultState:s.vaultState,
   extraObjectGranted:s.extraObjectGranted,
   choiceComparison:s.choiceComparison,
+  researchDecisions:s.researchPolicy==="none"?null:s.researchDecisions,
   objectsEverOwned:[...s.objectsEverOwned].sort(),
   operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
   objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,
