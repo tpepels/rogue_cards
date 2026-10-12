@@ -29,13 +29,16 @@ const scoreItem=(o,strategy)=>{
  return power+(can(o,"MAGIC")&&strategy==="seal"?14:0)+(can(o,"CURSED")?-7:0)+(o.id==="crown-relic"&&strategy==="seal"?20:0);
 };
 export const strategies=Object.freeze(["survival","treasure","magic","seal","negotiation"]);
+export const roomPolicies=Object.freeze(["scripted","contextual","uniform","second-when-legal"]);
 
 export class ExpeditionState {
- constructor({seed=1,heroes=["warrior"],strategy="survival"}={}){
+ constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted"}={}){
   verifyPrintedData();
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
+  if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
-  this.rng=randomSource(seed);this.strategy=strategy;this.heroes=heroes.map(id=>{
+  this.rng=randomSource(seed);this.strategy=strategy;this.roomPolicy=roomPolicy;
+  this.objectsEverOwned=new Set();this.vaultState=null;this.heroes=heroes.map(id=>{
    const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
     nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,nextDefenseAdv:false,nextDefenseBonus:0,
@@ -58,7 +61,10 @@ export class ExpeditionState {
    activated:0,magicActions:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
    corpses:0,banishments:0,recharged:0,overcharges:0,sealAvailable:false,
    sealAttempt:false,sealWin:false,won:false,roundLimit:false,unresolved:0,
-   operationCounts:{},cardCounts:{},roomChoices:{},monsterVisits:{}};
+   operationCounts:{},cardCounts:{},roomChoices:{},roomOptionAvailable:{},
+   monsterVisits:{},objectAcquisitions:{},objectActivations:{},
+   objectRoomExposures:{},objectEquippedRoomExposures:{},
+   wipeCause:null,wipeStage:null};
   for(const h of this.heroes){
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);
    if(index<0)throw Error("Missing starter "+h.card.v2.starter);
@@ -85,7 +91,10 @@ export class ExpeditionState {
  itemOfTag(tag){return this.heroes.find(h=>h.inventory.some(o=>can(o,tag)))||null;}
  anyEquippedTag(tag){return this.heroes.some(h=>this.equippedTag(h,tag));}
  partyCount(tag){return this.heroes.reduce((n,h)=>n+h.inventory.filter(o=>can(o,tag)).length,0);}
- add(h,card){if(!card)return;h.inventory.push(card);this.equip(h,card);}
+ add(h,card){if(!card)return;h.inventory.push(card);this.equip(h,card);
+  this.objectsEverOwned.add(card.id);
+  this.metrics.objectAcquisitions[card.id]=(this.metrics.objectAcquisitions[card.id]||0)+1;
+ }
  equip(h,card){
   let slot=null;
   if(can(card,"WEAPON"))slot="weapon";
@@ -119,7 +128,12 @@ export class ExpeditionState {
   this.lastSpent=last;return last;
  }
  hurt(h,amt){const n=Math.max(0,amt);const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
-  this.metrics.damage+=before-h.hp;return before-h.hp;}
+  this.metrics.damage+=before-h.hp;
+  if(before>0&&h.hp===0&&!this.alive()&&!this.metrics.wipeCause){
+   this.metrics.wipeCause=this.monster?.id||this.room?.id||"unknown-effect";
+   this.metrics.wipeStage=this.room?.stage||"unknown";
+  }
+  return before-h.hp;}
  heal(h,amt){h.hp=clamp(h.hp+Math.max(0,amt),0,h.card.hp);}
  healParty(amt){const h=this.chooseActor();if(h.hp>0)this.heal(h,amt);}
  draw(n=1){for(let i=0;i<n;i++){
@@ -144,7 +158,14 @@ export class ExpeditionState {
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
   this.metrics.spent++;}
  beginRoom(room){
-  this.room=room;this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
+  this.room=room;
+  // Exposure means present at entry; it is NOT proof of a legal activation.
+  for(const h of this.living()){
+   for(const o of h.inventory)
+    this.metrics.objectRoomExposures[o.id]=(this.metrics.objectRoomExposures[o.id]||0)+1;
+   for(const o of Object.values(h.slots))
+    if(o)this.metrics.objectEquippedRoomExposures[o.id]=(this.metrics.objectEquippedRoomExposures[o.id]||0)+1;
+  }this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
   this.pendingFightHeal=null;this.extraMonsterAdv=false;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites.clear();
   this.heroes.forEach(h=>{
@@ -179,6 +200,7 @@ export class ExpeditionState {
   if(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card))return false;
   this.actor=h;this.metrics.activated++;
   this.metrics.cardCounts[card.id]=(this.metrics.cardCounts[card.id]||0)+1;
+  this.metrics.objectActivations[card.id]=(this.metrics.objectActivations[card.id]||0)+1;
   if(["SCROLL","WAND","POTION"].includes(card.v2.kind))this.metrics.magicActions+=Number(can(card,"MAGIC"));
   if(card.v2.kind==="POTION"){
    this.metrics.potionsUsed++;

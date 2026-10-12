@@ -3,7 +3,7 @@
  * All d6 Item/Room operations go through the checked card transcriptions.
  */
 import {HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
-import {ExpeditionState,strategies} from "./expedition-runtime.js";
+import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
@@ -22,7 +22,32 @@ const chooseRoom=s=>{
  const choiceOK=i=>affordable(choices[i])&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
     s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
+ const ok0=choiceOK(0),ok1=choiceOK(1);
+ for(const i of [0,1])if(i===0?ok0:ok1){
+  const key=room.id+":"+i;
+  s.metrics.roomOptionAvailable[key]=(s.metrics.roomOptionAvailable[key]||0)+1;
+ }
+ if(!ok0&&!ok1)return null;
+ if(s.roomPolicy==="second-when-legal")return ok1?1:0;
+ if(s.roomPolicy==="uniform")return ok0&&ok1?s.die(2)-1:ok1?1:0;
  const hpFrac=actor.hp/actor.card.hp;
+ if(s.roomPolicy==="contextual"){
+  const score=ops=>{
+   const text=ops.join(" "),items=s.living().reduce((n,h)=>n+h.inventory.length,0);
+   const price=ops.reduce((n,op)=>n+Number(/^(?:COST|DISCARD):(\d+)$/.exec(op)?.[1]||0),0);
+   let val=-price*(s.strategy==="seal"?4:2);
+   if(/HEAL|CURE/.test(text))val+=hpFrac<.7?8:1;
+   if(/DRAW|TRADE|FIGHT_REWARD/.test(text))val+=items<4?7:3;
+   if(/RECHARGE/.test(text))val+=s.exhaustedWand()?8:-2;
+   if(/CLEANSE/.test(text))val+=s.anyEquippedTag("CURSED")?7:-3;
+   if(/BANISH|BRIBE|SILENCE/.test(text))val+=hpFrac<.75?5:2;
+   if(/CHECK_WIT/.test(text))val+=Math.max(...s.living().map(h=>h.card.wit))>=3?4:0;
+   if(/ROLL_ROOM_RISK|ROLL_ROOM_COST_REROLL/.test(text))val+=hpFrac<.6?-8:1;
+   if(/FIGHT/.test(text))val+=hpFrac<.6?-6:0;
+   return val;
+  };
+  return !ok0?1:!ok1?0:score(choices[1])>score(choices[0])?1:0;
+ }
  const b=choices[1].join(" ");
  let desired=0;
  if(s.strategy==="survival"&&hpFrac<.65&&/HEAL/.test(b))desired=1;
@@ -494,8 +519,11 @@ function seal(s){
  }
  s.metrics.sealWin=good;return good;
 }
-export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival"}={}){
- const s=new ExpeditionState({seed,heroes,strategy});
+export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
+export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
+ roomPolicy="scripted",vaultChoice="policy"}={}){
+ if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
+ const s=new ExpeditionState({seed,heroes,strategy,roomPolicy});
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
   while(s.rooms[stage].length){
    const room=s.rooms[stage].shift();s.beginRoom(room);
@@ -508,8 +536,24 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  if(!s.alive())return report(s);
  s.beginRoom(VAULT);s.roomRoll();
  s.metrics.sealAvailable=s.discardable(s.heroes.length===2?5:3,"MAGIC");
- const preferSeal=strategy==="seal"||(strategy==="survival"&&
-  s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55));
+ // Captured *before* the branch: same seed + policy must yield the same state
+ // regardless of whether the Vault decision is fight or seal-if-available.
+ s.vaultState={
+  hp:s.heroes.map(h=>h.hp),maxHP:s.heroes.map(h=>h.card.hp),
+  inventory:s.heroes.map(h=>h.inventory.map(o=>o.id).sort()),
+  equipped:s.heroes.map(h=>Object.fromEntries(
+   Object.entries(h.slots).map(([slot,item])=>[slot,item.id]))),
+  magicHeld:s.partyCount("MAGIC"),
+  sealAffordable:s.metrics.sealAvailable,
+  potions:s.heroes.reduce((n,h)=>n+h.inventory.filter(o=>o.v2.kind==="POTION").length,0),
+  scrolls:s.heroes.reduce((n,h)=>n+h.inventory.filter(o=>o.v2.kind==="SCROLL").length,0),
+  wands:s.heroes.reduce((n,h)=>n+h.inventory.filter(o=>o.v2.kind==="WAND").length,0),
+  exhaustedWands:s.exhausted.size
+ };
+ if(!s.alive())return report(s);
+ const preferSeal=vaultChoice==="seal-if-available"||(vaultChoice==="policy"&&
+  (strategy==="seal"||(strategy==="survival"&&
+   s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
  if(s.metrics.sealAttempt)s.monsterAdv=true;
  s.monster=WARDEN;s.monsterHP=WARDEN.hp;
@@ -521,20 +565,35 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  s.metrics.won=true;return report(s);
 }
 function report(s){
- const {operationCounts,cardCounts,roomChoices,monsterVisits,...m}=s.metrics;
+ const {operationCounts,cardCounts,roomChoices,roomOptionAvailable,
+  monsterVisits,objectAcquisitions,objectActivations,objectRoomExposures,
+  objectEquippedRoomExposures,...m}=s.metrics;
  return {...m,remainingHP:s.heroes.map(h=>h.hp),magicHeld:s.partyCount("MAGIC"),
-  operationCounts,cardCounts,roomChoices,monsterVisits,
+  failureStage:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
+   s.metrics.wipeStage||s.room?.stage||"unknown",
+  failureCause:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
+   s.metrics.wipeCause||"unknown",
+  vaultState:s.vaultState,
+  objectsEverOwned:[...s.objectsEverOwned].sort(),
+  operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
+  objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,
   identifiedPotions:s.potionIdentities.size,
   exhaustedWands:s.exhausted.size};
 }
-export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy="survival"}={}){
+export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy="survival",
+ roomPolicy="scripted",vaultChoice="policy"}={}){
  if(!Number.isSafeInteger(runs)||runs<1||runs>100000)throw RangeError("Bad number of runs");
+ if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room policy "+roomPolicy);
+ if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault choice "+vaultChoice);
  const sum={wins:0,vault:0,deep:0,damage:0,drawn:0,spent:0,rounds:0,battles:0,
   negotiations:0,corpses:0,activated:0,potions:0,scouts:0,magic:0,
   unidentified:0,unresolved:0,stalls:0,sealAvailable:0,sealAttempts:0,sealWins:0,cardCounts:{},roomChoices:{},
-  monsterVisits:{},operationCounts:{}};
+  monsterVisits:{},operationCounts:{},roomOptionAvailable:{},
+  objectAcquisitions:{},objectActivations:{},objectRoomExposures:{},
+  objectEquippedRoomExposures:{},objectSeenRuns:{},objectSeenWins:{},
+  failureCauses:{},failureStages:{},vaultHp:0,vaultMaxHp:0,vaultMagic:0};
  for(let i=0;i<runs;i++){
-  const r=simulateFullExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,strategy});
+  const r=simulateFullExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,strategy,roomPolicy,vaultChoice});
   sum.wins+=Number(r.won);sum.vault+=Number(r.cleared===9);
   sum.deep+=Number(r.cleared>=6);sum.damage+=r.damage;sum.drawn+=r.drawn;
   sum.spent+=r.spent;sum.rounds+=r.rounds;sum.battles+=r.battles;
@@ -543,11 +602,23 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   sum.unidentified+=r.identifiedPotions;sum.unresolved+=r.unresolved;
   sum.stalls+=Number(r.roundLimit);sum.sealAvailable+=Number(r.sealAvailable);
   sum.sealAttempts+=Number(r.sealAttempt);sum.sealWins+=Number(r.sealWin);
-  for(const key of ["cardCounts","roomChoices","monsterVisits","operationCounts"])
+  if(r.vaultState){sum.vaultHp+=r.vaultState.hp.reduce((a,b)=>a+b,0);
+   sum.vaultMaxHp+=r.vaultState.maxHP.reduce((a,b)=>a+b,0);
+   sum.vaultMagic+=r.vaultState.magicHeld;}
+  if(!r.won){
+   sum.failureCauses[r.failureCause]=(sum.failureCauses[r.failureCause]||0)+1;
+   sum.failureStages[r.failureStage]=(sum.failureStages[r.failureStage]||0)+1;
+  }
+  for(const id of r.objectsEverOwned){
+   sum.objectSeenRuns[id]=(sum.objectSeenRuns[id]||0)+1;
+   if(r.won)sum.objectSeenWins[id]=(sum.objectSeenWins[id]||0)+1;
+  }
+  for(const key of ["cardCounts","roomChoices","roomOptionAvailable","monsterVisits","operationCounts",
+   "objectAcquisitions","objectActivations","objectRoomExposures","objectEquippedRoomExposures"])
    for(const [name,n] of Object.entries(r[key]))sum[key][name]=(sum[key][name]||0)+n;
  }
  const mean=x=>sum[x]/runs;
- return {model:"phase5-explicit-card-policy-v1",strategy,heroes,runs,
+ return {model:"phase5-explicit-card-policy-v1",strategy,heroes,roomPolicy,vaultChoice,runs,
   winCount:sum.wins,vaultCount:sum.vault,deepCount:sum.deep,
   winRate:mean("wins"),vaultRate:mean("vault"),deepRate:mean("deep"),
   meanDamage:mean("damage"),meanDrawn:mean("drawn"),meanSpent:mean("spent"),
@@ -562,6 +633,15 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   sealSuccessRatePerAttempt:sum.sealWins/Math.max(1,sum.sealAttempts),
   sealWinRateAtVault:sum.sealWins/Math.max(1,sum.vault),
   unresolvedEffects:sum.unresolved,stalledExpeditions:sum.stalls,
+  meanVaultPartyHP:sum.vaultHp/Math.max(1,sum.vault),
+  meanVaultPartyMaxHP:sum.vaultMaxHp/Math.max(1,sum.vault),
+  meanVaultMagicHeld:sum.vaultMagic/Math.max(1,sum.vault),
+  failureCauses:sum.failureCauses,failureStages:sum.failureStages,
+  objectSeenRuns:sum.objectSeenRuns,objectSeenWins:sum.objectSeenWins,
+  objectAcquisitions:sum.objectAcquisitions,objectActivations:sum.objectActivations,
+  objectRoomExposures:sum.objectRoomExposures,
+  objectEquippedRoomExposures:sum.objectEquippedRoomExposures,
   cardActivations:sum.cardCounts,roomChoices:sum.roomChoices,
+  roomOptionAvailable:sum.roomOptionAvailable,
   monsterVisits:sum.monsterVisits,operations:sum.operationCounts};
 }
