@@ -264,7 +264,7 @@ export class ExpeditionState {
   case "CLEANSE_COST":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
     if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);
       this.consume(owner,target);}return;}
-  case "ALCHEMY_HEAL":if(can(this.lastSpent,"ALCHEMY"))this.heal(h,Math.max(0,this.die()-2));return;
+  case "ALCHEMY_HEAL_OR_TWO":this.heal(h,can(this.lastSpent,"ALCHEMY")?this.die():2);return;
   case "MAGIC_HEAL":if(can(this.lastSpent,"MAGIC"))this.heal(h,n());return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
   case "NEXT_WIT":this.witBonus+=n();return;
