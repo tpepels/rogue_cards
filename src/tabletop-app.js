@@ -19,7 +19,7 @@ function show(){
  const physical=printDeck(selected);
  mount.innerHTML=xeroxInkFilter+'<div class="tt-sitehead">'+
   '<div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">TABLETOP EDITION · NO BROWSER GAME REQUIRED</div></div>'+
-  '<nav class="tt-nav" aria-label="Main links"><a href="./docs/illustration-first-layout-study.html">DESIGN REFERENCE</a><a href="#cards">THE CARDS</a><a href="./rules.html">ONE A4 RULES</a><a href="./v2-rooms.html">V2 ROOM LAB</a><a href="./v2-objects.html">V2 ITEM LAB</a><a href="./print-and-play.html">PRINT GUIDE</a></nav></div>'+
+  '<nav class="tt-nav" aria-label="Main links"><a href="./docs/illustration-first-layout-study.html">DESIGN REFERENCE</a><a href="#cards">THE CARDS</a><a href="./rules.html">ONE A4 RULES</a><a href="./v2-rooms.html">V2 ROOM LAB</a><a href="./v2-objects.html">V2 ITEM LAB</a><a href="./v2-monsters.html">V2 MONSTER LAB</a><a href="./print-and-play.html">PRINT GUIDE</a></nav></div>'+
   '<main class="tt-shell">'+
   '<section class="tt-hero"><div class="tt-kicker">'+esc(EDITION)+' · 1–2 HEROES · d20 + d6</div>'+
   '<h1>The dungeon lives on the table.</h1>'+
