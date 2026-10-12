@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**One card catalogue and print kit**](https://tpepels.github.io/rogue_cards/) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
+[**One card catalogue and print kit**](https://tpepels.github.io/rogue_cards/) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
