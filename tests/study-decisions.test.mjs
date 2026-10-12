@@ -7,7 +7,7 @@ import {join} from "node:path";
 import {researchPolicies,simulateFullExpedition} from "../src/expedition-campaign.js";
 
 test("experimental decisions are opt-in and do not change the existing baseline",()=>{
- assert.deepEqual(researchPolicies,["none","parley","seal","conserve","rooms","adaptive"]);
+ assert.deepEqual(researchPolicies,["none","parley","seal","conserve","rooms","adaptive","planner"]);
  for(const strategy of ["magic","treasure","seal","survival"])
   for(const seed of [1,91,3007]){
    const args={seed,heroes:["wizard"],strategy};
