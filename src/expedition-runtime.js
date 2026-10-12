@@ -32,12 +32,15 @@ export const strategies=Object.freeze(["survival","treasure","magic","seal","neg
 export const roomPolicies=Object.freeze(["scripted","contextual","uniform","second-when-legal"]);
 
 export class ExpeditionState {
- constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted"}={}){
+ constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted",extraObjectId=null}={}){
   verifyPrintedData();
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
   if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
   this.rng=randomSource(seed);this.strategy=strategy;this.roomPolicy=roomPolicy;
+  if(extraObjectId!==null&&!byId(OBJECTS,extraObjectId))
+   throw Error("Unknown extra Object "+extraObjectId);
+  this.extraObjectGranted=false;
   this.objectsEverOwned=new Set();this.vaultState=null;this.heroes=heroes.map(id=>{
    const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
@@ -69,6 +72,15 @@ export class ExpeditionState {
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);
    if(index<0)throw Error("Missing starter "+h.card.v2.starter);
    this.add(h,this.deck.splice(index,1)[0]);this.add(h,this.deck.pop());
+  }
+  // Experimental *extra resource* intervention: move an existing deck copy
+  // into the first Hero's inventory without generating a duplicate.
+  if(extraObjectId!==null){
+   const index=this.deck.findIndex(o=>o.id===extraObjectId);
+   if(index>=0){
+    this.add(this.heroes[0],this.deck.splice(index,1)[0]);
+    this.extraObjectGranted=true;
+   }
   }
  }
  die(n=6){return this.rng.die(n);}

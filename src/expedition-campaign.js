@@ -27,6 +27,15 @@ const chooseRoom=s=>{
   const key=room.id+":"+i;
   s.metrics.roomOptionAvailable[key]=(s.metrics.roomOptionAvailable[key]||0)+1;
  }
+ if(s.forceRoomChoice?.id===room.id){
+  s.choiceComparison={
+   seen:true,bothLegal:ok0&&ok1,
+   hp:s.heroes.map(h=>h.hp),
+   inventory:s.heroes.map(h=>h.inventory.map(o=>o.id).sort()),
+   pendingMonster:s.monster?.id||null
+  };
+  if(ok0&&ok1)return s.forceRoomChoice.choice;
+ }
  if(!ok0&&!ok1)return null;
  if(s.roomPolicy==="second-when-legal")return ok1?1:0;
  if(s.roomPolicy==="uniform")return ok0&&ok1?s.die(2)-1:ok1?1:0;
@@ -389,7 +398,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  if(poison&&done>0&&!h.immune)h.poison=true;
  if(drain&&done>0)s.discard(1);
 }
-function monsterRespond(s,h){
+export function monsterRespond(s,h){
  if(!s.monster||s.monsterHP<=0)return;
  if(s.monsterSkip>0){s.monsterSkip--;return;}
  const m=s.monster;
@@ -442,7 +451,7 @@ function monsterRespond(s,h){
  case "warden":if(band===1)s.living().forEach(x=>monsterAttack(s,x));else if(band===2)a.nextDis++;
   else if(band===3)hit({adv:true});break;
  case "warden-fury":if(band===0)s.living().forEach(x=>monsterAttack(s,x));else if(band===1)hit({drain:true});
-  else if(band===2)s.living().forEach(x=>s.hurt(x,2));else hit({adv:true,damageBonus:2});break;
+  else if(band===2)s.living().forEach(x=>s.hurt(x,1));else hit({adv:true,damageBonus:2});break;
  default:throw Error("Unimplemented Monster behaviour "+m.id);
  }
  // Trigger poison-sensitive equipped Rings and Companions.
@@ -490,8 +499,8 @@ function finishMonsters(s){
  }
  return s.alive();
 }
-function seal(s){
- const cost=s.heroes.length===2?5:3;
+export function seal(s){
+ const cost=s.heroes.length===2?6:3;
  const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(cost,"MAGIC");
  if(!s.metrics.sealAvailable)return false;
  s.metrics.sealAttempt=true;
@@ -521,9 +530,15 @@ function seal(s){
 }
 export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
- roomPolicy="scripted",vaultChoice="policy"}={}){
+ roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
- const s=new ExpeditionState({seed,heroes,strategy,roomPolicy});
+ if(forceRoomChoice!==null&&
+  (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
+   ![0,1].includes(forceRoomChoice.choice)))
+  throw Error("Invalid forced Room choice");
+ const s=new ExpeditionState({seed,heroes,strategy,roomPolicy,extraObjectId});
+ s.forceRoomChoice=forceRoomChoice;
+ s.choiceComparison=null;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
   while(s.rooms[stage].length){
    const room=s.rooms[stage].shift();s.beginRoom(room);
@@ -535,7 +550,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  }
  if(!s.alive())return report(s);
  s.beginRoom(VAULT);s.roomRoll();
- s.metrics.sealAvailable=s.discardable(s.heroes.length===2?5:3,"MAGIC");
+ s.metrics.sealAvailable=s.discardable(s.heroes.length===2?6:3,"MAGIC");
  // Captured *before* the branch: same seed + policy must yield the same state
  // regardless of whether the Vault decision is fight or seal-if-available.
  s.vaultState={
@@ -574,6 +589,8 @@ function report(s){
   failureCause:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
    s.metrics.wipeCause||"unknown",
   vaultState:s.vaultState,
+  extraObjectGranted:s.extraObjectGranted,
+  choiceComparison:s.choiceComparison,
   objectsEverOwned:[...s.objectsEverOwned].sort(),
   operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
   objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,

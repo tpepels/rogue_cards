@@ -15,6 +15,15 @@ The canonical simulation is `src/expedition-campaign.js`, using the expedition s
 
 An editorial cross-card audit still distinguishes **144 declared metadata links** from actual printed effects: **65 links have identifiable printed evidence** and **79 are not directly evidenced by that heuristic**. Metadata links grant no gameplay power.
 
+## Later canonical Vault adjustment (12 October 2026)
+
+The following conservatively adjusted values supersede the older benchmark:
+Warden Unbound has ATK 6, its Ruin result deals 1 HP to each Hero, and the
+Vault Seal costs 3 MAGIC Items solo or 6 with two Heroes. The rates below
+were measured **before** these adjustments and must not be presented as
+current post-adjustment win rates. See README.md for pairwise interaction and
+individual card-balance experiments.
+
 ## Measured complete-policy results
 
 The GitHub Actions **Verify tabletop print-and-play** run on commit `675ac246d2` executed `npm run balance -- 2000`: 2,000 seeded expeditions for each of **12 party setups × 5 strategies = 120,000 campaigns**. All returned zero unresolved operations and zero stalled campaigns. These are implementation-based, **policy-specific win rates**, not human win probabilities.

@@ -109,6 +109,48 @@ when the last surviving Hero died; phase-specific deaths are recorded
 separately. All 28 pairs are included, but balance still needs tabletop
 validation and better optimized decision policies.
 
+
+## Item and Room balance / interaction testing
+
+The canonical Vault balance adjustment is printed on the cards and used by
+both simulators: Warden Phase II has **ATK 6** and its Ruin result costs **1 HP
+per Hero**. The Seal costs **3 MAGIC Items solo / 6 with two Heroes**.
+
+Run these two independent, controlled balance experiments:
+
+```sh
+npm test
+npm run balance:items -- 200 > item-balance.json
+npm run balance:room-cards -- 200 > room-card-balance.json
+```
+
+- **Item balance:** all **52 Objects**, over 8 solo Heroes + 4 representative
+  pairs and three strategies. Matched seeded expeditions compare the normal
+  starting hand against adding one extra **existing** Item copy removed from
+  the shuffled deck. Reports trials, availability, paired victory-rate
+  difference, discordant outcomes, damage, and approximate uncertainty.
+  **This measures the value of receiving an extra Item, not an intrinsic
+  ranking or proof that two Item cards are equally strong.**
+- **Room-choice balance:** all **36 regional Rooms**, same setups and seeds.
+  Run each legal Room option at the same pre-decision HP, inventory and
+  pending Monster. Only samples that actually reach the Room **and can take
+  both choices** enter the comparison. Reports conditional paired outcomes
+  and uncertainty; sparse samples are explicitly null, not fabricated.
+- **Mechanical interaction tests:** automated pairwise Object × Object,
+  Object × regional Room (both choices), Object × Monster (including Warden
+  phases, sampled printed dice faces), and Hero × Object. Every declared
+  Object link must refer to a real card. Dedicated tests still exercise
+  **all six faces** of every printed Object and Room roll, plus selected
+  higher-order interactions.
+
+**Scope limitation:** exhaustive testing of *every possible multi-card
+combination*, sequence, dice history, and strategic decision is infeasible;
+the interaction suite is comprehensive at the stated **pairwise** level,
+not exhaustive across triples or larger combinations. Passing the suite
+checks engine integrity, not balance, usefulness, game-theoretic optimality
+or real tabletop enjoyment. Use the generated balance reports to decide
+which individual cards warrant adjustment.
+
 ## Verification
 
 ```sh

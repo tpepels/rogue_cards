@@ -112,9 +112,11 @@ test("Hungry Ring activates once after a separate MAGIC Item, not recursively",(
  assert.equal(s.metrics.cardCounts["ring-hunger"],1);
 });
 test("printed party-size Warden seal and all-Hero attack behaviours are in canonical cards",()=>{
- assert.match(VAULT.v2.choices[1].effect,/5 with two Heroes/);
+ assert.match(VAULT.v2.choices[1].effect,/6 with two Heroes/);
  assert.match(WARDEN.behavior[1],/ATTACK each Hero/);
  assert.match(WARDEN_FURY.behavior[0],/ATTACK each Hero/);
+ assert.equal(WARDEN_FURY.atk,6);
+ assert.match(WARDEN_FURY.behavior[2],/lose 1 HP/);
 });
 test("before-print verification prevents source drift across new full-effect engine",()=>{
  const s=new ExpeditionState({seed:90210,heroes:["warrior","witch"],strategy:"seal"});

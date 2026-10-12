@@ -24,7 +24,7 @@ export const MONSTER_IDS = Object.freeze([
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
  rooms:"1f54af43",objects:"10f68323",monsters:"03f7a3b3",
- heroes:"4116c2a8",warden:"c9b99451"
+ heroes:"4116c2a8",warden:"0fb23b0c"
 });
 const digest=data=>{
  let h=2166136261;
@@ -225,7 +225,7 @@ function respond(state,active){
  case "cultist":if(band===0)state.monsterAdv=true;else if(band===1)atk({atkBonus:6-m.atk});else if(band===2)h.poisoned=true;else atk({adv:true});break;
  case "sentinel":if(band===0)h.attackDis=true;else if(band===1)atk();else if(band===2)atk({damageBonus:2});else atk({adv:true});break;
  case "warden":if(band===1)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===2)h.attackDis=true;else if(band===3)atk({adv:true});break;
- case "warden-fury":if(band===0)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===1)monsterAction(state,h,m,"drain");else if(band===2)healthy(state.heroes).forEach(x=>hurt(x,2,state));else atk({adv:true,damageBonus:2});break;
+ case "warden-fury":if(band===0)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===1)monsterAction(state,h,m,"drain");else if(band===2)healthy(state.heroes).forEach(x=>hurt(x,1,state));else atk({adv:true,damageBonus:2});break;
  default:throw new Error("Unmodeled Monster "+m.id);
  }
  if(h.card.id==="monk"&&!h.abilityUsed&&h.hp>0){
@@ -357,7 +357,7 @@ function fight(state,monster,{startingHP=monster.hp,transitionAt=0,initialAdv=fa
  return thresholdReached;
 }
 function seal(state){
- const cost=state.heroes.length===2?5:3;
+ const cost=state.heroes.length===2?6:3;
  state.sealAvailable=magicCount(state.heroes)>=cost;
  if(!state.sealAvailable)return false;
  state.sealAttempt=true;for(let i=0;i<cost;i++)spendItem(state,{magic:true});

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Physical-first d20/d6 Rogue Cards print-and-play tabletop game",
   "scripts": {
-    "test": "node --test tests/tabletop.test.mjs tests/playtest.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs",
+    "test": "node --test tests/tabletop.test.mjs tests/playtest.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs tests/warden-balance.test.mjs tests/card-interactions.test.mjs tests/card-balance.test.mjs",
     "test:visual": "playwright test",
     "balance": "node scripts/full-balance.mjs",
     "balance:baseline": "node scripts/playtest.mjs",
@@ -14,7 +14,9 @@
     "serve": "python3 -m http.server 8000",
     "balance:matched": "node scripts/analyze-balance.mjs vault",
     "balance:rooms": "node scripts/analyze-balance.mjs rooms",
-    "balance:diagnostics": "node scripts/analyze-balance.mjs diagnostics"
+    "balance:diagnostics": "node scripts/analyze-balance.mjs diagnostics",
+    "balance:items": "node scripts/card-balance.mjs items",
+    "balance:room-cards": "node scripts/card-balance.mjs rooms"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
