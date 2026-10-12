@@ -7,7 +7,7 @@ const data=[
  ["wizard","Hedge Wizard","wizard",17,2,2,6,"staff","WILD SPARK · as your combat action",
   [["1–2","Misfire: lose d6 HP."],["3–4","Deal d6+2 damage to Monster."],["5–6","Deal 2d6 damage; skip its next response."]],"Most definitely harmless."],
  ["witch","Marsh Witch","wizard",19,2,3,5,"smoky","HEX BREW · when you use a Potion or Scroll",
-  [["1–2","It curdles: become POISONED."],["3–4","Remove POISONED from a Hero."],["5–6","Use the spell, then choose the Monster's next d6 result."]],"Every answer has ingredients."],
+  [["1–2","It curdles: become POISONED."],["3–4","Remove POISONED from a Hero."],["5–6","Resolve that Potion or Scroll; choose the Monster's next d6 behaviour, if present."]],"Every answer has ingredients."],
  ["rogue","Cutpurse","rogue",20,4,3,5,"key","DIRTY TRICK · before you attack or negotiate",
   [["1–2","Caught: your next d20 has DIS."],["3–4","Your next d20 has ADV."],["5–6","Opposed d20+WIT vs Monster d20+DEF with ADV; win: draw 1 Item."]],"A lock is a conversation."],
  ["thief","Tunnel Thief","rogue",19,4,3,4,"rope","POCKET CHANGE · when a Room offers a reward",
