@@ -10,7 +10,7 @@ function show(){
  const counts=[...V2_ITEM_FAMILIES,"POTION"].map(kind=>kind+" "+V2_OBJECTS_BY_FAMILY[kind].length).join(" · ");
  mount.innerHTML=ink+
   '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS <small>V2</small></div><div class="tt-sub">PHASE 2 · OBJECT EXPANSION · PLAYTEST PROTOTYPE</div></div>'+
-  '<nav class="tt-nav" aria-label="V2 navigation"><a href="./">PLAYABLE V1 DECK</a><a href="./v2-rooms.html">36 V2 ROOMS</a><a href="./rules-v2.html">V2 RULES</a></nav></div>'+
+  '<nav class="tt-nav" aria-label="V2 navigation"><a href="./">PLAYABLE V1 DECK</a><a href="./v2-rooms.html">36 V2 ROOMS</a><a href="./v2-monsters.html">V2 MONSTERS</a><a href="./rules-v2.html">V2 RULES</a></nav></div>'+
   '<main class="tt-shell tt-v2-object-gallery"><section class="tt-hero"><div class="tt-kicker">44 UNIQUE ITEMS · 8 POTIONS · SCROLLS, RINGS AND WANDS</div>'+
   '<h1>Strange things in your pockets.</h1>'+
   '<p>Tools, cursed equipment, familiars, relics, scrolls, rings and wands. Every object has a clear printed action and, where appropriate, a d6 table. Magic can work, backfire, break, or reveal something unexpected.</p>'+
