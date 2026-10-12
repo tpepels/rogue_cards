@@ -531,7 +531,7 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
  if(!Number.isSafeInteger(runs)||runs<1||runs>100000)throw RangeError("Bad number of runs");
  const sum={wins:0,vault:0,deep:0,damage:0,drawn:0,spent:0,rounds:0,battles:0,
   negotiations:0,corpses:0,activated:0,potions:0,scouts:0,magic:0,
-  unidentified:0,unresolved:0,stalls:0,sealAvailable:0,sealWins:0,cardCounts:{},roomChoices:{},
+  unidentified:0,unresolved:0,stalls:0,sealAvailable:0,sealAttempts:0,sealWins:0,cardCounts:{},roomChoices:{},
   monsterVisits:{},operationCounts:{}};
  for(let i=0;i<runs;i++){
   const r=simulateFullExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,strategy});
@@ -542,12 +542,13 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   sum.potions+=r.potionsUsed;sum.scouts+=r.scouted;sum.magic+=r.magicActions;
   sum.unidentified+=r.identifiedPotions;sum.unresolved+=r.unresolved;
   sum.stalls+=Number(r.roundLimit);sum.sealAvailable+=Number(r.sealAvailable);
-  sum.sealWins+=Number(r.sealWin);
+  sum.sealAttempts+=Number(r.sealAttempt);sum.sealWins+=Number(r.sealWin);
   for(const key of ["cardCounts","roomChoices","monsterVisits","operationCounts"])
    for(const [name,n] of Object.entries(r[key]))sum[key][name]=(sum[key][name]||0)+n;
  }
  const mean=x=>sum[x]/runs;
  return {model:"phase5-explicit-card-policy-v1",strategy,heroes,runs,
+  winCount:sum.wins,vaultCount:sum.vault,deepCount:sum.deep,
   winRate:mean("wins"),vaultRate:mean("vault"),deepRate:mean("deep"),
   meanDamage:mean("damage"),meanDrawn:mean("drawn"),meanSpent:mean("spent"),
   meanCombatRounds:mean("rounds"),meanBattles:mean("battles"),
@@ -555,6 +556,10 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   meanActivated:mean("activated"),meanPotions:mean("potions"),
   meanScouting:mean("scouts"),meanMagic:mean("magic"),
   sealAvailabilityAtVault:sum.sealAvailable/Math.max(1,sum.vault),
+  sealAttempts:sum.sealAttempts,sealWins:sum.sealWins,
+  wardenWins:sum.wins-sum.sealWins,
+  sealAttemptRateAtVault:sum.sealAttempts/Math.max(1,sum.vault),
+  sealSuccessRatePerAttempt:sum.sealWins/Math.max(1,sum.sealAttempts),
   sealWinRateAtVault:sum.sealWins/Math.max(1,sum.vault),
   unresolvedEffects:sum.unresolved,stalledExpeditions:sum.stalls,
   cardActivations:sum.cardCounts,roomChoices:sum.roomChoices,

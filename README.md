@@ -50,8 +50,20 @@ The game now has explicit handlers for all **52 Object cards** and all **37 Room
 ```sh
 npm run audit
 npm run balance -- 2000
+npm run balance -- 10000 --json > detailed-results.json
 npm run balance:baseline -- 120
 ```
+
+
+The default `balance` output is the original TSV-compatible table. Add `--json` to export
+all 60 configurations with per-card activation counts, Room choices, Monster visits,
+executed effect operations, seal availability, seal attempts and seal successes.
+JSON also includes the tested Git commit (when available), fixed seed, experiment
+size and aggregate solo/cooperative and strategy summaries. No new card rules or
+simulator strategies are introduced. **Seal-related rates use different denominators:**
+seal availability and attempt rate use Vault arrivals; seal success per attempt uses
+actual attempts. A low activation count is not proof a card is weak because it may
+have been rarely drawn.
 
 `npm run balance` is the complete-effect, five-policy benchmark; `balance:baseline` is an older reduced-mechanics comparison. CI has verified **120,000 seeded expeditions** with zero unresolved operations or stalls, but the simulated choices are scripted, not optimised human play. Do not treat these win rates as established physical-game balance: real solo/cooperative sessions and focused interactions still need testing before final print.
 
