@@ -100,7 +100,7 @@ test("one A4 rulebook describes entire adventure and alternate boss victory",()=
  assert.match(html,/WIT/);assert.match(html,/POISONED/);
  assert.match(html,/SEAL/);assert.match(html,/Phase II/);
  assert.match(html,/PARLEY/);assert.match(html,/OVERCHARGE/);
- assert.match(html,/Scrolls/);assert.match(html,/Rings/);
+ assert.match(html,/Scrolls/);assert.match(html,/1 Ring/);
  assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
  assert.equal((html.match(/<section><h2>/g)||[]).length,8);
  assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
