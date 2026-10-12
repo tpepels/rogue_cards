@@ -7,7 +7,7 @@
  *
  * Deliberate limitations (reported, never hidden): no room look-ahead optimisation,
  * no corpse eating, no cross-card triggered abilities except basic equipment, no
- * potion identification, no recharging, and no Scroll/Wand action policy. Thus this
+ * potion identification, no recharging, and only selected Scroll/Wand combat actions in the optional magic policy. Thus this
  * is a CONSERVATIVE, BASIC-ATTACK policy, not the whole card game's win probability.
  * Unknown room effects are counted in skippedEffects for the audit.
  */
@@ -92,7 +92,7 @@ function newState(heroCards,rng){
  }
  return {rng,heroes,deck,monsters:Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(s=>[s,deckForRegion(s,rng,MONSTERS)])),
   cleared:0,battles:0,kills:0,damageTaken:0,itemsDrawn:heroes.length,itemsSpent:0,
-  skippedEffects:0,sealAvailable:false,sealAttempt:false,sealWin:false,roundLimit:false,
+  skippedEffects:0,magicActions:0,usedWands:new Set(),forcedMonsterRoll:0,sealAvailable:false,sealAttempt:false,sealWin:false,roundLimit:false,
   won:false,rounds:0,monsterResponses:0,region:"UPPER",activeMonster:null,monsterHP:0,monsterSkip:0,monsterAdv:false,heroAdv:false};
 }
 function drawMonster(state,stage){
@@ -179,7 +179,8 @@ function monsterAction(state,hero,monster,kind,{adv=false,atkBonus=0,damageBonus
 function respond(state,active){
  const m=state.activeMonster;if(!m)return;
  if(state.monsterSkip>0){state.monsterSkip--;return;}
- const rng=state.rng,roll=rng.die(6),band=roll<=2?0:roll<=4?1:roll===5?2:3;
+ const rng=state.rng,roll=state.forcedMonsterRoll||rng.die(6),band=roll<=2?0:roll<=4?1:roll===5?2:3;
+ state.forcedMonsterRoll=0;
  state.monsterResponses++;
  const h=active.hp>0?active:pickHero(state.heroes);if(!h)return;
  const atk=(options={})=>monsterAction(state,h,m,undefined,options);
@@ -204,9 +205,79 @@ function respond(state,active){
   h.abilityUsed=true;const d=rng.die(6);if(d>=5)heal(h,2);else if(d<=2)hurt(h,2,state);
  }
 }
+function castCombatMagic(state,hero){
+ if(state.policy!=="magic")return false;
+ const m=state.activeMonster,rng=state.rng;
+ if(!m||state.monsterHP<=0)return false;
+ const usableScrolls=["scroll-last","scroll-lightning","scroll-flame","scroll-banish","scroll-frost"];
+ const usableWands=["wand-sparks","wand-frost","wand-turn","wand-morph"];
+ if(state.monsterHP<9&&m.stage!=="FINAL")return false;
+ // Deliberately narrow playtest policy: do not claim mastery of all 52 Items.
+ let spell=hero.items.find(o=>usableWands.includes(o.id)&&!state.usedWands.has(o.id));
+ if(!spell)spell=hero.items.find(o=>usableScrolls.includes(o.id));
+ if(!spell)return false;
+ const isWand=spell.v2.kind==="WAND";
+ if(isWand)state.usedWands.add(spell.id);
+ else hero.items.splice(hero.items.indexOf(spell),1);
+ state.magicActions++;
+ const die=rng.die(6),harm=n=>hurt(hero,n,state),damage=n=>{state.monsterHP-=n;};
+ switch(spell.id){
+ case "scroll-last":
+  if(die<=2)harm(rng.die(6));else if(die<=4)damage(rng.die(6)+rng.die(6));
+  else {damage(rng.die(6)+rng.die(6)+rng.die(6));heal(hero,rng.die(6));}
+  break;
+ case "scroll-lightning":
+  if(die<=2)harm(rng.die(6));else if(die<=4)damage(rng.die(6)+3);
+  else if(die===5)damage(rng.die(6)+rng.die(6));
+  else damage(rng.die(6)+rng.die(6)+rng.die(6));
+  if(die>2&&m.id==="sentinel")damage(rng.die(6));
+  break;
+ case "scroll-flame":
+  if(die<=2){harm(rng.die(6));state.forcedMonsterRoll=6;}
+  else if(die<=4)damage(rng.die(6)+2);
+  else {damage(rng.die(6)+rng.die(6));state.monsterSkip++;}
+  break;
+ case "scroll-banish":
+  if(die<=2)state.forcedMonsterRoll=6;
+  else if(die<=4)state.monsterSkip++;
+  else if(m.stage==="FINAL")state.monsterSkip+=2;
+  else state.monsterHP=0;
+  break;
+ case "scroll-frost":
+  if(die<=2)state.forcedMonsterRoll=6;else state.monsterSkip+=die<=4?1:2;
+  break;
+ case "wand-sparks":
+  if(die<=2)harm(1);else if(die<=4)damage(rng.die(6));
+  else damage(rng.die(6)+rng.die(6));
+  break;
+ case "wand-frost":
+  if(die<=2)harm(2);else if(die<=4)state.skippedEffects++;
+  else {state.monsterSkip++;heal(hero,2);}
+  break;
+ case "wand-turn":
+  if(die<=2)harm(1);else state.monsterSkip+=die<=4?1:2;
+  break;
+ case "wand-morph":
+  if(die<=2)hero.items.splice(hero.items.indexOf(spell),1);
+  else if(die<=4)state.skippedEffects++;
+  else {state.monsterSkip++;takeCard(state);}
+  break;
+ default:throw new Error("Unmodeled magic "+spell.id);
+ }
+ if(hero.card.id==="witch"&&!hero.abilityUsed){
+  hero.abilityUsed=true;
+  const hex=rng.die(6);
+  if(hex<=2)hero.poisoned=true;
+  else if(hex<=4)hero.poisoned=false;
+  else state.skippedEffects++;
+ }
+ return true;
+}
+
 function heroTurn(state,hero){
  const rng=state.rng,m=state.activeMonster,stats=effectiveStats(hero);
  if(!m||hero.hp<=0)return;
+ if(castCombatMagic(state,hero))return;
  if(hero.card.id==="wizard"&&!hero.abilityUsed){
   hero.abilityUsed=true;const d=rng.die(6);
   if(d<=2)hurt(hero,rng.die(6),state);
@@ -236,7 +307,7 @@ function heroTurn(state,hero){
  state.monsterHP-=damage;
 }
 function fight(state,monster,{startingHP=monster.hp,transitionAt=0}={}){
- state.activeMonster=monster;state.monsterHP=startingHP;state.monsterSkip=0;state.monsterAdv=false;
+ state.activeMonster=monster;state.monsterHP=startingHP;state.monsterSkip=0;state.forcedMonsterRoll=0;state.monsterAdv=false;
  state.battles++;
  state.heroes.forEach(h=>{h.weaponUsed=false;h.shieldUsed=false;});
  let rounds=0;
@@ -262,10 +333,11 @@ function seal(state){
  state.sealWin=opposedWit(state.rng,highest.card.wit,6);
  return state.sealWin;
 }
-export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal"}={}){
+export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",policy="basic"}={}){
+ if(!["basic","magic"].includes(policy))throw new Error("Unknown playtest policy "+policy);
  if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw new RangeError("1 or 2 Heroes required");
  const cards=heroes.map(id=>{const c=HEROES.find(h=>h.id===id);if(!c)throw new Error("Unknown Hero "+id);return c;});
- const rng=randomSource(seed),state=newState(cards,rng);
+ const rng=randomSource(seed),state=newState(cards,rng);state.policy=policy;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
   const rooms=rng.shuffle(ROOMS.filter(r=>r.stage===stage)).slice(0,3);
   for(const room of rooms){
@@ -291,29 +363,29 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal"}
 }
 function summary(s){
  return {won:s.won,cleared:s.cleared,battles:s.battles,kills:s.kills,damageTaken:s.damageTaken,
-  itemsDrawn:s.itemsDrawn,itemsSpent:s.itemsSpent,magicHeld:magicCount(s.heroes),
+  itemsDrawn:s.itemsDrawn,itemsSpent:s.itemsSpent,magicHeld:magicCount(s.heroes),magicActions:s.magicActions,
   sealAvailable:s.sealAvailable,sealAttempt:s.sealAttempt,sealWin:s.sealWin,roundLimit:s.roundLimit,
   skippedEffects:s.skippedEffects,turns:s.rounds,
   remainingHP:s.heroes.map(h=>h.hp)};
 }
-export function simulateBatch({runs=1000,seed=1,heroes=["warrior"],bossChoice="seal"}={}){
+export function simulateBatch({runs=1000,seed=1,heroes=["warrior"],bossChoice="seal",policy="basic"}={}){
  if(!Number.isInteger(runs)||runs<1||runs>200000)throw new RangeError("Invalid run count");
  const totals={wins:0,deepReached:0,vaultReached:0,battles:0,damageTaken:0,itemsDrawn:0,
-  sealAvailable:0,sealAttempt:0,sealWin:0,roundLimits:0,skippedEffects:0,rounds:0};
+  sealAvailable:0,sealAttempt:0,sealWin:0,roundLimits:0,skippedEffects:0,rounds:0,magicActions:0};
  for(let i=0;i<runs;i++){
-  const r=simulateExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,bossChoice});
+  const r=simulateExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,bossChoice,policy});
   totals.wins+=Number(r.won);totals.deepReached+=Number(r.cleared>=6);
   totals.vaultReached+=Number(r.cleared===9);
   totals.battles+=r.battles;totals.damageTaken+=r.damageTaken;
   totals.itemsDrawn+=r.itemsDrawn;totals.sealAvailable+=Number(r.sealAvailable);
   totals.sealAttempt+=Number(r.sealAttempt);totals.sealWin+=Number(r.sealWin);
-  totals.roundLimits+=Number(r.roundLimit);totals.skippedEffects+=r.skippedEffects;totals.rounds+=r.turns;
+  totals.roundLimits+=Number(r.roundLimit);totals.skippedEffects+=r.skippedEffects;totals.rounds+=r.turns;totals.magicActions+=r.magicActions;
  }
- return {model:MODEL_VERSION,runs,heroes:[...heroes],bossChoice,
+ return {model:MODEL_VERSION,runs,heroes:[...heroes],bossChoice,policy,
   winRate:totals.wins/runs,deepRate:totals.deepReached/runs,vaultRate:totals.vaultReached/runs,
   sealAvailabilityRate:totals.sealAvailable/Math.max(1,totals.vaultReached),
   sealSuccessRate:totals.sealWin/Math.max(1,totals.sealAttempt),
   meanBattles:totals.battles/runs,meanDamage:totals.damageTaken/runs,
   meanItemsDrawn:totals.itemsDrawn/runs,meanRounds:totals.rounds/runs,
-  meanUnmodeledEffects:totals.skippedEffects/runs,roundLimits:totals.roundLimits};
+  meanUnmodeledEffects:totals.skippedEffects/runs,meanMagicActions:totals.magicActions/runs,roundLimits:totals.roundLimits};
 }
