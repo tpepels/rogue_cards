@@ -160,20 +160,20 @@ function content(card,{sidebar=false}={}){
  if(card.type==="hero"&&card.v2){
   const v=card.v2;
   return '<section class="tt-content tt-content--v2-hero" aria-label="Hero ability and starting equipment">'+
-   '<div class="tt-v2-hero-start">START WITH: '+esc(v.starter.toUpperCase())+' + 1 RANDOM OBJECT</div>'+
-   '<p class="tt-v2-hero-trigger">'+esc(v.trigger)+'</p>'+
-   '<div class="tt-v2-results">'+v.roll.outcomes.map(o=>
-    '<div class="tt-v2-result"><b>'+esc(o.range)+'</b><span>'+esc(o.effect)+'</span></div>').join("")+'</div></section>';
+   '<div class="tt-slip tt-slip--lead"><div class="tt-v2-hero-start">START WITH: '+esc(v.starter.toUpperCase())+' + 1 RANDOM OBJECT</div>'+
+   '<p class="tt-v2-hero-trigger">'+esc(v.trigger)+'</p></div>'+
+   '<div class="tt-slip tt-slip--results"><div class="tt-v2-results">'+v.roll.outcomes.map(o=>
+    '<div class="tt-v2-result"><b>'+esc(o.range)+'</b><span>'+esc(o.effect)+'</span></div>').join("")+'</div></div></section>';
  }
  if(card.type==="monster"&&card.v2){
   const v=card.v2;
   return '<section class="tt-content tt-content--v2-monster" aria-label="Monster dice, weakness and bargain">'+
-   '<div class="tt-v2-monster-head">'+(v.phase?'PHASE '+(v.phase===1?'I':'II')+' · ':'')+'BEHAVIOUR · ROLL d6 AFTER EACH HERO TURN</div>'+
+   '<div class="tt-slip tt-slip--lead"><div class="tt-v2-monster-head">'+(v.phase?'PHASE '+(v.phase===1?'I':'II')+' · ':'')+'BEHAVIOUR · ROLL d6 AFTER EACH HERO TURN</div>'+
    '<div class="tt-v2-monster-rows">'+card.behavior.map((effect,i)=>
-     '<div class="tt-v2-result"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(effect)+'</span></div>').join("")+'</div>'+
-   '<p class="tt-v2-monster-rule"><b>WEAKNESS — </b>'+esc(v.weakness)+'</p>'+
+     '<div class="tt-v2-result"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(effect)+'</span></div>').join("")+'</div></div>'+
+   '<div class="tt-slip tt-slip--results"><p class="tt-v2-monster-rule"><b>WEAKNESS — </b>'+esc(v.weakness)+'</p>'+
    '<p class="tt-v2-monster-rule"><b>PARLEY — </b>'+esc(v.parley)+'</p>'+
-   '<p class="tt-v2-monster-remains"><b>REMAINS — </b>'+esc(v.remains)+'</p></section>';
+   '<p class="tt-v2-monster-remains"><b>REMAINS — </b>'+esc(v.remains)+'</p></div></section>';
  }
  if(card.v2&&(card.type==="item"||card.type==="potion")){
   const v=card.v2;
@@ -184,22 +184,23 @@ function content(card,{sidebar=false}={}){
       '<div class="tt-v2-result"><b>'+esc(row.range)+'</b><span>'+esc(row.effect)+'</span></div>').join("")+'</div>'
    :"";
   return '<section class="tt-content tt-content--v2 tt-content--v2-object" aria-label="Item effects and roll ranges">'+
-   '<div class="tt-v2-kind">'+esc(v.kind)+' <span class="tt-v2-tags">'+tags+'</span></div>'+
-   '<p class="tt-v2-trigger">'+esc(v.trigger)+'</p>'+
+   '<div class="tt-slip tt-slip--lead"><div class="tt-v2-kind">'+esc(v.kind)+' <span class="tt-v2-tags">'+tags+'</span></div>'+
+   '<p class="tt-v2-trigger">'+esc(v.trigger)+'</p></div>'+
+   ((dice||v.alternative||card.type==="potion")?'<div class="tt-slip tt-slip--results">'+
    dice+(v.alternative?'<div class="tt-v2-alternative">'+esc(v.alternative)+'</div>':"")+
    (card.type==="potion"?'<div class="tt-v2-identity">IDENTIFY: keep one spent copy face up.</div>':"")+
-   '</section>';
+   '</div>':"")+'</section>';
  }
  if(card.v2&&card.type==="room"){
   const v=card.v2;
   const choices=v.choices.map(choice=>'<div class="tt-v2-choice"><b>'+esc(choice.label)+'</b><span>'+esc(choice.effect)+'</span></div>').join("");
   const results=v.roll.outcomes.map(outcome=>'<div class="tt-v2-result"><b>'+esc(outcome.range)+'</b><span>'+esc(outcome.effect)+'</span></div>').join("");
   return '<section class="tt-content tt-content--v2" aria-label="Room choices and d6 results">'+
-   '<div class="tt-v2-kind">'+esc(v.kind)+' <span>CHOOSE ONE</span></div>'+
+   '<div class="tt-slip tt-slip--lead"><div class="tt-v2-kind">'+esc(v.kind)+' <span>CHOOSE ONE</span></div>'+
    '<p class="tt-v2-prompt">'+esc(v.prompt)+'</p>'+
-   '<div class="tt-v2-choices">'+choices+'</div>'+
-   '<div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
-   '<div class="tt-v2-results">'+results+'</div></section>';
+   '<div class="tt-v2-choices">'+choices+'</div></div>'+
+   '<div class="tt-slip tt-slip--results"><div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
+   '<div class="tt-v2-results">'+results+'</div></div></section>';
  }
  throw new TypeError("No canonical card effects: "+card.type);
 }
@@ -216,9 +217,9 @@ export function cardMarkup(card){
  middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
    '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
    content(card)+'</div>';
- return '<article class="tt-card tt-art-first tt-'+type+' tt-layout-'+layout+
+ return '<article class="tt-card tt-paper-collage tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
-  '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-paste="'+plate+'" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-file="'+esc(asset||"")+'" data-art-status="'+(asset?'generated':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   label+typeStamp+middle+

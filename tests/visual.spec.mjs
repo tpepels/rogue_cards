@@ -16,14 +16,22 @@ test("one canonical gallery covers all families and prints real card sheets",asy
   await filter.selectOption(type);
   await expect(page.locator(".tt-grid .tt-card")).toHaveCount(count);
   const values=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(c=>{
-   const paper=c.querySelector(".tt-collage>.tt-content"),rect=paper.getBoundingClientRect();
    const title=c.querySelector(".tt-title").getBoundingClientRect();
-   return {id:c.dataset.id,clipY:paper.scrollHeight-paper.clientHeight,clipX:paper.scrollWidth-paper.clientWidth,titleOverlap:title.bottom-rect.top};
+   const notes=[...c.querySelectorAll(".tt-collage>.tt-content>.tt-slip")];
+   const issues=notes.map(note=>{
+    const r=note.getBoundingClientRect();
+    const intersects=Math.min(title.right,r.right)>Math.max(title.left,r.left)&&Math.min(title.bottom,r.bottom)>Math.max(title.top,r.top);
+    return {clipY:note.scrollHeight-note.clientHeight,clipX:note.scrollWidth-note.clientWidth,intersects};
+   });
+   return {id:c.dataset.id,issues};
   }));
   for(const row of values){
-   expect(row.clipY,type+" clipped vertically: "+row.id).toBeLessThanOrEqual(2);
-   expect(row.clipX,type+" clipped horizontally: "+row.id).toBeLessThanOrEqual(2);
-   expect(row.titleOverlap,type+" title collision: "+row.id).toBeLessThanOrEqual(5);
+   expect(row.issues.length,type+" missing pasted notes: "+row.id).toBeGreaterThanOrEqual(1);
+   for(const note of row.issues){
+    expect(note.clipY,type+" note clipped vertically: "+row.id).toBeLessThanOrEqual(2);
+    expect(note.clipX,type+" note clipped horizontally: "+row.id).toBeLessThanOrEqual(2);
+    expect(note.intersects,type+" title intersects a note: "+row.id).toBe(false);
+   }
   }
  }
  await filter.selectOption("WAND");
@@ -32,8 +40,8 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await expect(page.getByRole("button",{name:"PRINT QUANTITIES"})).toBeVisible();
  await page.emulateMedia({media:"print"});
  const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
-  const paper=c.querySelector(".tt-collage>.tt-content"),r=c.getBoundingClientRect();
-  return {w:r.width,h:r.height,clip:paper.scrollHeight-paper.clientHeight};
+  const slips=[...c.querySelectorAll(".tt-collage>.tt-content>.tt-slip")],r=c.getBoundingClientRect();
+  return {w:r.width,h:r.height,clip:Math.max(...slips.map(note=>note.scrollHeight-note.clientHeight))};
  }));
  expect(printed.length).toBeGreaterThan(0);
  for(const m of printed){
@@ -66,60 +74,87 @@ test("small-screen catalogue controls and cards do not overflow horizontally",as
 });
 
 
-test("every unique card has legible ink, a physical type stamp and unclipped pasted rules",async({page})=>{
+test("each card has clear pasted notes over full-bleed art",async({page})=>{
  test.setTimeout(180000);
  await page.goto("/");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(111);
- const designs=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const title=card.querySelector(".tt-title").getBoundingClientRect();
-  const kind=card.querySelector(".tt-card-kind").getBoundingClientRect();
-  const paper=card.querySelector(".tt-collage>.tt-content");
-  const slip=paper.getBoundingClientRect();
-  const art=card.querySelector(".tt-collage>.tt-visual").getBoundingClientRect();
-  const bounds=card.getBoundingClientRect();
-  return {id:card.dataset.id,type:card.dataset.v2Kind,
-   vertical:paper.scrollHeight-paper.clientHeight,
-   horizontal:paper.scrollWidth-paper.clientWidth,
-   titleOverlap:title.bottom-slip.top,
-   stampOverlapX:Math.max(0,Math.min(kind.right,title.right)-Math.max(kind.left,title.left)),
-   stampOverlapY:Math.max(0,Math.min(kind.bottom,title.bottom)-Math.max(kind.top,title.top)),
-   stampOutside:kind.right-bounds.right,
-   illustrationAboveSlip:slip.top-art.top,
-   noteWidth:slip.width,
-   artWidth:art.width,
-   noteTransform:getComputedStyle(paper).transform};
- }));
- const families=new Set();
- for(const card of designs){
-  families.add(card.type);
-  expect(card.vertical,"Rules vertically clipped on "+card.type+"/"+card.id).toBeLessThanOrEqual(2);
-  expect(card.horizontal,"Rules horizontally clipped on "+card.type+"/"+card.id).toBeLessThanOrEqual(2);
-  expect(card.titleOverlap,"Title is obscured by notes: "+card.id).toBeLessThanOrEqual(5);
-  expect(card.stampOutside,"Type stamp extends outside card: "+card.id).toBeLessThanOrEqual(2);
-  expect(Math.min(card.stampOverlapX,card.stampOverlapY),
-   "Type stamp intersects title: "+card.id).toBeLessThanOrEqual(5);
-  expect(card.illustrationAboveSlip,"No visible art above notes: "+card.id).toBeGreaterThan(24);
- }
- for(const family of ["HERO","MONSTER","WARDEN","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION","HAZARD","SHRINE","ENCOUNTER"]){
+ const check=async()=>{
+  const cards=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+   const title=card.querySelector(".tt-title").getBoundingClientRect();
+   const stamp=card.querySelector(".tt-card-kind").getBoundingClientRect();
+   const image=card.querySelector(".tt-collage>.tt-visual").getBoundingClientRect();
+   const cardBounds=card.getBoundingClientRect();
+   const collage=card.querySelector(".tt-collage").getBoundingClientRect();
+   const notes=[...card.querySelectorAll(".tt-collage>.tt-content>.tt-slip")].map(node=>{
+    const bounds=node.getBoundingClientRect();
+    return {x:bounds.left,y:bounds.top,right:bounds.right,bottom:bounds.bottom,
+     width:bounds.width,height:bounds.height,
+     clipY:node.scrollHeight-node.clientHeight,
+     clipX:node.scrollWidth-node.clientWidth,
+     text:node.innerText,angle:getComputedStyle(node).transform};
+   });
+   return {id:card.dataset.id,type:card.dataset.v2Kind,plate:card.dataset.paste,
+    imageH:image.height,imageW:image.width,
+    imageFill:getComputedStyle(card.querySelector(".tt-art-image")).objectFit,
+    cardBounds:{left:cardBounds.left,top:cardBounds.top,right:cardBounds.right,bottom:cardBounds.bottom},
+    collage:{left:collage.left,top:collage.top,right:collage.right,bottom:collage.bottom},
+    title:{left:title.left,top:title.top,right:title.right,bottom:title.bottom},
+    stampOutside:stamp.right-cardBounds.right,
+    stampOverlapX:Math.max(0,Math.min(stamp.right,title.right)-Math.max(stamp.left,title.left)),
+    stampOverlapY:Math.max(0,Math.min(stamp.bottom,title.bottom)-Math.max(stamp.top,title.top)),
+    notes};
+  }));
+  expect(cards).toHaveLength(111);
+  for(const card of cards){
+   expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
+   expect(card.imageH,card.id+" illustration too small").toBeGreaterThan(110*96/25.4);
+   expect(card.imageW,card.id+" illustration too narrow").toBeGreaterThan(83*96/25.4);
+   expect(card.notes.length,card.id+" has no note").toBeGreaterThanOrEqual(1);
+   expect(card.notes.length,card.id+" too many pasted notes").toBeLessThanOrEqual(2);
+   expect(card.stampOutside,card.id+" stamp outside frame").toBeLessThanOrEqual(2);
+   expect(Math.min(card.stampOverlapX,card.stampOverlapY),card.id+" stamp/title overlap").toBeLessThanOrEqual(5);
+   for(const note of card.notes){
+    expect(note.clipY,card.id+" note vertically clipped").toBeLessThanOrEqual(2);
+    expect(note.clipX,card.id+" note horizontally clipped").toBeLessThanOrEqual(2);
+    expect(note.y-card.collage.top,card.id+" pasted note extends above artwork").toBeGreaterThanOrEqual(21);
+    expect(note.bottom-card.collage.bottom,card.id+" pasted note extends below frame").toBeLessThanOrEqual(4);
+    expect(note.x-card.collage.left,card.id+" pasted note extends left").toBeGreaterThanOrEqual(-3);
+    expect(note.right-card.collage.right,card.id+" pasted note extends right").toBeLessThanOrEqual(4);
+    const overlapX=Math.min(card.title.right,note.right)-Math.max(card.title.left,note.x);
+    const overlapY=Math.min(card.title.bottom,note.bottom)-Math.max(card.title.top,note.y);
+    expect(Math.min(overlapX,overlapY),card.id+" rules overlap title").toBeLessThanOrEqual(4);
+   }
+   if(card.notes.length===2){
+    const [a,b]=card.notes;
+    const overlapX=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
+    const overlapY=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+    expect(Math.min(overlapX,overlapY),card.id+" pasted notes collide").toBeLessThanOrEqual(3);
+   }
+  }
+  return cards;
+ };
+ const onScreen=await check();
+ const families=new Set(onScreen.map(card=>card.type));
+ for(const family of ["HERO","MONSTER","WARDEN","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION","HAZARD","SHRINE","ENCOUNTER"])
   expect(families.has(family),"No artwork/layout for "+family).toBeTruthy();
- }
- const samples=Object.fromEntries(designs.filter(x=>["TOOL","SCROLL","RING","WAND","RELIC","HERO","MONSTER"].includes(x.type))
-   .map(x=>[x.type,x]).filter((x,i,all)=>all.findIndex(y=>y[0]===x[0])===i));
- expect(new Set(Object.values(samples).map(x=>x.noteTransform)).size,
-  "Card families must have distinct paper rotation/compositions").toBeGreaterThanOrEqual(4);
+ expect(new Set(onScreen.map(c=>c.plate)).size).toBe(4);
+ expect(new Set(onScreen.map(c=>c.notes[0].angle)).size).toBeGreaterThanOrEqual(3);
  await page.emulateMedia({media:"print"});
- const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const paper=card.querySelector(".tt-collage>.tt-content");
-  const frame=card.getBoundingClientRect();
-  return {id:card.dataset.id,vertical:paper.scrollHeight-paper.clientHeight,
-    horizontal:paper.scrollWidth-paper.clientWidth,w:frame.width,h:frame.height};
- }));
+ // The same physical card component is used in the four-up print sheets.
+ const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>({
+  id:c.dataset.id,
+  w:c.getBoundingClientRect().width,h:c.getBoundingClientRect().height,
+  clips:[...c.querySelectorAll(".tt-slip")].map(n=>({
+   y:n.scrollHeight-n.clientHeight,x:n.scrollWidth-n.clientWidth
+  }))
+ })));
  expect(printed).toHaveLength(111);
  for(const card of printed){
-  expect(card.vertical,"Print vertically clipped: "+card.id).toBeLessThanOrEqual(2);
-  expect(card.horizontal,"Print horizontally clipped: "+card.id).toBeLessThanOrEqual(2);
   expect(card.w).toBeGreaterThan(90*96/25.4-2);
   expect(card.h).toBeLessThan(130*96/25.4+2);
+  for(const clip of card.clips){
+   expect(clip.y,"Printed note clipped on "+card.id).toBeLessThanOrEqual(2);
+   expect(clip.x,"Printed note clipped on "+card.id).toBeLessThanOrEqual(2);
+  }
  }
 });
 
@@ -131,7 +166,7 @@ test("physical card families have distinct illustration frames and artifact layo
    const card=cards.find(c=>c.dataset.v2Kind===family);
    if(!card)return {family,missing:true};
    const plate=card.querySelector(".tt-illustration");
-   const slip=card.querySelector(".tt-collage>.tt-content");
+   const slip=card.querySelector(".tt-slip--lead");
    const stamp=card.querySelector(".tt-card-kind");
    return {family,frame:getComputedStyle(plate,"::before").border,
     frameShape:getComputedStyle(plate,"::before").borderRadius,
@@ -148,38 +183,3 @@ test("physical card families have distinct illustration frames and artifact layo
 });
 
 
-test("all 111 cards keep a readable rule docket below a prominent illustration",async({page})=>{
- test.setTimeout(180000);
- await page.goto("/");
- const inspect=()=>page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const picture=card.querySelector(".tt-collage>.tt-visual").getBoundingClientRect();
-  const paper=card.querySelector(".tt-collage>.tt-content");
-  const docket=paper.getBoundingClientRect();
-  const area=card.querySelector(".tt-collage").getBoundingClientRect();
-  const image=card.querySelector(".tt-art-image");
-  return {id:card.dataset.id,type:card.dataset.v2Kind,
-   artHeight:picture.height,artWidth:picture.width,
-   docketTop:docket.top,docketBottom:docket.bottom,
-   artBottom:picture.bottom,areaBottom:area.bottom,
-   docketClipY:paper.scrollHeight-paper.clientHeight,
-   docketClipX:paper.scrollWidth-paper.clientWidth,
-   objectFit:getComputedStyle(image).objectFit,
-   layout:getComputedStyle(card.querySelector(".tt-collage")).display
-  };
- }));
- const check=results=>{
-  expect(results).toHaveLength(111);
-  for(const c of results){
-   expect(c.layout,c.id+" should have independent art and rules").toBe("flex");
-   expect(c.objectFit,c.id+" should display the complete original picture").toBe("contain");
-   expect(c.artHeight,c.id+" lost too much illustration").toBeGreaterThanOrEqual(38*96/25.4);
-   expect(c.artBottom-c.docketTop,c.id+" rules conceal the picture").toBeLessThanOrEqual(5);
-   expect(c.docketBottom-c.areaBottom,c.id+" rules extend beyond physical card").toBeLessThanOrEqual(2);
-   expect(c.docketClipY,c.id+" text clipped vertically").toBeLessThanOrEqual(2);
-   expect(c.docketClipX,c.id+" text clipped horizontally").toBeLessThanOrEqual(2);
-  }
- };
- check(await inspect());
- await page.emulateMedia({media:"print"});
- check(await inspect());
-});
