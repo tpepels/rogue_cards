@@ -415,3 +415,62 @@ test("V2 Room lab previews and prints 36 distinct, readable d6 choice cards",asy
   expect(c.height).toBeLessThan(130*96/25.4+2);
  }
 });
+
+
+test("Phase 2 object lab prints every Scroll, Ring, Wand, Item and Potion legibly",async({page})=>{
+ const errors=[];page.on("pageerror",e=>errors.push(e.message));
+ await page.goto("/v2-objects.html");
+ await expect(page.getByRole("heading",{name:/Strange things in your pockets/i})).toBeVisible();
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(52);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(13);
+ await expect(page.locator(".tt-grid .tt-layout-v2-object")).toHaveCount(52);
+ await expect(page.locator(".tt-grid .tt-v2-tags")).toHaveCount(52);
+ expect(errors).toEqual([]);
+ const cards=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const body=card.querySelector(".tt-content--v2-object");
+  const b=body.getBoundingClientRect(),art=card.querySelector(".tt-visual").getBoundingClientRect(),
+   title=card.querySelector(".tt-title").getBoundingClientRect(),frame=card.getBoundingClientRect();
+  return {id:card.dataset.id,kind:card.dataset.v2Kind,
+   verticalClip:body.scrollHeight-body.clientHeight,
+   horizontalClip:body.scrollWidth-body.clientWidth,
+   paperTop:b.top-frame.top,titleBottom:title.bottom-frame.top,
+   overlap:Math.min(art.bottom,b.bottom)-Math.max(art.top,b.top),
+   footerClip:card.querySelector(".tt-footer").getBoundingClientRect().bottom-frame.bottom};
+ }));
+ for(const c of cards){
+  expect(c.verticalClip,"Preview text clipped vertically "+c.id).toBeLessThanOrEqual(2);
+  expect(c.horizontalClip,"Preview text clipped horizontally "+c.id).toBeLessThanOrEqual(2);
+  expect(c.paperTop,"Title collides with paper "+c.id).toBeGreaterThan(c.titleBottom-5);
+  expect(c.overlap,"No artwork/paper collage "+c.id).toBeGreaterThan(35);
+  expect(c.footerClip,"Footer extends below card "+c.id).toBeLessThanOrEqual(2);
+ }
+ await page.emulateMedia({media:"print"});
+ const pages=page.locator(".tt-print-only .tt-sheet");
+ await expect(pages).toHaveCount(13);
+ const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
+  const body=c.querySelector(".tt-content--v2-object"),rect=c.getBoundingClientRect(),
+   title=c.querySelector(".tt-title").getBoundingClientRect(),paper=body.getBoundingClientRect();
+  return {id:c.dataset.id,w:rect.width,h:rect.height,
+   clip:body.scrollHeight-body.clientHeight,
+   horizontal:body.scrollWidth-body.clientWidth,
+   titleClear:paper.top-title.bottom};
+ }));
+ expect(printed).toHaveLength(52);
+ for(const c of printed){
+  expect(c.w).toBeGreaterThan(90*96/25.4-2);
+  expect(c.h).toBeLessThan(130*96/25.4+2);
+  expect(c.clip,"Print text clipped "+c.id).toBeLessThanOrEqual(2);
+  expect(c.horizontal,"Print text horizontally clipped "+c.id).toBeLessThanOrEqual(2);
+  expect(c.titleClear,"Title/paper collide in print "+c.id).toBeGreaterThan(-5);
+ }
+ await page.emulateMedia({media:"screen"});
+ const family=page.getByRole("combobox",{name:"V2 object family"});
+ await family.selectOption("WAND");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(7);
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(7);
+ await page.getByRole("button",{name:"ONE EACH"}).click();
+ await expect(page.getByRole("button",{name:"PRINT QUANTITIES"})).toBeVisible();
+ await family.selectOption("POTION");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(19);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(5);
+});
