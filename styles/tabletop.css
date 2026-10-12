@@ -741,6 +741,58 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  }
 }
 
+
+/* V2 Phase 2 — distinct object slips using the established physical collage;
+   range labels are bold printer-safe ink, no digital widget treatments. */
+.tt-layout-v2-object{--art-bottom:2mm;--slip-bottom:7.3mm}
+.tt-card.tt-layout-v2-object .tt-collage>.tt-content--v2-object{
+ max-height:calc(100% - 20mm);
+ padding:1.6mm 2.2mm 2mm;
+ background:#f1e8d8;
+ background-image:linear-gradient(170deg,#f5eddf,#e8ddca);
+}
+.tt-layout-v2-object .tt-title{font-size:20px;max-width:calc(100% - 6mm)}
+.tt-content--v2-object .tt-v2-kind{display:flex;align-items:center;gap:1.5mm;flex-wrap:wrap;justify-content:flex-start}
+.tt-content--v2-object .tt-v2-tags{display:flex;flex-wrap:wrap;gap:.65mm;margin-left:auto;justify-content:flex-end}
+.tt-content--v2-object .tt-v2-tag{
+ font:900 8px/1 "Courier New",monospace;
+ background:#252019;color:#f8efe1;padding:.55mm .8mm;
+ letter-spacing:0;white-space:nowrap
+}
+.tt-content--v2-object .tt-v2-trigger{
+ margin:1.3mm 0 1.1mm;
+ font:900 11.1px/1.28 "Courier New",monospace;
+ border-bottom:1px solid #4b4036;padding-bottom:.85mm;
+}
+.tt-content--v2-object .tt-v2-roll-heading{
+ margin:1mm -.6mm .7mm;padding:.65mm 1mm;
+ font:900 11px/1.17 "Courier New",monospace
+}
+.tt-content--v2-object .tt-v2-result{
+ font:10.65px/1.2 "Courier New",monospace;
+ grid-template-columns:11.6mm 1fr;
+ padding:.7mm .3mm;
+}
+.tt-content--v2-object .tt-v2-result b{font:900 11.6px/1.05 "Courier New",monospace}
+.tt-content--v2-object .tt-v2-alternative{
+ border-top:1.5px solid #28211a;
+ margin-top:1.1mm;padding-top:1mm;
+ font:10.5px/1.24 "Courier New",monospace
+}
+.tt-content--v2-object .tt-v2-identity{
+ font:900 9px/1.12 "Courier New",monospace;
+ border-top:1px dashed #4a3a29;
+ margin-top:1mm;padding-top:1mm;
+}
+.tt-v2-object-gallery .tt-hero{background:#eee2d0}
+.tt-v2-object-gallery .tt-hero h1{font-size:clamp(30px,4.8vw,54px)}
+.tt-v2-object-gallery .tt-hero p{max-width:810px}
+.tt-v2-object-gallery .tt-v2-object-count{
+ padding:6px 0 14px;font:12px/1.35 "Courier New",monospace;
+}
+.tt-v2-object-gallery .tt-v2-family-group{margin:12px 0}
+.tt-v2-object-gallery .tt-v2-family-label{font:bold 13px "Courier New",monospace}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
