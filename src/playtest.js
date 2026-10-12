@@ -13,7 +13,7 @@
  */
 import {HEROES, ROOMS, MONSTERS, OBJECTS, WARDEN, WARDEN_FURY, VAULT} from "./tabletop-data.js";
 
-export const MODEL_VERSION = "phase5-basic-attack-v1";
+export const MODEL_VERSION = "phase5-structured-baseline-v2";
 export const MONSTER_IDS = Object.freeze([
  "rat","goblin","crawler","bat","troll","wisp","eye","mold",
  "wraith","rust","cultist","sentinel","warden","warden-fury"
@@ -285,7 +285,8 @@ function heroTurn(state,hero){
   else {state.monsterHP-=rng.die(6)+rng.die(6);state.monsterSkip++;}
   return;
  }
- let adv=false,dis=hero.attackDis||hero.poisoned;
+ let adv=state.heroAdv,dis=hero.attackDis||hero.poisoned;
+ state.heroAdv=false;
  hero.attackDis=false;
  if(hero.card.id==="rogue"&&!hero.abilityUsed){
   hero.abilityUsed=true;const d=rng.die(6);if(d<=2)dis=true;else if(d>=3)adv=true;
@@ -306,8 +307,8 @@ function heroTurn(state,hero){
  }
  state.monsterHP-=damage;
 }
-function fight(state,monster,{startingHP=monster.hp,transitionAt=0}={}){
- state.activeMonster=monster;state.monsterHP=startingHP;state.monsterSkip=0;state.forcedMonsterRoll=0;state.monsterAdv=false;
+function fight(state,monster,{startingHP=monster.hp,transitionAt=0,initialAdv=false}={}){
+ state.activeMonster=monster;state.monsterHP=startingHP;state.monsterSkip=0;state.forcedMonsterRoll=0;state.monsterAdv=initialAdv;
  state.battles++;
  state.heroes.forEach(h=>{h.weaponUsed=false;h.shieldUsed=false;});
  let rounds=0;
@@ -351,10 +352,10 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",
   }
  }
  const omen=rng.die(6);
- if(omen<=2)state.monsterAdv=true;
+ if(omen>=5)state.heroAdv=true;
  if(bossChoice==="seal"&&seal(state)){state.won=true;return summary(state);}
  if(!partyAlive(state.heroes))return summary(state);
- if(!fight(state,WARDEN,{transitionAt:12}))return summary(state);
+ if(!fight(state,WARDEN,{transitionAt:12,initialAdv:omen<=2}))return summary(state);
  // The Warden's health is conserved across phases. Start Phase II at exactly
  // 12 HP or fewer, never restore an extra health bar.
  if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,0,12)}))return summary(state);
