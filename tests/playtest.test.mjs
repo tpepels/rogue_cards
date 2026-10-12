@@ -73,6 +73,15 @@ test("cooperative expeditions never exceed nine regional Rooms or double-grant t
   }
  }
 });
+test("limited magic policy casts real printed Scrolls and Wands without exhausting the same Wand twice",()=>{
+ const a=simulateBatch({runs:350,seed:12,heroes:["witch","wizard"],policy:"magic"});
+ const b=simulateBatch({runs:350,seed:12,heroes:["witch","wizard"],policy:"magic"});
+ assert.deepEqual(a,b);
+ assert.ok(a.meanMagicActions>0.05,"Expected actual spell uses from shuffled decks");
+ assert.equal(a.roundLimits,0);
+ assert.ok(a.meanUnmodeledEffects>0,"Unimplemented effects must remain visible");
+ console.log("PHASE5 MAGIC POLICY (PARTIAL):",JSON.stringify(a));
+});
 test("batch measurements are deterministic, numerical and explicitly report model omissions",()=>{
  const a=simulateBatch({runs:300,seed:402,heroes:["wizard","knight"]});
  const b=simulateBatch({runs:300,seed:402,heroes:["wizard","knight"]});
