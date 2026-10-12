@@ -24,7 +24,7 @@ export const MONSTER_IDS = Object.freeze([
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
  rooms:"1f54af43",objects:"10f68323",monsters:"03f7a3b3",
- heroes:"32c877c6",warden:"4f906773"
+ heroes:"4116c2a8",warden:"c9b99451"
 });
 const digest=data=>{
  let h=2166136261;
@@ -224,8 +224,8 @@ function respond(state,active){
  case "rust":if(band===1)atk();else if(band===2)spendItem(state)||hurt(h,3,state);else if(band===3)atk({adv:true});break;
  case "cultist":if(band===0)state.monsterAdv=true;else if(band===1)atk({atkBonus:6-m.atk});else if(band===2)h.poisoned=true;else atk({adv:true});break;
  case "sentinel":if(band===0)h.attackDis=true;else if(band===1)atk();else if(band===2)atk({damageBonus:2});else atk({adv:true});break;
- case "warden":if(band===1)atk();else if(band===2)h.attackDis=true;else if(band===3)atk({adv:true});break;
- case "warden-fury":if(band===0)atk();else if(band===1)monsterAction(state,h,m,"drain");else if(band===2)healthy(state.heroes).forEach(x=>hurt(x,2,state));else atk({adv:true,damageBonus:2});break;
+ case "warden":if(band===1)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===2)h.attackDis=true;else if(band===3)atk({adv:true});break;
+ case "warden-fury":if(band===0)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===1)monsterAction(state,h,m,"drain");else if(band===2)healthy(state.heroes).forEach(x=>hurt(x,2,state));else atk({adv:true,damageBonus:2});break;
  default:throw new Error("Unmodeled Monster "+m.id);
  }
  if(h.card.id==="monk"&&!h.abilityUsed&&h.hp>0){
@@ -357,9 +357,10 @@ function fight(state,monster,{startingHP=monster.hp,transitionAt=0,initialAdv=fa
  return thresholdReached;
 }
 function seal(state){
- state.sealAvailable=magicCount(state.heroes)>=3;
+ const cost=state.heroes.length===2?5:3;
+ state.sealAvailable=magicCount(state.heroes)>=cost;
  if(!state.sealAvailable)return false;
- state.sealAttempt=true;for(let i=0;i<3;i++)spendItem(state,{magic:true});
+ state.sealAttempt=true;for(let i=0;i<cost;i++)spendItem(state,{magic:true});
  const highest=[...healthy(state.heroes)].sort((a,b)=>b.card.wit-a.card.wit)[0];
  if(!highest){state.sealAttempt=false;return false;}
  state.sealWin=opposedWit(state.rng,highest.card.wit,6);
@@ -388,7 +389,7 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",
  if(omen>=5)state.heroAdv=true;
  if(bossChoice==="seal"&&seal(state)){state.won=true;return summary(state);}
  if(!partyAlive(state.heroes))return summary(state);
- if(!fight(state,WARDEN,{transitionAt:12,initialAdv:omen<=2}))return summary(state);
+ if(!fight(state,WARDEN,{transitionAt:12,initialAdv:omen<=2||state.sealAttempt}))return summary(state);
  // The Warden's health is conserved across phases. Start Phase II at exactly
  // 12 HP or fewer, never restore an extra health bar.
  if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,0,12)}))return summary(state);
