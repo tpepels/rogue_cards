@@ -656,8 +656,8 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 }
 
 
-/* V2 PHASE 1 — six Room ecologies with cut-paper choice and dice records.
-   V1 classes and print geometry are untouched. All results are real, sharp
+/* Canonical Room ecology: cut-paper choices and clear printed dice records.
+   Physical print geometry is fixed. All results are real, sharp
    ink on solid paper; art continues behind the pasted mechanic slip. */
 .tt-layout-v2-room{
  --art-bottom:2mm;
@@ -729,7 +729,7 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-layout-v2-room .tt-stage{
  letter-spacing:.01em;
 }
-/* The preview hub is NOT the live V1 print kit. */
+/* Gallery retains print-safe typography and spacing. */
 .tt-v2-hub .tt-hero{background:#ede4d2}
 .tt-v2-hub .tt-hero h1{font-size:clamp(31px,4.8vw,56px)}
 .tt-v2-hub .tt-hero p{max-width:800px}
