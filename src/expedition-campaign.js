@@ -153,7 +153,7 @@ function attemptParley(s,m){
    h.used.add("hero");const trick=s.die();
    rogueDis=trick<=2;rogueAdv=trick>=3;rogueReward=trick>=5;
   }
-  const r=rollD20(s,{adv:boon.adv||rogueAdv,dis:h.poison||h.slots.armour?.id==="mail"||rogueDis});
+  const r=s.rerollIfKept(h,rollD20(s,{adv:boon.adv||rogueAdv,dis:h.poison||h.slots.armour?.id==="mail"||rogueDis}));
   const opp=s.die(20);
   success=r===20||(r!==1&&r+h.card.wit+boon.bonus>opp+difficulty);
   if(success&&rogueReward)s.draw();
@@ -225,7 +225,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const adv=attackAdv||rogueAdv||h.nextAdv>0||blessing.adv;
  const dis=attackDis||rogueDis;
  h.nextAdv=0;
- s.pendingD20=rollD20(s,{adv,dis});
+ s.pendingD20=s.rerollIfKept(h,rollD20(s,{adv,dis}));
  s.pendingD20Modifier=0;
  const ring=h.slots.ring;
  if(ring?.id==="ring-luck"&&!h.used.has(ring)){s.activate(h,ring);}
@@ -331,7 +331,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  }
  const atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
  const blessing=blessBeforeD20(s,h);
- let def=rollD20(s,{adv:defenseAdv||blessing.adv});
+ let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv}));
  let defenceBonus=blessing.bonus;
  const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
  const undo=itemIn(s,h,"wand-undo");
@@ -473,7 +473,7 @@ function seal(s){
  s.discard(cost,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
  const boon=blessBeforeD20(s,h);
- let atk=rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"});
+ let atk=s.rerollIfKept(h,rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"}));
  const ring=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
  if(ring&&!h.used.has(ring)){
   s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,ring);
