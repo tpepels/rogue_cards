@@ -147,9 +147,16 @@ function attemptParley(s,m){
   if(potion){s.consume(potion,potion.inventory.find(o=>o.v2.kind==="POTION"));success=true;}break;}
  case "bat":case "wisp":{
   const difficulty=m.id==="bat"?3:5;
-  const r=rollD20(s,{dis:h.poison||h.slots.armour?.id==="mail"});
+  const boon=blessBeforeD20(s,h);
+  let rogueAdv=false,rogueDis=false,rogueReward=false;
+  if(h.card.id==="rogue"&&!h.used.has("hero")){
+   h.used.add("hero");const trick=s.die();
+   rogueDis=trick<=2;rogueAdv=trick>=3;rogueReward=trick>=5;
+  }
+  const r=rollD20(s,{adv:boon.adv||rogueAdv,dis:h.poison||h.slots.armour?.id==="mail"||rogueDis});
   const opp=s.die(20);
-  success=r===20||(r!==1&&r+h.card.wit>opp+difficulty);
+  success=r===20||(r!==1&&r+h.card.wit+boon.bonus>opp+difficulty);
+  if(success&&rogueReward)s.draw();
   if(success&&m.id==="wisp")s.peek(1);
   break;
  }
@@ -193,16 +200,19 @@ function eatCorpse(s,m){
  }
 }
 // Responsible for pre-attack Hero and gear triggers.
+function blessBeforeD20(s,target){
+ const priest=s.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
+ if(!priest)return {bonus:0,adv:false};
+ priest.used.add("hero");const d=s.die();
+ if(d<=2){s.hurt(priest,s.die());return {bonus:0,adv:false};}
+ if(d<=4)return {bonus:2,adv:false};
+ target.poison=false;return {bonus:0,adv:true};
+}
 function playerRoll(s,h,bonus,def,actorType="attack"){
  const attackAdv=h.nextAdv>0,attackDis=h.nextDis>0||h.poison;
  h.nextAdv=0;h.nextDis=0;
  let extraAtk=h.nextAtk||0;h.nextAtk=0;
- if(h.card.id==="priest"&&!h.used.has("hero")){
-  h.used.add("hero");const d=s.die();
-  if(d<=2)s.hurt(h,s.die());
-  else if(d<=4)extraAtk+=2;
-  else {h.nextAdv++;h.poison=false;}
- }
+ const blessing=blessBeforeD20(s,h);extraAtk+=blessing.bonus;
  let rogueAdv=false,rogueDis=false;
  if(h.card.id==="rogue"&&!h.used.has("hero")){
   h.used.add("hero");const d=s.die();
@@ -212,7 +222,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
    if(r===20||r!==1&&r+h.card.wit>op+def)s.draw();
   }
  }
- const adv=attackAdv||rogueAdv||h.nextAdv>0;
+ const adv=attackAdv||rogueAdv||h.nextAdv>0||blessing.adv;
  const dis=attackDis||rogueDis;
  h.nextAdv=0;
  s.pendingD20=rollD20(s,{adv,dis});
@@ -320,10 +330,22 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
  const atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
- const def=rollD20(s,{adv:defenseAdv});
+ const blessing=blessBeforeD20(s,h);
+ let def=rollD20(s,{adv:defenseAdv||blessing.adv});
+ let defenceBonus=blessing.bonus;
+ const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
+ const undo=itemIn(s,h,"wand-undo");
+ if(lucky&&!h.used.has(lucky)){
+  s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,lucky);
+  def=s.pendingD20+s.pendingD20Modifier;
+ }
+ if(undo&&!s.exhausted.has(undo)&&def<13){
+  s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,undo);
+  def=s.pendingD20+s.pendingD20Modifier;
+ }
  s.monsterAdv=false;s.monsterDis=false;
  if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
- const hit=atk===20||atk!==1&&atk+s.monster.atk+bonus>def+s.stats(h).def+(h.nextDefenseBonus||0);
+ const hit=atk===20||atk!==1&&atk+s.monster.atk+bonus>def+s.stats(h).def+defenceBonus+(h.nextDefenseBonus||0);
  if(!hit)return;
  let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra;
  s.pendingDamage=damage;
@@ -442,9 +464,15 @@ function seal(s){
  s.metrics.sealAttempt=true;
  s.discard(3,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
- const atk=rollD20(s,{dis:h.poison||h.slots.armour?.id==="mail"});
+ const boon=blessBeforeD20(s,h);
+ let atk=rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"});
+ const ring=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
+ if(ring&&!h.used.has(ring)){
+  s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,ring);
+  atk=s.pendingD20+s.pendingD20Modifier;
+ }
  const def=s.die(20);
- const good=atk===20||atk!==1&&atk+h.card.wit+s.witBonus>def+6;
+ const good=atk===20||atk!==1&&atk+h.card.wit+s.witBonus+boon.bonus>def+6;
  s.metrics.sealWin=good;return good;
 }
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival"}={}){
