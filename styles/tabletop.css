@@ -655,6 +655,92 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  .tt-card .tt-content,.tt-card .tt-title{print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
 
+
+/* V2 PHASE 1 — six Room ecologies with cut-paper choice and dice records.
+   V1 classes and print geometry are untouched. All results are real, sharp
+   ink on solid paper; art continues behind the pasted mechanic slip. */
+.tt-layout-v2-room{
+ --art-bottom:2mm;
+ --slip-bottom:7mm;
+}
+.tt-layout-v2-room .tt-title{
+ font-size:20px;
+ max-width:calc(100% - 6.5mm);
+}
+.tt-card.tt-layout-v2-room .tt-collage > .tt-content--v2{
+ padding:1.45mm 2mm 1.85mm;
+ border-top:2px solid #17130d;
+ max-height:calc(100% - 19mm);
+ background:#f2eadc;
+ background-image:linear-gradient(165deg,#f4edde,#e7dcc9 97%);
+}
+.tt-content--v2 .tt-v2-kind{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:2mm;
+ font:bold 9px/1.15 "Courier New",monospace;
+ letter-spacing:.045em;
+}
+.tt-content--v2 .tt-v2-kind span{font-size:8px;letter-spacing:0}
+.tt-content--v2 .tt-v2-prompt{
+ font:italic 11px/1.13 Georgia,serif;
+ margin:.9mm 0 1.15mm;
+}
+.tt-content--v2 .tt-v2-choices{
+ display:grid;gap:.45mm;
+ padding:0 0 1mm;
+}
+.tt-content--v2 .tt-v2-choice{
+ display:grid;grid-template-columns:17mm 1fr;
+ gap:1.1mm;align-items:baseline;
+ padding:.6mm .3mm;
+ border-top:1px solid #241b1359;
+ font:10.45px/1.19 "Courier New",monospace;
+}
+.tt-content--v2 .tt-v2-choice b{
+ font-weight:900;
+ background:#211b15;
+ color:#f8f0e2;
+ padding:.35mm .75mm;
+ width:max-content;
+ max-width:100%;
+ overflow-wrap:anywhere;
+}
+.tt-content--v2 .tt-v2-roll-heading{
+ font:900 10.3px/1.18 "Courier New",monospace;
+ border-top:1.5px solid #1b1510;
+ border-bottom:1px solid #1b15105b;
+ background:#ded2bf;
+ padding:.7mm 1mm .5mm;
+ margin:.5mm -1mm .7mm;
+}
+.tt-content--v2 .tt-v2-results{display:grid;gap:0}
+.tt-content--v2 .tt-v2-result{
+ display:grid;grid-template-columns:11.6mm 1fr;gap:1.1mm;
+ align-items:baseline;
+ border-bottom:1px solid #2b221930;
+ padding:.55mm .3mm;
+ font:10.6px/1.16 "Courier New",monospace;
+}
+.tt-content--v2 .tt-v2-result:last-child{border-bottom:0}
+.tt-content--v2 .tt-v2-result b{
+ font:900 11.5px/1 "Courier New",monospace;
+ white-space:nowrap;
+}
+.tt-layout-v2-room .tt-stage{
+ letter-spacing:.01em;
+}
+/* The preview hub is NOT the live V1 print kit. */
+.tt-v2-hub .tt-hero{background:#ede4d2}
+.tt-v2-hub .tt-hero h1{font-size:clamp(31px,4.8vw,56px)}
+.tt-v2-hub .tt-hero p{max-width:800px}
+.tt-v2-notice{margin:14px 0 18px;padding:12px 15px;border:2px dashed #322519;background:#f3ebdd;font:12px/1.5 "Courier New",monospace}
+.tt-v2-tally{font:11px/1.4 "Courier New",monospace;padding-top:4px}
+@media print{
+ .tt-v2-hub .tt-layout-v2-room .tt-content--v2{
+  print-color-adjust:exact;-webkit-print-color-adjust:exact;
+ }
+}
+
 @media(max-width:600px){.tt-info{grid-template-columns:1fr}.tt-shell{padding:12px}.tt-hero{padding:17px}.tt-sitehead{padding:16px}}
 @media print{
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
