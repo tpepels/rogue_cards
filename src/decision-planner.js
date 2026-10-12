@@ -59,7 +59,7 @@ export function forecastCombat(s,m=s.monster){
  const heroDamage=living.reduce((n,h)=>n+
   hitProbability(s.stats(h).atk+(h.recruitedGoblin?1:0),m.def,
    {dis:h.poison||h.nextDis>0,adv:h.nextAdv>0})*
-  (3.5+(h.nextDamage||0)+(h.slots.weapon?.id==="sword"?0.8:0)),0);
+  (3.5+(h.nextDamage||0)+s.basicAttackBonus(h)+(h.slots.weapon?.id==="sword"?0.8:0)),0);
  const remaining=m===s.monster?Math.max(0,s.monsterHP):m.hp;
  const turns=clamp(remaining/Math.max(0.5,heroDamage),0.3,18);
  const target=living.reduce((a,h)=>a+h.hp,0)/count;
@@ -201,7 +201,7 @@ function effectScore(ops,party){
 export function planCombat(s,h){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s),m=s.monster;
  if(!m)return {action:"attack",score:0,options:0};
- const damage=hitProbability(s.stats(h).atk,m.def,{dis:h.poison||h.nextDis>0})*3.5+
+ const damage=hitProbability(s.stats(h).atk,m.def,{dis:h.poison||h.nextDis>0})*(3.5+s.basicAttackBonus(h))+
   Math.max(0,h.nextDamage);
  const spellCost=w.spell*(1+(m.stage!=="FINAL"&&party.magic<=party.sealCost?0.55:0));
  const fore=forecastCombat(s,m);

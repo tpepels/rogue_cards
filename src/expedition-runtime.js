@@ -248,6 +248,7 @@ export class ExpeditionState {
   else if(d<=4)this.apply("CURE",[],null);
   else this.forcedBehavior=1;
  }
+ basicAttackBonus(h){return h.slots.weapon?.id==="staff"?1:0;}
  stats(h){
   const w=h.slots.weapon,a=h.slots.armour,r=h.slots.ring;
   return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),

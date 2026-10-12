@@ -335,7 +335,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  }
  return {hit,critical:natural===20};
 }
-function playerAttack(s,h){
+export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
   (s.strategy==="magic"||s.monsterHP>=8)){
@@ -349,7 +349,7 @@ function playerAttack(s,h){
  const stat=s.stats(h),r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
  if(!r.hit||h.hp<=0)return;
  let dmg=s.die()+(r.critical?s.die():0);
- dmg+=h.nextDamage;h.nextDamage=0;
+ dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
  if(h.card.id==="warrior"&&!h.used.has("hero")){
   h.used.add("hero");const d=s.die();

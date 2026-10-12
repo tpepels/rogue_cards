@@ -24,21 +24,26 @@ This is a source-level usability assessment, not a substitute for observing new 
 - **Bridge Troll**: Clarified: FIRE damage prevents the next Regenerate behaviour.
 - **Pitch Torch**: Clarified: all three qualifying dark locations are named.
 - **Wand of Almost Doors**: Clarified: all four qualifying locked locations are named.
-- **Ashwood Staff**: Still unresolved: no currently printed spell attacks using d20+WIT; the conditional +1 damage has no apparent trigger.
+- **Ashwood Staff**: Replaced the unavailable WIT-spell bonus with +1 damage on a successful d20 + ATK attack while equipped.
 
-## Unresolved design decision
+## Resolved without expanding the rulebook
 
-**Ashwood Staff:** The text now specifies exactly what would activate its
-`+1 damage` bonus: a spell that makes a `d20+WIT` attack. However, the current
-111-card set does not appear to contain such an attack. This is an *inert
-conditional benefit*, not a missing explanation in the one-page rulebook.
-Making it useful would require deciding a replacement trigger and updating
-the simulation engine; it has not been silently redesigned in this edit.
+**Ashwood Staff:** The unused WIT spell-attack interaction was replaced with
+an explicit, testable passive: when an equipped Staff wielder hits with a
+`d20 + ATK` attack, add 1 damage. No extra dice, action, or tracking needed.
+The existing `+1 ATK` and SHRINE option are preserved. The simulator and the
+planner implement the same bonus; unsuccessful attacks and Scroll damage
+never receive it.
+
+**Dented Crowbar:** The four eligible locked Rooms are now named directly
+on the card, and the unspecified special ENCOUNTER trade has been deleted.
+The printed replacement d6 and its outcomes are unchanged.
 
 ## Per-card result
 
 All cards below have a readable trigger/choice and printed outcomes by this
-static audit. `Check mechanic` indicates the remaining unsupported trigger.
+static audit. All previously identified wording issues are resolved. This does
+not replace blind playtesting with a new human player.
 Word counts exclude titles, card numbering, tags and flavour text.
 
 | # | Card | Family | Rule words | Finding |
@@ -105,13 +110,13 @@ Word counts exclude titles, card numbering, tags and flavour text.
 | 60 | Rusty Key | TOOL | 14 | Readable |
 | 61 | Knotted Rope | TOOL | 13 | Readable |
 | 62 | Pitch Torch | TOOL | 25 | Readable |
-| 63 | Dented Crowbar | TOOL | 37 | Readable |
+| 63 | Dented Crowbar | TOOL | 38 | Readable |
 | 64 | Chalk of Detours | TOOL | 35 | Readable |
 | 65 | Spore Jar | TOOL | 32 | Readable |
 | 66 | Ghost Coin | TOOL | 27 | Readable |
 | 67 | Bone Needle | TOOL | 29 | Readable |
 | 68 | Notched Sword | EQUIPMENT | 43 | Readable |
-| 69 | Ashwood Staff | EQUIPMENT | 27 | Check mechanic |
+| 69 | Ashwood Staff | EQUIPMENT | 26 | Readable |
 | 70 | Whispering Blade | EQUIPMENT | 19 | Readable |
 | 71 | Patchwork Mail | EQUIPMENT | 22 | Readable |
 | 72 | Warded Shield | EQUIPMENT | 28 | Readable |

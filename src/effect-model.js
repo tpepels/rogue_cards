@@ -54,7 +54,7 @@ export const ROLL_EFFECTS=Object.freeze({
 });
 export const NON_ROLL_EFFECTS=Object.freeze({
  key:"LOCK_OVERRIDE",rope:"ROOM_ROPE",torch:"ROOM_FIRE_OR_SKIP",
- staff:"WEAPON_MAGIC", "cursed-blade":"CURSED_WEAPON",
+ staff:"WEAPON_BASIC_HIT", "cursed-blade":"CURSED_WEAPON",
  mail:"ARMOUR_WIT_DIS", "cursed-mail":"CURSED_ARMOUR",
  "lantern-heart":"ROOM_FIRE_OR_RECHARGE","crown-relic":"SACRIFICE_CRITICAL"
 });
