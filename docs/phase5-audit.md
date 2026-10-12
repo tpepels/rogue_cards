@@ -15,6 +15,15 @@ The canonical simulation is `src/expedition-campaign.js`, using the expedition s
 
 An editorial cross-card audit still distinguishes **144 declared metadata links** from actual printed effects: **65 links have identifiable printed evidence** and **79 are not directly evidenced by that heuristic**. Metadata links grant no gameplay power.
 
+## d20 health-counter revision (12 October 2026)
+
+Each Hero and active Monster is tracked with one dedicated d20 showing
+remaining HP, never rolled. Heroes' printed maximum HP now ranges from
+18 to 20; the Warden starts at 20 HP and transitions to Phase II at
+10 HP, retaining the same counter and any remaining HP. The game's
+previous measured win rates were calculated with more Hero/Warden HP,
+and therefore are not post-revision outcomes.
+
 ## Later canonical Vault adjustment (12 October 2026)
 
 The following conservatively adjusted values supersede the older benchmark:

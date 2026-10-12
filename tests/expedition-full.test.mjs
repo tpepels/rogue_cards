@@ -5,6 +5,20 @@ import {verifyObjectCoverage,ROLL_EFFECTS,NON_ROLL_EFFECTS} from "../src/effect-
 import {verifyRoomCoverage,ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ExpeditionState,validateStateEffects,strategies} from "../src/expedition-runtime.js";
 import {simulateFullExpedition,simulateFullBatch} from "../src/expedition-campaign.js";
+test("d20 health trackers support full HP, 0 HP, and healing",()=>{
+ const s=new ExpeditionState({seed:417,heroes:["wizard","knight"]});
+ for(const h of s.heroes)assert.ok(h.hp>=1&&h.hp<=20,h.card.id);
+ const wizard=s.heroes[0];
+ s.hurt(wizard,wizard.hp+10);
+ assert.equal(wizard.hp,0);
+ s.heal(wizard,5);
+ assert.equal(wizard.hp,5);
+ s.heal(wizard,100);
+ assert.equal(wizard.hp,wizard.card.hp);
+ assert.equal(WARDEN.hp,20);
+ assert.equal(WARDEN_FURY.hp,10);
+ assert.match(WARDEN.v2.weakness,/10 HP or less/);
+});
 test("all printed Object results and Room choices have exactly one executable handler",()=>{
  const o=verifyObjectCoverage(),r=verifyRoomCoverage();
  assert.equal(o.objects,52);

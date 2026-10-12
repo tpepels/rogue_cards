@@ -464,7 +464,7 @@ export function monsterRespond(s,h){
 function fight(s,{warden=false}={}){
  if(!s.monster||!s.alive())return false;
  s.metrics.battles++;s.trollScorched=false;
- const m=s.monster,threshold=warden&&m.id==="warden"?12:0;
+ const m=s.monster,threshold=warden&&m.id==="warden"?10:0;
  let turns=0;
  while(s.alive()&&s.monsterHP>threshold&&turns<300){
   turns++;
@@ -574,7 +574,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  s.monster=WARDEN;s.monsterHP=WARDEN.hp;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
- s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(12,s.monsterHP));
+ s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
  s.metrics.monsterVisits["warden-fury"]=(s.metrics.monsterVisits["warden-fury"]||0)+1;
  if(!fight(s,{warden:true}))return report(s);
  s.metrics.won=true;return report(s);

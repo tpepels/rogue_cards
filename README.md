@@ -25,7 +25,12 @@ The catalogue can show **one of each** or **full physical print quantities**, fi
 
 Select a Hero, take the named starting Object and draw one more. Shuffle UPPER, MIDDLE and DEEP Rooms and matching Monsters into regional piles. Descend through three Rooms of each level, one at a time, then the Amulet Vault.
 
-Every Room offers a decision, a printed roll and potentially a Monster. Combat is opposed **d20 + ATK vs d20 + DEF**, with **d6 damage** and a Monster's own **d6 behaviour after each Hero turn**. Scrolls, Rings and Wands interact with Monsters, Rooms, environmental properties and each other. At the Vault, choose whether to face the Warden or attempt an expensive magical seal; the Warden changes into its second phase at 12 HP.
+Every Room offers a decision, a printed roll and potentially a Monster. Combat is opposed **d20 + ATK vs d20 + DEF**, with **d6 damage** and a Monster's own **d6 behaviour after each Hero turn**. Scrolls, Rings and Wands interact with Monsters, Rooms, environmental properties and each other. At the Vault, choose whether to face the Warden or attempt an expensive magical seal; the Warden changes into its second phase at 10 HP.
+
+Every Hero and active Monster tracks remaining HP with its own d20 (never rolled).
+Hero starting HP ranges from 18 to 20; the Warden starts at 20 HP and
+keeps the same die when it changes phase at 10 HP. At 0 HP, remove the die.
+Use separate d20s for opposed combat and WIT rolls.
 
 All general rules fit on [one A4 sheet](rules.html). Individual card text is authoritative when it overrides a shared rule. The print deck is self-contained; no online lookup or digital engine is required.
 
@@ -127,7 +132,7 @@ now agree:
 
 The historical balance reports preceding these adjustments describe older
 card values. Do not interpret those results as post-change measurements.
-No other Item, Room, Hero, Warden, or Vault rule changed in this pass.
+No other Item, Room, Hero, Warden, or Vault rule changed in that four-card balance pass.
 
 ## Item and Room balance / interaction testing
 
@@ -169,6 +174,18 @@ not exhaustive across triples or larger combinations. Passing the suite
 checks engine integrity, not balance, usefulness, game-theoretic optimality
 or real tabletop enjoyment. Use the generated balance reports to decide
 which individual cards warrant adjustment.
+
+## d20 health tracking (12 October 2026)
+
+Each Hero and active Monster has one dedicated d20 showing its current HP;
+the d20 is a counter, not a roll. The eight Heroes now have maximum HP
+18–20 and the Warden has 20 HP, changing to Phase II at 10 HP without
+resetting its counter. Remove the die at 0 HP and restore it if a Hero is
+healed. Normal d20 rolls use separate dice.
+
+These health changes can affect win rates; pre-change balance reports are
+not post-change difficulty estimates. Printed cards and both simulation
+engines have corresponding changes.
 
 ## Verification
 

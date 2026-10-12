@@ -24,7 +24,7 @@ export const MONSTER_IDS = Object.freeze([
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
  rooms:"9b7aa79d",objects:"56991468",monsters:"03f7a3b3",
- heroes:"4116c2a8",warden:"0fb23b0c"
+ heroes:"9a6deb4d",warden:"8455c206"
 });
 const digest=data=>{
  let h=2166136261;
@@ -389,10 +389,10 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",
  if(omen>=5)state.heroAdv=true;
  if(bossChoice==="seal"&&seal(state)){state.won=true;return summary(state);}
  if(!partyAlive(state.heroes))return summary(state);
- if(!fight(state,WARDEN,{transitionAt:12,initialAdv:omen<=2||state.sealAttempt}))return summary(state);
+ if(!fight(state,WARDEN,{transitionAt:10,initialAdv:omen<=2||state.sealAttempt}))return summary(state);
  // The Warden's health is conserved across phases. Start Phase II at exactly
- // 12 HP or fewer, never restore an extra health bar.
- if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,0,12)}))return summary(state);
+ // 10 HP or fewer, never restore an extra health bar.
+ if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,0,WARDEN_FURY.hp)}))return summary(state);
  state.won=true;
  return summary(state);
 }

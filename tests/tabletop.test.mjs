@@ -28,7 +28,7 @@ test("exactly one complete canonical physical edition",()=>{
 test("eight archetypes have unique starting Objects, valid stats and complete d6 skills",()=>{
  const starts=new Set();
  for(const h of HEROES){
-  assert.ok(h.hp>=16&&h.hp<=28);
+  assert.ok(h.hp>=1&&h.hp<=20,"One d20 must show starting HP: "+h.id);
   assert.ok(h.atk>=0&&h.def>=0&&h.wit>=0);
   assert.ok(h.v2.starter&&OBJECTS.some(o=>o.id===h.v2.starter),h.id);
   assert.ok(!starts.has(h.v2.starter),"Duplicate starter "+h.id);
@@ -38,6 +38,14 @@ test("eight archetypes have unique starting Objects, valid stats and complete d6
   assert.match(cardMarkup(h),/tt-layout-v2-hero/);
   assert.ok(cardMarkup(h).includes("START WITH"));
  }
+});
+test("a single d20 can show all Hero and Monster health values",()=>{
+ const creatures=[...HEROES,...MONSTERS,WARDEN,WARDEN_FURY];
+ for(const card of creatures){
+  assert.ok(card.hp>=1&&card.hp<=20,card.id+" needs more than a d20 for HP");
+ }
+ assert.ok(WARDEN_FURY.hp<WARDEN.hp);
+ assert.ok(WARDEN.v2.weakness.includes("10 HP or less"));
 });
 test("all 36 regional Rooms and the final Vault provide complete d6 choices",()=>{
  assert.equal(ROOMS.filter(r=>r.stage==="UPPER").length,12);
@@ -68,7 +76,7 @@ test("objects contain complete on-card outcomes, scrolls/rings/wands have safe f
  }
 });
 test("Monsters have distinctive four-band responses, weaknesses and defined negotiation",()=>{
- assert.equal(WARDEN.hp,24);assert.equal(WARDEN_FURY.hp,12);
+ assert.equal(WARDEN.hp,20);assert.equal(WARDEN_FURY.hp,10);
  assert.equal(WARDEN.stage,"FINAL");assert.equal(WARDEN_FURY.stage,"FINAL");
  for(const m of [...MONSTERS,WARDEN,WARDEN_FURY]){
   assert.equal(m.behavior.length,4,m.id);
@@ -80,7 +88,7 @@ test("Monsters have distinctive four-band responses, weaknesses and defined nego
   assert.ok(html.includes(esc(m.v2.weakness)),m.id);
   assert.ok(html.includes("1–2")&&html.includes("3–4")&&html.includes(">5</b>")&&html.includes(">6</b>"));
  }
- assert.match(WARDEN.v2.weakness,/12 HP/);
+ assert.match(WARDEN.v2.weakness,/10 HP/);
  assert.match(WARDEN_FURY.v2.weakness,/0 HP/);
  assert.match(MONSTERS.find(m=>m.id==="bat").v2.parley,/Opposed d20/);
  assert.match(MONSTERS.find(m=>m.id==="goblin").v2.parley,/RECRUIT/);
@@ -98,7 +106,9 @@ test("one A4 rulebook describes entire adventure and alternate boss victory",()=
  assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
  assert.match(html,/After each Hero turn/);
  assert.match(html,/healing still needs a printed effect/);
- assert.match(html,/without restoring HP/);
+ assert.match(html,/keeping the same HP die/);
+ assert.match(html,/Never roll HP dice/);
+ assert.match(html,/At <strong>0 HP<\/strong>, remove the die/);
  assert.doesNotMatch(html,/heal freely/i);
  const page=html.match(/<main class="sheet">([\s\S]*?)<\/main>/)?.[1]||"";
  const wordCount=page.replace(/<[^>]+>/g," ").trim().split(/\s+/).length;
