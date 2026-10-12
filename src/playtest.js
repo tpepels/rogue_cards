@@ -99,7 +99,7 @@ function drawMonster(state,stage){
  const pile=state.monsters[stage];if(!pile)return;
  // If a region's finite monster pile runs out, recycle its printed copies.
  if(!pile.length)pile.push(...deckForRegion(stage,state.rng,MONSTERS));
- if(state.activeMonster)throw new Error("Two simultaneous Monsters are outside this baseline policy");
+ if(state.activeMonster){state.skippedEffects++;return;} // A second simultaneous Monster is outside this basic policy.
  state.activeMonster=pile.pop();state.monsterHP=state.activeMonster.hp;
 }
 function applyRoomOutcome(state,text,stage){
@@ -118,7 +118,7 @@ function applyRoomOutcome(state,text,stage){
  if(/become poisoned|\bpoisoned\b/i.test(s)&&!/remove poisoned|ignore poisoned/.test(s))hero.poisoned=true;
  if(/remove poisoned/.test(s))hero.poisoned=false;
  if(/discard\s+(?:one|1)\s+item|discard\s+1\s+of them/.test(s))spendItem(state);
- if(/draw an? (?:upper|middle|deep) monster|summons? a (?:middle|deep|upper) monster|it charges\. fight|it attacks! fight/.test(s)){
+ if(/draw an? (?:upper|middle|deep) monster|summons? a (?:middle|deep|upper) monster/.test(s)){
   drawMonster(state,stage);
  }
  if(/discard (?:the )?monster|it flees|it leaves/.test(s))state.activeMonster=null;
@@ -285,7 +285,7 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal"}
  if(!fight(state,WARDEN,{transitionAt:12}))return summary(state);
  // The Warden's health is conserved across phases. Start Phase II at exactly
  // 12 HP or fewer, never restore an extra health bar.
- if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,1,12)}))return summary(state);
+ if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,0,12)}))return summary(state);
  state.won=true;
  return summary(state);
 }
