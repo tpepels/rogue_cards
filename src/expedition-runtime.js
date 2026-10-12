@@ -3,7 +3,7 @@
  * All mutable game state belongs to the expedition. No stateful globals.
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
-import {randomSource} from "./playtest.js";
+import {randomSource,verifyPrintedData} from "./playtest.js";
 import {applyCardRoll,NON_ROLL_EFFECTS} from "./effect-model.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 
@@ -32,6 +32,7 @@ export const strategies=Object.freeze(["survival","treasure","magic","seal","neg
 
 export class ExpeditionState {
  constructor({seed=1,heroes=["warrior"],strategy="survival"}={}){
+  verifyPrintedData();
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
   this.rng=randomSource(seed);this.strategy=strategy;this.heroes=heroes.map(id=>{
