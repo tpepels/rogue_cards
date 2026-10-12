@@ -268,6 +268,9 @@ export class ExpeditionState {
   case "BANISH":if(this.monster){this.monster=null;this.monsterHP=0;this.banished=true;this.metrics.banishments++;}return;
   case "RECHARGE":this.recharge();return;
   case "CURSED_RECHARGE":if(can(this.lastSpent,"CURSED"))this.recharge();return;
+  case "SUPPLY_BARTER":if(this.exhaustedWand()&&this.strategy==="magic"&&this.discardable(1,"MAGIC")){
+    this.discard(1,{tag:"MAGIC"});this.recharge();}
+    else if(this.discardable()){this.discard();this.draw(2);}return;
   case "CLEANSE":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
     if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);}return;}
   case "CLEANSE_COST":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
@@ -335,13 +338,18 @@ export class ExpeditionState {
   if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
     &&this.strategy!=="seal"){const h=this.own("key");this.consume(h,byId(h.inventory,"key"));face=6;}
   if((this.has("torch")||this.has("lantern-heart")||this.anyEquippedTag("FIRE"))&&
-    ["u-lamp","m-crypt","d-shadow"].includes(this.room.id))face=6;
+    this.room.id==="u-lamp")face=6;
+  if((this.has("torch")||this.partyCount("FIRE")>0)&&this.room.id==="m-crypt")face=6;
+  if(this.anyEquippedTag("FIRE")&&this.room.id==="d-shadow")face=6;
   if(this.anyEquippedTag("ICE")&&this.room.id==="d-shadow")face=4;
   if(this.heroes.some(h=>this.equipped(h,"ring-eye"))&&this.room.id==="d-oracle")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-spores"))&&this.room.id==="m-fungus")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-ashes"))&&this.room.id==="u-lamp")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-hunger"))&&this.room.id==="d-crown")face=5;
   if(this.room.id==="m-statue"&&can(this.lastSpent,"MAGIC"))face=6;
+  if(this.room.id==="d-mirror"&&this.strategy==="treasure"&&this.discardable(1,"MAGIC")){
+   this.discard(1,{tag:"MAGIC"});face=6;
+  }
   if(this.room.id==="m-auction"&&can(this.lastSpent,"MAGIC"))face=6;
   if(this.room.id==="m-well"&&can(this.lastSpent,"CURSED"))face=6;
   const scrollSub={
