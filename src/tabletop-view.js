@@ -109,6 +109,7 @@ export function cardMarkup(card){
  const type=esc(card.type), layout=composition(card),asset=assetPath(card),plate=printPlate(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
+ const typeStamp='<span class="tt-card-kind" aria-hidden="true">'+esc(card.v2?.kind||card.type).replaceAll("EQUIPMENT","GEAR")+'</span>';
  let middle;
  // The print plate and paste-on rule paper share one overlapping collage plane.
  // Neither is a browser background: the art is a genuine illustrated card layer.
@@ -120,7 +121,7 @@ export function cardMarkup(card){
   '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-status="'+(asset?'original':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
-  label+middle+
+  label+typeStamp+middle+
   '<footer class="tt-footer"><i>'+esc(card.flavor||"")+'</i><span>No. '+
   String(index).padStart(2,"0")+'</span></footer></article>';
 }
