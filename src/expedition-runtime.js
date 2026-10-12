@@ -48,7 +48,7 @@ export class ExpeditionState {
   this.damageElement=null;this.actor=this.heroes[0];this.room=null;
   this.pendingRoomFace=null;this.pendingDamage=0;this.pendingDefenseAdv=false;
   this.pendingD20=0;this.pendingD20Modifier=0;this.pendingD20Dis=false;
-  this.lastSpent=null;this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
+  this.lastSpent=null;this.lastCostCards=[];this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
   this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
   this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
@@ -138,7 +138,7 @@ export class ExpeditionState {
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
   this.metrics.spent++;}
  beginRoom(room){
-  this.room=room;this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;
+  this.room=room;this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
   this.pendingFightHeal=null;this.trapGuard=false;this.extraMonsterAdv=false;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites.clear();
   this.heroes.forEach(h=>{
@@ -223,7 +223,8 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "DISCARD":this.discard(n());return;
-  case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");this.discard(n());return;
+  case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");
+   this.lastCostCards=[];for(let i=0;i<n();i++)this.lastCostCards.push(this.discard());return;
   case "TRADE":if(this.discardable(Number(v))){this.discard(Number(v));this.draw(Number(args[1]));}return;
   case "PEEK":this.peek(n());return;
   case "PEEK_SWAP":this.peek(n(),true);return;
@@ -277,7 +278,7 @@ export class ExpeditionState {
     if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);
       this.consume(owner,target);}return;}
   case "ALCHEMY_HEAL_OR_TWO":this.heal(h,can(this.lastSpent,"ALCHEMY")?this.die():2);return;
-  case "MAGIC_HEAL":if(can(this.lastSpent,"MAGIC"))this.heal(h,n());return;
+  case "MAGIC_HEAL":if(this.lastCostCards.some(x=>can(x,"MAGIC")))this.heal(h,n());return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
   case "NEXT_WIT":this.witBonus+=n();return;
   case "SAVE_TRAP":this.trapGuard=true;return;
@@ -293,7 +294,9 @@ export class ExpeditionState {
     this.hurt(h,this.die());this.roomRoll(6);}
     else if(this.discardable()){this.discard();this.peek();}return;
   case "BOOKCASE_FIRE_OR_SCROLL":if(this.has("torch")||this.anyEquippedTag("FIRE"))this.draw();
-    else if(this.discardable(1,"MAGIC")){this.discard(1,{tag:"MAGIC"});this.peek(2);}return;
+    else{const owner=this.heroes.find(x=>x.inventory.some(y=>y.v2.kind==="SCROLL"));
+      if(owner){const item=owner.inventory.find(y=>y.v2.kind==="SCROLL");
+       this.consume(owner,item);this.peek(2);}}return;
   case "FUNGUS_BURN":if(this.has("torch"))this.heal(h,this.die());
     else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.heal(h,this.die());}return;
   case "CHOIR_SILENCE":if(this.has("torch"))this.draw(2);
@@ -325,6 +328,7 @@ export class ExpeditionState {
   if(!this.room)throw Error("Room roll without Room");
   let face=typeof forced==="number"?forced:this.die();
   const risk=forced&&typeof forced==="object"?forced.risk:null;
+  const firstSpent=this.lastSpent;
   if(risk){
    const willing=this.strategy!=="survival"&&this.actor.hp>this.actor.card.hp*.4;
    if(willing){
@@ -334,6 +338,9 @@ export class ExpeditionState {
   }
   if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id))face=6;
   if(this.has("dog")&&["u-nest","m-beetle"].includes(this.room.id))face=6;
+  if(this.room.id==="m-beetle"&&this.strategy==="treasure"&&this.discardable(1,"METAL")){
+   this.discard(1,{tag:"METAL"});face=6;
+  }
   if(this.has("raven")&&this.room.id==="d-oracle")face=6;
   if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
     &&this.strategy!=="seal"){const h=this.own("key");this.consume(h,byId(h.inventory,"key"));face=6;}
@@ -351,7 +358,7 @@ export class ExpeditionState {
    this.discard(1,{tag:"MAGIC"});face=6;
   }
   if(this.room.id==="m-auction"&&can(this.lastSpent,"MAGIC"))face=6;
-  if(this.room.id==="m-well"&&can(this.lastSpent,"CURSED"))face=6;
+  if(this.room.id==="m-well"&&can(firstSpent,"CURSED"))face=6;
   const scrollSub={
    "m-fungus":"scroll-flame","d-choir":"scroll-flame","m-flood":"scroll-frost",
    "m-beetle":"scroll-lightning","u-gate":"scroll-unlock","m-vault":"scroll-unlock",
