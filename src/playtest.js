@@ -19,6 +19,33 @@ export const MONSTER_IDS = Object.freeze([
  "wraith","rust","cultist","sentinel","warden","warden-fury"
 ]);
 
+// Snapshot of the printed source that the partial model has been reviewed against.
+// When these change, explicitly review the simulator instead of silently reporting
+// probabilities for unrecognized abilities or outcomes.
+export const REVIEWED_CARD_HASHES=Object.freeze({
+ rooms:"1f54af43",objects:"10f68323",monsters:"03f7a3b3",
+ heroes:"32c877c6",warden:"4f906773"
+});
+const digest=data=>{
+ let h=2166136261;
+ for(const char of JSON.stringify(data))h=Math.imul(h^char.charCodeAt(0),16777619)>>>0;
+ return h.toString(16).padStart(8,"0");
+};
+let reviewed=false;
+export function verifyPrintedData(){
+ if(reviewed)return true;
+ const observed={
+  rooms:digest(ROOMS.map(r=>[r.id,r.v2])),
+  objects:digest(OBJECTS.map(o=>[o.id,o.copies,o.v2])),
+  monsters:digest(MONSTERS.map(m=>[m.id,m.hp,m.atk,m.def,m.behavior,m.v2])),
+  heroes:digest(HEROES.map(h=>[h.id,h.hp,h.atk,h.def,h.wit,h.v2])),
+  warden:digest([VAULT.v2,WARDEN,WARDEN_FURY])
+ };
+ const mismatches=Object.keys(observed).filter(key=>observed[key]!==REVIEWED_CARD_HASHES[key]);
+ if(mismatches.length)throw new Error("Printed card content changed; review Phase 5 simulation coverage: "+mismatches.join(", "));
+ reviewed=true;return true;
+}
+
 export function randomSource(seed=1) {
  let state=(seed>>>0)||0x9e3779b9;
  const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296;};
@@ -338,6 +365,7 @@ function seal(state){
  return state.sealWin;
 }
 export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal",policy="basic"}={}){
+ verifyPrintedData();
  if(!["basic","magic"].includes(policy))throw new Error("Unknown playtest policy "+policy);
  if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw new RangeError("1 or 2 Heroes required");
  const cards=heroes.map(id=>{const c=HEROES.find(h=>h.id===id);if(!c)throw new Error("Unknown Hero "+id);return c;});
