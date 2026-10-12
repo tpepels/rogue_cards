@@ -474,3 +474,49 @@ test("Phase 2 object lab prints every Scroll, Ring, Wand, Item and Potion legibl
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(19);
  await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(5);
 });
+
+
+test("Phase 3 V2 Monster ecology cards print with legible weaknesses, bargains and dice bands",async({page})=>{
+ const errors=[];page.on("pageerror",err=>errors.push(err.message));
+ await page.goto("/v2-monsters.html");
+ await expect(page.getByRole("heading",{name:/Know what hunts you/i})).toBeVisible();
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(12);
+ await expect(page.locator(".tt-grid .tt-layout-v2-monster")).toHaveCount(12);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(3);
+ const metrics=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const content=card.querySelector(".tt-content--v2-monster");
+  const b=content.getBoundingClientRect(),title=card.querySelector(".tt-title").getBoundingClientRect();
+  return {id:card.dataset.id,
+   vertical:content.scrollHeight-content.clientHeight,
+   horizontal:content.scrollWidth-content.clientWidth,
+   overlap:title.bottom-b.top,
+   weaknesses:content.querySelectorAll(".tt-v2-monster-rule").length,
+   dice:content.querySelectorAll(".tt-v2-monster-rows .tt-v2-result").length};
+ }));
+ for(const m of metrics){
+  expect(m.vertical,"Preview clips Monster "+m.id).toBeLessThanOrEqual(2);
+  expect(m.horizontal,"Preview clips Monster horizontally "+m.id).toBeLessThanOrEqual(2);
+  expect(m.overlap,"Monster title collides with rules "+m.id).toBeLessThanOrEqual(5);
+  expect(m.weaknesses).toBe(2);
+  expect(m.dice).toBe(4);
+ }
+ await page.emulateMedia({media:"print"});
+ const print=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
+  const body=c.querySelector(".tt-content--v2-monster"),rect=c.getBoundingClientRect();
+  return {id:c.dataset.id,w:rect.width,h:rect.height,
+    vertical:body.scrollHeight-body.clientHeight,
+    horizontal:body.scrollWidth-body.clientWidth};
+ }));
+ expect(print).toHaveLength(12);
+ for(const m of print){
+  expect(m.vertical,"Print clips Monster "+m.id).toBeLessThanOrEqual(2);
+  expect(m.horizontal,"Print clips Monster horizontally "+m.id).toBeLessThanOrEqual(2);
+  expect(m.w).toBeGreaterThan(90*96/25.4-2);
+  expect(m.h).toBeLessThan(130*96/25.4+2);
+ }
+ await page.emulateMedia({media:"screen"});
+ await page.getByRole("combobox",{name:"V2 Monster region"}).selectOption("DEEP");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(4);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(1);
+ expect(errors).toEqual([]);
+});
