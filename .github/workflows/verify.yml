@@ -24,9 +24,9 @@ jobs:
       - name: Check printed card audit and seeded balance report
         run: |
           npm run audit
-          npm run balance -- 120
+          npm run balance:baseline -- 120
       - name: Compare complete-effect strategies across solo and cooperative expeditions
-        run: npm run balance:full -- 2000
+        run: npm run balance -- 2000
       - name: Verify physical card print, A4 and responsive preview
         run: npm run test:visual
       - name: Upload browser report on failure
