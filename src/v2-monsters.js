@@ -13,7 +13,7 @@ const SPEC=Object.freeze({
    parley:"LURE: Discard 1 Item to make it leave. No corpse.",remains:"EAT d6: 1–2 lose 2 HP; 3–4 heal 2 HP; 5–6 peek next Room."},
  troll:{tags:["BEAST","REGEN"],weakness:"FIRE damage stops its next Regenerate behaviour (5).",
    parley:"TOLL: Discard 2 Items to avoid this fight.",remains:"EAT d6: 1–2 POISONED; 3–4 heal d6 HP; 5–6 draw 1 Item."},
- wisp:{tags:["LIGHT","MAGIC"],weakness:"After ICE damage, its next behaviour 6 becomes 1–2.",
+ wisp:{tags:["LIGHT","MAGIC"],weakness:"After activating an ICE Item, its next behaviour 6 becomes 1–2.",
    parley:"FOLLOW: Lose d6 HP; peek at the next 2 Rooms. Wisp leaves.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 next d20 has ADV."},
  eye:{tags:["GAZE","MAGIC"],weakness:"With Ring of the Sideways Eye, its 6 becomes 1–2.",
    parley:"COVER EYES: Discard 1 Item; it leaves. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 peek next Room."},
