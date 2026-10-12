@@ -1299,3 +1299,39 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  }
  .tt-card{box-shadow:none!important}
 }
+
+
+/* Asymmetric placements, tuned per family after the full-deck print pass.
+   A reference-inspired collage cannot use identical full-width pasted notes. */
+.tt-card[data-v2-kind="TOOL"] .tt-collage>.tt-content--v2-object{
+ width:65mm;right:.45mm;left:auto;
+}
+.tt-card[data-v2-kind="COMPANION"] .tt-collage>.tt-content--v2-object{
+ width:67mm;right:auto;left:1mm;
+}
+.tt-card[data-v2-kind="RELIC"] .tt-collage>.tt-content--v2-object{
+ width:73mm;right:.7mm;left:auto;
+}
+.tt-card[data-v2-kind="RING"] .tt-collage>.tt-content--v2-object{
+ width:72mm;right:auto;left:1mm;
+}
+.tt-card[data-v2-kind="SCROLL"] .tt-collage>.tt-content--v2-object{
+ width:77mm;right:.9mm;left:auto;
+}
+/* Shorter map-driven Rooms get a real vertical side note, leaving a recognisable
+   part of the environment illustration uninterrupted on the opposite side. */
+.tt-card[data-id="u-fall"] .tt-collage>.tt-content--v2,
+.tt-card[data-id="u-mimic"] .tt-collage>.tt-content--v2,
+.tt-card[data-id="d-bones"] .tt-collage>.tt-content--v2{
+ left:auto;right:.3mm;width:53mm;
+ padding:1.25mm 1.45mm 1.5mm;
+ transform:rotate(.3deg);
+}
+.tt-card[data-id="u-fall"] .tt-v2-choice,
+.tt-card[data-id="u-mimic"] .tt-v2-choice,
+.tt-card[data-id="d-bones"] .tt-v2-choice{grid-template-columns:14mm 1fr;gap:.75mm;font-size:9.5px}
+.tt-card[data-id="u-fall"] .tt-v2-result,
+.tt-card[data-id="u-mimic"] .tt-v2-result,
+.tt-card[data-id="d-bones"] .tt-v2-result{
+ font-size:9.5px;grid-template-columns:10mm 1fr;gap:.7mm;
+}
