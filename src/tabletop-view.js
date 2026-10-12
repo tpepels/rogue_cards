@@ -42,6 +42,7 @@ const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquar
 const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
 export function composition(card){
  if(card.v2&&card.type==="room")return "v2-room";
+ if(card.v2&&(card.type==="item"||card.type==="potion"))return "v2-object";
  if(card.type==="hero")return "portrait-stats";
  if(card.type==="monster")return DENSE_MONSTERS.has(card.id)?"monster-dense":"monster";
  if(card.type==="room")return SPLIT_ROOMS.has(card.id)?"room-split":DENSE_ROOMS.has(card.id)?"scene-compact":"room-scene";
@@ -68,6 +69,21 @@ function stats(card){
   '<div class="tt-stat"><span class="tt-stat-symbol" aria-hidden="true">'+mark+'</span><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
 }
 function content(card,{sidebar=false}={}){
+ if(card.v2&&(card.type==="item"||card.type==="potion")){
+  const v=card.v2;
+  const tags=v.tags.map(tag=>'<span class="tt-v2-tag">'+esc(tag)+'</span>').join("");
+  const dice=v.roll
+   ?'<div class="tt-v2-roll-heading">ROLL d6</div>'+
+    '<div class="tt-v2-results">'+v.roll.outcomes.map(row=>
+      '<div class="tt-v2-result"><b>'+esc(row.range)+'</b><span>'+esc(row.effect)+'</span></div>').join("")+'</div>'
+   :"";
+  return '<section class="tt-content tt-content--v2 tt-content--v2-object" aria-label="Item effects and roll ranges">'+
+   '<div class="tt-v2-kind">'+esc(v.kind)+' <span class="tt-v2-tags">'+tags+'</span></div>'+
+   '<p class="tt-v2-trigger">'+esc(v.trigger)+'</p>'+
+   dice+(v.alternative?'<div class="tt-v2-alternative">'+esc(v.alternative)+'</div>':"")+
+   (card.type==="potion"?'<div class="tt-v2-identity">IDENTIFY: keep one spent copy face up.</div>':"")+
+   '</section>';
+ }
  if(card.v2&&card.type==="room"){
   const v=card.v2;
   const choices=v.choices.map(choice=>'<div class="tt-v2-choice"><b>'+esc(choice.label)+'</b><span>'+esc(choice.effect)+'</span></div>').join("");
