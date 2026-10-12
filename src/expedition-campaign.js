@@ -417,7 +417,7 @@ function fight(s,{warden=false}={}){
  if(turns>=300)s.metrics.roundLimit=true;
  const completed=s.monsterHP<=threshold;
  if(completed&&threshold===0){
-  s.metrics.kills++;
+  if(!s.banished)s.metrics.kills++;
   if(!s.banished&&!warden)eatCorpse(s,m);
   if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
   if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
@@ -437,8 +437,8 @@ function finishMonsters(s){
  return s.alive();
 }
 function seal(s){
- const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=magic>=3;
- if(!s.discardable(3,"MAGIC"))return false;
+ const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(3,"MAGIC");
+ if(!s.metrics.sealAvailable)return false;
  s.metrics.sealAttempt=true;
  s.discard(3,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
@@ -460,6 +460,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  }
  if(!s.alive())return report(s);
  s.beginRoom(VAULT);s.roomRoll();
+ s.metrics.sealAvailable=s.discardable(3,"MAGIC");
  const preferSeal=strategy==="seal"||(strategy==="survival"&&
   s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
