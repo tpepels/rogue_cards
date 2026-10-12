@@ -41,6 +41,17 @@ All general rules fit on [one A4 sheet](rules.html). Individual card text is aut
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
 - `rules.html` — the one canonical rules sheet
 
+## Phase 5: mechanical audit and playtest baselines
+
+[Phase 5 measured audit and limitations](docs/phase5-audit.md)
+
+Two reproducible developer commands accompany the canonical print kit:
+
+- **npm run audit** — check all cards' printed dice bands, broken references and Object–Room metadata-only links
+- **npm run balance -- 1500** — run seeded baseline solo and two-Hero expeditions with basic attacks and a limited Scroll/Wand policy
+
+The model uses real regional piles, basic equipment, opposed d20, Monster d6 behaviour and the two Warden phases, but does **not** implement every Potion, Companion, Ring, Relic, parley choice, Room alternative or tactical strategy. Its win rates are *diagnostics*, **not** established game balance. The next work is complete card-effect coverage and real print-and-play testing; no more website sections are needed.
+
 ## Verification
 
 ```sh
