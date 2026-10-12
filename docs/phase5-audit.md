@@ -1,68 +1,70 @@
-# Phase 5 — mechanical audit and expedition baselines
+# Phase 5 — complete-card expedition model and balance audit
 
-**Status: active implementation, not final balance certification.** The website remains one card catalogue and one A4 rulebook. No new public pages or cards.
+**Status (12 October 2026):** mechanical model implemented and quantitatively benchmarked; **not yet certified as physically playtested or optimally balanced**. V2 is the sole playable edition. The website still contains one card catalogue and one A4 rulebook; no additional public pages were added.
 
-## Audit coverage
+## What is implemented
 
-- **111 unique cards**: eight Heroes, 36 Rooms, one Vault, 12 regional Monsters, two Warden phases, and 52 Objects.
-- Complete d6 outcome ranges and Monster behaviour bands.
-- **144 declared Object–Room metadata links.** A conservative named-reference/property heuristic finds **65 with printed evidence** and **79 without direct printed evidence**. Metadata alone never grants an effect, and unsupported links are not automatically bugs.
-- Resource costs, printed conditions, Warden stage continuity and once-per-Room effects.
+The canonical simulation is `src/expedition-campaign.js`, using the expedition state in `src/expedition-runtime.js`.
 
-The repeatable audit (npm run audit) rejects missing Room references, malformed dice bands and duplicate card identities, and prints evidence gaps.
+- All **111 unique card faces** are retained: 8 Heroes, 36 regional Rooms, 1 Vault, 12 regional Monsters, 2 Warden phases, and 52 Objects.
+- **52 Objects** and **37 Rooms** have explicit, mechanically typed handlers for every printed d6 outcome; all 74 Room choices also have handlers. Invalid or unknown operations fail rather than silently doing nothing.
+- Physical inventory and starting gear, one Weapon/Armour/Ring/Companion slot, cursed equipment, Potion identification, one-use Scrolls, exhausted/recharged Wands, Ring and Companion triggers, party protection, parley, edible remains, held bonuses, scouting and Room rewards are represented.
+- Nine regional Rooms lead to the tenth-room Vault. The Warden retains HP when entering Phase II. Its printed two-Hero attacks and the higher two-Hero sealing cost are modeled.
+- The play policies are **survival**, **treasure**, **magic**, **seal**, and **negotiation**. They differ in Room choices, resource spending and interactions. The policies are scripted and deterministic for a given seed, not human or optimal decision-makers.
+- Tests force every printed Object d6 face and every Room choice/result through its handler, stress solo and two-Hero expeditions, check Potion identity and Wand exhaustion, protect cursed cleansing/held modifiers and verify printed-card fingerprints. CI also checks browser printing and the one-A4 rules.
 
-## Card improvements already made
+An editorial cross-card audit still distinguishes **144 declared metadata links** from actual printed effects: **65 links have identifiable printed evidence** and **79 are not directly evidenced by that heuristic**. Metadata links grant no gameplay power.
 
-1. **Fungal Garden:** discarding FIRE now explicitly heals d6 HP.
-2. **Candle Altar:** cleansing an equipped CURSED Item requires discarding another Item.
-3. **Laughing Fountain:** paying 2 HP now explicitly grants two d6 rolls and a choice of result.
-4. **Treasure That Sings:** the corresponding push-your-luck cost has identical timing.
-5. **Warden Unbound:** FIRE or LIGHTNING damage now skips its next response. The earlier effect merely changed a result of 6 to 1–2, but 1–2 was still an attack.
+## Measured complete-policy results
 
-No base statistics were changed on evidence from the limited simulator, and no extra universal rules were added.
+The GitHub Actions **Verify tabletop print-and-play** run on commit `675ac246d2` executed `npm run balance -- 2000`: 2,000 seeded expeditions for each of **12 party setups × 5 strategies = 120,000 campaigns**. All returned zero unresolved operations and zero stalled campaigns. These are implementation-based, **policy-specific win rates**, not human win probabilities.
 
-## Simulator contract
-
-The seeded model in src/playtest.js uses regional Room draws, printed Monster copies, Hero starting Objects, basic equipment ATK/DEF, opposed d20 combat (including critical 1/20), major Hero combat abilities, Monster behaviour, nine regional Rooms, a two-phase Warden without health restoration, and the opposed WIT seal.
-
-The **basic** policy attacks normally and chooses the first affordable Room option. The **magic** policy also casts a selected subset of five offensive Scrolls and four Wands, consuming or exhausting them as printed.
-
-**Important limitations:** this does not yet simulate Potions and identification, EAT/corpse choices, most Ring/Relic/Companion triggers, most parley options, precise room scouting/reordering, Wand recharge and every alternative Room decision. Unimplemented or simplified interactions are counted in the output. The numbers below are **policy-specific benchmarks, not verified full-game win rates**.
-
-## Initial results
-
-1,500 seeded runs per setup, seed 42. Sampling error for a rate from this many runs is at most approximately ±2.5 percentage points at 95% confidence, but the **systematic simulator bias is much greater**.
-
-| Party | Basic win % | Limited-magic win % | Magic actions/run |
+| Hero / party | Survival win rate | Magic win rate | Seal-focused win rate |
 | --- | ---: | ---: | ---: |
-| Warrior | 38.9 | 37.7 | 0.52 |
-| Knight | 51.2 | 49.9 | 0.52 |
-| Wizard | 25.4 | 25.1 | 0.43 |
-| Witch | 23.5 | 21.9 | 0.45 |
-| Rogue | 32.5 | 31.3 | 0.48 |
-| Thief | 27.9 | 27.5 | 0.46 |
-| Priest | 28.8 | 29.5 | 0.46 |
-| Monk | 33.7 | 34.1 | 0.48 |
-| Warrior + Priest | 79.7 | 78.5 | 0.48 |
-| Knight + Wizard | 83.5 | 84.6 | 0.52 |
-| Rogue + Witch | 63.7 | 62.6 | 0.53 |
-| Thief + Monk | 69.5 | 68.1 | 0.58 |
+| Warrior | 46.2% | 38.0% | 50.5% |
+| Knight | 47.6% | 39.2% | 55.7% |
+| Wizard | 26.4% | 19.8% | 45.0% |
+| Witch | 28.5% | 18.4% | 45.6% |
+| Rogue | 34.9% | 24.9% | 46.4% |
+| Thief | 34.8% | 21.1% | 50.9% |
+| Priest | 32.6% | 22.0% | 50.1% |
+| Monk | 32.1% | 25.1% | 45.9% |
+| Warrior + Priest | 75.8% | 67.8% | 78.5% |
+| Knight + Wizard | 73.2% | 68.8% | 81.5% |
+| Rogue + Witch | 61.1% | 53.1% | 70.2% |
+| Thief + Monk | 65.0% | 54.9% | 73.4% |
 
-The two-Hero survival buffer is strong even with one Monster response after each Hero action. This merits full-game and real-table testing before inventing a scaling rule. Magical Heroes are materially undervalued because their signature Item interactions are largely outside the simulated policy.
+The **treasure** and **negotiation** policies were also executed for all 12 setups; their full tabular output is in the linked Actions job. At 2,000 trials a single win-rate estimate has up to approximately ±2.2 percentage points of ordinary 95% binomial sampling error, apart from much larger policy/model uncertainty.
 
-**Warden seal:** In limited-magic runs, approximately **61–69% of solo parties reaching the Vault** and **69–85% of the tested two-Hero parties reaching it** still held three MAGIC Items. The alternative ending is reachable in the current supply model. Actual players may spend substantially more magic before the Vault.
+**Findings:** solo play remains notably harder than paired play; physical-fighter Heroes fare better with the survival policy, while magic-dependent Heroes get a large relative benefit from preparing for the seal. An aggressive scripted spell policy can perform *worse* than conserving resources, making magic/spell timing an important balance consideration. These outcomes are sensitive to the specific heuristics; do not treat the raw class ranking as definitive.
 
-The magic policy casts **under one spell per expedition** on average. It is not adequate evidence that magic itself is weak or strong.
+## Gameplay corrections already incorporated
 
-## Verification
+- Clarified FIRE healing sacrifices, shrine cleansing cost, and both pay-to-reroll Room choices on printed cards.
+- Made the final Warden's FIRE/LIGHTNING weakness cancel an actual response.
+- Adjusted several Hero profiles, two-Hero sealing cost and Warden multi-target attacks after the early tests.
+- Corrected the Warden's phase health transition, failed-seal bonus, Hero protection timing, Priest/Ring/Wand d20 intervention, saved rerolls, persistence of one-time benefits, Potion identity, cursed-item cleanse, and a final-Room party-wipe edge case.
+- Card-text fingerprints guard against unnoticed simulator/printed-card divergence. New mechanical changes require tests and reviewed handler updates.
 
-- npm test — original physical-card tests, seeded solo and duo expeditions, opposed dice correctness, card-reference audit, printed wording regressions.
-- npm run audit — print network and mechanical structure report.
-- npm run balance -- 1500 — reproducible outcomes for eight solo Heroes and six two-Hero combinations under both policies.
-- npm run test:visual — browser checks for 111 distinct card faces and their A4 print sheets.
+## Verification and repeatability
 
-## What remains before Phase 5 can be called finished
+```sh
+npm install
+npm test
+npm run audit
+npm run balance -- 2000
+npm run balance:baseline -- 120
+npm run test:visual
+```
 
-Build a strict full-effect resolver or verified action definitions for **all 52 Objects** and every Room decision; play survival, treasure, negotiation, spell-heavy and seal-preparation strategies; check infinite loops and resource exploits; run full solo and two-player campaigns; and compare the numbers with real printed-card playtests. Only then adjust HP/ATK/DEF, resource supply or party difficulty, and finish unique artwork and the print proof.
+`npm run balance` is now the **canonical full-effect, five-strategy experiment**. `npm run balance:baseline` is retained only as a separately labeled historical simplified comparison and should not be used to make final balance decisions.
 
-**Keep rules on the cards. Do not add more website sections or expand the deck as a substitute for balancing it.**
+[Successful quantitative CI run](https://github.com/tpepels/rogue_cards/actions/runs/38258466804).
+
+## What is still required before final physical print
+
+**The effects have executable handlers, but modeling every handler is not the same as proving every strategic use is correct or realistic.** Forced result tests check mechanical reachability; scripted policies do not exhaustively search every combo or establish good human decisions.
+
+Before saying the game is fully balanced, verify interaction parity against real card reads and representative **solo and co-op tabletop sessions**, especially Crown-of-Rehearsals/seal decisions, multi-Hero targeting, high-value magic conversions, late-dungeon consumable availability, resource loops, and the large solo-versus-duo performance gap. Record session outcomes and perceived decision quality. Then make a targeted final balance pass and physical print proof.
+
+Do **not** add website sections or new cards to compensate for incomplete validation; retain the one-A4 rules limit.
