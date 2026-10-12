@@ -41,6 +41,7 @@ const DENSE_MONSTERS=new Set(["rat","goblin","crawler","bat","troll","eye","mold
 const DENSE_ROOMS=new Set(["u-shrine","m-altar","d-oracle","m-vault","d-reliquary","m-fungus","u-nest"]);
 const DENSE_ITEMS=new Set(["cursed-blade","cursed-mail","dog","raven"]);
 export function composition(card){
+ if(card.v2&&card.type==="room")return "v2-room";
  if(card.type==="hero")return "portrait-stats";
  if(card.type==="monster")return DENSE_MONSTERS.has(card.id)?"monster-dense":"monster";
  if(card.type==="room")return SPLIT_ROOMS.has(card.id)?"room-split":DENSE_ROOMS.has(card.id)?"scene-compact":"room-scene";
@@ -67,6 +68,17 @@ function stats(card){
   '<div class="tt-stat"><span class="tt-stat-symbol" aria-hidden="true">'+mark+'</span><b>'+esc(value)+'</b><small>'+esc(name)+'</small></div>').join("")+'</div>';
 }
 function content(card,{sidebar=false}={}){
+ if(card.v2&&card.type==="room"){
+  const v=card.v2;
+  const choices=v.choices.map(choice=>'<div class="tt-v2-choice"><b>'+esc(choice.label)+'</b><span>'+esc(choice.effect)+'</span></div>').join("");
+  const results=v.roll.outcomes.map(outcome=>'<div class="tt-v2-result"><b>'+esc(outcome.range)+'</b><span>'+esc(outcome.effect)+'</span></div>').join("");
+  return '<section class="tt-content tt-content--v2" aria-label="Room choices and d6 results">'+
+   '<div class="tt-v2-kind">'+esc(v.kind)+' <span>CHOOSE ONE</span></div>'+
+   '<p class="tt-v2-prompt">'+esc(v.prompt)+'</p>'+
+   '<div class="tt-v2-choices">'+choices+'</div>'+
+   '<div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
+   '<div class="tt-v2-results">'+results+'</div></section>';
+ }
  if(card.type==="monster"){
   return '<section class="tt-content tt-content--monster tt-record" aria-label="Monster behaviour and remains">'+
    '<div class="tt-label">BEHAVIOUR <span>ROLL d6 AFTER EACH HERO ACTION</span></div>'+
@@ -85,7 +97,7 @@ function content(card,{sidebar=false}={}){
 }
 export function cardMarkup(card){
  if(!card||!card.type||!card.title||!card.art)throw new TypeError("Invalid tabletop card");
- const index=CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1;
+ const index=card.v2?.number??(CATALOGUE.findIndex(c=>c.id===card.id&&c.type===card.type)+1);
  const type=esc(card.type), layout=composition(card),asset=assetPath(card),plate=printPlate(card);
  const stage=card.stage?'<span class="tt-stage">'+esc(card.stage)+'</span>':"";
  const label='<h2 class="tt-title"><span>'+esc(card.title)+'</span></h2>';
@@ -103,7 +115,7 @@ export function cardMarkup(card){
  }
  return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
-  '" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-status="'+(asset?'original':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   label+middle+
