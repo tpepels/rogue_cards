@@ -41,16 +41,19 @@ All general rules fit on [one A4 sheet](rules.html). Individual card text is aut
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
 - `rules.html` — the one canonical rules sheet
 
-## Phase 5: mechanical audit and playtest baselines
+## Phase 5: full-effect expedition validation
 
-[Phase 5 measured audit and limitations](docs/phase5-audit.md)
+[Phase 5 measured audit and modeling limitations](docs/phase5-audit.md)
 
-Two reproducible developer commands accompany the canonical print kit:
+The game now has explicit handlers for all **52 Object cards** and all **37 Room cards** (both choices and every d6 band), plus the canonical two-phase Warden, Hero abilities, Monster behaviour, item inventory, Potion identification, Wand recharging, curses, parley and corpses. Five deterministic play strategies support repeatable solo and two-Hero comparisons.
 
-- **npm run audit** — check all cards' printed dice bands, broken references and Object–Room metadata-only links
-- **npm run balance -- 1500** — run seeded baseline solo and two-Hero expeditions with basic attacks and a limited Scroll/Wand policy
+```sh
+npm run audit
+npm run balance -- 2000
+npm run balance:baseline -- 120
+```
 
-The model uses real regional piles, basic equipment, opposed d20, Monster d6 behaviour and the two Warden phases, but does **not** implement every Potion, Companion, Ring, Relic, parley choice, Room alternative or tactical strategy. Its win rates are *diagnostics*, **not** established game balance. The next work is complete card-effect coverage and real print-and-play testing; no more website sections are needed.
+`npm run balance` is the complete-effect, five-policy benchmark; `balance:baseline` is an older reduced-mechanics comparison. CI has verified **120,000 seeded expeditions** with zero unresolved operations or stalls, but the simulated choices are scripted, not optimised human play. Do not treat these win rates as established physical-game balance: real solo/cooperative sessions and focused interactions still need testing before final print.
 
 ## Verification
 
