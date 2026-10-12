@@ -10,7 +10,7 @@ export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<
  * illustrates Buried Lockbox. This changes presentation ONLY, not physical rules.
  */
 export const CARD_ART=Object.freeze({
- "hero:delver":"cave_delver.png",
+ "hero:warrior":"cave_delver.png",
  "monster:eye":"floating_eye.png",
  "item:key":"rusty_key.png",
  "potion:smoky":"smoky_potion.png",
@@ -82,7 +82,7 @@ function content(card,{sidebar=false}={}){
  if(card.type==="monster"&&card.v2){
   const v=card.v2;
   return '<section class="tt-content tt-content--v2-monster" aria-label="Monster dice, weakness and bargain">'+
-   '<div class="tt-v2-monster-head">BEHAVIOUR · ROLL d6 AFTER EACH HERO TURN</div>'+
+   '<div class="tt-v2-monster-head">(v.phase?'PHASE '+(v.phase===1?'I':'II')+' · ':'')+'BEHAVIOUR · ROLL d6 AFTER EACH HERO TURN</div>'+
    '<div class="tt-v2-monster-rows">'+card.behavior.map((effect,i)=>
      '<div class="tt-v2-result"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+esc(effect)+'</span></div>').join("")+'</div>'+
    '<p class="tt-v2-monster-rule"><b>WEAKNESS — </b>'+esc(v.weakness)+'</p>'+
