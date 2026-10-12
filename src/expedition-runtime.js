@@ -26,7 +26,7 @@ const copyDeck=(rng,source)=>rng.shuffle(source.flatMap(c=>Array.from({length:c.
 const scoreItem=(o,strategy)=>{
  const k=o.v2.kind;
  const power={EQUIPMENT:15,RING:13,COMPANION:12,WAND:11,RELIC:9,SCROLL:6,POTION:4,TOOL:4}[k]||1;
- return power+(can(o,"MAGIC")&&strategy==="seal"?14:0)+(can(o,"CURSED")?-7:0);
+ return power+(can(o,"MAGIC")&&strategy==="seal"?14:0)+(can(o,"CURSED")?-7:0)+(o.id==="crown-relic"&&strategy==="seal"?20:0);
 };
 export const strategies=Object.freeze(["survival","treasure","magic","seal","negotiation"]);
 
