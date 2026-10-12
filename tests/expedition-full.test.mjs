@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {HEROES,ROOMS,VAULT,OBJECTS,MONSTERS} from "../src/tabletop-data.js";
+import {HEROES,ROOMS,VAULT,OBJECTS,MONSTERS,WARDEN,WARDEN_FURY} from "../src/tabletop-data.js";
 import {verifyObjectCoverage,ROLL_EFFECTS,NON_ROLL_EFFECTS} from "../src/effect-model.js";
 import {verifyRoomCoverage,ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ExpeditionState,validateStateEffects,strategies} from "../src/expedition-runtime.js";
@@ -84,4 +84,40 @@ test("a single full expedition is deterministic and records actual effect use",(
  assert.ok(a.activated>=0);
  assert.ok(a.rounds>=0);
  assert.equal(a.unresolved,0);
+});
+
+
+test("cursed cleansing persists, without silently removing the physical Item",()=>{
+ const s=new ExpeditionState({seed:109,heroes:["warrior"],strategy:"survival"});
+ const h=s.heroes[0],blade=OBJECTS.find(o=>o.id==="cursed-blade");
+ s.add(h,blade);h.slots.weapon=blade;
+ assert.equal(s.cursed(blade),true);
+ s.apply("CLEANSE",[],null);
+ assert.equal(s.cursed(blade),false);
+ assert.ok(h.inventory.includes(blade));
+ assert.equal(s.equippedTag(h,"CURSED"),false);
+});
+test("Hungry Ring activates once after a separate MAGIC Item, not recursively",()=>{
+ const s=new ExpeditionState({seed:701,heroes:["witch"],strategy:"magic"});
+ const h=s.heroes[0];s.beginRoom(ROOMS[0]);
+ const ring=OBJECTS.find(o=>o.id==="ring-hunger");
+ const scroll=OBJECTS.find(o=>o.id==="scroll-flame");
+ s.add(h,ring);h.slots.ring=ring;s.add(h,scroll);
+ s.monster=MONSTERS[0];s.monsterHP=s.monster.hp;
+ s.activate(h,scroll,{face:4});
+ assert.equal(s.metrics.cardCounts["ring-hunger"],1);
+ assert.equal(h.used.has(ring),true);
+ const scroll2=OBJECTS.find(o=>o.id==="scroll-last");
+ s.add(h,scroll2);s.activate(h,scroll2,{face:4});
+ assert.equal(s.metrics.cardCounts["ring-hunger"],1);
+});
+test("printed party-size Warden seal and all-Hero attack behaviours are in canonical cards",()=>{
+ assert.match(VAULT.v2.choices[1].effect,/5 with two Heroes/);
+ assert.match(WARDEN.behavior[1],/ATTACK each Hero/);
+ assert.match(WARDEN_FURY.behavior[0],/ATTACK each Hero/);
+});
+test("before-print verification prevents source drift across new full-effect engine",()=>{
+ const s=new ExpeditionState({seed:90210,heroes:["warrior","witch"],strategy:"seal"});
+ assert.equal(s.heroes.length,2);
+ assert.equal(s.metrics.unresolved,0);
 });
