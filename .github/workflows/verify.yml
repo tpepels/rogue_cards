@@ -21,6 +21,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Validate tabletop cards and one-sheet rules
         run: npm test
+      - name: Check printed card audit and seeded balance report
+        run: |
+          npm run audit
+          npm run balance -- 120
       - name: Verify physical card print, A4 and responsive preview
         run: npm run test:visual
       - name: Upload browser report on failure
