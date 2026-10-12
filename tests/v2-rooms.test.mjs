@@ -61,6 +61,8 @@ test("Rooms embed interesting interactions, danger and genuinely distinct choice
   "Obstacles and NPCs need meaningful opposed d20 rolls");
  assert.ok(V2_ROOMS.filter(r=>r.v2.choices.some(c=>/roll again|reroll once/i.test(c.effect))).length>=3,
   "Risky Rooms should allow deliberate push-your-luck rolls");
+ assert.ok(V2_ROOMS.filter(r=>/Draw an? (UPPER|MIDDLE|DEEP) Monster/.test(r.v2.prompt)&&r.v2.choices.some(c=>c.label==="FIGHT")).length>=3,
+  "Some Rooms should start with a Monster and offer a fight-or-negotiate choice");
  assert.ok(V2_ROOMS.filter(r=>r.v2.links.length).length>=25);
  for(const named of ["Rusty Key","Knotted Rope","Pitch Torch","Tunnel Raven","Loyal Hound","Antidote","cursed Items"]){
   assert.ok(V2_ROOMS.some(r=>r.v2.links.includes(named)),named);
