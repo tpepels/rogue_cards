@@ -24,6 +24,18 @@ were measured **before** these adjustments and must not be presented as
 current post-adjustment win rates. See README.md for pairwise interaction and
 individual card-balance experiments.
 
+## Targeted card-balance adjustments (12 October 2026)
+
+After the controlled per-card simulations on commit `276e9c9`, we
+adjusted exactly four cards: Whispering Blade (+4 ATK with curse unchanged),
+Hall of Teeth RATTLE (three Items after winning the DEEP Monster fight),
+Ghostly Auction HECKLE (three Items after winning the MIDDLE Monster fight),
+and Warden's Threshold FIGHT (two Items plus unchanged d6 HP healing after
+victory). Matching typed-effect handlers, full-effect combat statistics,
+the scripted treasure policy, and reviewed printed-card hashes were updated
+together. Earlier experiment measurements are **pre-adjustment** and must
+be rerun before claiming the new cards have a particular win rate.
+
 ## Measured complete-policy results
 
 The GitHub Actions **Verify tabletop print-and-play** run on commit `675ac246d2` executed `npm run balance -- 2000`: 2,000 seeded expeditions for each of **12 party setups × 5 strategies = 120,000 campaigns**. All returned zero unresolved operations and zero stalled campaigns. These are implementation-based, **policy-specific win rates**, not human win probabilities.

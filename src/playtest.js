@@ -23,7 +23,7 @@ export const MONSTER_IDS = Object.freeze([
 // When these change, explicitly review the simulator instead of silently reporting
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
- rooms:"1f54af43",objects:"10f68323",monsters:"03f7a3b3",
+ rooms:"9b7aa79d",objects:"56991468",monsters:"03f7a3b3",
  heroes:"4116c2a8",warden:"0fb23b0c"
 });
 const digest=data=>{
@@ -71,7 +71,7 @@ export function opposedWit(rng,wit,dc){
  return a!==1&&(a===20||a+wit>b+dc);
 }
 const hasTag=(card,tag)=>card.v2?.tags?.includes(tag);
-const weaponValue=o=>({sword:2,staff:1,"cursed-blade":3}[o.id]||0);
+const weaponValue=o=>({sword:2,staff:1,"cursed-blade":4}[o.id]||0);
 const armourValue=o=>({mail:2,shield:1,"cursed-mail":3}[o.id]||0);
 export const effectiveStats=hero=>{
  const carried=hero.items;

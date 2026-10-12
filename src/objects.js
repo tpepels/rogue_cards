@@ -48,7 +48,7 @@ const equipment=[
   "WEAPON: +1 ATK. Spell attacks made with WIT deal +1 damage.",null,
   "At a SHRINE, heal 2 HP instead of its choice; or straighten a Wand.",["u-shrine","m-altar","d-mirror"],"Its knots are watching.",2],
  ["cursed-blade","Whispering Blade","key","EQUIPMENT",["METAL","CURSED","WEAPON"],
-  "CURSED WEAPON: +3 ATK; lose 1 HP after each successful hit.",null,
+  "CURSED WEAPON: +4 ATK; lose 1 HP after each successful hit.",null,
   "Cannot remove until cleansed in a SHRINE Room.",["u-shrine","m-altar","d-crown"],"It argues with your blood.",1],
  ["mail","Patchwork Mail","knight","EQUIPMENT",["METAL","ARMOUR"],
   "ARMOUR: +2 DEF; your WIT rolls have DIS.",null,

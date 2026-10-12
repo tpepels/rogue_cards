@@ -110,6 +110,25 @@ separately. All 28 pairs are included, but balance still needs tabletop
 validation and better optimized decision policies.
 
 
+## Targeted Item and Room balance adjustments (12 October 2026)
+
+The first controlled Item/Room experiments motivated a four-card
+balance pass. The canonical card catalogue and the full-effect handlers
+now agree:
+
+- **Whispering Blade:** +4 ATK (was +3), still CURSED and loses 1 HP after
+  each successful hit.
+- **Hall of Teeth - RATTLE:** after winning the required DEEP Monster fight,
+  draw 3 Items (was 2).
+- **Ghostly Auction - HECKLE:** after winning the required MIDDLE Monster
+  fight, draw 3 Items (was 2).
+- **Warden's Threshold - FIGHT:** after victory, heal d6 HP and draw
+  2 Items (was 1).
+
+The historical balance reports preceding these adjustments describe older
+card values. Do not interpret those results as post-change measurements.
+No other Item, Room, Hero, Warden, or Vault rule changed in this pass.
+
 ## Item and Room balance / interaction testing
 
 The canonical Vault balance adjustment is printed on the cards and used by

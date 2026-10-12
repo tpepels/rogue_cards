@@ -45,7 +45,7 @@ export const ROOM_EFFECTS=Object.freeze({
  ["HURT:d6","DISCARD:1"],["NONE"],["DRAW:2"]]),
  "m-well":C(["COST:1","ROLL_ROOM_COST_REROLL"],["PEEK:1"],[
  ["MONSTER_DRAW"],["HEAL:d6"],["DRAW:2"],["DRAW:3"]]),
- "m-auction":C(["COST:1","ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:2"],[
+ "m-auction":C(["COST:1","ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:3"],[
  ["POISON"],["DRAW:2"],["DRAW:3"]]),
  "m-clock":C(["ROLL_ROOM"],["CHECK_ATK:5:DRAW1_RECHARGE:HURTd6"],[
  ["HURT:d6"],["HEAL:d6"],["DRAW:1"],["NEXT_WIT:2"]]),
@@ -60,11 +60,11 @@ export const ROOM_EFFECTS=Object.freeze({
  ["HURT:2d6"],["HURT:d6"],["DRAW:1"]]),
  "d-reliquary":C(["ROLL_ROOM"],["COST:2","DRAW:3","MAGIC_HEAL:2"],[
  ["HURT:d6","DRAW:1"],["DRAW:2"],["DRAW:3","SAVE_TRAP"]]),
- "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:2"],[
+ "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:3"],[
  ["MONSTER_DRAW"],["DRAW:1"],["DRAW:2","HEAL:2"]]),
  "d-oracle":C(["ROLL_ROOM"],["HEAL:2"],[
  ["HURT:d6"],["PEEK_SWAP:2"],["PEEK:1","DRAW:1"],["PEEK_SWAP:2","DRAW:2"]]),
- "d-gate":C(["ROLL_ROOM"],["FIGHT_REWARD:1","FIGHT_HEAL:d6"],[
+ "d-gate":C(["ROLL_ROOM"],["FIGHT_REWARD:2","FIGHT_HEAL:d6"],[
  ["FIGHT"],["BANISH"],["BANISH","DRAW:1","CURSED_EXTRA_DRAW"]]),
  "d-mirror":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[
  ["POISON"],["CURE","HEAL:d6"],["SAVE_ATTACK_ADV"]]),

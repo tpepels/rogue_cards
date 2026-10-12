@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Physical-first d20/d6 Rogue Cards print-and-play tabletop game",
   "scripts": {
-    "test": "node --test tests/tabletop.test.mjs tests/playtest.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs tests/warden-balance.test.mjs tests/card-interactions.test.mjs tests/card-balance.test.mjs",
+    "test": "node --test tests/tabletop.test.mjs tests/playtest.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs tests/warden-balance.test.mjs tests/card-interactions.test.mjs tests/card-balance.test.mjs tests/balance-adjustments.test.mjs",
     "test:visual": "playwright test",
     "balance": "node scripts/full-balance.mjs",
     "balance:baseline": "node scripts/playtest.mjs",

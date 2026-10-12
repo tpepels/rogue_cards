@@ -62,7 +62,7 @@ const chooseRoom=s=>{
  if(s.strategy==="survival"&&hpFrac<.65&&/HEAL/.test(b))desired=1;
  if(s.strategy==="magic"&&s.exhaustedWand()&&(/RECHARGE/.test(b)||room.v2.kind==="SHRINE"))desired=1;
  if(s.strategy==="seal"&&/COST:2/.test(b))desired=0;
- if(s.strategy==="treasure"&&/DRAW:2|DRAW:3|FIGHT_REWARD:2/.test(b)&&hpFrac>.55)desired=1;
+ if(s.strategy==="treasure"&&/DRAW:2|DRAW:3|FIGHT_REWARD:[23]/.test(b)&&hpFrac>.55)desired=1;
  if(s.strategy==="negotiation"&&(/BANISH|BRIBE|SILENCE|CHECK_WIT|FUNGUS_BURN/.test(b)))desired=1;
  if(["u-nest","m-crypt","d-gate"].includes(room.id)&&s.strategy!=="treasure")desired=0;
  if(!choiceOK(desired))desired=1-desired;

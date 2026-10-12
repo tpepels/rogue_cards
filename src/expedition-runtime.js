@@ -250,7 +250,7 @@ export class ExpeditionState {
  }
  stats(h){
   const w=h.slots.weapon,a=h.slots.armour,r=h.slots.ring;
-  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":3}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
+  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
     def:h.card.def+({mail:2,shield:1,"cursed-mail":3}[a?.id]||0)};
  }
  apply(kind,args,card){
