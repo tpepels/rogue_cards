@@ -220,7 +220,10 @@ function castCombatMagic(state,hero){
  if(isWand)state.usedWands.add(spell.id);
  else hero.items.splice(hero.items.indexOf(spell),1);
  state.magicActions++;
- const die=rng.die(6),harm=n=>hurt(hero,n,state),damage=n=>{state.monsterHP-=n;};
+ const die=rng.die(6),harm=n=>hurt(hero,n,state),damage=n=>{
+  state.monsterHP-=n;
+  if(n>0&&m.id==="warden-fury"&&(hasTag(spell,"FIRE")||hasTag(spell,"LIGHTNING")))state.monsterSkip++;
+ };
  switch(spell.id){
  case "scroll-last":
   if(die<=2)harm(rng.die(6));else if(die<=4)damage(rng.die(6)+rng.die(6));
