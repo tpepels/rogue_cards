@@ -87,6 +87,18 @@ test("limited magic policy casts real printed Scrolls and Wands without exhausti
  assert.ok(a.meanUnmodeledEffects>0,"Unimplemented effects must remain visible");
  console.log("PHASE5 MAGIC POLICY (PARTIAL):",JSON.stringify(a));
 });
+test("all Heroes safely handle campaign-end simultaneous death and alternate strategies",()=>{
+ // Same seed family as the CLI smoke test, which first revealed a final-Room
+ // wipe occurring before the printed Vault seal could legitimately happen.
+ for(const hero of HEROES){
+  for(const policy of ["basic","magic"]){
+   const report=simulateBatch({runs:180,seed:0x16082026,heroes:[hero.id],policy});
+   assert.equal(report.roundLimits,0);
+   assert.ok(report.winRate>=0&&report.winRate<=1);
+   assert.ok(report.vaultRate>=report.winRate);
+  }
+ }
+});
 test("batch measurements are deterministic, numerical and explicitly report model omissions",()=>{
  const a=simulateBatch({runs:300,seed:402,heroes:["wizard","knight"]});
  const b=simulateBatch({runs:300,seed:402,heroes:["wizard","knight"]});
