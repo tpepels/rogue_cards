@@ -72,7 +72,7 @@ const middle=make("MIDDLE",[
   [["CROSS","Roll d6. With Knotted Rope, choose 5–6."],["ARGUE","Opposed d20+WIT vs d20+4: win, heal 2 HP; lose, lose d6 HP."]],"CROSS",
   [["1–2","Lose d6 HP and discard 1 Item."],["3–4","Cross. No further effect."],["5–6","Find a bundle. Draw 2 Items."]],["Knotted Rope"],"The bridge can count."],
  ["m-well","The Bottomless Well","water","MYSTERY","A coin takes a long time to land.",
-  [["DROP","Discard 1 Item; roll d6. Discard another to reroll once. If CURSED, choose 6."],["LISTEN","Peek at the next Room."]],"DROP",
+  [["DROP","Discard 1 Item; roll d6. Discard another to reroll once. If dropped CURSED, choose 6."],["LISTEN","Peek at the next Room."]],"DROP",
   [["1–2","Something climbs out. Draw a MIDDLE Monster."],["3–4","Heal d6 HP."],["5","Draw 2 Items."],["6","The well returns 3 Items."]],["Tunnel Raven"],"The echo is older than you."],
  ["m-auction","Ghostly Auction","ghost","ENCOUNTER","Bids are taken in memories and teeth.",
   [["BID","Discard 1 Item; roll d6. If it is MAGIC, choose 5–6."],["HECKLE","Draw a MIDDLE Monster. After victory, draw 2 Items."]],"BID",
