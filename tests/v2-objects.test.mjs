@@ -69,7 +69,8 @@ test("Wands misfire or break, have distinct outcomes and recharge via printed Sh
  for(const c of wands){
   assert.match(c.v2.trigger,/roll d6/i);
   assert.match(c.v2.trigger,/turn sideways|recharges it/i,c.id);
-  assert.match(c.v2.alternative,/SHRINE:.*straighten this Wand/i,c.id);
+  assert.match(c.v2.alternative,/SHRINE:.*recharge/i,c.id);
+  assert.match(c.v2.alternative,/OVERCHARGE:.*discard Wand.*lose d6 HP/i,c.id);
   assert.match(c.v2.roll.outcomes[0].effect,/misfire|fizzle|breaks|backfire/i,c.id);
   assert.ok(c.v2.tags.includes("MAGIC"));
   assert.ok(c.v2.links.some(id=>V2_ROOMS.some(r=>r.id===id)));
