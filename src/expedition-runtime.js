@@ -310,10 +310,29 @@ export class ExpeditionState {
   const h=this.chooseActor();this.actor=h;
   let wit=kind==="CHECK_WIT";
   const stat=wit?h.card.wit+this.witBonus:this.stats(h).atk;
-  const dis=wit&&h.slots.armour?.id==="mail";
-  const roll=()=>this.die(20),a=roll(),d=dis?Math.min(a,roll()):a;
+  let dis=h.poison||h.nextDis>0||(wit&&h.slots.armour?.id==="mail");
+  let adv=h.nextAdv>0,blessBonus=0;
+  h.nextDis=0;h.nextAdv=0;
+  const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
+  if(priest){priest.used.add("hero");const d=this.die();
+   if(d<=2)this.hurt(priest,this.die());
+   else if(d<=4)blessBonus=2;
+   else{adv=true;h.poison=false;}
+  }
+  const roll=()=>this.die(20),a=roll();
+  let d=adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a;
+  const ring=h.slots.ring;
+  if(ring?.id==="ring-luck"&&!h.used.has(ring)){
+   this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,ring);
+   d=this.pendingD20+this.pendingD20Modifier;
+  }
+  const wand=h.inventory.find(x=>x.id==="wand-undo"&&!this.exhausted.has(x));
+  if(wand&&d+stat+blessBonus<dc+11){
+   this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,wand);
+   d=this.pendingD20+this.pendingD20Modifier;
+  }
   const monsterRoll=roll();
-  const ok=d===20||(d!==1&&d+stat>monsterRoll+dc);
+  const ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
   this.witBonus=0;
   const code=ok?success:fail;
   if(code==="DRAW1_RECHARGE"){this.draw();this.recharge();}
