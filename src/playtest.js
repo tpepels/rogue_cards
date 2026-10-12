@@ -235,23 +235,24 @@ function heroTurn(state,hero){
  }
  state.monsterHP-=damage;
 }
-function fight(state,monster){
- state.activeMonster=monster;state.monsterHP=monster.hp;state.monsterSkip=0;state.monsterAdv=false;
+function fight(state,monster,{startingHP=monster.hp,transitionAt=0}={}){
+ state.activeMonster=monster;state.monsterHP=startingHP;state.monsterSkip=0;state.monsterAdv=false;
  state.battles++;
  state.heroes.forEach(h=>{h.weaponUsed=false;h.shieldUsed=false;});
  let rounds=0;
- while(partyAlive(state.heroes)&&state.monsterHP>0&&rounds++<120){
+ while(partyAlive(state.heroes)&&state.monsterHP>transitionAt&&rounds++<120){
   for(const hero of state.heroes){
-   if(hero.hp<=0||state.monsterHP<=0)continue;
-   heroTurn(state,hero);if(state.monsterHP<=0)break;
+   if(hero.hp<=0||state.monsterHP<=transitionAt)continue;
+   heroTurn(state,hero);if(state.monsterHP<=transitionAt)break;
    respond(state,hero);if(!partyAlive(state.heroes))break;
   }
  }
  state.rounds+=rounds;
  if(rounds>=120)state.roundLimit=true;
  if(state.monsterHP<=0)state.kills++;
+ const thresholdReached=state.monsterHP<=transitionAt;
  state.activeMonster=null;
- return state.monsterHP<=0;
+ return thresholdReached;
 }
 function seal(state){
  state.sealAvailable=magicCount(state.heroes)>=3;
@@ -281,11 +282,10 @@ export function simulateExpedition({seed=1,heroes=["warrior"],bossChoice="seal"}
  if(omen<=2)state.monsterAdv=true;
  if(bossChoice==="seal"&&seal(state)){state.won=true;return summary(state);}
  if(!partyAlive(state.heroes))return summary(state);
- if(!fight(state,WARDEN))return summary(state);
- // Phase II retains current HP: the model uses WARDEN_FURY's printed 12 HP as
- // the second-phase target. This is a staged combat approximation.
- state.activeMonster=null;
- if(!fight(state,WARDEN_FURY))return summary(state);
+ if(!fight(state,WARDEN,{transitionAt:12}))return summary(state);
+ // The Warden's health is conserved across phases. Start Phase II at exactly
+ // 12 HP or fewer, never restore an extra health bar.
+ if(!fight(state,WARDEN_FURY,{startingHP:clamp(state.monsterHP,1,12)}))return summary(state);
  state.won=true;
  return summary(state);
 }
