@@ -1,6 +1,6 @@
 # Rogue Cards V2 — Phase 3 mechanical-ecology audit
 
-**Status:** phase 3 implementation on \`main\`, as separately printable V2 prototypes. **V1 is still the canonical playable edition.**
+**Status:** phase 3 implementation on `main`, as separately printable V2 prototypes. **V1 is still the canonical playable edition.**
 
 [36 V2 Rooms](../v2-rooms.html) · [52 unique V2 Objects](../v2-objects.html) · [12 V2 Monsters](../v2-monsters.html) · [one-page V2 rules](../rules-v2.html)
 
@@ -11,7 +11,7 @@ The V2 design catalogue contains **100 unique card faces**: 36 Rooms (12 per reg
 The audit identified recurring problems:
 
 1. **Flat rewards:** too many different Rooms simply exchanged HP for 1–3 Items. We rewrote selected choices to substitute Wand recharge, magical sacrifices and risk-dependent rewards.
-2. **Synergy by annotation only:** the earlier \`v2.links\` lists suggested connections that were not always actionable. Phase 3 prints the **actual trigger, cost and outcome** on the involved cards; metadata alone does nothing.
+2. **Synergy by annotation only:** the earlier `v2.links` lists suggested connections that were not always actionable. Phase 3 prints the **actual trigger, cost and outcome** on the involved cards; metadata alone does nothing.
 3. **Interchangeable spells:** Scrolls and Wands largely differed by damage amount or skipped Monster responses. Now they can change a specific behaviour band, explode in the Hero's face, or interact with a specific Room/Monster.
 4. **Wands generated repeatable value:** Wands must now be upright to use; after rolling, turn them sideways. An overcharge **discards the Wand and costs d6 HP**, guaranteeing only that Wand's printed highest outcome. Alternative recharge is confined to explicitly printed, once-per-party Room decisions, a Shrine substitution, or a consumed card.
 5. **Curses were only taxes on stats:** cursed gear now influences magic effects, negotiations, sacrifice and high-risk boosts. Equipped CURSED gear remains stuck until cleansed.
@@ -70,12 +70,12 @@ Phase 3 is a design/ecology pass, not a claim that the entire V2 game is balance
 
 ## Files and verification
 
-- \`src/v2-rooms.js\` — updated Room choices.
-- \`src/v2-objects.js\` — expanded item effects, family interactions, Scrolls/Rings/Wands.
-- \`src/v2-monsters.js\` — new independent V2 Monster ecology over V1 stat baselines.
-- \`src/tabletop-view.js\` and \`styles/tabletop.css\` — physical collage layouts, including Monster d6/weakness/parley strips.
-- \`v2-monsters.html\` and \`src/v2-monsters-app.js\` — preview/filter/print.
-- \`tests/v2-ecology.test.mjs\` — printed synergy, overcharge, complete behaviour bands and V1 isolation.
-- \`tests/v2-objects.test.mjs\`, \`tests/v2-rooms.test.mjs\`, \`tests/visual.spec.mjs\` — existing and new mechanical/physical print checks.
+- `src/v2-rooms.js` — updated Room choices.
+- `src/v2-objects.js` — expanded item effects, family interactions, Scrolls/Rings/Wands.
+- `src/v2-monsters.js` — new independent V2 Monster ecology over V1 stat baselines.
+- `src/tabletop-view.js` and `styles/tabletop.css` — physical collage layouts, including Monster d6/weakness/parley strips.
+- `v2-monsters.html` and `src/v2-monsters-app.js` — preview/filter/print.
+- `tests/v2-ecology.test.mjs` — printed synergy, overcharge, complete behaviour bands and V1 isolation.
+- `tests/v2-objects.test.mjs`, `tests/v2-rooms.test.mjs`, `tests/visual.spec.mjs` — existing and new mechanical/physical print checks.
 
 **No V1 Card data, V1 mechanics or canonical V1 rulebook were edited.** V2 changes are kept independently on main for review.
