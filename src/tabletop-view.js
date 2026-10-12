@@ -216,7 +216,7 @@ export function cardMarkup(card){
  middle='<div class="tt-collage" aria-label="Illustration with pasted game instructions">'+
    '<div class="tt-visual">'+visual(card)+stats(card)+stage+'</div>'+
    content(card)+'</div>';
- return '<article class="tt-card tt-'+type+' tt-layout-'+layout+
+ return '<article class="tt-card tt-art-first tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
   '" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-file="'+esc(asset||"")+'" data-art-status="'+(asset?'generated':'placeholder')+

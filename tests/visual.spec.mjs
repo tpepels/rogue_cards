@@ -146,3 +146,40 @@ test("physical card families have distinct illustration frames and artifact layo
   .toBeGreaterThanOrEqual(9);
  expect(metrics.find(m=>m.family==="SCROLL").stampDirection).toBe("vertical-rl");
 });
+
+
+test("all 111 cards keep a readable rule docket below a prominent illustration",async({page})=>{
+ test.setTimeout(180000);
+ await page.goto("/");
+ const inspect=()=>page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const picture=card.querySelector(".tt-collage>.tt-visual").getBoundingClientRect();
+  const paper=card.querySelector(".tt-collage>.tt-content");
+  const docket=paper.getBoundingClientRect();
+  const area=card.querySelector(".tt-collage").getBoundingClientRect();
+  const image=card.querySelector(".tt-art-image");
+  return {id:card.dataset.id,type:card.dataset.v2Kind,
+   artHeight:picture.height,artWidth:picture.width,
+   docketTop:docket.top,docketBottom:docket.bottom,
+   artBottom:picture.bottom,areaBottom:area.bottom,
+   docketClipY:paper.scrollHeight-paper.clientHeight,
+   docketClipX:paper.scrollWidth-paper.clientWidth,
+   objectFit:getComputedStyle(image).objectFit,
+   layout:getComputedStyle(card.querySelector(".tt-collage")).display
+  };
+ }));
+ const check=results=>{
+  expect(results).toHaveLength(111);
+  for(const c of results){
+   expect(c.layout,c.id+" should have independent art and rules").toBe("flex");
+   expect(c.objectFit,c.id+" should display the complete original picture").toBe("contain");
+   expect(c.artHeight,c.id+" lost too much illustration").toBeGreaterThanOrEqual(38*96/25.4);
+   expect(c.artBottom-c.docketTop,c.id+" rules conceal the picture").toBeLessThanOrEqual(5);
+   expect(c.docketBottom-c.areaBottom,c.id+" rules extend beyond physical card").toBeLessThanOrEqual(2);
+   expect(c.docketClipY,c.id+" text clipped vertically").toBeLessThanOrEqual(2);
+   expect(c.docketClipX,c.id+" text clipped horizontally").toBeLessThanOrEqual(2);
+  }
+ };
+ check(await inspect());
+ await page.emulateMedia({media:"print"});
+ check(await inspect());
+});

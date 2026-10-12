@@ -1,0 +1,173 @@
+/* Art-first edition. One image plate above the inked rules docket.
+   Text is still printed in full; all 111 front sides stay 90 x 130 mm.
+   This stylesheet loads last to supersede the earlier collage offsets. */
+.tt-card.tt-art-first .tt-collage{
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ justify-content:flex-end;
+ gap:0;
+ padding:0 .35mm 5.7mm;
+ background:#e9dfcb;
+ overflow:hidden;
+}
+.tt-card.tt-art-first .tt-collage > .tt-visual{
+ position:relative;
+ top:auto;bottom:auto;left:auto;right:auto;
+ display:flex;
+ flex:1 1 0;
+ align-self:stretch;
+ width:auto;height:auto;
+ min-height:var(--art-first-min,51mm);
+ margin:0;
+ transform:none;
+ transform-origin:center;
+ overflow:hidden;
+ border:1px solid #21180f;
+ background:#e9dfcb;
+ box-shadow:inset 0 0 0 .5mm #261a12;
+}
+.tt-card.tt-art-first .tt-collage > .tt-visual .tt-illustration{
+ width:100%;height:100%;min-height:0;
+ background:#e9dfcb;
+ border:0;
+}
+.tt-card.tt-art-first .tt-collage > .tt-visual .tt-art-image{
+ width:100%;height:100%;
+ object-fit:contain;
+ object-position:center center;
+ background:#e9dfcb;
+ filter:none;
+}
+.tt-card.tt-art-first .tt-collage > .tt-visual:after{
+ opacity:.13;
+ background:repeating-linear-gradient(93deg,transparent 0 18px,#35271914 18px 19px);
+}
+.tt-card.tt-art-first .tt-collage > .tt-content{
+ position:relative;
+ top:auto;bottom:auto;left:auto;right:auto;
+ flex:0 0 auto;
+ align-self:center;
+ width:calc(100% - 1.2mm);
+ max-width:none;max-height:none;min-height:0;
+ margin:-.35mm 0 0;
+ padding:1.05mm 1.45mm 1.3mm;
+ overflow:visible;
+ transform:rotate(var(--slip-tilt,0deg));
+ box-shadow:.35mm .4mm 0 #241910;
+ background:#f2eadc;
+ clip-path:polygon(0 1%,13% 0,29% 1%,46% 0,67% .8%,86% 0,100% 1%,99.5% 99%,78% 100%,55% 99%,30% 100%,0 98%);
+}
+.tt-card.tt-art-first .tt-collage > .tt-content:before{
+ display:none;
+}
+.tt-card.tt-art-first .tt-title{
+ top:8.2mm;
+ z-index:9;
+}
+/* Keep the bottom panel narrow in height, rather than reducing readable type.
+   The smaller gaps are printer-safe (no text changes). */
+.tt-card.tt-art-first .tt-v2-kind{padding-bottom:.35mm;margin:0}
+.tt-card.tt-art-first .tt-v2-trigger{
+ margin:.55mm 0 .35mm;padding-bottom:.35mm;
+}
+.tt-card.tt-art-first .tt-v2-prompt{margin:.4mm 0 .55mm}
+.tt-card.tt-art-first .tt-v2-choices{gap:.1mm;padding-bottom:.2mm}
+.tt-card.tt-art-first .tt-v2-choice{padding:.27mm .4mm;margin:.1mm 0}
+.tt-card.tt-art-first .tt-v2-roll-heading{
+ padding:.35mm .7mm;margin:.4mm 0 .35mm;
+}
+.tt-card.tt-art-first .tt-v2-results>.tt-v2-result,
+.tt-card.tt-art-first .tt-v2-monster-rows .tt-v2-result{
+ padding:.25mm .35mm;margin:.1mm 0;
+}
+.tt-card.tt-art-first .tt-v2-result b{
+ min-width:9.5mm;
+ padding:.15mm .25mm;
+}
+.tt-card.tt-art-first .tt-v2-alternative{
+ margin-top:.4mm;padding:.45mm .7mm;
+}
+.tt-card.tt-art-first .tt-v2-identity{margin:.35mm 0 0;padding-top:.3mm}
+/* Hero portrait: tall plate with four compact skill records below. */
+.tt-card.tt-art-first.tt-layout-v2-hero{--art-first-min:62mm}
+.tt-card.tt-art-first.tt-layout-v2-hero .tt-collage>.tt-content{
+ width:calc(100% - 3mm);align-self:flex-end;margin-right:.5mm;
+ padding:1mm 1.4mm 1.1mm;
+}
+.tt-card.tt-art-first.tt-layout-v2-hero .tt-collage .tt-stats{
+ top:15.5mm;left:0;height:46mm;width:14.6mm;
+}
+/* Monster behaviors have more text: the picture keeps the upper half. */
+.tt-card.tt-art-first.tt-layout-v2-monster{--art-first-min:44mm}
+.tt-card.tt-art-first.tt-layout-v2-monster .tt-collage>.tt-content{
+ width:calc(100% - 1mm);padding:.8mm 1.4mm 1mm;
+}
+.tt-card.tt-art-first.tt-layout-v2-monster .tt-collage .tt-stats{
+ top:15.5mm;left:0;height:36mm;width:14mm;
+}
+.tt-card.tt-art-first .tt-v2-monster-rows .tt-v2-result{
+ line-height:1.1;
+}
+.tt-card.tt-art-first .tt-v2-monster-rule{
+ margin:.35mm 0 0;padding:.25mm .1mm 0;
+ line-height:1.12;
+}
+.tt-card.tt-art-first .tt-v2-monster-remains{
+ margin:.35mm 0 0;padding:.3mm .1mm 0;
+ line-height:1.12;
+}
+/* Room dossier: no tall side strip obscuring the chamber.
+   The choices and die record sit beneath the scene. */
+.tt-card.tt-art-first.tt-layout-v2-room{--art-first-min:48mm}
+.tt-card.tt-art-first.tt-layout-v2-room .tt-collage>.tt-content{
+ width:calc(100% - 1.2mm);padding:.85mm 1.35mm 1mm;
+}
+.tt-card.tt-art-first.tt-layout-v2-room .tt-v2-result,
+.tt-card.tt-art-first.tt-layout-v2-room .tt-v2-choice{
+ font-size:10.1px;line-height:1.12;
+}
+.tt-card.tt-art-first[data-id="vault"]{--art-first-min:42mm}
+/* Found objects: a mostly uninterrupted print, with a smaller receipt.
+   Families retain separate type stamps / ornament from compositions.css. */
+.tt-card.tt-art-first.tt-layout-v2-object{--art-first-min:56mm}
+.tt-card.tt-art-first.tt-layout-v2-object .tt-collage>.tt-content{
+ width:calc(100% - 2.6mm);
+ padding:1mm 1.45mm 1.15mm;
+}
+.tt-card.tt-art-first[data-v2-kind="TOOL"],
+.tt-card.tt-art-first[data-v2-kind="EQUIPMENT"]{--art-first-min:73mm}
+.tt-card.tt-art-first[data-v2-kind="COMPANION"],
+.tt-card.tt-art-first[data-v2-kind="RELIC"]{--art-first-min:61mm}
+.tt-card.tt-art-first[data-v2-kind="SCROLL"],
+.tt-card.tt-art-first[data-v2-kind="WAND"]{--art-first-min:50mm}
+.tt-card.tt-art-first[data-v2-kind="RING"]{--art-first-min:58mm}
+.tt-card.tt-art-first[data-v2-kind="POTION"]{--art-first-min:60mm}
+.tt-card.tt-art-first[data-v2-kind="TOOL"] .tt-collage>.tt-content,
+.tt-card.tt-art-first[data-v2-kind="EQUIPMENT"] .tt-collage>.tt-content{
+ width:calc(100% - 5mm);
+ align-self:flex-end;margin-right:.6mm;
+}
+.tt-card.tt-art-first[data-v2-kind="COMPANION"] .tt-collage>.tt-content,
+.tt-card.tt-art-first[data-v2-kind="RING"] .tt-collage>.tt-content{
+ width:calc(100% - 4mm);
+ align-self:flex-start;margin-left:.6mm;
+}
+.tt-card.tt-art-first[data-v2-kind="SCROLL"] .tt-collage>.tt-content,
+.tt-card.tt-art-first[data-v2-kind="WAND"] .tt-collage>.tt-content{
+ width:calc(100% - 1mm);
+}
+.tt-card.tt-art-first[data-v2-kind="RELIC"] .tt-collage>.tt-content,
+.tt-card.tt-art-first[data-v2-kind="POTION"] .tt-collage>.tt-content{
+ width:calc(100% - 3mm);
+}
+.tt-card.tt-art-first .tt-content--v2-object .tt-v2-result{
+ font-size:10px;line-height:1.11;
+}
+/* The image and rule strip form a single physical print composition. */
+@media print{
+ .tt-card.tt-art-first .tt-collage{overflow:hidden}
+ .tt-card.tt-art-first .tt-collage>.tt-content{
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+ }
+}
