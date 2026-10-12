@@ -51,7 +51,7 @@ function setupPrepared(s){
   }
   const gp=itemIn(s,x,"goblin-pet"),br=itemIn(s,x,"ring-bargain");
   if(s.room.v2.kind==="ENCOUNTER"){
-   if(gp)rollItem(s,x,gp);
+   if(gp&&x.slots.companion===gp)rollItem(s,x,gp);
    if(br&&x.slots.ring===br)rollItem(s,x,br);
    const wm=itemIn(s,x,"wand-market");
    if(wm&&!s.exhausted.has(wm)&&s.strategy!=="seal")rollItem(s,x,wm);
@@ -215,7 +215,7 @@ function playerAttack(s,h){
  }
  const ring=h.slots.ring;
  if(ring?.id==="ring-ashes"&&!h.used.has(ring))s.activate(h,ring);
- const stat=s.stats(h),r=playerRoll(s,h,stat.atk,m.def);
+ const stat=s.stats(h),r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
  if(!r.hit||h.hp<=0)return;
  let dmg=s.die()+(r.critical?s.die():0);
  dmg+=h.nextDamage;h.nextDamage=0;
@@ -231,7 +231,6 @@ function playerAttack(s,h){
    dmg+=h.nextDamage-before;h.nextDamage=before;
   }
  }
- if(h.recruitedGoblin)dmg+=1;
  s.monsterHP-=dmg;
  if(s.monster?.id==="troll"&&s.anyEquippedTag("FIRE"))s.trollScorched=true;
 }
@@ -275,8 +274,8 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  const mirror=itemIn(s,h,"mirror");
  if(mirror&&!h.used.has(mirror)){
   // Printed trigger: before opposed defence. Reflection cancels the pending hit.
-  s.pendingDamage=0;s.activate(h,mirror);
-  if(s.pendingDamage===0&&h.used.has(mirror)&&s.monsterHP<=0)return;
+  s.pendingDamage=0;s.pendingReflect=false;s.activate(h,mirror);
+  if(s.pendingReflect){s.pendingReflect=false;return;}
   defenseAdv=defenseAdv||h.nextDefenseAdv;hurtExtra+=h.damageVulnerability;
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
@@ -424,6 +423,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  const preferSeal=strategy==="seal"||(strategy==="survival"&&
   s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
+ if(s.metrics.sealAttempt)s.monsterAdv=true;
  s.monster=WARDEN;s.monsterHP=WARDEN.hp;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
