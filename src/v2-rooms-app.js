@@ -9,7 +9,7 @@ function show(){
  const kinds=[...new Set(rooms.map(c=>c.v2.kind))];
  mount.innerHTML=filterSvg+
   '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS <small>V2</small></div><div class="tt-sub">PHASE 1 · ROOM EXPANSION · PRINTABLE DESIGN DRAFT</div></div>'+
-  '<nav class="tt-nav" aria-label="V2 site links"><a href="./">PLAYABLE V1 DECK</a><a href="./v2-objects.html">V2 ITEMS</a><a href="./rules-v2.html">V2 RULES</a><a href="#v2-cards">V2 ROOMS</a></nav></div>'+
+  '<nav class="tt-nav" aria-label="V2 site links"><a href="./">PLAYABLE V1 DECK</a><a href="./v2-objects.html">V2 ITEMS</a><a href="./v2-monsters.html">V2 MONSTERS</a><a href="./rules-v2.html">V2 RULES</a><a href="#v2-cards">V2 ROOMS</a></nav></div>'+
   '<main class="tt-shell tt-v2-hub"><section class="tt-hero"><div class="tt-kicker">36 UNIQUE ROOMS · 12 PER REGION · d6 ON EACH CARD</div>'+
   '<h1>Thirty-six ways to get lost.</h1>'+
   '<p>Every Room offers a choice, with the consequence of its risky action printed as d6 ranges on the card. Encounter dangerous objects, bargains, shrines, peculiar NPCs, monsters and unpredictable treasure. Roll and see what happens.</p>'+
