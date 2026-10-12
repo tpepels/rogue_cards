@@ -52,7 +52,7 @@ test("every Hero can complete a deterministic nine-room expedition without unbou
    const b=simulateExpedition({seed,heroes:[h.id]});
    assert.deepEqual(a,b,h.id+" "+seed);
    assert.ok(a.cleared>=0&&a.cleared<=9);
-   assert.ok(a.battles>=0&&a.rounds>=0);
+   assert.ok(a.battles>=0&&a.turns>=0);
    assert.equal(a.roundLimit,false,h.id+" "+seed);
    assert.ok(a.itemsDrawn>=1&&a.itemsSpent>=0);
    if(a.won)assert.equal(a.cleared,9);
