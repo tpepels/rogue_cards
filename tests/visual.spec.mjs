@@ -364,3 +364,54 @@ test("V2 playtest rulebook is one A4, retains opposed rolls and prints dice-rang
  expect(dims.overflowY,"V2 rulebook exceeds one A4").toBeLessThanOrEqual(2);
  expect(dims.overflowX,"V2 rulebook horizontal overflow").toBeLessThanOrEqual(2);
 });
+
+
+test("V2 Room lab previews and prints 36 distinct, readable d6 choice cards",async({page})=>{
+ await page.goto("/v2-rooms.html");
+ await expect(page.getByRole("heading",{name:/Thirty-six ways to get lost/i})).toBeVisible();
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(36);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(9);
+ await expect(page.locator(".tt-grid .tt-v2-roll-heading")).toHaveCount(36);
+ await expect(page.locator(".tt-grid .tt-v2-choice")).toHaveCount(72);
+ const views=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const paper=card.querySelector(".tt-content--v2"),title=card.querySelector(".tt-title");
+  const p=paper.getBoundingClientRect(),t=title.getBoundingClientRect(),frame=card.getBoundingClientRect();
+  const art=card.querySelector(".tt-visual").getBoundingClientRect();
+  return {id:card.dataset.id,kind:card.dataset.v2Kind,
+   height:frame.height,width:frame.width,
+   clip:paper.scrollHeight-paper.clientHeight,
+   clipHorizontal:paper.scrollWidth-paper.clientWidth,
+   paperTop:p.top-frame.top,
+   titleBottom:t.bottom-frame.top,
+   footerBottom:card.querySelector(".tt-footer").getBoundingClientRect().bottom-frame.bottom,
+   artOverPaper:Math.min(art.bottom,p.bottom)-Math.max(art.top,p.top),
+   titleRight:t.right-frame.right
+  };
+ }));
+ for(const v of views){
+  expect(v.kind.length,"Missing Room family "+v.id).toBeGreaterThan(0);
+  expect(v.clip,"Text clips vertically in "+v.id).toBeLessThanOrEqual(2);
+  expect(v.clipHorizontal,"Text clips horizontally in "+v.id).toBeLessThanOrEqual(2);
+  expect(v.paperTop,"Rule slip collides with title "+v.id).toBeGreaterThanOrEqual(v.titleBottom-4);
+  expect(v.footerBottom,"Footer outside card "+v.id).toBeLessThanOrEqual(2);
+  expect(v.artOverPaper,"Not a real collage "+v.id).toBeGreaterThan(30);
+  expect(v.titleRight,"Title outside card "+v.id).toBeLessThanOrEqual(2);
+ }
+ const region=page.getByRole("combobox",{name:"V2 Room region"});
+ await region.selectOption("MIDDLE");
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(12);
+ await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(3);
+ await page.emulateMedia({media:"print"});
+ const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(card=>({
+  id:card.dataset.id,
+  clip:card.querySelector(".tt-content--v2").scrollHeight-card.querySelector(".tt-content--v2").clientHeight,
+  width:card.getBoundingClientRect().width,
+  height:card.getBoundingClientRect().height
+ })));
+ expect(printed).toHaveLength(12);
+ for(const c of printed){
+  expect(c.clip,"Print clipped "+c.id).toBeLessThanOrEqual(2);
+  expect(c.width).toBeGreaterThan(90*96/25.4-2);
+  expect(c.height).toBeLessThan(130*96/25.4+2);
+ }
+});
