@@ -6,6 +6,7 @@ import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop
 import {randomSource,verifyPrintedData} from "./playtest.js";
 import {applyCardRoll,NON_ROLL_EFFECTS} from "./effect-model.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
+import {resolveRoomChoice,protectHero,roomEntry,monsterEntry} from "./room-memory-engine.js";
 import {itemOptions} from "./item-access.js";
 
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
@@ -49,9 +50,12 @@ export class ExpeditionState {
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
   this.deck=copyDeck(this.rng,OBJECTS);
-  this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s)).slice(0,3)]));
+  this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s))]));
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
+   this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
+   this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
+   this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
   this.monsterQueue=[];this.monster=null;this.monsterHP=0;this.monsterSkip=0;
@@ -146,7 +150,7 @@ export class ExpeditionState {
   }
   this.lastSpent=last;return last;
  }
- hurt(h,amt){const n=Math.max(0,amt);const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
+ hurt(h,amt){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
   this.metrics.damage+=before-h.hp;
   if(before>0&&h.hp===0&&!this.alive()&&!this.metrics.wipeCause){
    this.metrics.wipeCause=this.monster?.id||this.room?.id||"unknown-effect";
@@ -156,7 +160,8 @@ export class ExpeditionState {
  heal(h,amt){h.hp=clamp(h.hp+Math.max(0,amt),0,h.card.hp);}
  healParty(amt){const h=this.chooseActor();if(h.hp>0)this.heal(h,amt);}
  draw(n=1){for(let i=0;i<n;i++){
-  if(!this.deck.length)return;
+   if(!this.deck.length)return;
+   if(this.forfeitNextItem){this.forfeitNextItem=false;this.deck.unshift(this.deck.pop());continue;}
   const h=this.chooseActor();const item=this.deck.pop();this.add(h,item);this.metrics.drawn++;
   this.metrics.objectDraws[item.id]=(this.metrics.objectDraws[item.id]||0)+1;
  }}
@@ -235,7 +240,9 @@ export class ExpeditionState {
   return result;
  }
  beginRoom(room){
-  this.room=room;
+   if(this.savedPath){if(this.savedPathGrace>0)this.savedPathGrace--;
+    else if(room.stage===this.savedPath.stage){this.rooms[room.stage].unshift(room);room=this.savedPath;this.savedPath=null;}}
+   this.room=room;this.skipRoom=false;
   this.seenRooms.add(room.id);
   // The current Room has left the pile; any earlier peek of it is spent.
   if(this.peekedRoomIds[room.stage]?.[0]===room.id)
@@ -253,9 +260,10 @@ export class ExpeditionState {
    h.used.clear();h.immune=false;h.poison=false;
    // NEXT effects stay on the card/hero until consumed, even across Rooms.
    h.damageVulnerability=0;
-  });
- }
- endRoom(){
+   });
+   roomEntry(this);
+  }
+  endRoom(){
   this.heroes.forEach(h=>{
    h.poison=false;h.immune=false;h.used.clear();
    if(h.defDuration>0&&--h.defDuration===0)h.nextDefenseBonus=0;
@@ -269,7 +277,8 @@ export class ExpeditionState {
   return this.monsters[region].pop();
  }
  drawMonster(){
-  const m=this.nextMonster();if(!m)return;
+   const m=this.nextMonster();if(!m)return;
+   if(monsterEntry(this))return;
   if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;}
   else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
@@ -332,6 +341,7 @@ export class ExpeditionState {
   const h=this.actor||this.chooseActor(),v=args[0],n=()=>this.amount(v||0);
   switch(kind){
   case "NONE":case "KEEP_ROOM_ROLL":return;
+   case "ROOM_SPECIAL":resolveRoomChoice(this,Number(v));return;
   case "HURT":this.hurt(h,n());return;
   case "HEAL":this.heal(h,n());return;
   case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n());return;
@@ -468,9 +478,36 @@ export class ExpeditionState {
   else if(code==="HURTd6")this.hurt(h,this.die());
   else throw Error("Unknown check consequence "+code);
  }
- roomRoll(forced=null){
+ forkRooms(mode){
+   const pile=this.rooms[this.room.stage],count=mode==="u-echoes"?3:2;
+   const offered=pile.splice(0,Math.min(count,pile.length));if(!offered.length)return;
+   if(mode==="u-echoes"&&offered.length===3)offered.splice(this.die(3)-1,1);
+   if(mode==="m-maps"&&this.discardable()&&pile.length){this.discard();offered.push(pile.shift());}
+   const rank=r=>(r.v2.kind==="TREASURE"?(this.strategy==="treasure"?7:3):0)+
+    (r.v2.kind==="SHRINE"&&this.chooseActor().hp<this.chooseActor().card.hp-2?4:0)-
+    (r.v2.kind==="LAIR"?4:0)-(r.v2.kind==="HAZARD"?2:0);
+   let candidates=offered;
+   if(mode==="m-red-detour"){
+    const treasure=offered.filter(x=>x.v2.kind==="TREASURE");if(treasure.length)candidates=treasure;
+   }
+   const chosen=[...candidates].sort((a,b)=>rank(b)-rank(a))[0],other=offered.filter(x=>x!==chosen);
+   if(mode==="u-mossy")pile.unshift(...other);
+   else if(mode==="u-candle"){this.savedPath=other[0]||null;this.savedPathGrace=1;}
+   else if(mode==="d-whisper-junction")this.whisperRoom=other[0]||null;
+   else if(mode==="u-echoes")pile.push(...other);
+   else if(mode==="d-gilded"&&other.some(x=>x.v2.kind==="TREASURE"))this.draw();
+   if(mode==="m-ladder")this.nextLadder=true;
+   pile.unshift(chosen);
+  }
+  resolveKeptRoll(card){
+   const band=ranges(card,this.die());
+   for(const op of card.v2.special.rollOps[band]){const [kind,...args]=op.split(":");this.apply(kind,args,card);}
+  }
+  roomRoll(forced=null){
   if(!this.room)throw Error("Room roll without Room");
   let face=typeof forced==="number"?forced:this.die();
+   const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
+   if(lamp>=0&&face<=4){face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);}
   const risk=forced&&typeof forced==="object"?forced.risk:null;
   const firstSpent=this.lastSpent;
   if(risk){
