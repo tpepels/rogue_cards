@@ -234,27 +234,6 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
   };
  }));
 
- if(metrics[0]?.leadShape==="none"){
-  const detail=await card.first().evaluate(el=>{
-   const note=el.querySelector(".tt-slip--lead");
-   const rules=[];
-   for(const sheet of document.styleSheets){
-    try{
-     for(const rule of sheet.cssRules){
-      if(rule.selectorText?.includes("tt-paper-collage")&&rule.selectorText.includes(".tt-slip"))
-       rules.push({href:sheet.href?.split("/").slice(-1)[0],
-        selector:rule.selectorText.slice(0,100),
-        clip:rule.style.clipPath,position:rule.style.position});
-     }
-    }catch{}
-   }
-   return {card:el.className,note:note?.className,
-    style:note?.getAttribute("style"),clip:getComputedStyle(note).clipPath,
-    match:note?.matches(".tt-card.tt-paper-collage .tt-slip"),
-    rules:rules.filter(x=>x.clip||x.position).slice(-15)};
-  });
-  console.log("CUTOUT_CSS_DEBUG",JSON.stringify(detail));
- }
  expect(metrics).toHaveLength(30);
  for(const x of metrics){
   expect(x.border,x.id+" lost its frame").toBeGreaterThanOrEqual(3);
