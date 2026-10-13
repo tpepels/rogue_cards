@@ -92,7 +92,7 @@ test("direct sampled-deck reuse is exact, independent, and never consumes real R
  for(const knowledge of ["fair","oracle"]){
   const s=roomState(knowledge);
   const control=roomState(knowledge);
-  const original=view(s);
+  const original=structuredClone(view(s));
   const prepared=prepareRolloutDecks(s,knowledge);
   for(const n of [811,2941,10017]){
    const opts={knowledge,diceSeed:n,deckSeed:n*3,blueprint:prepared};
