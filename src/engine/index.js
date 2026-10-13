@@ -15,6 +15,7 @@ import {playerAttack,monsterRespond,executeItemOption}
 
 export {ExpeditionState,strategies,roomPolicies}
  from "./expedition-state.js";
+export {seal,sealCost} from "./vault.js";
 export {randomSource} from "./random.js";
 export {d6Band} from "./dice-bands.js";
 export {playerAttack,monsterRespond,executeItemOption,blessBeforeD20}
