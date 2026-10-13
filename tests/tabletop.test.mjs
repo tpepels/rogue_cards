@@ -6,15 +6,15 @@ import {cardMarkup,printSheets,CARDS_PER_SHEET,CARD_ART,assetPath,composition,es
 const faces=range=>{const [a,b=a]=range.split("–").map(Number);assert.ok(a>=1&&b<=6&&Number.isInteger(a)&&Number.isInteger(b));return Array.from({length:b-a+1},(_,i)=>a+i)};
 const dice=table=>{assert.ok([3,4].includes(table.outcomes.length));const facesFound=table.outcomes.flatMap(r=>{assert.ok(r.effect);return faces(r.range)});assert.deepEqual(facesFound.sort(),[1,2,3,4,5,6])};
 test("exactly one complete canonical physical edition",()=>{
- assert.equal(HEROES.length,8);assert.equal(ROOMS.length,54);assert.equal(MONSTERS.length,12);
+ assert.equal(HEROES.length,8);assert.equal(ROOMS.length,64);assert.equal(MONSTERS.length,12);
  assert.equal(ITEMS.length,44);assert.equal(POTIONS.length,8);assert.equal(OBJECTS.length,52);
- assert.equal(CATALOGUE.length,8+54+1+12+2+52);
+ assert.equal(CATALOGUE.length,8+64+1+12+2+52);
  assert.equal(new Set(CATALOGUE.map(c=>c.type+":"+c.id)).size,CATALOGUE.length);
  assert.equal(CARD_WIDTH_MM,90);assert.equal(CARD_HEIGHT_MM,130);assert.equal(CARDS_PER_SHEET,4);
  assert.equal(PRINT_DECK.length,CATALOGUE.reduce((n,c)=>n+c.copies,0));
  assert.equal(PRINT_DECK.length,printDeck().length);
  assert.ok(PRINT_DECK.length>CATALOGUE.length);
- assert.equal(catalogue("room").length,55);
+ assert.equal(catalogue("room").length,65);
  assert.equal(catalogue("monster").length,14);
  assert.equal(catalogue("all","SCROLL").length,8);
  assert.equal(catalogue("all","RING").length,7);
@@ -47,15 +47,15 @@ test("a single d20 can show all Hero and Monster health values",()=>{
  assert.ok(WARDEN_FURY.hp<WARDEN.hp);
  assert.ok(WARDEN.v2.weakness.includes("10 HP or less"));
 });
-test("all 54 regional Rooms and the final Vault provide complete d6 choices",()=>{
- assert.equal(ROOMS.filter(r=>r.stage==="UPPER").length,20);
- assert.equal(ROOMS.filter(r=>r.stage==="MIDDLE").length,18);
- assert.equal(ROOMS.filter(r=>r.stage==="DEEP").length,16);
+test("all 64 regional Rooms and the final Vault provide complete d6 choices",()=>{
+ assert.equal(ROOMS.filter(r=>r.stage==="UPPER").length,24);
+ assert.equal(ROOMS.filter(r=>r.stage==="MIDDLE").length,22);
+ assert.equal(ROOMS.filter(r=>r.stage==="DEEP").length,18);
  assert.equal(VAULT.stage,"FINAL");assert.equal(VAULT.copies,1);
  for(const r of [...ROOMS,VAULT]){
   assert.equal(r.v2.choices.length,2,r.id);
   assert.ok(r.v2.prompt.length>4,r.id);
-  dice(r.v2.roll);
+  if(r.v2.roll)dice(r.v2.roll);
   assert.match(cardMarkup(r),/tt-layout-v2-room/);
  }
 });
@@ -133,7 +133,7 @@ test("every physical card prints deterministically with correct images and A4 qu
  for(const [i,card] of CATALOGUE.entries()){
   const key=card.type+":"+card.id,name=CARD_ART[key];
   assert.ok(name,"Missing illustration for "+key);
-  if(!ROOMS.some(r=>r.id===card.id&&r.v2.special&&!["m-fungus","m-bridge","m-well","m-clock"].includes(r.id)))assert.match(name,new RegExp("^\\d+_"+slug(card.title)+"\\.png$"),
+  if(!ROOMS.some(r=>r.id===card.id&&(r.v2.special||r.v2.fate)&&!["m-fungus","m-bridge","m-well","m-clock"].includes(r.id)))assert.match(name,new RegExp("^\\d+_"+slug(card.title)+"\\.png$"),
    "Illustration assignment does not match card "+key);
   const path="assets/illustrations/"+name;
   assert.ok(existsSync(path),path);
