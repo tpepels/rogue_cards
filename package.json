@@ -49,7 +49,8 @@
     "study:retained": "node scripts/study-retained-paths.mjs",
     "study:v4-item-value": "node scripts/study-v4-item-value.mjs",
     "layouts:build": "node scripts/build-card-layouts.mjs",
-    "layouts:check": "node scripts/build-card-layouts.mjs --check"
+    "layouts:check": "node scripts/build-card-layouts.mjs --check",
+    "oracle:overnight": "node scripts/study-oracle-overnight.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
