@@ -6,6 +6,7 @@ import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop
 import {randomSource,verifyPrintedData} from "./playtest.js";
 import {applyCardRoll,NON_ROLL_EFFECTS} from "./effect-model.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
+import {itemOptions} from "./item-access.js";
 
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const byId=(array,id)=>array.find(x=>x.id===id);
@@ -251,12 +252,12 @@ export class ExpeditionState {
   else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
  }
- activate(h,card,{face=null,consume=true}={}){
+ activate(h,card,{face=null,consume=true,mode="printed",record=true}={}){
   if(!h.inventory.includes(card))throw Error("Object not owned "+card.id);
   if(!card.v2.roll)throw Error("Non-dice card "+card.id+" needs its printed direct trigger");
   if(card.v2.kind==="WAND"&&this.exhausted.has(card))return false;
   if(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card))return false;
-  const before=this.itemSnapshot(h),mode=this.itemMode||"printed";
+  const before=this.itemSnapshot(h);
   this.actor=h;this.metrics.activated++;
   this.metrics.cardCounts[card.id]=(this.metrics.cardCounts[card.id]||0)+1;
   this.metrics.objectActivations[card.id]=(this.metrics.objectActivations[card.id]||0)+1;
@@ -281,7 +282,7 @@ export class ExpeditionState {
   if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
    this.activate(h,h.slots.ring);
   }
-  this.noteItemResult(h,card,mode,before);
+  if(record)this.noteItemResult(h,card,mode,before);
   return true;
  }
  thiefReward(){const thief=this.living().find(x=>x.card.id==="thief"&&!x.used.has("hero"));
@@ -460,7 +461,8 @@ export class ExpeditionState {
   }
   if(this.has("raven")&&this.room.id==="d-oracle")face=6;
   if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
-    &&this.strategy!=="seal"){const h=this.own("key");this.consume(h,byId(h.inventory,"key"));face=6;}
+    &&this.strategy!=="seal"){const h=this.own("key");this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
+     this.consume(h,byId(h.inventory,"key"));return true;});face=6;}
   if((this.has("torch")||this.has("lantern-heart")||this.anyEquippedTag("FIRE"))&&
     this.room.id==="u-lamp")face=6;
   if((this.has("torch")||this.partyCount("FIRE")>0)&&this.room.id==="m-crypt")face=6;
@@ -487,7 +489,11 @@ export class ExpeditionState {
   }
   const owner=this.heroes.find(h=>h.slots.ring?.id==="ring-echo"&&!h.used.has("ring-echo"));
   this.pendingRoomFace=face;
-  if(owner){this.activate(owner,owner.slots.ring);face=this.pendingRoomFace;}
+  if(owner){
+   this.noteOptions(itemOptions(this,owner,"room-roll"));
+   this.activate(owner,owner.slots.ring,{mode:"room-reroll"});
+   face=this.pendingRoomFace;
+  }
   this.pendingRoomFace=null;
   const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
   // A kept Reliquary can ignore one printed trap, then must be discarded.
