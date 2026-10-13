@@ -79,6 +79,22 @@ All general rules fit on [one A4 sheet](rules.html). Individual card text is aut
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
 - `rules.html` — the one canonical rules sheet
 
+## Visual card layout editor
+
+Open [**the drag-and-resize layout editor**](https://tpepels.github.io/rogue_cards/layout-editor.html) to position each card's **title**, **upper rules**, and **dice/results** cutouts on the real printed card.
+
+- Choose any of the 139 cards, drag a paper piece, and use its bottom-right handle to resize it.
+- The numeric inspector uses **millimetres**, so screen and print use the same layout. Arrow keys nudge a selected piece; Shift + arrows move it 2 mm.
+- Work is automatically saved **in that browser only**. Choose **Export JSON** to download a portable `rogue-cards-layouts.json` backup, and **Import JSON** to resume it anywhere.
+- To make the layout permanent, replace `data/card-placements.json` with the exported file, then run:
+
+```sh
+npm run layouts:build
+npm run layouts:check
+```
+
+Commit `data/card-placements.json` and generated `styles/card-placements.css` together. The latter is loaded **after** the collage styles and applied to both the gallery and A4 printing. There is no need to maintain separate CSS selectors for individual cards. The editor deliberately only changes placement and size, not rules text or the physical 90 × 130 mm card dimensions.
+
 ## Reusable engine and separate research experiments
 
 The [headless game-engine architecture](docs/engine-architecture.md)
