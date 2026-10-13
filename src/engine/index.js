@@ -10,7 +10,7 @@
 import {ExpeditionState} from "./expedition-state.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {itemOptions} from "../item-access.js";
-import {playerAttack,monsterRespond,executeItemOption}
+import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
  from "./combat.js";
 
 export {ExpeditionState,strategies,roomPolicies}
@@ -18,7 +18,7 @@ export {ExpeditionState,strategies,roomPolicies}
 export {seal,sealCost} from "./vault.js";
 export {randomSource} from "./random.js";
 export {d6Band} from "./dice-bands.js";
-export {playerAttack,monsterRespond,executeItemOption,blessBeforeD20}
+export {playerAttack,monsterRespond,executeItemOption,engraveElbereth,blessBeforeD20}
  from "./combat.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
@@ -51,7 +51,11 @@ export function observeGame(s){
   scoutedRooms:Object.fromEntries(STAGES.map(stage=>
    [stage,[...(s.peekedRoomIds[stage]||[])]])),
   ended:!s.alive()||s.metrics.won,
-  won:!!s.metrics.won
+  won:!!s.metrics.won,
+   elberethAttempts:s.elberethAttempts,
+   trapdoors:s.trapdoorHistory.map(x=>({...x})),
+   rerolls:s.rerollHistory.map(x=>({...x})),
+   ending:s.endingKind
  };
 }
 
@@ -107,7 +111,11 @@ export function legalCombatActions(s,heroIndex){
  if(!s.monster||s.monsterHP<=0)return [];
  const hero=s.heroes[heroIndex];
  if(!hero||hero.hp<=0)return [];
- return [{kind:"attack",heroIndex},...itemOptions(s,hero,"combat")
+ return [{kind:"attack",heroIndex},
+   ...(!["sentinel","warden","warden-fury"].includes(s.monster.id)&&s.elberethAttempts<2?
+    [{kind:"elbereth",heroIndex,mode:"ward"},
+     ...(s.discardable()?[{kind:"elbereth",heroIndex,mode:"flee"}]:[])]:[]),
+   ...itemOptions(s,hero,"combat")
   .map((option,i)=>({kind:"item",heroIndex,optionIndex:i,
    cardId:option.card.id,mode:option.mode}))];
 }
@@ -119,7 +127,8 @@ export function takeCombatAction(s,action){
   throw Error("Combat action requires a Hero index");
  const legal=legalCombatActions(s,action.heroIndex);
  const candidate=legal.find(a=>a.kind===action.kind&&
-  (a.kind==="attack"||a.optionIndex===action.optionIndex));
+  (a.kind==="attack"||a.kind==="elbereth"&&a.mode===action.mode||
+      a.kind==="item"&&a.optionIndex===action.optionIndex));
  if(!candidate)throw Error("Illegal combat action");
  const hero=s.heroes[action.heroIndex];
  s.setActor(hero);
