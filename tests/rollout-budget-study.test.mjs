@@ -101,3 +101,21 @@ test("local fixed-weight budget smoke compares fair and Oracle on identical seed
   assert.deepEqual(JSON.parse(readFileSync(join(out,"validation.json"),"utf8")).pass,true);
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
+
+test("local CLI exposes finite nested search and strictly full terminal scoring",()=>{
+ const args=["--runs","1","--seeds","91001","--budgets","0,2",
+  "--parties","solo","--strategies","magic",
+  "--replan-budget","1","--rollout-rooms","9",
+  "--combat-actions","600","--combat-room-depth","9",
+  "--strict-terminal","--dry-run"];
+ const yes=cli(args);
+ assert.equal(yes.status,0,yes.stderr);
+ assert.match(yes.stderr,/"replanBudget": 1/);
+ assert.match(yes.stderr,/"strictTerminal": true/);
+ const no=cli(["--rollout-rooms","2","--strict-terminal","--dry-run"]);
+ assert.notEqual(no.status,0);
+ assert.match(no.stderr,/--strict-terminal requires/);
+ const invalid=cli(["--replan-budget","9","--dry-run"]);
+ assert.notEqual(invalid.status,0);
+ assert.match(invalid.stderr,/replanBudget/);
+});
