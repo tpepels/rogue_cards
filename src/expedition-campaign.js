@@ -345,6 +345,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  h.nextDefenseAdv=false;
  let hit=natural===20||natural!==1&&modified+bonus+extraAtk>defense+def;
  if(!hit){
+  s.noteOptions(itemOptions(s,h,"failed-d20"));
   const crown=itemIn(s,h,"crown-relic");
   if(crown&&s.monster&&(s.monster.stage==="FINAL"||h.hp<h.card.hp*.3)){
    s.consume(h,crown);s.hurt(h,s.die());hit=true;return {hit,critical:true};
@@ -366,7 +367,7 @@ export function playerAttack(s,h){
  if(ring?.id==="ring-ashes"&&!h.used.has(ring))s.activate(h,ring);
  const stat=s.stats(h),r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
  if(!r.hit||h.hp<=0)return;
- s.noteOptions(itemOptions(s,h,"on-attack"));
+ s.noteOptions(itemOptions(s,h,"on-hit"));
  let dmg=s.die()+(r.critical?s.die():0);
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
@@ -419,7 +420,7 @@ function useItemsInCombat(s,h){
  if(h.hp<h.card.hp*.4){
   const p=h.inventory.find(o=>o.v2.kind==="POTION");
   if(p)return s.activate(h,p,{mode:"emergency"});
-  for(const id of ["needle","moth"]){
+  for(const id of ["needle"]){
    const x=itemIn(s,h,id);
    if(x&&!h.used.has(x)){s.activate(h,x,{mode:"emergency"});return true;}
   }
@@ -467,7 +468,7 @@ function useItemsInCombat(s,h){
  }
  // A Wand can be deliberately sacrificed for its highest band.
  if(s.monster.stage==="FINAL"&&h.hp>6&&s.strategy==="magic"){
-  const wand=h.inventory.find(o=>o.v2.kind==="WAND"&&!s.exhausted.has(o));
+  const wand=itemOptions(s,h,"combat").find(o=>o.mode==="overcharge")?.card;
   if(wand){s.directItem(h,wand,"overcharge",()=>{
    s.metrics.overcharges++;s.hurt(h,s.die());
    s.activate(h,wand,{face:6,record:false});
@@ -507,6 +508,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
  const hit=atk===20||atk!==1&&atk+s.monster.atk+bonus>def+s.stats(h).def+defenceBonus+(h.nextDefenseBonus||0);
  if(!hit)return;
+ s.noteOptions(itemOptions(s,h,"after-hit"));
  let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra;
  s.pendingDamage=damage;
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour))
@@ -649,6 +651,7 @@ export function seal(s){
  const def=s.die(20);
  let good=atk===20||atk!==1&&atk+h.card.wit+s.witBonus+boon.bonus>def+6;
  if(!good){
+  for(const hero of s.living())s.noteOptions(itemOptions(s,hero,"failed-d20"));
   // Crown of Rehearsals can rescue even a failed final magical test.
   const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
