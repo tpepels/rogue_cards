@@ -34,7 +34,7 @@ function parse(args){
  const values={},flags=new Set(),allowed=new Set(["--runs","--seeds",
   "--budgets","--strategies","--workers","--out","--weights",
   "--rollout-rooms","--combat-actions","--combat-room-depth",
-  "--replan-budget","--parties","--chunk-size"]);
+  "--replan-budget","--parties","--party","--chunk-size"]);
  for(let i=0;i<args.length;i++){
   if(["--dry-run","--resume","--allow-expensive","--strict-terminal"].includes(args[i])){
    if(flags.has(args[i]))throw Error("Duplicate flag "+args[i]);
@@ -65,8 +65,20 @@ function parse(args){
   throw Error("Unknown strategies");
  const group=values["--parties"]||"all";
  if(!["all","solo","duo"].includes(group))throw Error("Bad --parties");
- const partyList=PARTIES.filter(p=>group==="all"||
+ let partyList=PARTIES.filter(p=>group==="all"||
   (group==="solo"?p.length===1:p.length===2));
+ // Single-party probes are essential for CPU-heavy terminal rollouts.
+ if(values["--party"]){
+  if(values["--parties"])throw Error("Use --party or --parties, not both");
+  const ids=values["--party"].split("+");
+  const order=HEROES.map(h=>h.id);
+  if(ids.length<1||ids.length>2||new Set(ids).size!==ids.length||
+     ids.some(id=>!order.includes(id)))
+   throw Error("--party expects one Hero or two distinct Heroes");
+  const key=ids.sort((a,b)=>order.indexOf(a)-order.indexOf(b)).join("+");
+  partyList=PARTIES.filter(p=>p.join("+")===key);
+  if(partyList.length!==1)throw Error("Unsupported party "+key);
+ }
  const workers=integer(values["--workers"]??
   Math.min(6,Math.max(1,availableParallelism()-1)),"workers",16);
  if(!workers)throw Error("Need at least one worker");
