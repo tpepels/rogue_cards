@@ -42,16 +42,55 @@ class IllustrationGeneratorTests(unittest.TestCase):
         self.assertIn('"hero:warrior":"001_veteran_warrior.png",', changed)
         self.assertIn('"hero:new":"112_new_hero.png"', changed)
         self.assertIn("function after(){}", changed)
-        with self.assertRaisesRegex(ValueError, "duplicate"):
+        with self.assertRaisesRegex(ValueError, "mapping changed"):
             module.add_mapping(changed, "hero:new", "113_new_hero.png")
 
-    def test_duplicate_artwork_rejected(self):
+    def test_provisional_art_is_recognised_as_missing(self):
         cards = [
-            {"key": "hero:a", "title": "A", "filename": "001_a.png"},
-            {"key": "hero:b", "title": "B", "filename": "001_a.png"},
+            {"key": "room:fungus", "title": "Fungal Garden",
+             "filename": "025_fungal_garden.png"},
+            {"key": "room:new", "title": "Mossy Corridor",
+             "filename": "025_fungal_garden.png"},
+            {"key": "room:newer", "title": "Old Vault",
+             "filename": "025_fungal_garden.png"},
         ]
-        with self.assertRaisesRegex(ValueError, "Duplicate artwork"):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, "025_fungal_garden.png").write_bytes(b"original")
+            plan = module.plan_cards(cards, Path(d))
+            self.assertEqual([c["filename"] for c in plan],
+                             ["025_fungal_garden.png",
+                              "026_mossy_corridor.png", "027_old_vault.png"])
+            self.assertEqual([c["missing"] for c in plan], [False, True, True])
+            self.assertEqual(plan[1]["previous_filename"], "025_fungal_garden.png")
+            self.assertTrue(plan[1]["new_mapping"])
+            self.assertFalse(plan[0]["new_mapping"])
+
+    def test_repeated_owned_artwork_rejected(self):
+        cards = [
+            {"key": "room:a", "title": "Fungal Garden",
+             "filename": "025_fungal_garden.png"},
+            {"key": "room:b", "title": "Fungal Garden",
+             "filename": "025_fungal_garden.png"},
+        ]
+        with self.assertRaisesRegex(ValueError, "Duplicate owned artwork"):
             module.plan_cards(cards, Path("."))
+
+    def test_replace_borrowed_art_mapping_without_affecting_others(self):
+        source = (
+            'export const CARD_ART=Object.freeze({\\n'
+            ' "room:original":"025_fungal_garden.png",\\n'
+            ' "room:new":"025_fungal_garden.png"\\n'
+            '});\\n'
+        )
+        changed = module.add_mapping(source, "room:new",
+                                     "112_mossy_corridor.png",
+                                     "025_fungal_garden.png")
+        self.assertIn('"room:original":"025_fungal_garden.png"', changed)
+        self.assertIn('"room:new":"112_mossy_corridor.png"', changed)
+        self.assertEqual(changed.count('"room:new"'), 1)
+        with self.assertRaisesRegex(ValueError, "mapping changed"):
+            module.add_mapping(changed, "room:new",
+                               "113_other.png", "025_fungal_garden.png")
 
     def test_slug_matches_existing_convention(self):
         self.assertEqual(module.slug("Warden's Threshold"), "warden_s_threshold")
