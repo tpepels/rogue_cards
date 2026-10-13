@@ -1,5 +1,7 @@
 // Executable per-card consequences. No new universal Room rules.
+import {resolveFateChoice,fateStageEntry,fateMonsterEntry,fateVaultEntry} from "./room-fates.js";
 export function resolveRoomChoice(s,choice){
+ if(s.room.v2.fate)return resolveFateChoice(s,choice);
  const id=s.room.id,h=s.chooseActor();
  const keep=(item=null)=>s.keptRooms.push({card:s.room,item});
  if(s.room.v2.special.corridor){
@@ -55,8 +57,11 @@ export function roomEntry(s){
   if(garden>=0&&h.card.hp-h.hp>=3){s.keptRooms.splice(garden,1);s.heal(h,3);s.skipRoom=true;}
  }
  if(s.nextLadder){s.nextLadder=false;if(room.v2?.kind==="LAIR")s.heroFirstAdv=true;else s.draw();}
+ if(room.stage==="DEEP")fateStageEntry(s,"DEEP");
+ if(room.stage==="FINAL")fateVaultEntry(s);
 }
-export function monsterEntry(s){
+export function monsterEntry(s,monster){
+ if(fateMonsterEntry(s,monster))return true;
  if(s.whisperRoom){s.rooms[s.whisperRoom.stage].unshift(s.whisperRoom);s.whisperRoom=null;}
  for(const id of ["m-bridge","m-wax-bridge"]){
   const i=s.keptRooms.findIndex(x=>x.card.id===id);if(i<0)continue;

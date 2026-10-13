@@ -2,6 +2,7 @@
 // 54 unique Rooms: 36 original Rooms, 18 additional Rooms. Every result range is printed.
 // No new universal actions, conditions, timers or external lookup tables.
 import {ROOM_REVISIONS,EXTRA_ROOMS} from "./room-memory.js";
+import {FATE_ROOMS} from "./room-fates.js";
 const make=(stage,rows)=>rows.map(([id,title,art,kind,prompt,choices,rollLabel,outcomes,links,flavor])=>({
  id,title,art,stage,type:"room",copies:1,
  rule:prompt,flavor:flavor||"",v2:{
@@ -127,7 +128,7 @@ const deep=make("DEEP",[
   [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
-export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map(c=>revisions.get(c.id)||c).concat(EXTRA_ROOMS).map((c,i)=>({
+export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map(c=>revisions.get(c.id)||c).concat(EXTRA_ROOMS,FATE_ROOMS).map((c,i)=>({
  ...c,v2:{...c.v2,number:i+1}
 })));
 export const V2_REGIONS=Object.freeze(["UPPER","MIDDLE","DEEP"]);
