@@ -163,7 +163,9 @@ function execute(job){
  return {id:job.id,arm:job.arm,stage:job.stage,rows,
   ...totals,winRate:totals.wins/totals.n,score:choiceScore(totals)};
 }
-if(!isMainThread){
+// Only handle worker jobs created by THIS study. Other local research
+// scripts import expeditionSeed/paired and have their own Worker protocol.
+if(!isMainThread&&workerData?.workerKind==="agent-study"){
  try{parentPort.postMessage({ok:true,result:execute(workerData)})}
  catch(e){parentPort.postMessage({ok:false,error:e.stack||String(e)})}
 }
@@ -173,7 +175,8 @@ async function parallel(jobs,workers){
   while(i<jobs.length){
    const index=i++,job=jobs[index];
    results[index]=await new Promise((done,reject)=>{
-    const worker=new Worker(new URL(import.meta.url),{workerData:job});
+    const worker=new Worker(new URL(import.meta.url),{workerData:{
+     ...job,workerKind:"agent-study"}});
     let got=false;
     worker.on("message",msg=>{got=true;msg.ok?done(msg.result):reject(Error(msg.error))});
     worker.on("error",reject);
