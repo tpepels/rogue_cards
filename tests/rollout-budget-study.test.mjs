@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
-import {mkdtempSync,rmSync,readFileSync,existsSync} from "node:fs";
+import {mkdtempSync,rmSync,readFileSync,existsSync,readdirSync,
+ unlinkSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 const cli=(args)=>spawnSync(process.execPath,
@@ -29,6 +30,39 @@ test("budget study refuses invalid budgets and duplicate seeds",()=>{
   const r=cli(args);
   assert.notEqual(r.status,0,args.join(" "));
  }
+});
+test("checkpoint/resume skips finished chunks and reproduces paired outcomes",()=>{
+ const dir=mkdtempSync(join(tmpdir(),"rogue-rollout-resume-"));
+ try{
+  const one=join(dir,"one");
+  const common=["--runs","3","--seeds","71001",
+   "--budgets","0,2","--parties","solo","--strategies","magic",
+   "--workers","2","--chunk-size","1"];
+  const first=cli([...common,"--out",one]);
+  assert.equal(first.status,0,first.stderr);
+  const original=JSON.parse(readFileSync(join(one,"summary.json"),"utf8"));
+  const checkpointDir=join(one,"checkpoints");
+  const before=readdirSync(checkpointDir).filter(x=>x.endsWith(".json"));
+  assert.equal(before.length,5*8*3);
+  // Simulate interruption in the last 3 games: remove their atomic
+  // checkpoints but leave all prior work in place.
+  for(const file of before.slice(-3))unlinkSync(join(checkpointDir,file));
+  unlinkSync(join(one,"summary.json"));
+  unlinkSync(join(one,"summary.md"));
+  unlinkSync(join(one,"validation.json"));
+  const resumed=cli([...common,"--out",one,"--resume"]);
+  assert.equal(resumed.status,0,resumed.stderr);
+  assert.match(resumed.stderr,/Resuming 117\/120 completed chunks/);
+  const complete=JSON.parse(readFileSync(join(one,"summary.json"),"utf8"));
+  assert.deepEqual(complete.results,original.results);
+  assert.deepEqual(complete.knowledgeContrasts,original.knowledgeContrasts);
+  const cached=cli([...common,"--out",one,"--resume"]);
+  assert.equal(cached.status,0,cached.stderr);
+  assert.match(cached.stderr,/Resuming 120\/120 completed chunks/);
+  const different=cli([...common,"--runs","4","--out",one,"--resume"]);
+  assert.notEqual(different.status,0);
+  assert.match(different.stderr,/Resume parameters differ/);
+ }finally{rmSync(dir,{recursive:true,force:true})}
 });
 test("local fixed-weight budget smoke compares fair and Oracle on identical seeds",()=>{
  const dir=mkdtempSync(join(tmpdir(),"rogue-rollout-budgets-"));
