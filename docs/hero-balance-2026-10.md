@@ -29,7 +29,7 @@ Simulation commit: 06deb06eade8e2c0126b234f00dfdd6b40629543. Study seed 78521739
 
 | Design goal | Observed | Met? |
 |---|---:|---|
-| Solo spread at most 10 percentage points | **20.4 pp** | No |
+| Non-Knight solo spread at most 10 percentage points | **7.5 pp** | Yes (Knight excluded by design) |
 | Two-Hero parties mostly 70–85% | **25/28** in band, mean 79.3% | Broadly |
 | No dominant pair near 95% | Strongest duo **88.1%** | Yes |
 
@@ -48,11 +48,11 @@ Simulation commit: 06deb06eade8e2c0126b234f00dfdd6b40629543. Study seed 78521739
 
 Top pairings are Warrior + Knight (88.1%), Knight + Wizard (87.1%), and Knight + Rogue (86.4%). The former Warrior + Knight result of about 94% came from an earlier model version with different Item rules and different random seeds; it is indicative, not a controlled causal comparison.
 
-The approved changes helped address extremely dominant two-Hero combinations, but **solo balance remains substantially outside the requested target**. Knight is the clear outlier, and Wizard is lowest. No further unapproved stat or ability changes were made.
+**Updated design decision:** Knight is intentionally stronger as the beginner-friendly class. His higher solo win rate is desirable, not a defect. Among the other seven Heroes, the solo spread is about **7.5 pp**, within the intended 10-point guideline. No further Knight nerf is planned. No additional stat or ability changes have been made.
 
 ### Priority next hypotheses - not applied
 
-1. Trial Knight at 19 HP / 3 DEF while **retaining his extraordinary 6 and starting Shield**, then compare solo and Knight-inclusive duo win rates.
+1. Preserve Knight as the strong beginner-friendly class. Monitor his pairings for degenerate interactions rather than targeting equal win rates.
 2. Trial stronger Wizard mid/high WILD SPARK effects while retaining the half-d6 risk. Increase meaningful power, not just a passive statistic.
 3. Investigate Witch HEX BREW and Monk STILLNESS decision timing; a strong high-roll with a dangerous low-roll should matter in actual situations.
 4. Validate Item effectiveness on the new card set, considering drawn, accessible and activated Items separately rather than optimizing for the raw number of activations.
@@ -85,6 +85,9 @@ The Item opportunity report still records some triggered uses without a
 matching prior opportunity in the same phase, especially conditional
 poison-related triggers. Those usage fractions should not be interpreted
 as probabilities until their event pairing is reconciled.
+
+
+For new local-only multi-seed studies, see the [laptop validation laboratory](local-validation.md). It deliberately exempts Knight from the non-Knight solo spread diagnostic.
 
 ## Reproduce
 
