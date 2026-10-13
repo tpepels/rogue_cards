@@ -32,13 +32,13 @@ const SPEC=Object.freeze({
    parley:"COVER EYES: Discard 1 Item; it leaves. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 peek next Room."},
  mold:{tags:["ALCHEMY","PLANT"],weakness:"FIRE: Its 6 becomes 1–2; ICE: its 5 becomes 1–2.",
    parley:"FEED: Discard a POTION; skip this fight. No corpse.",remains:"EAT d6: 1–2 POISONED; 3–4 heal d6 HP; 5–6 remove POISONED."},
- wraith:{tags:["CURSED","MAGIC"],weakness:"With MAGIC gear, behaviour 5 becomes 1–2.",
+ wraith:{tags:["CURSED","MAGIC"],weakness:"With equipped MAGIC gear, behaviour 5 becomes 1–2.",
    parley:"APPEASE: While wearing CURSED gear, lose d6 HP; it leaves. No loot.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},
- rust:{tags:["METAL"],weakness:"Without METAL equipment, behaviour 5 becomes 1–2.",
+ rust:{tags:["METAL"],weakness:"Without equipped METAL gear, behaviour 5 becomes 1–2.",
    parley:"FEED: Discard a METAL Item. It leaves; draw 1 Item.",remains:"EAT d6: 1–2 POISONED; 3–4 heal 2 HP; 5–6 gain ADV on next DEF."},
- cultist:{tags:["CURSED","BARGAIN"],weakness:"MAGIC: Turn its next 6 into 1–2 once.",
+ cultist:{tags:["CURSED","BARGAIN"],weakness:"With MAGIC gear, treat the next behaviour 6 as 1–2.",
    parley:"BARGAIN: With equipped CURSED gear, lose d6 HP; it leaves; draw 1 Item.",remains:"EAT d6: 1–2 lose d6 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."},
- sentinel:{tags:["METAL","LIGHTNING"],weakness:"LIGHTNING damage deals +d6; ICE turns its next 6 into 1–2.",
+ sentinel:{tags:["METAL","LIGHTNING"],weakness:"LIGHTNING deals +d6 damage; ICE changes the next behaviour 6 to 1–2.",
    parley:"BRIBE: Discard 2 METAL Items to bypass it. No loot.",remains:"Cannot EAT this Monster."}
 });
 
