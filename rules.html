@@ -3,83 +3,127 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rogue Cards · Canonical One-page Rules</title>
+<title>Rogue Cards - How to Play</title>
 <style>
 @page{size:A4 portrait;margin:9mm}
-:root{font-family:Georgia,"Times New Roman",serif;color:#181510;background:#ddd7c8}
-*{box-sizing:border-box}body{margin:0}
-nav{width:192mm;max-width:100%;margin:10px auto;display:flex;justify-content:space-between;gap:12px;font:bold 12px "Courier New",monospace}
-nav a{color:inherit}
-.sheet{width:192mm;max-width:100%;min-height:278mm;background:#f4eedf;margin:10px auto;padding:10mm 10.5mm;border:3px solid #191511}
-.mast{display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;border-bottom:5px double #17130f;padding-bottom:5mm}
-h1{font:900 33px/.93 Georgia,serif;letter-spacing:-1px;margin:0}
-.edition{text-align:right;font:bold 10px/1.45 "Courier New",monospace;white-space:nowrap}
-.subtitle{margin:5px 0 10px;border-bottom:1px solid #3b3025;padding-bottom:7px;font:bold 11px/1.35 "Courier New",monospace;letter-spacing:.015em}
+:root{font-family:Georgia,"Times New Roman",serif;color:#201910;background:#d5cabc}
+*{box-sizing:border-box}
+body{margin:0}
+nav{width:192mm;max-width:100%;margin:12px auto;display:flex;gap:18px;justify-content:space-between;font:bold 12px "Courier New",monospace}
+nav a{color:#201910}
+.sheet{width:192mm;max-width:100%;min-height:279mm;margin:12px auto;background:#f5efe2;padding:9mm 10mm;border:2px solid #261d14}
+.mast{border-bottom:3px double #231a12;padding-bottom:5mm;margin-bottom:5mm;display:flex;align-items:end;justify-content:space-between;gap:5mm}
+h1{font:bold 33px/.98 Georgia,serif;letter-spacing:-.8px;margin:0}
+.edition{font:bold 10px/1.35 "Courier New",monospace;text-align:right}
+.lede{font-size:15px;line-height:1.4;margin:5mm 0 6mm}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:8mm}
-section{margin:0 0 9px;break-inside:avoid}
-h2{font:900 15.5px/1.15 Georgia,serif;border-bottom:2px solid #191511;margin:0 0 5px;padding-bottom:4px}
-p,li{font-size:12px;line-height:1.4;margin:4px 0}
-ol{padding-left:18px;margin:5px 0 0}
+section{margin:0 0 6mm;break-inside:avoid}
+h2{font:bold 17px/1.15 Georgia,serif;border-bottom:1px solid #544637;margin:0 0 2mm;padding-bottom:1mm}
+h3{font:bold 13px/1.2 Georgia,serif;margin:3mm 0 1mm}
+p,li{font-size:13px;line-height:1.42;margin:0 0 2.3mm}
+ol,ul{padding-left:5.5mm;margin:1.3mm 0 2.5mm}
+li{padding-left:.5mm}
 strong{font-weight:900}
-.quick{border:2px solid #211b15;padding:7px 9px;margin:7px 0;font:11px/1.45 "Courier New",monospace}
-.quick b{font-weight:900}
-.dice{display:grid;grid-template-columns:1fr 1fr;gap:2mm;margin:6px 0}
-.die{background:#211b15;color:#f6f0e4;padding:6px 7px;font:900 12px/1.25 "Courier New",monospace}
-.die small{display:block;font-size:9px;font-weight:normal}
-.roll-sample{margin:7px 0;border-left:4px solid #211b15;padding:5px 7px;background:#e8dfcd;font:11px/1.4 "Courier New",monospace}
-.roll-sample strong{display:block}
-.end{border-top:3px double #211b15;margin-top:6px;padding-top:7px;font:bold 10px/1.4 "Courier New",monospace}
-.status{font:bold 9px/1.35 "Courier New",monospace;margin-top:6px}
-@media(max-width:650px){.sheet{width:100%;min-height:0;padding:17px}.cols{grid-template-columns:1fr}.mast h1{font-size:30px}.edition{font-size:9px}}
-@media print{html,body{background:white}.sheet{margin:0;padding:0;border:0;width:192mm;height:279mm;min-height:279mm;max-height:279mm;overflow:hidden}nav{display:none}.cols{grid-template-columns:1fr 1fr}}
+.note{padding:2.2mm 2.8mm;margin:3mm 0;background:#e9dec9;border-left:3px solid #302319}
+.note p:last-child{margin-bottom:0}
+.example{font:12px/1.4 "Courier New",monospace;padding:2.6mm 3mm;margin:3mm 0;background:#ece0cd}
+.example strong{display:block;margin-bottom:1mm}
+.end{border-top:2px double #3e3020;margin-top:4mm;padding-top:2mm;font:11px/1.4 "Courier New",monospace}
+.page-number{text-align:right;font:bold 10px "Courier New",monospace;margin-top:4mm}
+@media(max-width:680px){nav{padding:0 12px}.sheet{margin:8px auto;width:100%;min-height:0;padding:18px}.cols{grid-template-columns:1fr}h1{font-size:29px}}
+@media print{
+ html,body{background:white}
+ nav{display:none}
+ .sheet{height:279mm;min-height:279mm;max-height:279mm;overflow:hidden;width:192mm;margin:0;border:0;padding:5mm 5mm 2mm;break-after:page;page-break-after:always}
+ .sheet:last-child{break-after:auto;page-break-after:auto}
+}
 </style>
 </head>
 <body>
-<nav><a href="./">← CARD CATALOGUE</a><a href="./tutorial.html">LEARN TO PLAY →</a><a href="#" onclick="print();return false">PRINT ONE A4 ↗</a></nav>
+<nav><a href="./index.html">← CARD CATALOGUE</a><a href="./tutorial.html">LEARN WITH EXAMPLES</a><a href="#" onclick="window.print();return false">PRINT THE GUIDE</a></nav>
 <main class="sheet">
-<div class="mast"><h1>ROGUE CARDS</h1><div class="edition">CANONICAL RULES<br>1–2 HEROES · d20 + d6</div></div>
-<div class="subtitle">NINE ROOMS. ONE VAULT. THE CARDS TELL THE REST.</div>
+<div class="mast"><h1>ROGUE CARDS</h1><div class="edition">HOW TO PLAY<br>1 OR 2 HEROES · 2 PAGES</div></div>
+<p class="lede">You are adventurers exploring a strange dungeon. Every Room might contain a Monster, treasure, a trap or something much stranger. You cannot predict what comes next, but you can decide which risks to take and which Items to save.</p>
 <div class="cols"><div>
-<section><h2>1 · The quest</h2>
-<p>Explore <strong>3 UPPER, 3 MIDDLE and 3 DEEP Rooms</strong> (3 Rooms per depth), then Vault. Trapdoors may skip Rooms. Claim the Amulet to win; if no Hero can act, lose.</p></section>
-<section><h2>2 · Set up</h2>
-<ol>
-<li>Choose 1–2 Heroes, starting Objects and HP d20s.</li>
-<li>Shuffle the <strong>Object deck</strong> (Items and Potions). Each Hero draws one. “Draw Item” means this deck.</li>
-<li>Shuffle separate Room and Monster piles by depth. Set aside Vault and Warden. Track HP with d20s. Never roll HP dice.</li>
-</ol></section>
-<section><h2>3 · In each Room</h2>
-<ol>
-<li><strong>REVEAL:</strong> Draw a Room; resolve its entry text.</li>
-<li><strong>CHOOSE:</strong> Resolve <strong>one</strong> printed option; pay its cost.</li>
-<li><strong>ENCOUNTER:</strong> PARLEY or fight. Only wins earn rewards; you may EAT its printed remains once.</li>
-<li><strong>DESCEND:</strong> End Room effects, discard unless a card says KEEP it, reset Room abilities. Enter Vault after DEEP.</li>
-</ol></section>
-<section><h2>4 · Combat turns</h2>
-<p>Heroes act in either order. Each turn: <strong>one action</strong> (attack, card action or pass). Triggers are free.</p>
-<p><strong>After each Hero turn,</strong> surviving Monsters roll <strong>d6 behaviour</strong> until one side falls or flees.</p>
-<p><strong>PARLEY:</strong> Follow its card. No reward for fleeing Monsters unless stated.</p>
-<p><strong>ELBERETH:</strong> Action: d20+WIT vs 15. Success: cancel next Monster response, or discard Item to escape. Failure: immediate ADV behaviour (no second response). Retry with DIS; second failure summons another Monster. Sentinel and Warden ignore it.</p></section>
+<section><h2>1. Your quest</h2>
+<p>Your goal is to descend through the dungeon, reach the <strong>Amulet Vault</strong> and escape with the Amulet. You win when you claim the Amulet and at least one Hero survives. If everyone is defeated, the expedition ends in failure.</p>
+<p>You usually visit <strong>3 UPPER, 3 MIDDLE and 3 DEEP Rooms</strong> before reaching the Vault. Some corridors and trapdoors change the route. Most games reveal only part of each shuffled Room deck.</p></section>
+<section><h2>2. What you need</h2>
+<ul>
+<li>One Hero card per player (play alone or with two Heroes).</li>
+<li>The <strong>UPPER, MIDDLE and DEEP Room</strong> cards, and Monsters from each depth.</li>
+<li>The shuffled Object deck (Items and Potions), plus the Vault and two Warden cards.</li>
+<li>One six-sided die (<strong>d6</strong>) and twenty-sided dice (<strong>d20</strong>) for tests and attacks.</li>
+<li>Additional d20s to show each Hero's and each Monster's remaining health.</li>
+</ul>
+<p>The dice used to show health are counters. <strong>Never roll HP dice</strong>.</p></section>
+<section><h2>3. Meet your Hero</h2>
+<p>Each Hero has a starting Item and a special ability. Its four numbers tell you what it can do:</p>
+<ul>
+<li><strong>HP</strong> - Health Points: how much harm the Hero can withstand.</li>
+<li><strong>ATK</strong> - Attack: how well the Hero hits Monsters.</li>
+<li><strong>DEF</strong> - Defence: how well the Hero avoids being hit.</li>
+<li><strong>WIT</strong> - Wits: how well the Hero handles tricks, negotiations, magic and other challenges.</li>
+</ul>
+<p>When you lose HP, lower your health die. Healing raises it again, but never above your starting HP. At <strong>0 HP</strong>, remove the die: that Hero cannot act unless another Hero heals them before the expedition moves on.</p></section>
 </div><div>
-<section><h2>5 · Opposed d20 combat</h2>
-<div class="dice"><div class="die">d20 + ATK<small>Attacker</small></div><div class="die">d20 + DEF<small>Defender</small></div></div>
-<p>Both roll. Higher total hits; ties defend. Hits deal <strong>d6 damage</strong>. Attacking natural <strong>1 always misses</strong>; natural <strong>20 always hits</strong> and adds +d6.</p>
-<p><strong>WIT:</strong> Roll d20+WIT against printed DC, or opposed d20. Natural 1 fails; 20 succeeds.</p>
-<p><strong>ADV / DIS:</strong> Roll 2d20; keep higher / lower. They cancel.</p></section>
-<section><h2>6 · Objects and d6</h2>
-<p><strong>d6:</strong> Resolve printed range. Monster behaviour uses 1–2 / 3–4 / 5 / 6. <strong>REROLL:</strong> When permitted, pay 1, 2, then 3 HP; new result stands. Printed complications apply.</p>
-<p>Equip <strong>1 Weapon, 1 Armour, 1 Ring and 1 Companion</strong> per Hero. Trade/equip freely between fights; healing still needs a printed effect.</p>
-<p>Discard used <strong>Scrolls</strong>. Turn used <strong>Wands</strong> sideways until recharged. <strong>OVERCHARGE:</strong> Discard upright Wand, lose d6 HP; take printed result. Tags matter when named. WITH an Item means carried; EQUIPPED means slotted. Only results marked TRAP count.</p></section>
-<section><h2>7 · What stays</h2>
-<p><strong>POISONED:</strong> DIS until cured or Room end. Abilities reset each Room; HP never exceeds starting HP. <strong>KEEP:</strong> Retain the Room and resolve its later choice when printed.</p>
-<p><strong>Potions:</strong> Roll on first use; keep a copy face up. Identical Potions share the result.</p>
-<p><strong>TRAPDOOR:</strong> Skip remaining Rooms; resolve destination damage/Monsters. Cursed return: resolve one older Room d6, then resume DEEP.</p>
-<p>At <strong>0 HP</strong>, remove the die. An ally may heal them before leaving; otherwise lose if none can act.</p></section>
-<section><h2>8 · The final Vault</h2>
-<p>Roll <strong>OMEN d6</strong>. <strong>FIGHT</strong> or one-time <strong>SEAL</strong>. Kept Rooms may unlock SMUGGLE, BARGAIN or UNTHRONE after Phase I. Escape without Amulet is defeat.</p>
-<p>Warden starts in <strong>Phase I</strong>; at <strong>10 HP or fewer</strong> switch to Phase II, keeping the same HP die. Win at 0 HP, or via successful SEAL; failure means fight.</p></section>
+<section><h2>4. Set up the dungeon</h2>
+<ol>
+<li>Choose one or two Heroes. Take each Hero's printed starting Item, then draw <strong>one additional Object</strong> per Hero.</li>
+<li>Set each Hero's health die to its starting HP.</li>
+<li>Shuffle the Objects into a draw pile. Whenever a card says <strong>draw an Item</strong>, draw from this pile.</li>
+<li>Shuffle the Rooms into separate UPPER, MIDDLE and DEEP piles. Shuffle the Monsters into three matching piles.</li>
+<li>Set the <strong>Amulet Vault</strong> and the two Warden cards aside. Begin with the UPPER Rooms.</li>
+</ol></section>
+<section><h2>5. Explore a Room</h2>
+<p>Play through one Room at a time, working together if there are two Heroes.</p>
+<ol>
+<li><strong>Reveal the Room.</strong> Read its introductory instruction first. If it tells you to draw a Monster or do something on entry, do so now.</li>
+<li><strong>Make the Room's choice.</strong> Most Rooms offer two printed options. Choose one you can perform, pay any cost, and follow its instructions. If the option asks for a die roll, use the result printed on that card.</li>
+<li><strong>Resolve any Monster.</strong> Fight it or attempt the alternative on its card, such as <strong>PARLEY</strong> (talking or bargaining). Finish the encounter before leaving.</li>
+<li><strong>Leave the Room.</strong> Discard it unless it says <strong>KEEP</strong>. Reset abilities marked “once per Room.” Continue with the next Room.</li>
+</ol>
+<p>If a card lets you look ahead or choose a route, follow its specific instructions. A kept Room stays face up beside your Hero until its later effect happens or you discard it.</p></section>
+<div class="note"><p><strong>Example.</strong> You draw <em>Flooded Chamber</em>. Read the Room, choose how to cross, and roll its d6 if that choice tells you to. You don't need to consult a separate list of Room effects: the outcomes are printed on the card.</p></div>
 </div></div>
-<div class="end">CARDS OVERRIDE THESE RULES WHEN THEY SAY SO. SPECIAL EFFECTS AND RESULTS ARE PRINTED ON THE CARDS. PRINT AT 100%.</div>
+<div class="page-number">ROGUE CARDS · 1 / 2</div>
+</main>
+<main class="sheet">
+<div class="mast"><h1>HOW PLAY WORKS</h1><div class="edition">ROLLS · FIGHTS · ITEMS<br>THE VAULT</div></div>
+<div class="cols"><div>
+<section><h2>6. Making rolls</h2>
+<p>A <strong>d6</strong> has six sides; a <strong>d20</strong> has twenty. “2d6” means roll two six-sided dice and add their results. For a Room's d6, find the range on that Room and do what it says.</p>
+<p>Some challenges call for a <strong>WIT test</strong>: roll a d20, add your Hero's WIT and compare the total with the number on the card. In an <strong>opposed test</strong>, both sides roll a d20 and add the stated ability; the higher total wins.</p>
+<p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s instead of one, then use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. If both apply, they cancel and you roll one d20.</p>
+<p>On a WIT test, a natural 1 fails and a natural 20 succeeds, even before bonuses.</p>
+<div class="example"><strong>AN EXAMPLE OF WIT</strong>A card requires WIT 15. Your Hero has WIT 4. You roll 12 on the d20: 12 + 4 = 16. You succeed.</div></section>
+<section><h2>7. When a Monster appears</h2>
+<p>Place the Monster in front of the party and mark its starting HP with a health die. If it offers <strong>PARLEY</strong>, you may try the printed alternative to fighting. A Monster that leaves peacefully normally gives no combat reward.</p>
+<p>During combat, living Heroes act in either order. Each Hero takes <strong>one action</strong> on their turn: attack, use an applicable Item or ability, try Elbereth, or pass. Abilities triggered by something already happening do not take a separate action unless stated.</p>
+<p><strong>After each Hero turn</strong>, if the Monster is still there, roll its <strong>d6 behaviour</strong> and resolve the printed result. Continue until the Monster is defeated, escapes or the party is defeated.</p></section>
+<section><h2>8. Attacking and defending</h2>
+<p>The attacker rolls <strong>d20 + ATK</strong>. The defender rolls <strong>d20 + DEF</strong>. If the attack total is higher, the hit lands. A tie means the defender avoids it.</p>
+<p>A hit normally deals <strong>d6 damage</strong>. Lower the target's HP by that amount. An attacking natural 1 always misses; a natural 20 always hits and deals an extra d6 damage. The same procedure applies when a Monster attacks a Hero.</p>
+<p>Defeated Monsters may provide rewards or edible remains (<strong>EAT</strong>) as described on their cards.</p></section>
+</div><div>
+<section><h2>9. Items, danger and surprises</h2>
+<p>Each Hero can equip one <strong>Weapon, Armour, Ring and Companion</strong>. You may carry other Objects. Outside combat, Heroes can exchange and equip Objects, but healing always requires an effect on a card.</p>
+<p><strong>Scrolls</strong> are discarded after use. A used <strong>Wand</strong> is turned sideways until recharged. To <strong>OVERCHARGE</strong>, discard an upright Wand and lose d6 HP to obtain the result described on it. <strong>Potions</strong> reveal their effect on first use; identical Potions share that discovery for the expedition.</p>
+<p>When a card says <strong>WITH</strong> an Item, you must carry it. <strong>EQUIPPED</strong> means it must occupy the appropriate slot. A result counts as a <strong>TRAP</strong> only when marked TRAP.</p>
+<p>Some cards let you <strong>REROLL</strong>. If permitted, the first reroll costs 1 HP, the second 2 HP, then 3 HP, and so on. You must accept the newest result, even if it is worse. Some cards add extra complications.</p>
+<p>A <strong>TRAPDOOR</strong> can skip remaining Rooms, drop you into a deeper level or lead somewhere unexpected. Resolve the landing effect immediately. Rooms you skipped do not give you their rewards.</p>
+<p>If you become <strong>POISONED</strong>, your Hero's d20 rolls have disadvantage until the poison is removed or the Room ends.</p></section>
+<section><h2>10. Elbereth: a last resort</h2>
+<p>Instead of attacking, a Hero may try to engrave <strong>Elbereth</strong> to stop a Monster. Roll d20 + WIT against 15. On success, cancel the Monster's next response, or discard an Item to escape it without a reward.</p>
+<p>On failure, the Monster immediately takes a behaviour with advantage where applicable. Trying Elbereth a second time against the same Monster is harder: roll with disadvantage. If that second attempt fails, another Monster appears. The Sentinel and Warden ignore Elbereth.</p></section>
+<section><h2>11. Reach the Amulet Vault</h2>
+<p>After DEEP, enter the Vault and roll its <strong>OMEN d6</strong>. Normally you must either <strong>FIGHT</strong> the Warden or attempt to <strong>SEAL</strong> it with magic.</p>
+<p>To SEAL, discard <strong>3 MAGIC Items</strong> (or 6 with two Heroes) and make the WIT test printed on the Vault. Success claims the Amulet. Failure forces a fight, and the Warden's first attack has advantage.</p>
+<p>In a fight, the Warden begins at 20 HP. At <strong>10 HP or fewer</strong>, replace Phase I with Phase II, keeping the same HP die. Reduce it to 0 to win. Rare earlier choices may unlock other ways to obtain the Amulet after Phase I.</p>
+<p><strong>You win</strong> when at least one Hero survives and claims the Amulet. Escaping empty-handed is survival, not victory. If no Hero can continue, you lose.</p></section>
+</div></div>
+<div class="end">THE RULES EXPLAIN THE SHARED GAME. THE CARDS PROVIDE THE SPECIFIC CHOICES, COSTS AND CONSEQUENCES. WHEN A CARD SAYS OTHERWISE, FOLLOW THAT CARD.</div>
+<div class="page-number">ROGUE CARDS · 2 / 2</div>
 </main>
 </body>
 </html>
