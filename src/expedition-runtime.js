@@ -279,8 +279,10 @@ export class ExpeditionState {
    this.consume(h,card);
   if(h.card.id==="witch"&&!h.used.has("witch-ability")&&
    ["SCROLL","POTION"].includes(card.v2.kind))this.witchReaction(h);
-  if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
-   this.activate(h,h.slots.ring);
+  if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&
+   can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
+   this.noteOptions(itemOptions(this,h,"after-magic"));
+   this.activate(h,h.slots.ring,{mode:"magic-reaction"});
   }
   if(record)this.noteItemResult(h,card,mode,before);
   return true;
@@ -454,7 +456,10 @@ export class ExpeditionState {
     else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
    }
   }
-  if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id))face=6;
+  if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id)){
+   const h=this.own("rope"),card=byId(h.inventory,"rope");
+   this.directItem(h,card,"room-override",()=>{face=6;return true;});
+  }
   if(this.has("dog")&&["u-nest","m-beetle"].includes(this.room.id))face=6;
   if(this.room.id==="m-beetle"&&this.strategy==="treasure"&&this.discardable(1,"METAL")){
    this.discard(1,{tag:"METAL"});face=6;
@@ -487,7 +492,8 @@ export class ExpeditionState {
    const h=this.own(scrollSub[this.room.id]),card=byId(h.inventory,scrollSub[this.room.id]);
    this.consume(h,card);face=6;
   }
-  const owner=this.heroes.find(h=>h.slots.ring?.id==="ring-echo"&&!h.used.has("ring-echo"));
+  const owner=this.heroes.find(h=>h.slots.ring?.id==="ring-echo"&&
+   !h.used.has(h.slots.ring));
   this.pendingRoomFace=face;
   if(owner){
    this.noteOptions(itemOptions(this,owner,"room-roll"));
