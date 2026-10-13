@@ -2,7 +2,9 @@
 
 The source of truth is the JavaScript `CATALOGUE` in `src/tabletop-data.js` and its
 `CARD_ART` mapping in `src/tabletop-view.js`. Do not maintain a separate
-CSV or 111-name list for art generation.
+CSV or fixed-size list for art generation. New Rooms can provisionally reuse existing
+artwork; the generator treats these shared assignments as **missing unique art**.
+This is currently the case for 18 of the 129 cards.
 
 ## Setup (once)
 
@@ -24,19 +26,20 @@ npm run art:missing -- --limit 3  # spend at most three image calls
 ```
 
 After adding a card to the real card catalogue, run `npm run art:missing`.
-New cards get the next unused numeric PNG filename; the generator automatically
-adds the matching `CARD_ART` entry. Existing images and mappings are never
-regenerated or renumbered. The generated PNGs are written directly into
+New cards and cards borrowing another card's PNG get the next unused numeric PNG
+filename. The generator automatically adds or replaces their `CARD_ART` entries.
+Original images and their own mappings are never regenerated or renumbered.
+The generated PNGs are written directly into
 `assets/illustrations/` so the website and print layout use them immediately.
 
 **Prompt:** the individual card title followed by the literal contents of
 `scripts/illustration-style.txt`. No subject descriptions, visual hooks, batch
 lists, per-card accent colors or injected instructions are sent.
 
-**Reference chaining:** the last illustration encountered in catalogue order
-is the next image's sole reference. If two new cards are generated consecutively,
-the first becomes the second's reference. The initial missing card needs an
-existing earlier illustration; if none exists, supply `--reference /path/to/image.jpg`.
+**Reference chaining:** the highest-numbered completed illustration is the
+initial reference, including when resuming a partial run. From then on, each
+newly generated illustration is the sole reference for the next generation.
+If none exists, supply `--reference /path/to/image.jpg`.
 No image generation is run by CI or automatically on git push.
 
 **Model:** `gemini-3.1-flash-image`, `1K`, JPEG API response, saved as PNG. This
