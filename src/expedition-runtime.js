@@ -50,6 +50,9 @@ export class ExpeditionState {
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
   this.deck=copyDeck(this.rng,OBJECTS);
+  // Physical draws from the hidden Item pile, NOT acquisitions/transfers
+  // (e.g. reclaiming an Item from the Bottomless Well).
+  this.deckRemovedCounts={};
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s))]));
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
@@ -81,7 +84,9 @@ export class ExpeditionState {
   for(const h of this.heroes){
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);
    if(index<0)throw Error("Missing starter "+h.card.v2.starter);
-   this.add(h,this.deck.splice(index,1)[0]);const random=this.deck.pop();
+   const starter=this.deck.splice(index,1)[0];
+   this.noteDeckRemoval(starter);this.add(h,starter);
+   const random=this.deck.pop();this.noteDeckRemoval(random);
    this.add(h,random);this.metrics.objectDraws[random.id]=(this.metrics.objectDraws[random.id]||0)+1;
   }
   // Experimental *extra resource* intervention: move an existing deck copy
@@ -89,7 +94,8 @@ export class ExpeditionState {
   if(extraObjectId!==null){
    const index=this.deck.findIndex(o=>o.id===extraObjectId);
    if(index>=0){
-    this.add(this.heroes[0],this.deck.splice(index,1)[0]);
+    const extra=this.deck.splice(index,1)[0];
+    this.noteDeckRemoval(extra);this.add(this.heroes[0],extra);
     this.extraObjectGranted=true;
    }
   }
@@ -114,6 +120,9 @@ export class ExpeditionState {
  itemOfTag(tag){return this.heroes.find(h=>h.inventory.some(o=>can(o,tag)))||null;}
  anyEquippedTag(tag){return this.heroes.some(h=>this.equippedTag(h,tag));}
  partyCount(tag){return this.heroes.reduce((n,h)=>n+h.inventory.filter(o=>can(o,tag)).length,0);}
+ noteDeckRemoval(card){
+  if(card)this.deckRemovedCounts[card.id]=(this.deckRemovedCounts[card.id]||0)+1;
+ }
  add(h,card){if(!card)return;h.inventory.push(card);this.equip(h,card);
   this.objectsEverOwned.add(card.id);
   this.metrics.objectAcquisitions[card.id]=(this.metrics.objectAcquisitions[card.id]||0)+1;
@@ -162,7 +171,8 @@ export class ExpeditionState {
  draw(n=1){for(let i=0;i<n;i++){
    if(!this.deck.length)return;
    if(this.forfeitNextItem){this.forfeitNextItem=false;this.deck.unshift(this.deck.pop());continue;}
-  const h=this.chooseActor();const item=this.deck.pop();this.add(h,item);this.metrics.drawn++;
+  const h=this.chooseActor();const item=this.deck.pop();
+   this.noteDeckRemoval(item);this.add(h,item);this.metrics.drawn++;
   this.metrics.objectDraws[item.id]=(this.metrics.objectDraws[item.id]||0)+1;
  }}
  peek(n=1,swap=false){
