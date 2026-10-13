@@ -5,6 +5,9 @@ export function resolveRoomChoice(s,choice){
  const id=s.room.id,h=s.chooseActor();
  const keep=(item=null)=>s.keptRooms.push({card:s.room,item});
  if(s.room.v2.special.corridor){
+  if(id==="d-gilded"&&choice===1){
+   s.keptRooms.push({card:s.room,choice:1});s.forkRooms("plain");return;
+  }
   if(id==="u-smuggler"&&choice===0){s.hurt(h,1);if(s.alive())s.draw();}
   if(id==="u-mossy"&&choice===0)s.heal(h,1);
   if(["m-ladder","d-whisper-junction"].includes(id)&&choice===1){
@@ -39,7 +42,10 @@ export function roomEntry(s){
   for(const entry of [...s.keptRooms])if(["m-well","u-leech-pool"].includes(entry.card.id)){
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="m-well"){
-    s.resolveKeptRoll(entry.card);if(entry.item)s.add(s.chooseActor(),entry.item);
+    if(s.returnChoices?.["m-well"]==="leave")s.heal(s.chooseActor(),3);
+    else{s.resolveKeptRoll(entry.card);
+     if(entry.item){const h=s.chooseActor();h.inventory.push(entry.item);
+      s.consumed.delete(entry.item);s.equip(h,entry.item);}}
    }else if(s.discardable())s.discard();else s.hurt(s.chooseActor(),2);
   }
  }
@@ -47,8 +53,14 @@ export function roomEntry(s){
   for(const entry of [...s.keptRooms])if(["m-clock","m-hungry-door","d-last-bell"].includes(entry.card.id)){
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="d-last-bell")s.resolveKeptRoll(entry.card);
+   else if(s.returnChoices?.[entry.card.id]==="roll")s.resolveKeptRoll(entry.card);
    else if(s.discardable())s.discard();else s.resolveKeptRoll(entry.card);
   }
+ }
+ if(room.id==="u-nest"){
+  const favor=s.keptRooms.find(x=>x.card.id==="u-rat-favor");
+  if(favor){s.keptRooms.splice(s.keptRooms.indexOf(favor),1);
+   s.skipNextMonster=true;s.draw();}
  }
  if(room.v2?.kind==="TREASURE"){
   const rat=s.keptRooms.findIndex(x=>x.card.id==="u-rat-favor");
@@ -57,7 +69,16 @@ export function roomEntry(s){
  if(room.stage!=="FINAL"&&!room.v2?.special?.corridor){
   const garden=s.keptRooms.findIndex(x=>x.card.id==="m-fungus");
   const h=s.chooseActor();
-  if(garden>=0&&h.card.hp-h.hp>=3){s.keptRooms.splice(garden,1);s.heal(h,3);s.skipRoom=true;}
+  if(garden>=0&&h.card.hp-h.hp>=3){
+   const mode=s.returnChoices?.["m-fungus"]||"heal";
+   if(mode!=="save"){
+    s.keptRooms.splice(garden,1);
+    if(mode==="burn"&&s.discardable(1,"FIRE")){
+     s.discard(1,{tag:"FIRE"});s.draw(2);h.poison=false;
+    }else s.heal(h,3);
+    s.skipRoom=true;
+   }
+  }
  }
  if(s.nextLadder){s.nextLadder=false;if(room.v2?.kind==="LAIR")s.heroFirstAdv=true;else s.draw();}
  if(room.stage==="DEEP")fateStageEntry(s,"DEEP");
