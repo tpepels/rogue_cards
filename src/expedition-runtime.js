@@ -429,7 +429,7 @@ export class ExpeditionState {
   h.nextDis=0;h.nextAdv=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
   if(priest){priest.used.add("hero");const d=this.die();
-   if(d<=2)this.hurt(priest,this.die());
+   if(d<=2)this.hurt(priest,Math.ceil(this.die()/2));
    else if(d<=4)blessBonus=2;
    else{adv=true;h.poison=false;}
   }
