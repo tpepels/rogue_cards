@@ -103,6 +103,16 @@ const chooseRoom=s=>{
   };
   if(ok0&&ok1)return s.forceRoomChoice.choice;
  }
+ // The rollout agent must compare retained Rooms through their future effects.
+ // Earlier policies still use their documented fate-choice preferences.
+ if(room.v2.fate&&plannerUses(s,"room")&&s.researchPolicy==="agent"&&
+    s.agentConfig?.planning==="rollout"&&s.agentConfig.budget>0){
+  if(!ok0&&!ok1)return null;
+  const result=agentPlanRoom(s,[ok0,ok1]);
+  recordPlan(s,"room",result);
+  s.plannerDecisions.fateRoomsPlanned=(s.plannerDecisions.fateRoomsPlanned||0)+1;
+  return result.choice;
+ }
  // Longer-term Room choices are assessed by policy, not short-horizon Room utilities.
  if(room.v2.fate){
   if(!ok0&&!ok1)return null;
