@@ -72,7 +72,7 @@ test("previously ambiguous card language now names timing, rolls and locations",
  assert.match(witch.v2.trigger,/after you use a Potion or Scroll/);
  assert.doesNotMatch(witch.v2.roll.outcomes.at(-1).effect,/Resolve that Potion/);
  const supply=ROOMS.find(x=>x.id==="u-supply");
- assert.ok(supply.v2.roll.outcomes.some(x=>/keep 1, discard 1/i.test(x.effect)));
+ assert.ok(supply.v2.roll.outcomes.some(x=>/Draw 2 Items, then discard 1 Item/i.test(x.effect)));
  for(const id of ["bat","eye"]){
   const m=MONSTERS.find(x=>x.id===id);
   assert.ok(m.behavior.some(x=>/next Hero d20 roll has DIS/.test(x)),m.title);
