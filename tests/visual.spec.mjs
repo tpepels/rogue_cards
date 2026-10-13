@@ -111,6 +111,10 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
   expect(cards).toHaveLength(139);
   for(const card of cards){
    expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
+   expect(Math.abs(card.collage.left-card.cardBounds.left),card.id+" art not flush left").toBeLessThanOrEqual(2);
+   expect(Math.abs(card.collage.top-card.cardBounds.top),card.id+" art not flush top").toBeLessThanOrEqual(2);
+   expect(Math.abs(card.collage.right-card.cardBounds.right),card.id+" art not flush right").toBeLessThanOrEqual(2);
+   expect(Math.abs(card.collage.bottom-card.cardBounds.bottom),card.id+" art not flush bottom").toBeLessThanOrEqual(2);
    expect(card.imageH,card.id+" illustration too small").toBeGreaterThan(110*96/25.4);
    expect(card.imageW,card.id+" illustration too narrow").toBeGreaterThan(83*96/25.4);
    expect(card.notes.length,card.id+" has no note").toBeGreaterThanOrEqual(1);
@@ -241,7 +245,7 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
 
  expect(metrics).toHaveLength(30);
  for(const x of metrics){
-  expect(x.border,x.id+" lost its frame").toBeGreaterThanOrEqual(3);
+  expect(x.border,x.id+" has an unwanted frame").toBe(0);
   expect(x.wear,x.id+" lost edge distress").toContain("radial-gradient");
   expect(x.titleShape,x.id+" lost hand-cut title").toContain("polygon");
   expect(x.leadShape,x.id+" lost paper scrap").toContain("polygon");
