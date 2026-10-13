@@ -1,0 +1,65 @@
+name: Planner causal ablation - 16 combinations
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/planner-ablation.yml
+
+jobs:
+  ablation-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run full 16-configuration causal ablation on independent seeds
+        run: |
+          npm run --silent study:planner:ablation -- 300 --all --seed 91027381 > planner-ablation.json
+          npm run --silent study:planner:ablation:report -- planner-ablation.json > planner-ablation.md
+      - name: Validate factorial sample and publish main results
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync("planner-ablation.json","utf8"));
+          if(r.experiment!=="rogue-cards-planner-ablation-v1"||
+            r.simulated!==345600||r.unresolved!==0||r.stalls!==0||
+            r.configs?.length!==16||
+            Object.keys(r.partyResults?.magic||{}).length!==36||
+            r.groups.all.configurations.some(c=>c.n!==21600))
+            throw Error("Incomplete, unresolved or non-factorial sample");
+          const pp=n=>(100*n).toFixed(2)+" pp";
+          const pct=n=>(100*n).toFixed(1)+"%";
+          const out=[
+            "## Isolated planner effects (345,600 independent-seed simulations)",
+            "This is a 16-cell factorial on scripted decision policies, not human play.",
+            "",
+            "| Feature | Alone gain | Removed from full | Factorial average (95% CI) |",
+            "|---|---:|---:|---:|"
+          ];
+          for(const feature of r.features){
+            const c=r.groups.all.effects;
+            out.push("| "+feature+" | "+pp(c.alone[feature].estimate)+
+              " | "+pp(c.removed[feature].estimate)+
+              " | "+pp(c.average[feature].estimate)+
+              " ["+pp(c.average[feature].ci95[0])+", "+pp(c.average[feature].ci95[1])+"] |");
+          }
+          out.push("",
+            "Scripted win rate: "+pct(r.groups.all.configurations[0].winRate)+
+            " | Full cautious planner: "+pct(r.groups.all.configurations[15].winRate),
+            "Seed: "+r.seed+" | Commit: "+r.commit,
+            "Full 16-cell report is downloadable from the workflow artifacts.");
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,out.join("\n")+"\n");
+          NODE
+      - name: Upload complete trial results and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planner-factorial-ablations
+          path: |
+            planner-ablation.json
+            planner-ablation.md
+          if-no-files-found: ignore
