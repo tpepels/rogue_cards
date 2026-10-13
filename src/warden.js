@@ -3,7 +3,7 @@
 export const VAULT={
  id:"vault",type:"room",stage:"FINAL",title:"The Amulet Vault",art:"amulet",copies:1,
  flavor:"The prize was never unattended.",rule:"Face the Warden.",
- v2:{kind:"FINAL",number:37,prompt:"Roll OMEN d6. Choose FIGHT or SEAL. Kept Rooms may unlock endings after Phase I.",
+ v2:{kind:"FINAL",number:37,prompt:"Roll OMEN d6. FIGHT or SEAL. Kept Rooms may unlock alternatives.",
  choices:[
   {label:"FIGHT",effect:"Face the Warden, Phase I. At 10 HP switch to Phase II."},
   {label:"SEAL",effect:"Discard 3 MAGIC Items (6 with two Heroes). Opposed d20+WIT vs d20+6. Win: Amulet. Lose: fight Warden; its first attack has ADV."}
