@@ -54,6 +54,69 @@ tuned **continuation** policy with stochastic dice, not exhaustive
 search at every future decision. Inner rollouts have planning
 budget zero to prevent recursive searches.
 
+## Performance work: JavaScript before native compilation
+
+Node/V8 already JIT-compiles this JavaScript. The major work is
+state cloning and playing hundreds of hypothetical future actions, not
+simple arithmetic. Rewriting the existing object-heavy rules engine in
+Rust/WebAssembly would not automatically accelerate it.
+
+Two first-pass optimizations have been implemented:
+
+1. Build the fair player's **public Item/Room/Monster candidate pools only
+   once per decision**; reuse them across sampled scenarios and possible
+   actions. This is based strictly on public knowledge.
+2. Use **card-aware cloning** of expedition state. Deep-copy all mutable
+   Heroes, HP, Items held, usage markers, maps, counters and decisions,
+   but share the immutable, canonical printed card definitions rather
+   than cloning their large text/effect objects hundreds of times.
+
+The old native `structuredClone` path is still available in
+the low-level fork function for debugging and verifying identical results.
+
+Before interpreting performance, benchmark **on the same laptop**:
+
+~~~sh
+git pull --ff-only
+npm test
+npm run bench:rollout-forks -- --samples 300
+~~~
+
+The microbenchmark compares (a) original structured clone and per-fork
+public-pool preparation, (b) structured clone with cached pools and
+(c) card-aware clone with cached pools. It verifies matching sampled
+outcomes before printing timings and speedup ratios. The result is
+a **fork-only** speed measurement, not a promise of whole-experiment
+speedup. Repeat the test several times, as garbage collection and
+JIT warm-up affect timings.
+
+If the clone is no longer dominant, measure the CPU hotspots in a
+**small** real study with V8's built-in profiler:
+
+~~~sh
+mkdir -p results/profiles
+node --cpu-prof --cpu-prof-dir=results/profiles \
+  scripts/study-rollout-budgets.mjs \
+  --runs 2 --seeds 81001 --budgets 8 \
+  --parties solo --strategies magic \
+  --workers 1 --chunk-size 1 \
+  --out results/rollout-profile-01
+~~~
+
+Inspect `*.cpuprofile` files in Chrome DevTools' Performance
+panel. Check `cloneRolloutState`, `forkExpeditionState`,
+`rolloutRoomContinuation`, `fight` and
+`itemOptions` before considering further changes.
+
+Potential next algorithmic work (not yet implemented): adaptive
+sequential sampling that stops clearly decided action comparisons
+early, and a compact numeric/immutable-state representation to
+reduce allocation and garbage collection. Rust via a Node-API
+module (for example napi-rs) is more appropriate than WebAssembly
+if profiling ultimately shows the inner rules engine is the dominant
+unavoidable compute kernel. That would be a larger port and would
+require strict seeded, event-by-event differential tests.
+
 ## 1. Validate locally before doing large studies
 
 Requires Node 22 or later, from the repository root:
