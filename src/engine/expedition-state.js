@@ -64,7 +64,7 @@ export class ExpeditionState {
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
    this.trapdoorHistory=[];this.pendingTrapLanding=null;this.secretFinds=0;
-   this.rerollHistory=[];this.heroAbilityModes={};this.elberethAttempts=0;
+   this.rerollHistory=[];this.heroAbilityModes={};this.returnChoices={};this.elberethAttempts=0;
    this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
    this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
