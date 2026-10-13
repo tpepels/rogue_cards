@@ -154,7 +154,13 @@ export function takeCombatAction(s,action){
  const hero=s.heroes[action.heroIndex];
  s.setActor(hero);
  if(candidate.kind==="attack")playerAttack(s,hero);
- else{
+ else if(candidate.kind==="elbereth"){
+  // ELBERETH is a standalone printed combat action, not an Item.
+  // On failure it immediately performs its Monster response; the
+  // subsequent response command consumes elberethSkipResponse.
+  const result=engraveElbereth(s,hero,{mode:candidate.mode});
+  if(!result.legal)throw Error("ELBERETH became illegal");
+ }else{
   const option=itemOptions(s,hero,"combat")[candidate.optionIndex];
   if(!executeItemOption(s,hero,option))
    throw Error("Combat Item was not activated");
