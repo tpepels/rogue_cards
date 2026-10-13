@@ -59,7 +59,8 @@ test("checkpoint/resume skips finished chunks and reproduces paired outcomes",()
   const cached=cli([...common,"--out",one,"--resume"]);
   assert.equal(cached.status,0,cached.stderr);
   assert.match(cached.stderr,/Resuming 120\/120 completed chunks/);
-  const different=cli([...common,"--runs","4","--out",one,"--resume"]);
+  const changed=common.slice();changed[1]="4";
+  const different=cli([...changed,"--out",one,"--resume"]);
   assert.notEqual(different.status,0);
   assert.match(different.stderr,/Resume parameters differ/);
  }finally{rmSync(dir,{recursive:true,force:true})}
