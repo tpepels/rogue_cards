@@ -92,7 +92,8 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
    case "COST":case "DISCARD":spend+=amount;break;
    case "DRAW":draw+=amount;break;
    case "TRADE":spend+=amount;draw+=estimatedDice(args[1]);break;
-   case "HEAL":case "HEAL_ALL":healing+=amount;break;
+   case "HEAL":healing+=amount;break;
+   case "HEAL_ALL":healing+=amount*party.heroes.length;break;
    case "HURT":harm+=amount;break;
    case "POISON":utility-=party.hpFraction<.6?5:3;break;
    case "CURE":utility+=party.heroes.some(h=>h.poison)?4:0.3;break;
@@ -100,18 +101,51 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
    case "RECHARGE":utility+=s.exhaustedWand()?weights.spell+1:0;break;
    case "CURSED_RECHARGE":utility+=s.exhaustedWand()?2:0;break;
    case "FIGHT_REWARD":conditionalFightReward+=amount;break;
+   case "FIGHT_HEAL":healing+=amount*(s.monster?0.75:0.55);break;
    case "MONSTER_DRAW":extraFights++;break;
    case "BANISH":case "FUNGUS_BURN":case "CHOIR_SILENCE":utility+=s.monster?6:3;break;
    case "NEXT_WIT":utility+=Math.min(4,amount);break;
    case "NEXT_ADV":case "DEF_ADV":utility+=1.7;break;
    case "MONSTER_ADV":utility-=2;break;
    case "NEXT_DIS":utility-=2.5;break;
-   case "CHECK_WIT":case "CHECK_ATK":utility+=0.5;break;
+   case "CHECK_WIT":case "CHECK_ATK": {
+    const actor=s.chooseActor();
+    const stat=kind==="CHECK_WIT"?actor.card.wit+(s.witBonus||0):s.stats(actor).atk;
+    const chance=exactWitChance(stat,Number(args[0]));
+    const scoreResult=code=>{
+     if(code==="DRAW1_RECHARGE")return weights.draw+(s.exhaustedWand()?weights.spell:0);
+     if(code==="DRAW1")return weights.draw;
+     if(code==="DRAW2")return 2*weights.draw;
+     if(code==="HEAL2")return Math.min(party.missing,2)*weights.damage;
+     if(code==="HURT2")return -Math.min(party.hp,2)*weights.damage;
+     if(code==="HURTd6")return -Math.min(party.hp,3.5)*weights.damage;
+     throw Error("Unmodelled printed check consequence "+code);
+    };
+    utility+=chance*scoreResult(args[1])+(1-chance)*scoreResult(args[2]);
+    break;
+   }
    case "ALCHEMY_HEAL_OR_TWO":healing+=2.2;break;
    case "MAGIC_HEAL":healing+=1.2;break;
    case "SUPPLY_BARTER":utility+=party.cards>2?2:0;break;
    case "ROLL_ROOM_COST_REROLL":utility+=0.7;break;
-   case "BOOKCASE_FIRE_OR_SCROLL":utility+=party.magic>0?3:1;break;
+   case "BOOKCASE_FIRE_OR_SCROLL":utility+=s.has("torch")||s.anyEquippedTag("FIRE")?weights.draw:
+    party.cards&&s.heroes.some(h=>h.inventory.some(c=>c.v2.kind==="SCROLL"))?0.9:-2;break;
+   case "FUNGUS_BURN":healing+=s.has("torch")||s.anyEquippedTag("FIRE")?3.5:0;break;
+   case "CHOIR_SILENCE":draw+=s.has("torch")||s.anyEquippedTag("FIRE")?2:0;break;
+   case "PUPPET_BRIBE":utility+=s.anyEquippedTag("CURSED")?
+    weights.draw*1.2-3.5*weights.damage:party.cards>0?0.8:0;break;
+   case "CLEANSE":utility+=s.anyEquippedTag("CURSED")?3:0;break;
+   case "CLEANSE_COST":
+    utility+=s.anyEquippedTag("CURSED")?1:0;
+    spend+=s.anyEquippedTag("CURSED")?1:0;break;
+   case "CURSED_EXTRA_DRAW":draw+=s.anyEquippedTag("CURSED")?1:0;break;
+   case "SAVE_TRAP":utility+=1.5;break;
+   case "SAVE_ATTACK_ADV":utility+=2;break;
+   case "SAVE_D20_REROLL":utility+=2.2;break;
+   case "SAVE_DEF":utility+=1.7;break;
+   case "NONE":case "ROLL_ROOM":case "ROLL_ROOM_RISK":
+   case "ROLL_ROOM_RISK_D6":case "ROLL_ROOM_COST_REROLL":
+   case "KEEP_ROOM_ROLL":case "SEAL":case "WARDEN_FIGHT":break;
    case "FIGHT":break; // already present Monster, not a second encounter
   }
  }
@@ -132,12 +166,21 @@ export function planRoom(s,legal){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s);
  const room=s.room,raw=ROOM_EFFECTS[room.id];
  const score=idx=>{
-  const ops=raw.choices[idx],initial=textScore(s,ops.filter(o=>!o.startsWith("ROLL_ROOM")),w,party,room.stage);
-  if(!ops.some(o=>/^ROLL_ROOM/.test(o)))return initial;
+  const ops=raw.choices[idx];
+  let initial=textScore(s,ops.filter(o=>!o.startsWith("ROLL_ROOM")),w,party,room.stage);
+  const roll=ops.find(o=>o.startsWith("ROLL_ROOM"));
+  if(!roll)return initial;
+  const risk=roll==="ROLL_ROOM_RISK"?2:roll==="ROLL_ROOM_RISK_D6"?3.5:0;
+  const eligibleRisk=s.strategy!=="survival"&&s.chooseActor().hp>s.chooseActor().card.hp*.4;
+  const reroll=eligibleRisk&&(risk>0||
+   roll==="ROLL_ROOM_COST_REROLL"&&s.discardable());
+  if(reroll)initial-=risk*w.damage+
+   Number(roll==="ROLL_ROOM_COST_REROLL")*party.resourceValue*weightsFactor(w);
   let result=0;
   for(let face=1;face<=6;face++){
    const band=bandFor(room,face),out=raw.outcomes[band];
-   result+=textScore(s,out,w,party,room.stage,{outcome:true})/6;
+   const likelihood=reroll?(2*face-1)/36:1/6;
+   result+=textScore(s,out,w,party,room.stage,{outcome:true})*likelihood;
   }
   return initial+result;
  };
