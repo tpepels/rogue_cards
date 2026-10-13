@@ -10,6 +10,7 @@
  * optimal-policy solver or a full-game tree search.
  */
 import {ROOMS,OBJECTS,MONSTERS} from "./tabletop-data.js";
+import {pairedRoomRollouts,pairedCombatRollouts} from "./rollout-evaluator.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {ROLL_EFFECTS,bandFor} from "./effect-model.js";
 import {itemOptions} from "./item-access.js";
@@ -42,6 +43,18 @@ export function validateAgentConfig(config){
  const samplingSeed=config.samplingSeed??277218221;
  if(!Number.isSafeInteger(samplingSeed)||samplingSeed<0||samplingSeed>0xffffffff)
   throw Error("Agent sample seed must be UINT32");
+ const planning=config.planning??"heuristic";
+ if(!["heuristic","rollout"].includes(planning))
+  throw Error("Unknown agent planning mode "+planning);
+ const rolloutRooms=config.rolloutRooms??2;
+ const combatActions=config.combatActions??14;
+ const combatRoomDepth=config.combatRoomDepth??0;
+ if(!Number.isInteger(rolloutRooms)||rolloutRooms<1||rolloutRooms>3)
+  throw Error("rolloutRooms must be 1..3");
+ if(!Number.isInteger(combatActions)||combatActions<4||combatActions>32)
+  throw Error("combatActions must be 4..32");
+ if(!Number.isInteger(combatRoomDepth)||combatRoomDepth<0||
+  combatRoomDepth>2)throw Error("combatRoomDepth must be 0..2");
  const weights={...AGENT_WEIGHTS,...(config.weights||{})};
  if(!config.weights||typeof config.weights!=="object"||Array.isArray(config.weights))
   throw Error("Agent weights must be an object");
@@ -51,7 +64,9 @@ export function validateAgentConfig(config){
   const [lo,hi]=OPTIMIZATION_RANGES[name];
   if(value<lo||value>hi)throw Error("Agent weight "+name+" outside ["+lo+", "+hi+"]");
  }
- return Object.freeze({knowledge,budget,samplingSeed,weights:Object.freeze(weights)});
+ return Object.freeze({knowledge,budget,samplingSeed,planning,
+  rolloutRooms,combatActions,combatRoomDepth,
+  weights:Object.freeze(weights)});
 }
 const idOf=card=>card.id;
 /** Returns an immutable *observation*, never an alias to hidden piles.
@@ -224,6 +239,8 @@ function roomOptionRollout(s,legal,choice,observation){
  return weights.lookahead*total/budget;
 }
 export function agentPlanRoom(s,legal){
+ if(s.agentConfig.planning==="rollout"&&s.agentConfig.budget>0)
+  return pairedRoomRollouts(s,legal);
  const obs=prepareAgentObservation(s,true);
  const baseline=planRoom(s,legal);
  if(!s.agentConfig.budget)return baseline;
@@ -244,6 +261,8 @@ export function agentPlanParley(s,m){
   reason:"agent_parley_threshold",margin};
 }
 export function agentPlanCombat(s,h){
+ if(s.agentConfig.planning==="rollout"&&s.agentConfig.budget>0)
+  return pairedCombatRollouts(s,h);
  prepareAgentObservation(s);
  // Baseline tactical forecast already marginalizes printed die bands. Agent
  // parameters control risk, future reservation and the attack-vs-Item margin.
