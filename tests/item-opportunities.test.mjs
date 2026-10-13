@@ -92,6 +92,39 @@ test("three Item policies are reproducible, opt-in, and account for results",()=
   /requires planner combat enabled/);
  assert.equal(typeof planCombat(fixture().s,fixture().h).action,"string");
 });
+test("Hungry Ring records a real after-MAGIC reaction and cannot retrigger this Room",()=>{
+ const {s,h}=fixture();
+ h.slots.ring=null;
+ const hunger=item("ring-hunger"),scroll=item("scroll-flame");
+ s.add(h,hunger);
+ s.add(h,scroll);
+ assert.equal(h.slots.ring,hunger);
+ assert.equal(itemOptions(s,h,"after-magic").length,1);
+ s.activate(h,scroll,{face:3});
+ assert.equal(s.metrics.itemOpportunities["ring-hunger"].byPhase["after-magic"],1);
+ assert.equal(s.metrics.itemUses["ring-hunger"].byMode["magic-reaction"],1);
+ assert.ok(h.used.has(hunger));
+});
+test("Ring of Echoes cannot reroll more than once in the same Room",()=>{
+ const {s,h}=fixture("u-passage");
+ const ring=item("ring-echo");
+ s.add(h,ring);
+ assert.equal(h.slots.ring,ring);
+ s.roomRoll();
+ s.roomRoll();
+ assert.equal(s.metrics.itemUses["ring-echo"].total,1);
+ assert.equal(s.metrics.itemOpportunities["ring-echo"].total,1);
+});
+test("actual weapon and armour bonuses are reported apart from dice activations",()=>{
+ const result=simulateFullExpedition({
+  seed:147,heroes:["warrior"],strategy:"magic",
+  researchPolicy:"planner",plannerRisk:"cautious"});
+ assert.ok(result.itemPassiveEffects&&typeof result.itemPassiveEffects==="object");
+ const s=fixture().s,h=s.heroes[0],card=h.slots.weapon;
+ s.notePassive(card,"attack",2);
+ assert.equal(s.metrics.itemPassiveEffects[card.id].attackBonus,2);
+ assert.equal(s.metrics.itemUses[card.id],undefined);
+});
 test("Item comparison produces per-card experiments and readable summary",()=>{
  const run=(script,args)=>spawnSync(process.execPath,[script,...args],
   {encoding:"utf8",maxBuffer:16*1024*1024});
