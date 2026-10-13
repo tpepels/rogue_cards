@@ -1,0 +1,143 @@
+// Choices on these Rooms are retained physically beside the Hero. No additional rules vocabulary.
+const rows=[
+ ["u-cartographer","UPPER","The Blind Cartographer","eye","MYSTERY","A blind hand draws two futures.",
+  [["TRUST","Keep this Room. Entering DEEP, look at the next 2 Rooms; put either first."],
+   ["BURN","Draw 2 Items. Keep this Room. Entering DEEP, lose 2 HP."]]],
+ ["u-hollow-knight","UPPER","The Hollow Knight","knight","ENCOUNTER","Its empty armour waits to be judged.",
+  [["SPARE","Keep this Room. Your first DEEP Monster leaves without fighting."],
+   ["STRIP","Draw 2 Items. Keep this Room. Your first DEEP Monster attacks with ADV."]]],
+ ["u-scribe-dust","UPPER","The Scribe of Dust","wizard","MYSTERY","He writes your name on a blank scroll.",
+  [["INSCRIBE","Discard 1 Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."],
+   ["BLOT","Draw 2 Items. Keep this Room. At the Vault, SEAL costs 1 extra MAGIC Item."]]],
+ ["u-bone-seed","UPPER","The Unburied Seed","mushroom","MYSTERY","The seed wants something to remember.",
+  [["PLANT","Tuck 1 Item beneath this Room. Keep it. Entering DEEP, recover it and draw 2 Items."],
+   ["EAT","Heal 3 HP. Keep this Room. Entering DEEP, lose 2 HP."]]],
+ ["m-ferryman-oath","MIDDLE","The Ferryman's Oath","water","ENCOUNTER","The ferryman accepts tomorrow's fare.",
+  [["PAY","Tuck 1 Item beneath this Room. Keep it. At the Vault, recover it and heal 3 HP."],
+   ["CHEAT","Draw 2 Items. Keep this Room. At the Vault, lose 3 HP."]]],
+ ["m-choir-nails","MIDDLE","Choir of Nails","bones","MYSTERY","Nails sing in the stone.",
+  [["LISTEN","Keep this Room. The first DEEP Monster's first attack has DIS."],
+   ["STEAL","Draw 2 Items. Keep this Room. The first DEEP Monster's first attack has ADV."]]],
+ ["m-hourglass","MIDDLE","The Inverted Hourglass","spiral","MYSTERY","The sand falls upward.",
+  [["TURN","Keep this Room. At the Vault, roll OMEN twice and use the higher result."],
+   ["BREAK","Draw 2 Items. Keep this Room. At the Vault, roll OMEN twice and use the lower result."]]],
+ ["m-drowned-banner","MIDDLE","The Drowned Banner","altar","SHRINE","A lost army's colours drip black.",
+  [["RAISE","Lose 2 HP. Keep this Room. At the Vault, the Warden begins with 3 less HP."],
+   ["BURN","Draw 2 Items. Keep this Room. At the Vault, the Warden's first attack has ADV."]]],
+ ["d-sleeping-crown","DEEP","The Sleeping Crown","bones","TREASURE","Something royal dreams beneath the gold.",
+  [["WEAR","Keep this Room. Your first Vault attack has ADV; SEAL costs 1 extra MAGIC Item."],
+   ["BREAK","Discard 1 MAGIC Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."]]],
+ ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","A chained ghost knows what happened here.",
+  [["FREE","Lose 2 HP. Keep this Room. At the Vault, heal 3 HP. If you win, the witness escapes with you."],
+   ["SILENCE","Draw 2 Items. Keep this Room. At the Vault, lose 2 HP. If you win, the witness remains lost."]]]
+];
+export const FATE_ROOMS=Object.freeze(rows.map(([id,stage,title,art,kind,prompt,choices])=>({
+ id,stage,title,art,type:"room",copies:1,rule:prompt,flavor:"",
+ v2:{kind,prompt,choices:choices.map(([label,effect])=>({label,effect})),
+  roll:null,links:[],fate:true}
+})));
+const mark=(s,choice,item=null)=>{
+ const entry={card:s.room,choice,item};
+ s.keptRooms.push(entry);
+ s.fateChoices.push({id:s.room.id,title:s.room.title,choice:s.room.v2.choices[choice].label});
+};
+const burnItem=(s,tag=null)=>s.discard(1,{tag});
+const take=(s,n=1)=>s.draw(n);
+const dead=(s,n)=>s.hurt(s.chooseActor(),n);
+const restore=(s,n)=>s.heal(s.chooseActor(),n);
+// Called by ROOM_FATE on the printed choice. Item costs are checked here.
+export function resolveFateChoice(s,choice){
+ const id=s.room.id;
+ if(![0,1].includes(choice))throw Error("Invalid fate choice on "+id);
+ const itemCost=(choice===0&&["u-scribe-dust","u-bone-seed","m-ferryman-oath"].includes(id))||
+  (choice===1&&id==="d-sleeping-crown");
+ const itemTag=id==="d-sleeping-crown"?"MAGIC":null;
+ if(itemCost&&!s.discardable(1,itemTag)){
+  // If an Item is required, choose the affordable printed alternative.
+  choice=1-choice;
+  if(choice===1&&id==="d-sleeping-crown")choice=0;
+ }
+ let tucked=null;
+ switch(id){
+ case "u-cartographer":if(choice===1)take(s,2);break;
+ case "u-hollow-knight":if(choice===1)take(s,2);break;
+ case "u-scribe-dust":if(choice===0)burnItem(s);else take(s,2);break;
+ case "u-bone-seed":if(choice===0)tucked=burnItem(s);else restore(s,3);break;
+ case "m-ferryman-oath":if(choice===0)tucked=burnItem(s);else take(s,2);break;
+ case "m-choir-nails":if(choice===1)take(s,2);break;
+ case "m-hourglass":if(choice===1)take(s,2);break;
+ case "m-drowned-banner":if(choice===0)dead(s,2);else take(s,2);break;
+ case "d-sleeping-crown":if(choice===1)burnItem(s,"MAGIC");break;
+ case "d-last-witness":if(choice===0)dead(s,2);else take(s,2);break;
+ default:throw Error("Unknown fate Room "+id);
+ }
+ if(s.alive())mark(s,choice,tucked);
+}
+function complete(s,entry){
+ const i=s.keptRooms.indexOf(entry);
+ if(i!==-1)s.keptRooms.splice(i,1);
+}
+// Called when a new depth is first entered; effects are resolved in encounter order.
+export function fateStageEntry(s,stage){
+ if(stage!=="DEEP"||s.fateDeepEntered)return;
+ s.fateDeepEntered=true;
+ for(const entry of [...s.keptRooms]){
+  const id=entry.card.id;
+  if(!["u-cartographer","u-bone-seed"].includes(id))continue;
+  complete(s,entry);
+  if(id==="u-cartographer"){
+   if(entry.choice===0)s.peek(2,true);
+   else dead(s,2);
+  }else if(entry.choice===0){
+   if(entry.item)s.add(s.chooseActor(),entry.item);
+   take(s,2);
+  }else dead(s,2);
+  if(!s.alive())return;
+ }
+}
+// Return true when the Monster is dismissed before a fight.
+export function fateMonsterEntry(s,monster){
+ if(monster.stage!=="DEEP")return false;
+ let dismissed=false;
+ for(const entry of [...s.keptRooms]){
+  if(!["u-hollow-knight","m-choir-nails"].includes(entry.card.id))continue;
+  complete(s,entry);
+  if(entry.card.id==="u-hollow-knight"){
+   if(entry.choice===0)dismissed=true;
+   else s.monsterAdv=true;
+  }else if(entry.choice===0)s.monsterDis=true;
+  else s.monsterAdv=true;
+ }
+ return dismissed;
+}
+// Vault debts and permanent modifiers resolve when the Vault is entered.
+export function fateVaultEntry(s){
+ const v=s.vaultModifiers;
+ for(const entry of [...s.keptRooms]){
+  const id=entry.card.id,c=entry.choice;
+  if(!["u-scribe-dust","m-ferryman-oath","m-hourglass",
+       "m-drowned-banner","d-sleeping-crown","d-last-witness"].includes(id))continue;
+  complete(s,entry);
+  switch(id){
+  case "u-scribe-dust":v.sealCostDelta+=c===0?-1:1;break;
+  case "m-ferryman-oath":
+   if(c===0){if(entry.item)s.add(s.chooseActor(),entry.item);restore(s,3);}
+   else dead(s,3);
+   break;
+  case "m-hourglass":v.omen=c===0?"high":"low";break;
+  case "m-drowned-banner":
+   if(c===0)v.wardenDamage+=3;
+   else v.wardenFirstAdv=true;
+   break;
+  case "d-sleeping-crown":
+   if(c===0){v.heroFirstAdv=true;v.sealCostDelta++;}
+   else v.sealCostDelta--;
+   break;
+  case "d-last-witness":
+   if(c===0){restore(s,3);s.endingMemory="The witness escapes with the Amulet.";}
+   else{dead(s,2);s.endingMemory="The witness remains lost beneath the dungeon.";}
+   break;
+  }
+  if(!s.alive())return;
+ }
+}
