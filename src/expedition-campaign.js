@@ -750,7 +750,7 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   failureCauses:{},failureStages:{},vaultHp:0,vaultMaxHp:0,vaultMagic:0};
  for(let i=0;i<runs;i++){
   const r=simulateFullExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,strategy,roomPolicy,vaultChoice});
-  sum.wins+=Number(r.won);sum.vault+=Number(r.cleared===9);
+  sum.wins+=Number(r.won);sum.vault+=Number(r.vaultState!==null);
   sum.deep+=Number(r.cleared>=6);sum.damage+=r.damage;sum.drawn+=r.drawn;
   sum.spent+=r.spent;sum.rounds+=r.rounds;sum.battles+=r.battles;
   sum.negotiations+=r.negotiations;sum.corpses+=r.corpses;sum.activated+=r.activated;
