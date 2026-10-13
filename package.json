@@ -46,7 +46,8 @@
     "bench:rollout-scenarios": "node scripts/benchmark-rollout-scenarios.mjs",
     "bench:expeditions": "node scripts/benchmark-expedition-throughput.mjs",
     "study:v4": "node scripts/study-v4-coherence.mjs",
-    "study:retained": "node scripts/study-retained-paths.mjs"
+    "study:retained": "node scripts/study-retained-paths.mjs",
+    "study:v4-item-value": "node scripts/study-v4-item-value.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
