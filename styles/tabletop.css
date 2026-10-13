@@ -1358,3 +1358,99 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-card .tt-mechanic--stat{font-weight:900}
 .tt-card .tt-mechanic--condition,
 .tt-card .tt-mechanic--keyword{font-weight:900}
+
+
+/* ------------------------------------------------------------------------
+   CROOKED DUNGEON ZINE - October 2026 reference polish
+   Work with the existing collage/print geometry, not against it:
+   preserve art coverage, north-east lead notes, left-hand result notes and
+   all 90 x 130 mm dimensions. Paper tears are deterministic by card plate.
+   ------------------------------------------------------------------------ */
+
+/* The reference's dark, chipped frame; edge stains stay out of the rules. */
+.tt-card{
+ border:2.6px solid #17120e;
+ border-radius:2.4mm 1.6mm 2.7mm 1.9mm;
+ box-shadow:2px 3px 0 #635644,inset 0 0 0 .38mm #211911;
+}
+.tt-card::after{
+ border:1.5px solid #241a12;
+ border-radius:2.1mm 1.35mm 2.35mm 1.65mm;
+ box-shadow:inset 0 0 0 .33mm #241a12a6;
+ background:
+  radial-gradient(ellipse at 0 0,#17110bd9 0 1.9mm,transparent 4.9mm),
+  radial-gradient(ellipse at 100% 0,#17110bc7 0 2.1mm,transparent 5mm),
+  radial-gradient(ellipse at 0 100%,#17110bc8 0 1.9mm,transparent 4.5mm),
+  radial-gradient(ellipse at 100% 100%,#17110be3 0 2.6mm,transparent 5mm),
+  linear-gradient(90deg,#1d160f73,transparent 5%,transparent 95%,#1d160f80),
+  linear-gradient(0deg,#1d160f7a,transparent 4.5%,transparent 95%,#1d160f83);
+ opacity:.78;
+}
+
+/* Jagged, unevenly registered paper labels. No repositioning of titles. */
+.tt-card .tt-title{
+ background:#f2e8d6;
+ box-shadow:.85mm .83mm 0 #17110b,.98mm 1.04mm 0 #746650;
+ clip-path:polygon(0 8%,6% 1%,15% 4%,28% 0,40% 3%,54% 0,69% 4%,82% 1%,94% 4%,100% 1%,99% 44%,100% 94%,89% 98%,78% 96%,61% 100%,47% 97%,32% 99%,14% 96%,0 100%);
+}
+.tt-card .tt-card-kind{
+ background:#e9dfcd;
+ box-shadow:.65mm .65mm 0 #18120e;
+ clip-path:polygon(0 9%,13% 2%,26% 5%,43% 0,60% 6%,80% 1%,100% 4%,99% 91%,82% 100%,65% 96%,40% 100%,20% 94%,0 99%);
+}
+
+/* Two distinct little scraps INSIDE the existing pasted rules note.
+   Pseudo papers and rotations do not change text metrics or available space. */
+.tt-card .tt-collage > .tt-content .tt-slip{
+ position:relative;
+ isolation:isolate;
+ transform-origin:50% 50%;
+}
+.tt-card .tt-collage > .tt-content .tt-slip::before{
+ content:"";
+ position:absolute;
+ z-index:-1;
+ pointer-events:none;
+ inset:-.22mm -.3mm;
+ background:linear-gradient(173deg,#f4e9d6f0,#e7dbc7e8);
+ clip-path:polygon(0 5%,8% 1%,20% 3%,34% 0,52% 2%,68% 0,83% 3%,100% 1%,99% 44%,100% 96%,87% 100%,71% 98%,56% 100%,38% 97%,22% 100%,0 98%);
+}
+.tt-card .tt-slip--lead{
+ transform:translateX(var(--lead-slide,.25mm)) rotate(var(--lead-turn,-.48deg));
+}
+.tt-card .tt-slip--results{
+ transform:translateX(var(--result-slide,-.35mm)) rotate(var(--result-turn,.48deg));
+}
+.tt-card .tt-slip--results::before{
+ background:linear-gradient(178deg,#e9decce8,#f0e5d3f0)!important;
+ clip-path:polygon(0 1%,14% 4%,25% 0,43% 2%,57% 0,75% 4%,89% 1%,100% 5%,99% 91%,84% 100%,68% 98%,45% 100%,23% 97%,0 100%)!important;
+}
+
+/* Plate and card-family differences without moving any note into the title. */
+.tt-card.tt-plate-a{--lead-turn:-.75deg;--result-turn:.35deg;--lead-slide:.15mm;--result-slide:-.4mm}
+.tt-card.tt-plate-b{--lead-turn:.5deg;--result-turn:-.62deg;--lead-slide:-.2mm;--result-slide:.25mm}
+.tt-card.tt-plate-c{--lead-turn:-.28deg;--result-turn:.72deg;--lead-slide:.3mm;--result-slide:-.25mm}
+.tt-card.tt-plate-d{--lead-turn:.62deg;--result-turn:-.28deg;--lead-slide:-.1mm;--result-slide:.3mm}
+.tt-layout-v2-monster{--lead-turn:-.75deg;--result-turn:.62deg}
+.tt-card[data-v2-kind="HAZARD"]{--lead-turn:-.55deg;--result-turn:.78deg}
+.tt-card[data-v2-kind="SHRINE"]{--lead-turn:.22deg;--result-turn:-.43deg}
+.tt-card[data-v2-kind="TREASURE"]{--lead-turn:-.38deg;--result-turn:.44deg}
+.tt-card[data-v2-kind="SCROLL"]{--lead-turn:.68deg;--result-turn:-.57deg}
+.tt-card[data-v2-kind="POTION"]{--lead-turn:-.68deg;--result-turn:.36deg}
+.tt-card[data-v2-kind="RING"]{--lead-turn:.52deg;--result-turn:-.46deg}
+
+/* Torn corners and inked top edge on the primary pasted rules block. */
+.tt-card .tt-collage > .tt-content{
+ background-image:
+  radial-gradient(circle at 2% 3%,#17120e42 0 .45mm,transparent .8mm),
+  radial-gradient(circle at 98% 98%,#17120e3d 0 .48mm,transparent .85mm),
+  linear-gradient(177deg,#f1e6d6,#e9ddca);
+ clip-path:polygon(0 2%,6% .3%,14% 1.4%,24% 0,38% 1.1%,51% 0,66% 1.5%,79% 0,91% 1.4%,100% .4%,99.6% 27%,100% 71%,99.2% 96%,87% 100%,72% 98.7%,56% 100%,41% 98.8%,25% 100%,11% 98.5%,0 99%);
+}
+@media print{
+ .tt-card{box-shadow:none!important}
+ .tt-card .tt-title,.tt-card .tt-card-kind,
+ .tt-card .tt-collage>.tt-content,.tt-card .tt-slip{
+ -webkit-print-color-adjust:exact;print-color-adjust:exact;
+ }
+}
