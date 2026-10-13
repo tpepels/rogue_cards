@@ -241,6 +241,10 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Planner factorial ablation results
+
+The [345,600-expedition Room / Combat / PARLEY / SEAL ablation](docs/planner-ablation-findings.md) measures the four cautious-planner features separately, including leave-one-out effects and all pairwise interactions. The findings apply only to scripted simulations; no physical-game rules or cards were altered.
+
 ## Planner v2: how to interpret results
 
 The planner study is a scripted simulation. It is not a measure of human win
