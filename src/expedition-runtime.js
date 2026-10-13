@@ -241,7 +241,15 @@ export class ExpeditionState {
  }
  beginRoom(room){
    if(this.savedPath){if(this.savedPathGrace>0)this.savedPathGrace--;
-    else if(room.stage===this.savedPath.stage){this.rooms[room.stage].unshift(room);room=this.savedPath;this.savedPath=null;}}
+    else if(room.stage===this.savedPath.stage){
+     // The saved corridor exit is an option against the newly drawn Room.
+     const score=r=>(r.v2.kind==="TREASURE"?(this.strategy==="treasure"?6:2):0)+
+      (r.v2.kind==="SHRINE"&&this.chooseActor().hp<this.chooseActor().card.hp-3?4:0)-
+      (r.v2.kind==="LAIR"?3:0)-(r.v2.kind==="HAZARD"?2:0);
+     const alternative=this.savedPath;this.savedPath=null;
+     if(score(alternative)>score(room)){this.rooms[room.stage].push(room);room=alternative;}
+     else this.rooms[room.stage].push(alternative);
+    }}
    this.room=room;this.skipRoom=false;
   this.seenRooms.add(room.id);
   // The current Room has left the pile; any earlier peek of it is spent.
