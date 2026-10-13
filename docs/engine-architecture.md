@@ -107,13 +107,14 @@ the public engine API.
 4. **Printed d6 bands precompiled once**, returning a constant-time
    face-to-outcome mapping instead of reparsing range strings for every
    triggered Room or Item effect.
-5. **Rollout deck samples reused across action alternatives**. Under the
-   same hypothetical scenario, the fair agent generates the unknown
-   decks **once**, then uses card-aware state clones for each action.
-   Each branch retains exactly the same independently seeded dice.
-   The Oracle still gets full remaining deck order, but never future
-   actual dice. Card-aware cloning and per-decision public-deck-pool
-   caching were already introduced earlier.
+5. **Rollout deck samples reused across action alternatives**. The fair
+   agent now generates a hypothetical hidden-deck scenario **once**,
+   then forks the smaller original game state for each legal action and
+   attaches its own shallow copies of the sampled pile arrays. This
+   avoids cloning the larger, already-sampled state for every alternative.
+   All branches get the same independent hypothetical dice stream.
+   The Oracle keeps the actual hidden deck order, but never future
+   real dice.
 
 No C++, Rust or WebAssembly build dependency is needed.
 
@@ -139,9 +140,19 @@ npm run bench:rollout-forks -- --samples 300
 npm run bench:rollout-scenarios -- --samples 300 --choices 4
 ~~~
 
-The scenario microbenchmark verifies matching seeded checksums across
-both versions **before** reporting elapsed milliseconds and relative
-speedups. These are microbenchmarks, not whole-game CPU measurements.
+The scenario microbenchmark compares **three versions**:
+independent per-action deck sampling, the earlier slower approach of
+cloning an already-sampled scenario state, and the optimized approach
+of sampling once then forking the original state. It verifies matched
+seeded checksums before reporting timings.
+
+A local Node 26 run observed **0.477 ms vs 0.0195 ms per fork**
+(about **24.4x faster**) for card-aware cloning compared with
+`structuredClone`. The earlier sampled-state clone approach regressed
+from **0.0719 to 0.0941 ms per four-action scenario** (about
+**31% slower**), which motivated the replacement. **The speed of the
+replacement must be measured locally; no improvement is assumed.**
+These are microbenchmarks, not whole-game CPU measurements.
 Do not assume a 2x faster fork makes the complete 128-rollout study 2x
 faster; combat resolution and the number of alternative actions remain
 important.
