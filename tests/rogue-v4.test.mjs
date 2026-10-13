@@ -13,7 +13,7 @@ test("V4 preserves 139 cards and all 64 regional Rooms",()=>{
  assert.equal(CATALOGUE.length,139);
  assert.equal(ROOMS.length,64);
  for(const hero of HEROES){
-  assert.match(hero.v2.trigger,/CHOOSE .*; or RISK: roll d6/);
+  assert.match(hero.v2.trigger,/^ONCE PER ROOM, .*: .*; or roll d6 for a risky result\.$/);
   assert.ok(hero.v2.roll?.outcomes.length>=3);
  }
 });
