@@ -1369,7 +1369,7 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 
 /* The reference's dark, chipped frame; edge stains stay out of the rules. */
 .tt-card{
- border:2.6px solid #17120e;
+ border:3.2px solid #17120e;
  border-radius:2.4mm 1.6mm 2.7mm 1.9mm;
  box-shadow:2px 3px 0 #635644,inset 0 0 0 .38mm #211911;
 }
@@ -1415,11 +1415,13 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  background:linear-gradient(173deg,#f4e9d6f0,#e7dbc7e8);
  clip-path:polygon(0 5%,8% 1%,20% 3%,34% 0,52% 2%,68% 0,83% 3%,100% 1%,99% 44%,100% 96%,87% 100%,71% 98%,56% 100%,38% 97%,22% 100%,0 98%);
 }
-.tt-card .tt-slip--lead{
+.tt-card .tt-slip--lead::before{
  transform:translateX(var(--lead-slide,.25mm)) rotate(var(--lead-turn,-.48deg));
+ transform-origin:50% 50%;
 }
-.tt-card .tt-slip--results{
+.tt-card .tt-slip--results::before{
  transform:translateX(var(--result-slide,-.35mm)) rotate(var(--result-turn,.48deg));
+ transform-origin:50% 50%;
 }
 .tt-card .tt-slip--results::before{
  background:linear-gradient(178deg,#e9decce8,#f0e5d3f0)!important;
