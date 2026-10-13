@@ -43,7 +43,8 @@ function parse(args){
  const raw={},opt=new Set(),known=new Set(["--preset","--train-seeds",
   "--validation-seeds","--test-seeds","--train-runs","--validation-runs",
   "--test-runs","--candidates","--rounds","--finalists","--budget",
-  "--workers","--strategies","--out"]);
+  "--workers","--strategies","--out","--planning",
+  "--rollout-rooms","--combat-actions","--combat-room-depth"]);
  for(let i=0;i<args.length;i++){
   if(flags.has(args[i])){opt.add(args[i]);continue}
   if(!known.has(args[i])||!args[i+1]||args[i+1].startsWith("--")||
@@ -73,6 +74,12 @@ function parse(args){
  const rounds=number("--rounds",base.rounds,1,6);
  const finalists=number("--finalists",base.finalists,1,16);
  const budget=number("--budget",base.budget,0,128);
+ const planning=raw["--planning"]||"heuristic";
+ if(!["heuristic","rollout"].includes(planning))
+  throw Error("Unknown planning mode "+planning);
+ const rolloutRooms=number("--rollout-rooms",2,1,3);
+ const combatActions=number("--combat-actions",14,4,32);
+ const combatRoomDepth=number("--combat-room-depth",0,0,2);
  const workers=number("--workers",Math.min(6,Math.max(1,availableParallelism()-1)),1,16);
  const strategies=(raw["--strategies"]||"magic,treasure").split(",");
  if(new Set(strategies).size!==strategies.length||strategies.some(x=>
@@ -84,7 +91,8 @@ function parse(args){
   4*testRuns*testSeeds.length);
  if(plannedExpeditions>50000000)throw Error("Too many expeditions in one run");
  return {preset,trainRuns,validationRuns,testRuns,candidates,rounds,
-  finalists,budget,workers,strategies,trainSeeds,validationSeeds,
+  finalists,budget,planning,rolloutRooms,combatActions,combatRoomDepth,
+  workers,strategies,trainSeeds,validationSeeds,
   testSeeds,plannedExpeditions,lookaheadSeed:0x4a6f792d,
   out:resolve(raw["--out"]||"results/agent-"+preset),
   dryRun:opt.has("--dry-run")};
@@ -106,7 +114,9 @@ function execute(job){
   {researchPolicy:"planner",plannerRisk:"cautious"}:
   {researchPolicy:"agent",agentConfig:validateAgentConfig({
    knowledge:job.arm==="oracle-fixed"?"oracle":job.arm,
-   weights:job.weights,budget:job.budget,
+   weights:job.weights,budget:job.budget,planning:job.planning,
+   rolloutRooms:job.rolloutRooms,combatActions:job.combatActions,
+   combatRoomDepth:job.combatRoomDepth,
    samplingSeed:job.lookaheadSeed})};
  const rows=[],totals={n:0,wins:0,otherN:0,otherWins:0,
   unresolved:0,stalls:0};
@@ -179,6 +189,8 @@ async function parallel(jobs,workers){
 }
 const withJob=(stage,arm,id,weights,seeds,runs,c,full=false)=>({
  stage,arm,id,weights,seeds,runs,strategies:c.strategies,budget:c.budget,
+ planning:c.planning,rolloutRooms:c.rolloutRooms,
+ combatActions:c.combatActions,combatRoomDepth:c.combatRoomDepth,
  lookaheadSeed:c.lookaheadSeed,full});
 export function paired(a,b){
  const source=new Map(a.rows.map(r=>[r.batchSeed+"|"+r.strategy+"|"+r.party,r]));
@@ -210,6 +222,8 @@ function report(result){
  const pp=x=>(100*x).toFixed(2)+" pp";
  const out=["# Optimized fair-information agent versus deck Oracle","",
   "Git revision: "+result.commit,
+ "Decision evaluator: "+result.config.planning+
+ " | chance samples/action: "+result.config.budget,
   "All training, validation and held-out seed batches are disjoint.",
   "Future dice are never visible, and chance samples use an independent RNG.",
   "",
