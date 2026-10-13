@@ -89,7 +89,7 @@ function config(c){
   rolloutRooms:9,combatActions:600,combatRoomDepth:9,
   weights:{...AGENT_WEIGHTS},samplingSeed:0x4a6f792d});
 }
-function compactMetric(source,result){
+function compactMetric(source,result,party){
  const fields=["roomChoices","roomOptionAvailable","roomRollBands",
   "objectAcquisitions","objectRollBands","monsterVisits","monsterBehaviorBands",
   "itemOpportunities","itemUses","itemPassiveEffects"];
@@ -97,7 +97,7 @@ function compactMetric(source,result){
   const v=typeof val==="number"?val:val?.total??val?.triggers??0;
   if(v)source[field][key]=(source[field][key]||0)+v;
  }
- for(const hero of result.party||[])source.heroes[hero]=(source.heroes[hero]||0)+1;
+ for(const hero of party)source.heroes[hero]=(source.heroes[hero]||0)+1;
  if(result.vaultEntered||result.vaultState)source.vaults++;
  if(result.won)source.wins++;
  if(result.roundLimit||result.unresolved)throw Error("Incomplete original expedition");
@@ -157,7 +157,7 @@ function execute(job,c,policy){
   coverage:newCoverage(),exampleSeeds:[]};
  for(let i=job.from;i<job.from+job.count;i++){
   const r=runOne(job.card,i,c,policy);
-  s.tried++;compactMetric(s.coverage,r.a);compactMetric(s.coverage,r.b);
+  s.tried++;compactMetric(s.coverage,r.a,r.party);compactMetric(s.coverage,r.b,r.party);
   if(!r.encountered)s.notReached++;
   if(!r.eligible){s.unaffordable++;continue}
   s.eligible++;
