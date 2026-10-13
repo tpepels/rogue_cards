@@ -79,7 +79,9 @@ export const ROOM_EFFECTS=Object.freeze({
  "d-last-chest":C(["ROLL_ROOM_RISK_D6"],["COST:1","HEAL:d6"],[
  ["MONSTER_DRAW"],["DRAW:2"],["DRAW:3","HEAL_ALL:2"]]),
  "vault":C(["WARDEN_FIGHT"],["SEAL"],[
- ["MONSTER_ADV"],["NONE"],["NEXT_ADV"]])
+ ["MONSTER_ADV"],["NONE"],["NEXT_ADV"]]),
+ ...Object.fromEntries(ROOMS.filter(r=>r.v2.special).map(r=>[r.id,
+  C(["ROOM_SPECIAL:0"],["ROOM_SPECIAL:1"],r.v2.special.rollOps)]))
 });
 export const ROOM_OPERATIONS=new Set([
  "NONE","ROLL_ROOM","ROLL_ROOM_RISK","ROLL_ROOM_RISK_D6","ROLL_ROOM_COST_REROLL",
@@ -88,7 +90,7 @@ export const ROOM_OPERATIONS=new Set([
  "CURSED_RECHARGE","SUPPLY_BARTER","PUPPET_BRIBE","BOOKCASE_FIRE_OR_SCROLL","FUNGUS_BURN",
  "CHOIR_SILENCE","ALCHEMY_HEAL_OR_TWO","MAGIC_HEAL","CURSED_EXTRA_DRAW","CLEANSE_COST",
  "NEXT_ADV","NEXT_DIS","NEXT_WIT","SAVE_TRAP","SAVE_ATTACK_ADV","SAVE_D20_REROLL",
- "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT"
+ "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL"
 ]);
 export function verifyRoomCoverage(){
  const cards=[...ROOMS,VAULT],existing=new Set(cards.map(r=>r.id));
