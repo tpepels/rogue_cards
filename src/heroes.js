@@ -17,8 +17,20 @@ const data=[
  ["monk","Roadless Monk","delver",19,4,4,4,"needle","STILLNESS · after a Monster rolls behaviour",
   [["1–2","Lose 2 HP."],["3–4","Change behaviour 5 or 6 to 3–4."],["5","Change result to 1–2; heal 2 HP."],["6","Cancel this Monster response; heal 2 HP."]],"The empty hand has room for more."]
 ];
+// A Hero can accept a modest certain benefit or gamble on the printed d6.
+// The trigger is once per Room; the choice is made when it fires.
+const reliable=Object.freeze({
+ warrior:"PRESS: Lose 1 HP for +2 damage",
+ knight:"GUARD: Lose 1 HP to prevent 3 damage from this hit",
+ wizard:"CONTROL: Deal 2 MAGIC damage without a roll",
+ witch:"DISTIL: Heal 1 HP or remove POISONED",
+ rogue:"BRIBE: Discard 1 Item for ADV on the coming d20",
+ thief:"SWAP: Draw 1 Item, then discard 1 Item",
+ priest:"BLESS: Lose 1 HP to add +2 to the Hero d20",
+ monk:"ENDURE: Lose 2 HP to change behaviour 5–6 to 3–4"
+});
 export const HEROES=Object.freeze(data.map(([id,title,art,hp,atk,def,wit,starter,trigger,outcomes,flavor],i)=>({
  id,type:"hero",title,art,hp,atk,def,wit,flavor,copies:1,rule:trigger,
- v2:{kind:"HERO",number:i+1,starter,trigger:"ONCE PER ROOM: "+trigger+" — roll d6.",
+ v2:{kind:"HERO",number:i+1,starter,trigger:"ONCE PER ROOM: "+trigger+". CHOOSE "+reliable[id]+"; or RISK: roll d6.",
  roll:{die:"d6",outcomes:outcomes.map(([range,effect])=>({range,effect}))}}
 })));
