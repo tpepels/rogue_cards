@@ -8,7 +8,7 @@ import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
-import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption}
+import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption,engraveElbereth}
  from "./engine/combat.js";
 import {verifyPrintedData} from "./playtest.js";
 import {seal,sealCost} from "./engine/vault.js";
@@ -432,7 +432,11 @@ function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
       throw Error("Rollout tried illegal combat Item option");
     }else if(forced.action==="attack")playerAttack(s,hero);
     else throw Error("Bad rollout combat choice "+forced.action);
-   }else if(!useItemsInCombat(s,hero))playerAttack(s,hero);
+   }else if(s.strategy==="survival"&&s.monster?.stage!=="FINAL"&&
+      s.monster?.id!=="sentinel"&&s.elberethAttempts<1&&
+      hero.hp<=Math.floor(hero.card.hp*.22)&&s.monsterHP>6){
+     engraveElbereth(s,hero,{mode:"ward"});
+    }else if(!useItemsInCombat(s,hero))playerAttack(s,hero);
    actions++;
    if(s.monsterHP>threshold&&s.alive())monsterRespond(s,hero);
    if(!s.alive()||s.monsterHP<=threshold)break;
