@@ -5,6 +5,7 @@
 import {HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
+import {fateChoiceLegal} from "./room-fates.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
@@ -87,7 +88,8 @@ const chooseRoom=s=>{
  const choiceOK=i=>affordable(choices[i])&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
     s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
- const ok0=choiceOK(0),ok1=choiceOK(1);
+ const ok0=choiceOK(0)&&(!room.v2.fate||fateChoiceLegal(s,room.id,0));
+ const ok1=choiceOK(1)&&(!room.v2.fate||fateChoiceLegal(s,room.id,1));
  for(const i of [0,1])if(i===0?ok0:ok1){
   const key=room.id+":"+i;
   s.metrics.roomOptionAvailable[key]=(s.metrics.roomOptionAvailable[key]||0)+1;
@@ -102,8 +104,13 @@ const chooseRoom=s=>{
   if(ok0&&ok1)return s.forceRoomChoice.choice;
  }
  // Longer-term Room choices are assessed by policy, not short-horizon Room utilities.
- if(room.v2.fate)return s.roomPolicy==="uniform"?(ok0&&ok1?s.die(2)-1:ok0?0:1):
-  s.roomPolicy==="second-when-legal"?1:s.strategy==="treasure"?1:0;
+ if(room.v2.fate){
+  if(!ok0&&!ok1)return null;
+  if(s.roomPolicy==="uniform")return ok0&&ok1?s.die(2)-1:ok0?0:1;
+  if(s.roomPolicy==="second-when-legal")return ok1?1:0;
+  const desired=s.strategy==="treasure"?1:0;
+  return desired===0?(ok0?0:1):(ok1?1:0);
+ }
  if(!ok0&&!ok1)return null;
  if(plannerUses(s,"room")){
   const result=s.researchPolicy==="agent"?agentPlanRoom(s,[ok0,ok1]):
