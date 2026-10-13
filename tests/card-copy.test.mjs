@@ -58,3 +58,34 @@ test("dice, statistics and conditions are bold but retain exact safe printed wor
   "&lt;b&gt;1d6 &amp; WIT&lt;/b&gt;");
  assert.doesNotMatch(ruleMarkup("<img src=x onerror=alert(1)>"),/<img/);
 });
+
+
+test("gameplay cards consistently identify triggers and what a roll changes",()=>{
+ const heroes=CATALOGUE.filter(c=>c.type==="hero");
+ const monsters=CATALOGUE.filter(c=>c.type==="monster");
+ const rooms=CATALOGUE.filter(c=>c.type==="room");
+ assert.equal(heroes.length,8);
+ for(const h of heroes){
+  assert.match(h.v2.trigger,/^ONCE PER ROOM, /,h.id);
+  assert.match(h.v2.trigger,/; or roll d6 for a risky result\.$/,h.id);
+ }
+ for(const m of monsters){
+  assert.equal(m.behavior.length,4,m.id);
+  assert.match(m.v2.parley,/^[A-Z][A-Z ]+: /,m.id+" missing PARLEY decision");
+  assert.match(m.v2.remains,/^(EAT: Roll d6\.|Cannot EAT)/,m.id);
+  assert.doesNotMatch(m.behavior.join(" "),/ATTACK \+\d+\b/,m.id+" ambiguous attack bonus");
+  assert.doesNotMatch(m.behavior.join(" "),/Hero attack DIS|Hero POISONED/,m.id);
+ }
+ for(const room of rooms){
+  assert.equal(room.v2.choices.length,2,room.id);
+  for(const choice of room.v2.choices){
+   assert.match(choice.label,/^[A-Z][A-Z ]+$/,room.id+" missing printed action");
+   assert.ok(choice.effect.length>8,room.id+" omits the consequence");
+  }
+ }
+ // This template is a persistent editorial guard, not a mechanical rule change.
+ const all=CATALOGUE.flatMap(c=>printedLines(c));
+ assert.ok(all.some(line=>/REROLL/.test(line)));
+ assert.ok(all.some(line=>/before|after|when|upon entering|at the Vault/i.test(line)));
+ assert.equal(all.some(line=>/EAT d6:|ATTACK \+2\.|Hero attack DIS\./.test(line)),false);
+});
