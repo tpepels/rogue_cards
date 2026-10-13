@@ -116,17 +116,21 @@ export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
     s.elberethAttempts>=2)return {legal:false};
  s.setActor(h);
  const attempt=++s.elberethAttempts;
+ s.metrics.elberethAttempts=(s.metrics.elberethAttempts||0)+1;
  const chalk=h.inventory.find(x=>x.id==="chalk"&&!h.used.has(x));
  if(chalk&&face===null)h.used.add(chalk);
  const roll=face??rollD20(s,{adv:!!chalk,dis:attempt===2});
  const success=roll===20||roll!==1&&roll+h.card.wit>=15;
  if(success){
+  s.metrics.elberethSuccesses=(s.metrics.elberethSuccesses||0)+1;
   if(mode==="flee"&&s.discardable()){
    s.discard();s.monsterHP=0;s.banished=true;s.metrics.banishments++;
+   s.metrics.elberethFlees=(s.metrics.elberethFlees||0)+1;
    return {legal:true,success:true,fled:true};
   }
   s.monsterSkip++;return {legal:true,success:true,fled:false};
  }
+ s.metrics.elberethFailures=(s.metrics.elberethFailures||0)+1;
  // A failed engraving provokes an immediate response; do not resolve that
  // same turn's normal Monster response again. A second failure draws help.
  if(attempt===2&&s.room?.stage!=="FINAL")s.drawMonster();
