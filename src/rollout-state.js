@@ -171,6 +171,10 @@ export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,
  const prepared=sampledDecks?null:
   blueprint||prepareRolloutDecks(s,knowledge);
  const fork=cloneRolloutState(s,{mode:cloneMode});
+ // The forced choice belongs to the real experiment, not the game rules.
+ // Allowing future hypothetical planning to see it would contaminate all
+ // earlier decisions and violate the matched pre-choice state contract.
+ fork.forceRoomChoice=null;
  const rng=randomSource(diceSeed>>>0);
  fork.rng=rng;
  if(knowledge==="fair"){
