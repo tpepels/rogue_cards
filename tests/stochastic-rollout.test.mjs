@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/expedition-runtime.js";
-import {HEROES,MONSTERS,ROOMS} from "../src/tabletop-data.js";
+import {HEROES,MONSTERS,ROOMS,WARDEN,VAULT,OBJECTS} from "../src/tabletop-data.js";
 import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState,
  sampleRolloutDecks} from "../src/rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
@@ -337,6 +337,39 @@ test("full-effect rollout matches across repeated decisions at fixed seeds",()=>
   assert.ok(["attack","item"].includes(plan.action));
   assert.ok(c.plannerDecisions);
  }
+});
+test("combat forks honor the new smuggled-Amulet ending after Warden Phase I",()=>{
+ const s=roomState("oracle",0);
+ s.beginRoom(VAULT);
+ s.monster=WARDEN;s.monsterHP=10;
+ s.vaultChoice="smuggle-if-available";
+ s.vaultModifiers.smuggleAvailable=true;
+ const magic=OBJECTS.find(o=>o.v2.tags?.includes("MAGIC")&&
+  !s.heroes.some(h=>h.inventory.includes(o)));
+ assert.ok(magic);
+ s.add(s.heroes[0],magic);
+ assert.equal(s.discardable(2),true);
+ assert.equal(s.discardable(1,"MAGIC"),true);
+ const result=rolloutCombatContinuation(s,0,{action:"attack"},{
+  maxHeroActions:14,roomDepth:0});
+ assert.equal(result.complete,true);
+ assert.equal(result.won,true);
+ assert.equal(s.endingKind,"smuggled_amulet");
+ assert.equal(s.metrics.won,true);
+ assert.equal(s.metrics.monsterVisits["warden-fury"]||0,0);
+});
+test("combat forks can exit empty-handed without incorrectly counting victory",()=>{
+ const s=roomState("oracle",0);
+ s.beginRoom(VAULT);
+ s.monster=WARDEN;s.monsterHP=10;
+ s.vaultChoice="escape-if-available";
+ s.vaultModifiers.smuggleAvailable=true;
+ const result=rolloutCombatContinuation(s,0,{action:"attack"},{
+  maxHeroActions:14,roomDepth:0});
+ assert.equal(result.complete,true);
+ assert.equal(result.won,false);
+ assert.equal(s.metrics.escaped,true);
+ assert.equal(s.endingKind,"escaped_empty_handed");
 });
 test("optional terminal horizon actually plays the Vault or an ordinary party wipe",()=>{
  const original=roomState("oracle");
