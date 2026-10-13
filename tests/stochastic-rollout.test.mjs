@@ -33,6 +33,10 @@ const roomState=(knowledge,budget=4)=>{
 const fightState=(knowledge,budget=4)=>{
  const s=roomState(knowledge,budget),m=MONSTERS.find(x=>x.id==="rat");
  s.monster=m;s.monsterHP=m.hp;s.metrics.battles++;
+ // Supply an actually legal combat Item for comparing attack vs Item,
+ // rather than relying on the random starting draw.
+ const idx=s.deck.findIndex(x=>x.id==="scroll-flame");
+ if(idx>=0)s.add(s.heroes[0],s.deck.splice(idx,1)[0]);
  return s;
 };
 test("state fork preserves alias identity, ownership, equipment and real random stream",()=>{
@@ -138,7 +142,7 @@ test("rollout validation rejects invalid horizons and supports 0-budget fallback
  const state=roomState("fair",0);
  const plan=agentPlanRoom(state,[true,true]);
  assert.equal(typeof plan.choice,"number");
- const fast=agentPlanCombat(fightState("fair",0),
-  fightState("fair",0).heroes[0]);
+ const fight=fightState("fair",0);
+ const fast=agentPlanCombat(fight,fight.heroes[0]);
  assert.equal(typeof fast.action,"string");
 });
