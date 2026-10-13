@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,readdirSync} from "node:fs";
+import {spawnSync} from "node:child_process";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createGame,observeGame,enterNextRoom,legalRoomChoices,
@@ -112,4 +113,21 @@ test("Full research simulation still executes complete expeditions after engine 
  assert.deepEqual(a,b);
  assert.equal(a.unresolved,0);
  assert.equal(a.roundLimit,false);
+});
+
+test("shared-scenario speed benchmark checks output equivalence before timing",()=>{
+ const p=spawnSync(process.execPath,[
+  "scripts/benchmark-rollout-scenarios.mjs",
+  "--samples","20","--choices","3"
+ ],{encoding:"utf8",maxBuffer:4*1024*1024});
+ assert.equal(p.status,0,p.stderr+"\n"+p.stdout.slice(0,3000));
+ const json=JSON.parse(p.stdout);
+ assert.equal(json.checksumsMatch,true);
+ assert.equal(json.samples,20);
+ assert.equal(json.choices,3);
+ assert.equal(json.measurements.length,2);
+ for(const metric of json.measurements){
+  assert.ok(metric.medianMs>0);
+  assert.equal(metric.runs.length,5);
+ }
 });
