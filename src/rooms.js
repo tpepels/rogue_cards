@@ -33,7 +33,7 @@ const upper=make("UPPER",[
   [["JUMP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose 1 HP; peek at the next Room."]],"JUMP",
   [["1–2","TRAP: Fall to MIDDLE; lose d6 HP and face a MIDDLE Monster."],["3–4","TRAP: Fall to MIDDLE; lose 2 HP."],["5–6","Draw 2 Items, then descend to MIDDLE."]],["Knotted Rope"],"Stairs should be trustworthy."],
  ["u-fountain","Laughing Fountain","water","MYSTERY","Its reflection smiles a little late.",
-  [["DRINK","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. If a reroll shows 1, draw an UPPER Monster."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if the discarded Item has ALCHEMY."]],"DRINK",
+  [["DRINK","Roll d6. REROLL for 1, then 2, then 3 HP; the new result stands. Rerolled 1: draw an UPPER Monster."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if the discarded Item has ALCHEMY."]],"DRINK",
   [["1–2","The water laughs. You lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP and draw 1 Item."]],["Bandages"],"Do not smile back."],
  ["u-merchant","Merchant in a Sack","shop","ENCOUNTER","A sack demands to see your inventory.",
   [["TRADE","Roll d6."],["PAY","Discard 2 Items; draw 3 Items."]],"TRADE",
@@ -124,7 +124,7 @@ const deep=make("DEEP",[
   [["WEAR","Roll d6."],["OFFER","Cleanse and discard 1 CURSED Item; draw 2 Items and recharge a Wand."]],"WEAR",
   [["1–2","Lose d6 HP; become POISONED."],["3–4","Remove POISONED."],["5","Heal d6 HP; remove POISONED."],["6","Keep this Room: +2 DEF through the next Room. At the Vault, with the Sleeping Crown, you may UNTHRONE."]],["cursed Items"],"It does not fit anyone."],
  ["d-last-chest","The Last Chest","door","TREASURE","A box contains exactly what you fear.",
-  [["OPEN","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. If a reroll shows 1, draw a DEEP Monster. Rusty Key chooses 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
+  [["OPEN","Roll d6. REROLL for 1, then 2, then 3 HP; the new result stands. Rerolled 1: draw a DEEP Monster. Rusty Key: choose 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
   [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
