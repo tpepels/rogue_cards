@@ -31,7 +31,8 @@ function scenarioSeed(s,kind,n){
  return {diceSeed:mix(root^0xc6e4ab31),deckSeed:mix(root^0x517cc1b7)};
 }
 function value(s,result,origin){
- if(result.complete&&result.won)return 1;
+ // Do not assign heuristic credit to a completed loss or empty-handed exit.
+ if(result.complete)return result.won?1:0;
  if(!s.alive()||s.metrics.roundLimit||s.metrics.unresolved)return 0;
  const max=s.heroes.reduce((n,h)=>n+h.card.hp,0);
  const hp=s.heroes.reduce((n,h)=>n+Math.max(0,h.hp),0);
@@ -78,6 +79,25 @@ function evaluateSampledAlternatives(s,choices,seeds,blueprint,assess){
   assess(fork,choices[i],i);
  }
 }
+function noteScenario(source,fork,result,kind,nestedBefore){
+ const audit=source.metrics.rolloutAudit??={
+  roomBranches:0,combatBranches:0,terminalBranches:0,
+  nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0
+ };
+ audit[kind==="room"?"roomBranches":"combatBranches"]++;
+ if(result.complete){
+  audit.terminalBranches++;
+  audit.terminalWins+=Number(!!result.won);
+ }else{
+  audit.nonterminalBranches++;
+  if(source.agentConfig.strictTerminal)
+   throw Error("Nonterminal "+kind+" branch in strict terminal rollout: "+
+    (source.room?.id||"unknown")+"/"+(source.monster?.id||"none"));
+ }
+ audit.futureReplannedBranches+=Math.max(0,
+  (fork.metrics.rolloutAudit?.roomBranches||0)+
+  (fork.metrics.rolloutAudit?.combatBranches||0)-nestedBefore);
+}
 function summarize(values){
  const n=values.length,mean=values.reduce((sum,v)=>sum+v,0)/n;
  const variance=n>1?values.reduce((sum,v)=>sum+(v-mean)**2,0)/(n-1):0;
@@ -96,8 +116,11 @@ export function pairedRoomRollouts(s,legal){
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"room",k);
   evaluateSampledAlternatives(s,choices,seeds,blueprint,(fork,choice,j)=>{
+   const before=(fork.metrics.rolloutAudit?.roomBranches||0)+
+    (fork.metrics.rolloutAudit?.combatBranches||0);
    const result=rolloutRoomContinuation(fork,choice,{
     depth:s.agentConfig.rolloutRooms});
+   noteScenario(s,fork,result,"room",before);
    values[j].push(value(fork,result,origin));
   });
  }
@@ -125,9 +148,12 @@ export function pairedCombatRollouts(s,h){
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"combat",k);
   evaluateSampledAlternatives(s,actions,seeds,blueprint,(fork,action,i)=>{
+   const before=(fork.metrics.rolloutAudit?.roomBranches||0)+
+    (fork.metrics.rolloutAudit?.combatBranches||0);
    const result=rolloutCombatContinuation(fork,index,action,{
     maxHeroActions:s.agentConfig.combatActions,
     roomDepth:s.agentConfig.combatRoomDepth});
+   noteScenario(s,fork,result,"combat",before);
    values[i].push(value(fork,result,origin));
   });
  }
