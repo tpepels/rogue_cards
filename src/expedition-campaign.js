@@ -10,6 +10,10 @@ import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
 const isAlive=s=>s.alive();
 export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive","planner"]);
+// Independent opt-in switches. An empty set must execute exactly the existing
+// scripted policy; the all-enabled set is the existing cautious/balanced/bold planner.
+export const PLANNER_FEATURES=Object.freeze(["room","combat","parley","seal"]);
+const plannerUses=(s,feature)=>s.researchPolicy==="planner"&&s.plannerFeatures.has(feature);
 const researchUses=(s,feature)=>s.researchPolicy===feature||s.researchPolicy==="adaptive";
 function recordPlan(s,kind,detail){
  const d=s.plannerDecisions; if(!d)return;
@@ -79,7 +83,7 @@ const chooseRoom=s=>{
   if(ok0&&ok1)return s.forceRoomChoice.choice;
  }
  if(!ok0&&!ok1)return null;
- if(s.researchPolicy==="planner"){
+ if(plannerUses(s,"room")){
   const result=planRoom(s,[ok0,ok1]);
   recordPlan(s,"room",result);
   return result.choice;
@@ -216,7 +220,7 @@ function attemptParley(s,m){
  const defaultParley=["negotiation","survival","seal"].includes(s.strategy);
  const heuristicParley=!defaultParley&&["magic","treasure"].includes(s.strategy)&&
   researchUses(s,"parley");
- const planner=s.researchPolicy==="planner";
+ const planner=plannerUses(s,"parley");
  if(m.stage==="FINAL"||(!defaultParley&&!s.researchAllowParley&&!heuristicParley&&!planner))
   return false;
  if(planner){
@@ -381,7 +385,7 @@ function useItemsInCombat(s,h){
    if(x&&!h.used.has(x)){s.activate(h,x);return true;}
   }
  }
- if(s.researchPolicy==="planner"){
+ if(plannerUses(s,"combat")){
   const decision=planCombat(s,h);
   recordPlan(s,"combat",decision);
   if(decision.action==="item"){
@@ -610,10 +614,17 @@ export function seal(s){
 export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
- researchAllowParley=false,researchPolicy="none",plannerRisk="balanced"}={}){
+ researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
+ plannerFeatures=null}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(!PLANNER_RISKS.includes(plannerRisk))throw Error("Unknown planner risk "+plannerRisk);
+ if(plannerFeatures!==null&&(!Array.isArray(plannerFeatures)||
+    new Set(plannerFeatures).size!==plannerFeatures.length||
+    plannerFeatures.some(f=>!PLANNER_FEATURES.includes(f))))
+  throw Error("Invalid planner features; choose a unique subset of "+PLANNER_FEATURES.join(", "));
+ if(plannerFeatures!==null&&researchPolicy!=="planner")
+  throw Error("Planner features require researchPolicy=planner");
  if(forceRoomChoice!==null&&
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
    ![0,1].includes(forceRoomChoice.choice)))
@@ -623,6 +634,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
  s.researchPolicy=researchPolicy;
  s.plannerRisk=plannerRisk;
+ s.plannerFeatures=new Set(plannerFeatures??PLANNER_FEATURES);
  s.plannerSeed=seed;
  s.plannerDecisions=researchPolicy==="planner"?{}:null;
  s.plannerTrace=[];
@@ -667,7 +679,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  const sealPreferred=tacticalSeal&&sealAffordable&&
   (bestWit(s).card.wit>=3||partyHpFraction(s)<.75);
  if(sealPreferred)s.researchDecisions.sealSelected++;
- const plannerSeal=researchPolicy==="planner"&&vaultChoice==="policy"?
+ const plannerSeal=plannerUses(s,"seal")&&vaultChoice==="policy"?
   planSeal(s):null;
  if(plannerSeal)recordPlan(s,"seal",plannerSeal);
  const preferSeal=vaultChoice==="seal-if-available"||plannerSeal?.attempt||sealPreferred||
@@ -698,6 +710,7 @@ function report(s){
   researchDecisions:s.researchPolicy==="none"?null:s.researchDecisions,
   plannerDecisions:s.plannerDecisions,plannerTrace:s.plannerTrace,
   plannerSeed:s.researchPolicy==="planner"?s.plannerSeed:null,
+  plannerFeatures:s.researchPolicy==="planner"?[...s.plannerFeatures].sort():null,
   objectsEverOwned:[...s.objectsEverOwned].sort(),
   operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
   objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,
