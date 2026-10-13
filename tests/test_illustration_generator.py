@@ -77,10 +77,10 @@ class IllustrationGeneratorTests(unittest.TestCase):
 
     def test_replace_borrowed_art_mapping_without_affecting_others(self):
         source = (
-            'export const CARD_ART=Object.freeze({\\n'
-            ' "room:original":"025_fungal_garden.png",\\n'
-            ' "room:new":"025_fungal_garden.png"\\n'
-            '});\\n'
+            'export const CARD_ART=Object.freeze({\n'
+            ' "room:original":"025_fungal_garden.png",\n'
+            ' "room:new":"025_fungal_garden.png"\n'
+            '});\n'
         )
         changed = module.add_mapping(source, "room:new",
                                      "112_mossy_corridor.png",
