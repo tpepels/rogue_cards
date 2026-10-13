@@ -169,9 +169,9 @@ test("full 16-configuration ablation CLI records paired contrasts and behaviour"
   assert.equal(x.groups.all.effects.alone[feature].n,24);
   assert.equal(x.groups.all.effects.removed[feature].n,24);
   assert.equal(x.groups.all.effects.average[feature].n,24);
-  assert.equal(x.groups.all.effects.alone[feature].estimate,
+  assert.ok(Math.abs(x.groups.all.effects.alone[feature].estimate-(
    x.groups.all.configurations[1<<PLANNER_FEATURES.indexOf(feature)].winRate-
-   x.groups.all.configurations[0].winRate);
+   x.groups.all.configurations[0].winRate))<1e-12);
  }
  assert.equal(Object.keys(x.groups.all.effects.pairwise).length,6);
  const tmp=mkdtempSync(join(tmpdir(),"rogue-ablation-"));
