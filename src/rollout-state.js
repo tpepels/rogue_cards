@@ -8,7 +8,7 @@
  */
 import {ExpeditionState} from "./expedition-runtime.js";
 import {randomSource} from "./playtest.js";
-import {ROOMS,MONSTERS,OBJECTS} from "./tabletop-data.js";
+import {ROOMS,MONSTERS,OBJECTS,HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
 const copies=cards=>cards.flatMap(card=>
@@ -21,6 +21,57 @@ const MONSTER_COPIES=Object.fromEntries(STAGES.map(stage=>[
 const STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
  stage,ROOMS.filter(r=>r.stage===stage)]));
 const ROOM_BY_ID=new Map(ROOMS.map(r=>[r.id,r]));
+// Only *canonical printed cards* may be shared between rollout forks.
+// They are fixed rules data, never mutable Hero state / equipment slots.
+const PRINTED_CARDS=new WeakSet([
+ ...OBJECTS,...ROOMS,...MONSTERS,...HEROES,VAULT,WARDEN,WARDEN_FURY
+]);
+/**
+ * Copy only mutable expedition data. Unlike structuredClone, this does not
+ * duplicate the large, read-only print/card definitions in every deck,
+ * inventory, starter, equipped slot, Monster queue and Room reference.
+ *
+ * Preserve aliases through one WeakMap: actor must point at the copied Hero,
+ * and an equipped card must be the exact same canonical card as the one in
+ * that copied Hero's inventory. Map/Set contents (including spent cards) must
+ * likewise remain identity-consistent.
+ */
+function cloneMutable(value,seen){
+ if(value===null||typeof value!=="object")return value;
+ if(PRINTED_CARDS.has(value))return value;
+ const prior=seen.get(value);if(prior)return prior;
+ let out;
+ if(Array.isArray(value)){
+  out=new Array(value.length);seen.set(value,out);
+  for(let i=0;i<value.length;i++)out[i]=cloneMutable(value[i],seen);
+  return out;
+ }
+ if(value instanceof Set){
+  out=new Set();seen.set(value,out);
+  for(const x of value)out.add(cloneMutable(x,seen));
+  return out;
+ }
+ if(value instanceof Map){
+  out=new Map();seen.set(value,out);
+  for(const [k,v] of value)out.set(cloneMutable(k,seen),cloneMutable(v,seen));
+  return out;
+ }
+ const proto=Object.getPrototypeOf(value);
+ if(proto!==Object.prototype&&proto!==null)
+  throw Error("Unsupported mutable rollout type "+
+   (value.constructor?.name||"unknown"));
+ out=Object.create(proto);seen.set(value,out);
+ for(const key of Object.keys(value))out[key]=cloneMutable(value[key],seen);
+ return out;
+}
+export function cloneRolloutState(s,{mode="card-aware"}={}){
+ if(!["card-aware","structured"].includes(mode))
+  throw Error("Invalid rollout clone mode "+mode);
+ const payload=Object.fromEntries(Object.entries(s).filter(([k])=>k!=="rng"));
+ const copied=mode==="structured"?structuredClone(payload):
+  cloneMutable(payload,new WeakMap());
+ return Object.assign(Object.create(ExpeditionState.prototype),copied);
+}
 const drawWithoutReplacement=(population,count,rng)=>{
  if(count===0)return [];
  if(population.length<count)throw Error(
@@ -70,16 +121,13 @@ export function prepareRolloutDecks(s,knowledge){
  }
  return {source:s,knowledge,items,rooms,monsters};
 }
-export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,blueprint=null}){
+export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,
+ blueprint=null,cloneMode="card-aware"}){
  if(blueprint&&(blueprint.source!==s||blueprint.knowledge!==knowledge))
   throw Error("Rollout deck blueprint does not match this state/knowledge");
  const prepared=blueprint||prepareRolloutDecks(s,knowledge);
  if(!["fair","oracle"].includes(knowledge))throw Error("Bad rollout knowledge");
- const payload=Object.fromEntries(Object.entries(s).filter(([k])=>k!=="rng"));
- // The single structuredClone call is important: equipped items and used sets
- // must retain identity with the same cloned inventory card objects.
- const fork=Object.assign(Object.create(ExpeditionState.prototype),
-  structuredClone(payload));
+ const fork=cloneRolloutState(s,{mode:cloneMode});
  const rng=randomSource(diceSeed>>>0);
  fork.rng=rng;
  const deckRng=randomSource(deckSeed>>>0);
