@@ -9,7 +9,8 @@
  * actions, then optional next Room. Truncated states receive a transparent
  * nonterminal heuristic; this is not exact full-expedition expectimax.
  */
-import {forkExpeditionState,prepareRolloutDecks} from "./rollout-state.js";
+import {forkExpeditionState,cloneRolloutState,prepareRolloutDecks} from "./rollout-state.js";
+import {randomSource} from "./engine/random.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "./expedition-campaign.js";
 import {planRoom,planCombat} from "./decision-planner.js";
@@ -61,6 +62,20 @@ function snapshot(s){
  return {cleared:s.metrics.cleared,
   inventory:s.heroes.reduce((n,h)=>n+h.inventory.length,0)};
 }
+/** Share the SAME sampled decks across all legal alternatives. The base
+ * snapshot stays untouched until the final evaluation: each other action
+ * gets an isolated card-aware clone with the same *hypothetical* dice seed.
+ * This removes repeated deck sampling per action without peeking at real RNG.
+ */
+function evaluateSampledAlternatives(s,choices,seeds,blueprint,assess){
+ const base=forkExpeditionState(s,{...seeds,
+  knowledge:s.agentConfig.knowledge,blueprint});
+ for(let i=choices.length-1;i>=0;i--){
+  const fork=i===0?base:cloneRolloutState(base);
+  if(i!==0)fork.rng=randomSource(seeds.diceSeed);
+  assess(fork,choices[i],i);
+ }
+}
 function summarize(values){
  const n=values.length,mean=values.reduce((sum,v)=>sum+v,0)/n;
  const variance=n>1?values.reduce((sum,v)=>sum+(v-mean)**2,0)/(n-1):0;
@@ -78,13 +93,11 @@ export function pairedRoomRollouts(s,legal){
  s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"room",k);
-  for(const [j,choice] of choices.entries()){
-   const fork=forkExpeditionState(s,{...seeds,
-    knowledge:s.agentConfig.knowledge,blueprint});
+  evaluateSampledAlternatives(s,choices,seeds,blueprint,(fork,choice,j)=>{
    const result=rolloutRoomContinuation(fork,choice,{
     depth:s.agentConfig.rolloutRooms});
    values[j].push(value(fork,result,origin));
-  }
+  });
  }
  const means=values.map(v=>summarize(v).mean);
  const scores=[legal[0]?means[choices.indexOf(0)]:-Infinity,
@@ -109,14 +122,12 @@ export function pairedCombatRollouts(s,h){
  s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"combat",k);
-  for(let i=0;i<actions.length;i++){
-   const fork=forkExpeditionState(s,{...seeds,
-    knowledge:s.agentConfig.knowledge,blueprint});
-   const result=rolloutCombatContinuation(fork,index,actions[i],{
+  evaluateSampledAlternatives(s,actions,seeds,blueprint,(fork,action,i)=>{
+   const result=rolloutCombatContinuation(fork,index,action,{
     maxHeroActions:s.agentConfig.combatActions,
     roomDepth:s.agentConfig.combatRoomDepth});
    values[i].push(value(fork,result,origin));
-  }
+  });
  }
  const means=values.map(v=>summarize(v).mean);
  const prior=planCombat(s,h);
