@@ -13,7 +13,7 @@ const rows=[
   [["PLANT","Tuck 1 Item beneath this Room. Keep it. Entering DEEP, recover it and draw 2 Items."],
    ["EAT","Heal 3 HP. Keep this Room. Entering DEEP, lose 2 HP."]]],
  ["m-ferryman-oath","MIDDLE","The Ferryman's Oath","water","ENCOUNTER","The ferryman accepts tomorrow's fare.",
-  [["PAY","Tuck 1 Item beneath this Room; keep it. At Vault: recover and heal 3 HP, or sacrifice to unlock SMUGGLE after Phase I."],
+  [["PAY","Tuck 1 Item beneath this Room. Keep it. At Vault: recover and heal 3 HP, or sacrifice to unlock SMUGGLE after Phase I."],
    ["CHEAT","Draw 2 Items. Keep this Room. At the Vault, lose 3 HP."]]],
  ["m-choir-nails","MIDDLE","Choir of Nails","bones","MYSTERY","Nails sing in the stone.",
   [["LISTEN","Keep this Room. The first DEEP Monster's first attack has DIS."],
