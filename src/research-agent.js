@@ -49,6 +49,17 @@ export function validateAgentConfig(config){
  const rolloutRooms=config.rolloutRooms??2;
  const combatActions=config.combatActions??14;
  const combatRoomDepth=config.combatRoomDepth??0;
+ // Opt-in one extra ply of branching at each later decision.
+ // Each nested fork drops to budget zero, preventing unbounded recursion.
+ const replanBudget=config.replanBudget??0;
+ const strictTerminal=config.strictTerminal??false;
+ if(!Number.isSafeInteger(replanBudget)||replanBudget<0||replanBudget>8)
+  throw Error("replanBudget must be 0..8");
+ if(typeof strictTerminal!=="boolean")
+  throw Error("strictTerminal must be boolean");
+ if(strictTerminal&&(planning!=="rollout"||rolloutRooms!==9||
+  combatActions!==600||combatRoomDepth!==9))
+  throw Error("strictTerminal requires rollout rooms=9, combat actions=600, combat room depth=9");
  if(!Number.isInteger(rolloutRooms)||rolloutRooms<1||rolloutRooms>9)
   throw Error("rolloutRooms must be 1..9");
  if(!Number.isInteger(combatActions)||combatActions<4||combatActions>600)
@@ -65,7 +76,7 @@ export function validateAgentConfig(config){
   if(value<lo||value>hi)throw Error("Agent weight "+name+" outside ["+lo+", "+hi+"]");
  }
  return Object.freeze({knowledge,budget,samplingSeed,planning,
-  rolloutRooms,combatActions,combatRoomDepth,
+  rolloutRooms,combatActions,combatRoomDepth,replanBudget,strictTerminal,
   weights:Object.freeze(weights)});
 }
 const idOf=card=>card.id;
