@@ -241,6 +241,17 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Item opportunity and strength experiments
+
+The [Item timing audit and 72,000-expedition controlled study](docs/item-opportunity-study.md)
+records each Object's draws, legal trigger opportunities, uses, observed outcomes
+and passive applications separately. It compares the original scripted policy,
+contextual Item preservation, zero reservation penalties and forced legal use.
+A [separate 165,600-expedition targeted study](.github/workflows/item-targeted-study.yml)
+forces **one card at a time** while leaving other decisions unchanged,
+so rarely selected Items can be investigated individually before changing
+printed cards. These remain simulated agents, not measured human win rates.
+
 ## Planner factorial ablation results
 
 The [345,600-expedition Room / Combat / PARLEY / SEAL ablation](docs/planner-ablation-findings.md) measures the four cautious-planner features separately, including leave-one-out effects and all pairwise interactions. The findings apply only to scripted simulations; no physical-game rules or cards were altered.
