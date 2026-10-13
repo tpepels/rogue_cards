@@ -8,7 +8,7 @@ const rows=[
   "mushroom",
   "Mushrooms mimic familiar faces.",
   "PRESERVE",
-  "Keep this Room. Before another Room, discard it to skip that Room and heal 3 HP; or discard FIRE too to draw 2 Items and cure POISONED.",
+  "Keep this Room. Before another Room, discard to skip it: heal 3 HP; or discard FIRE too to draw 2 Items and cure POISONED.",
   "PICK",
   "Roll d6 to harvest now.",
   "HARVEST",
