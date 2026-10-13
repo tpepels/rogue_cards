@@ -60,8 +60,6 @@
      <label>TOP (MM) <input id="position-y" type="number" min="0" max="130" step=".5"></label>
      <label>WIDTH (MM) <input id="position-w" type="number" min="10" max="90" step=".5"></label>
      <label>MIN. HEIGHT (MM) <input id="position-h" type="number" min="0" max="130" step=".5"></label>
-     <label>ROTATION (°) <input id="position-angle" type="number" min="-45" max="45" step=".5"></label>
-     <label>OVERLAP LAYER <input id="position-z" type="number" min="0" max="80" step="1"></label>
      <label>ROTATION (°) <input id="position-rotation" type="number" min="-180" max="180" step=".5"></label>
      <label>LAYER (Z-INDEX) <input id="position-zIndex" type="number" min="1" max="99" step="1"></label>
     </div>
@@ -73,7 +71,6 @@
      <button id="layer-ahead" type="button">BRING TO FRONT</button>
     </div>
     <p class="le-subtle">Higher layers sit in front of lower ones. Rotation and stacking are saved with each piece in the same JSON export.</p>
-    <div class="le-row"><button id="layer-back" type="button">SEND BACK</button><button id="layer-front" type="button">BRING FRONT</button></div>
     <div class="le-row"><button id="reset-rotation" type="button">STRAIGHTEN</button></div>
     <div class="le-row"><button id="reset-piece" type="button">RESET SELECTED</button><button id="reset-card" type="button">RESET THIS CARD</button></div>
    </div>
