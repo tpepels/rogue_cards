@@ -545,15 +545,15 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
  if(!s.alive()||!survived)return {complete:true,state:s,won:false};
  if(warden){
   if(phaseOne){
-   s.monster=WARDEN_FURY;
-   s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
-   s.metrics.monsterVisits["warden-fury"]=
-    (s.metrics.monsterVisits["warden-fury"]||0)+1;
-   if(!fight(s,{warden:true}))
-    return {complete:true,state:s,won:false};
+   // Exactly the same post-Phase-I alternatives as a normal expedition.
+   // In particular, smuggling, bargains and escape can end the run BEFORE
+   // Warden Fury; do not force a generic Phase II fight in rollouts.
+   finishWardenAfterPhaseOne(s,s.vaultChoice??"policy");
+  }else{
+   s.metrics.won=true;
+   s.endingKind="amulet_taken";
   }
-  s.metrics.won=true;
-  return {complete:true,state:s,won:true};
+  return {complete:true,state:s,won:Boolean(s.metrics.won)};
  }
  if(!finishMonsters(s))return {complete:true,state:s,won:false};
  finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
@@ -667,6 +667,10 @@ function finishVault(s){
  if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
+ return finishWardenAfterPhaseOne(s,vaultChoice);
+}
+function finishWardenAfterPhaseOne(s,vaultChoice){
+ // Canonical post-Warden-I resolution, shared with stochastic combat forks.
  // Rare alternative endings require earlier saved Rooms and payment.
  const v=s.vaultModifiers;
  const canSmuggle=v.smuggleAvailable&&s.discardable(2)&&s.discardable(1,"MAGIC");
@@ -750,7 +754,7 @@ export function simulateFullBatch({runs=1000,seed=1,heroes=["warrior"],strategy=
   failureCauses:{},failureStages:{},vaultHp:0,vaultMaxHp:0,vaultMagic:0};
  for(let i=0;i<runs;i++){
   const r=simulateFullExpedition({seed:(seed+i*0x9e3779b1)>>>0,heroes,strategy,roomPolicy,vaultChoice});
-  sum.wins+=Number(r.won);sum.vault+=Number(r.vaultState!==null);
+  sum.wins+=Number(r.won);sum.vault+=Number(r.vaultEntered||r.vaultState!==null);
   sum.deep+=Number(r.cleared>=6);sum.damage+=r.damage;sum.drawn+=r.drawn;
   sum.spent+=r.spent;sum.rounds+=r.rounds;sum.battles+=r.battles;
   sum.negotiations+=r.negotiations;sum.corpses+=r.corpses;sum.activated+=r.activated;
