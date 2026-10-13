@@ -28,7 +28,8 @@ const styles=["magic","treasure"];
 const seedAt=(st,party,i)=>(seed+Math.imul(st+1,0xc2b2ae35)+
  Math.imul(party+1,0x85ebca6b)+Math.imul(i,0x9e3779b1))>>>0;
 const obj=()=>({draws:0,acquired:0,opportunities:0,uses:0,byPhase:{},
- byMode:{},result:{damage:0,healing:0,selfDamage:0,draws:0,resourcesSpent:0,
+ byMode:{},passive:{triggers:0,attackBonus:0,defenceBonus:0,witPenalties:0},
+ result:{damage:0,healing:0,selfDamage:0,draws:0,resourcesSpent:0,
  responsesSkipped:0,poisonCured:0,recharges:0,scouts:0}});
 const counter=()=>({n:0,wins:0,vault:0,damage:0,rounds:0,spent:0,
  activated:0,magicActions:0,negotiations:0,seal:0,
@@ -57,6 +58,9 @@ function record(c,r){
   const result=r.itemResults?.[id];
   if(result)for(const k of Object.keys(cell.result))
    cell.result[k]+=result[k]||0;
+  const passive=r.itemPassiveEffects?.[id];
+  if(passive)for(const k of Object.keys(cell.passive))
+   cell.passive[k]+=passive[k]||0;
  }
 }
 function update(g,results){
