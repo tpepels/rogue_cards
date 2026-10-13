@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/expedition-runtime.js";
 import {HEROES,MONSTERS} from "../src/tabletop-data.js";
-import {forkExpeditionState,prepareRolloutDecks}
+import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState}
  from "../src/rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "../src/expedition-campaign.js";
@@ -76,6 +76,74 @@ test("prepared public-deck pools are bit-identical to uncached forks",()=>{
   assert.throws(()=>forkExpeditionState(another,{
    diceSeed:1,deckSeed:1,knowledge,blueprint:prepared}),/blueprint/);
  }
+});
+test("card-aware clone matches structuredClone on Room and combat game outcomes",()=>{
+ const view=s=>({
+  hp:s.heroes.map(h=>h.hp),
+  equipped:s.heroes.map(h=>Object.fromEntries(
+   Object.entries(h.slots).map(([k,v])=>[k,v?.id]))),
+  inventory:s.heroes.map(h=>h.inventory.map(o=>o.id)),
+  decks:s.deck.map(o=>o.id),
+  room:s.room?.id,monster:s.monster?.id,monsterHP:s.monsterHP,
+  monsterSkip:s.monsterSkip,poison:s.heroes.map(h=>h.poison),
+  metrics:s.metrics,exhausted:[...s.exhausted].map(o=>o.id),
+  consumed:[...s.consumed].map(o=>o.id),
+  seen:[...s.seenRooms],rewrites:[...s.rewrites]
+ });
+ for(const knowledge of ["fair","oracle"]){
+  const s=roomState(knowledge);
+  const prepared=prepareRolloutDecks(s,knowledge);
+  for(const seed of [81,231,601]){
+   const common={diceSeed:seed,deckSeed:seed+300,knowledge,
+    blueprint:prepared};
+   const fast=forkExpeditionState(s,common);
+   const native=forkExpeditionState(s,{...common,cloneMode:"structured"});
+   assert.deepEqual(view(fast),view(native),"Fork startup differs");
+   const a=rolloutRoomContinuation(fast,seed%2,{depth:2});
+   const b=rolloutRoomContinuation(native,seed%2,{depth:2});
+   assert.equal(a.complete,b.complete);
+   assert.equal(a.won,b.won);
+   assert.deepEqual(view(fast),view(native),
+    knowledge+" room continuation diverged for "+seed);
+  }
+  const c=fightState(knowledge);
+  const combatBlueprint=prepareRolloutDecks(c,knowledge);
+  for(const seed of [51,910]){
+   const opts={diceSeed:seed,deckSeed:seed*5,knowledge,
+    blueprint:combatBlueprint};
+   const fast=forkExpeditionState(c,opts);
+   const native=forkExpeditionState(c,{...opts,cloneMode:"structured"});
+   const a=rolloutCombatContinuation(fast,0,{action:"attack"},{
+    maxHeroActions:10,roomDepth:1});
+   const b=rolloutCombatContinuation(native,0,{action:"attack"},{
+    maxHeroActions:10,roomDepth:1});
+   assert.equal(a.complete,b.complete);
+   assert.deepEqual(view(fast),view(native),
+    knowledge+" combat continuation diverged for "+seed);
+  }
+ }
+});
+test("card-aware cloning shares printed definitions but isolates mutable state",()=>{
+ const original=fightState("oracle");
+ const fast=cloneRolloutState(original);
+ const slow=cloneRolloutState(original,{mode:"structured"});
+ assert.strictEqual(fast.heroes[0].card,original.heroes[0].card);
+ assert.notStrictEqual(slow.heroes[0].card,original.heroes[0].card);
+ assert.notStrictEqual(fast.heroes[0],original.heroes[0]);
+ assert.strictEqual(fast.actor,fast.heroes[0]);
+ assert.strictEqual(fast.heroes[0].slots.weapon,
+  fast.heroes[0].inventory.find(x=>x.id==="sword"));
+ const before=original.heroes[0].hp;
+ fast.heroes[0].hp=1;
+ fast.metrics.damage=888;
+ fast.heroes[0].used.add("isolated");
+ fast.heroes[0].inventory.pop();
+ assert.equal(original.heroes[0].hp,before);
+ assert.notEqual(original.metrics.damage,888);
+ assert.ok(!original.heroes[0].used.has("isolated"));
+ assert.notEqual(original.heroes[0].inventory.length,
+  fast.heroes[0].inventory.length);
+ assert.throws(()=>cloneRolloutState(original,{mode:"alien"}));
 });
 test("fair resampling depends on public information, not hidden actual card IDs/order",()=>{
  const a=roomState("fair"),b=roomState("fair");
