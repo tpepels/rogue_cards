@@ -124,7 +124,7 @@ const deep=make("DEEP",[
   [["WEAR","Roll d6."],["OFFER","Cleanse and discard 1 CURSED Item; draw 2 Items and recharge a Wand."]],"WEAR",
   [["1–2","Lose d6 HP; become POISONED."],["3–4","Remove POISONED."],["5","Heal d6 HP; remove POISONED."],["6","Keep this Room: +2 DEF through the next Room. At the Vault, with the Sleeping Crown, you may UNTHRONE."]],["cursed Items"],"It does not fit anyone."],
  ["d-last-chest","The Last Chest","door","TREASURE","A box contains exactly what you fear.",
-  [["OPEN","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. If a reroll shows 1, draw an UPPER Monster. Rusty Key chooses 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
+  [["OPEN","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. If a reroll shows 1, draw a DEEP Monster. Rusty Key chooses 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
   [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
