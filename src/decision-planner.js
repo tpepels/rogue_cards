@@ -180,54 +180,116 @@ export function planParley(s,m){
   score:parleyValue,chance,combatRisk:fightPenalty,cost:costValue};
 }
 function weightsFactor(w){return w.resource/2.6;}
-function effectScore(ops,party){
- let damage=0,healing=0,skips=0,curse=0,draw=0;
+/** Only printed ACTION cards are candidates for spending a combat turn.
+ * Reactive d20 Wands, lock-only magic, scouting and encounter-only trades
+ * have other timings and may never be played as a generic combat action.
+ */
+export const COMBAT_ACTION_IDS=Object.freeze([
+ "scroll-flame","scroll-frost","scroll-lightning","scroll-banish",
+ "scroll-mischief","scroll-last","wand-sparks","wand-morph",
+ "wand-turn","wand-frost","spore-jar"
+]);
+const COMBAT_ACTIONS=new Set(COMBAT_ACTION_IDS);
+function effectScore(ops,party,monster){
+ let damage=0,healing=0,skips=0,curse=0,draw=0,banish=0,resources=0;
  for(const raw of ops){
   const [kind,arg]=raw.split(":");
   const val=estimatedDice(arg);
-  if(kind==="DAMAGE")damage+=val;
-  if(kind==="NEXT_DAMAGE")damage+=val*.75;
-  if(kind==="SKIP")skips+=val;
-  if(kind==="MONSTER_DIS")skips+=.4;
-  if(kind==="BANISH_OR_SKIP")skips+=1.2;
-  if(kind==="HEAL")healing+=Math.min(party.missing,val);
-  if(kind==="HURT")curse+=val;
-  if(kind==="DRAW")draw+=val;
-  if(kind==="NEXT_ADV")damage+=1;
-  if(kind==="FORCE_BEHAVIOR"||kind==="REWRITE_BEHAVIOR")skips+=.3;
+  switch(kind){
+   case "DAMAGE":damage+=val;break;
+   case "NEXT_DAMAGE":damage+=val*.35;break;
+   case "SKIP":skips+=val;break;
+   case "MONSTER_DIS":skips+=.35;break;
+   case "BANISH_OR_SKIP":
+    if(monster.stage==="FINAL")skips+=val;else banish=1;
+    break;
+   case "HEAL":healing+=Math.min(party.missing,val);break;
+   case "HURT":curse+=val;break;
+   case "DRAW":draw+=val;break;
+   case "DISCARD":resources+=val;break;
+   case "TRADE":resources+=val;draw+=estimatedDice(raw.split(":")[2]);break;
+   case "FORCE_BEHAVIOR":if(Number(arg)===6)skips-=.7;break;
+   case "MONSTER_DRAW_OR_FORCE":skips-=.7;break;
+   case "REWRITE_BEHAVIOR":skips+=.12;break;
+   case "NEXT_ADV":damage+=.5;break;
+   case "BREAK_WAND":resources+=1;break;
+  }
  }
- return {damage,healing,skips,curse,draw};
+ return {damage,healing,skips,curse,draw,banish,resources};
+}
+function criticalProbability({adv=false,dis=false}={}){
+ if(adv&&!dis)return 39/400;
+ if(dis&&!adv)return 1/400;
+ return 1/20;
+}
+export function expectedAttack(s,h,m=s.monster){
+ if(!m)return {damage:0,killChance:0,hitChance:0};
+ const remaining=Math.max(0,m===s.monster?s.monsterHP:m.hp);
+ if(!remaining)return {damage:0,killChance:1,hitChance:1};
+ const modifiers={dis:h.poison||h.nextDis>0,adv:h.nextAdv>0};
+ const hitChance=hitProbability(s.stats(h).atk+(h.recruitedGoblin?1:0)+(h.nextAtk||0),
+  m.def,modifiers);
+ const critChance=criticalProbability(modifiers);
+ const ordinaryChance=Math.max(0,hitChance-critChance);
+ const bonus=(h.nextDamage||0)+s.basicAttackBonus(h);
+ let ordinary=0,lethalNormal=0,critical=0,lethalCritical=0;
+ for(let die=1;die<=6;die++){
+  const amount=bonus+die;
+  ordinary+=Math.min(remaining,Math.max(0,amount))/6;
+  lethalNormal+=Number(amount>=remaining)/6;
+  for(let extra=1;extra<=6;extra++){
+   const critAmount=amount+extra;
+   critical+=Math.min(remaining,Math.max(0,critAmount))/36;
+   lethalCritical+=Number(critAmount>=remaining)/36;
+  }
+ }
+ return {damage:ordinaryChance*ordinary+critChance*critical,
+  killChance:ordinaryChance*lethalNormal+critChance*lethalCritical,hitChance};
+}
+export function legalCombatActions(s,h){
+ if(!s.monster||h.hp<=0)return [];
+ return h.inventory.filter(card=>COMBAT_ACTIONS.has(card.id)&&
+  !!card.v2.roll&&!s.exhausted.has(card)&&
+  !(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card)));
 }
 export function planCombat(s,h){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s),m=s.monster;
  if(!m)return {action:"attack",score:0,options:0};
- const damage=hitProbability(s.stats(h).atk,m.def,{dis:h.poison||h.nextDis>0})*(3.5+s.basicAttackBonus(h))+
-  Math.max(0,h.nextDamage);
- const spellCost=w.spell*(1+(m.stage!=="FINAL"&&party.magic<=party.sealCost?0.55:0));
- const fore=forecastCombat(s,m);
+ const remaining=Math.max(1,s.monsterHP);
+ const attack=expectedAttack(s,h,m),fore=forecastCombat(s,m);
  const incoming=fore.monsterDamage*w.damage;
- let winner=null,options=0;
- for(const card of h.inventory){
-  if(!card.v2.roll||!["SCROLL","WAND"].includes(card.v2.kind))continue;
-  if(card.v2.kind==="WAND"&&s.exhausted.has(card))continue;
+ const attackScore=attack.damage*w.damage+attack.killChance*incoming;
+ const eligible=legalCombatActions(s,h);
+ let winner=null;
+ for(const card of eligible){
   let sum=0;
   for(let face=1;face<=6;face++){
-   const effect=effectScore(ROLL_EFFECTS[card.id][bandFor(card,face)],party);
-   sum+=effect.damage*w.damage+
-    effect.healing*w.damage+
-    effect.skips*incoming+
-    effect.draw*w.draw-
-    effect.curse*w.damage;
+   const effect=effectScore(ROLL_EFFECTS[card.id][bandFor(card,face)],party,m);
+   // A direct spell that finishes the Monster prevents this turn's response.
+   // Do not value extra damage beyond the remaining HP.
+   const lethal=effect.damage>=remaining||effect.banish>0;
+   const skipped=lethal?1:clamp(effect.skips,0,2);
+   const heal=Math.min(party.missing,effect.healing);
+   const harm=Math.min(h.hp,effect.curse);
+   sum+=(Math.min(remaining,effect.damage)*w.damage+
+     (lethal?0:skipped)*incoming+Number(lethal)*incoming+
+     heal*w.damage+effect.draw*w.draw-
+     harm*w.damage-effect.resources*party.resourceValue*weightsFactor(w))/6;
+   // Being killed by a backfire cannot be compensated by a prospective draw.
+   if(effect.curse>=h.hp&&effect.curse>0)sum-=w.death/6;
   }
-  const expected=sum/6;
-  const opportunity=card.v2.kind==="SCROLL"?spellCost:Math.max(0.8,spellCost*.35);
-  const utility=expected-opportunity;
-  options++;
-  if(!winner||utility>winner.score)winner={action:"item",card,score:utility};
+  const reserveMagic=m.stage!=="FINAL"&&party.magic<=party.sealCost;
+  const opportunity=card.v2.kind==="SCROLL"?
+   w.spell*(reserveMagic?1.45:1):
+   card.id==="spore-jar"?party.resourceValue*weightsFactor(w):
+   // A Wand turns sideways, but remains owned and can be recharged.
+   Math.max(.35,w.spell*(party.roomsLeft>1?.22:.09));
+  const utility=sum-opportunity;
+  if(!winner||utility>winner.score)
+   winner={action:"item",card,score:utility};
  }
- const attackScore=damage*w.damage+(m.hp<=damage?incoming:0);
- if(winner&&winner.score>attackScore+0.6)return {...winner,attackScore,options};
- return {action:"attack",score:attackScore,options};
+ if(winner&&winner.score>attackScore+0.1)return {...winner,attackScore,options:eligible.length};
+ return {action:"attack",score:attackScore,attackScore,options:eligible.length};
 }
 export function planSeal(s){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s);
