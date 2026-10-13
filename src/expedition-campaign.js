@@ -630,6 +630,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  // Experiment-only removal of a saved Room AFTER its initial printed effect.
  // The reusable game engine never depends on this intervention.
  s.researchRetainedAblations=[];
+ s.researchRetainedPlacements=[];
  s.researchAllowParley=researchAllowParley;
  s.choiceComparison=null;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
@@ -638,6 +639,8 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
    actRoom(s);
    if(!s.alive()||!finishMonsters(s))return report(s);
    finishRoom(s);
+   for(const kept of s.keptRooms)if(kept.card.id===s.room.id)
+    s.researchRetainedPlacements.push({id:kept.card.id,choice:kept.choice??null});
    if(retainedRoomAblation!==null){
     const kept=s.keptRooms.filter(x=>x.card.id===retainedRoomAblation);
     if(kept.length){
@@ -761,6 +764,7 @@ function report(s){
   fateChoices:s.fateChoices,
   roomsEncountered:[...s.seenRooms].sort(),
   retainedRoomAblations:s.researchRetainedAblations??[],
+  retainedRoomPlacements:s.researchRetainedPlacements??[],
   ending:s.metrics.won?s.endingMemory:null,
   vaultModifiers:{...s.vaultModifiers},
   extraObjectGranted:s.extraObjectGranted,
