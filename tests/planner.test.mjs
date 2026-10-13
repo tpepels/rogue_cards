@@ -57,14 +57,14 @@ test("planner does not play lock, scouting, reaction or merchant cards as combat
 });
 test("planner scores current Monster health and can choose a valid attacking spell",()=>{
  const s=state(72),h=s.heroes[0];
- s.monster=MONSTERS.find(m=>m.id==="sentinel");s.monsterHP=16;
- const lightning=OBJECTS.find(c=>c.id==="scroll-lightning");
- s.add(h,lightning);
- assert.equal(legalCombatActions(s,h).some(c=>c===lightning),true);
+ s.monster=WARDEN;s.monsterHP=16;h.hp=11;
+ const spell=OBJECTS.find(c=>c.id==="scroll-last");
+ s.add(h,spell);
+ assert.equal(legalCombatActions(s,h).some(c=>c===spell),true);
  const roll=planCombat(s,h);
  assert.ok(roll.options>=1);
  assert.equal(roll.action,"item");
- assert.equal(roll.card.id,"scroll-lightning");
+ assert.equal(roll.card.id,"scroll-last");
  const e1=expectedAttack(s,h);
  s.monsterHP=2;
  const e2=expectedAttack(s,h);
