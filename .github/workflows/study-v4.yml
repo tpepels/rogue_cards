@@ -27,6 +27,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/study-v4.yml
+      - scripts/study-v4-coherence.mjs
+      - tests/v4-coherence.test.mjs
 
 jobs:
   study:
