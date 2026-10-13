@@ -1,3 +1,4 @@
+import {d6Band} from "./engine/dice-bands.js";
 /**
  * Phase 5: executable, explicit d6 card outcomes.
  * Cards remain the source of player-facing wording; this file is a reviewable
@@ -67,14 +68,8 @@ export const ALLOWED_OPERATIONS=new Set([
  "ROOM_OUTCOME","REROLL_ROOM","KEEP_ROOM_ROLL","GOBLIN_EXTRA","BREAK_WAND"
 ]);
 export const bandFor=(card,roll)=>{
- const out=card.v2.roll?.outcomes;
- if(!out)throw new Error("No d6 outcome on "+card.id);
- if(!Number.isInteger(roll)||roll<1||roll>6)throw new RangeError("Invalid d6 value");
- const index=out.findIndex(({range})=>{
-  const [lo,hi=lo]=range.split("–").map(Number);
-  return roll>=lo&&roll<=hi;
- });
- if(index<0)throw new Error("Uncovered d6 "+roll+" for "+card.id);
+ const index=d6Band(card,roll);
+ if(index<0)throw Error("Uncovered d6 "+roll+" for "+card.id);
  return index;
 };
 export function verifyObjectCoverage(){
