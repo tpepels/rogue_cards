@@ -57,3 +57,68 @@ test("layout editor imports a multi-card JSON and shows those placements",async(
  await page.getByRole("button",{name:"UPPER RULES"}).click();
  await expect(page.locator("#position-w")).toHaveValue("38");
 });
+
+
+test("rotation and stacking change what appears in front and survive JSON export",async({page})=>{
+ await page.goto("/layout-editor.html");
+ const overlap={version:1,units:"mm",cards:{
+  "hero:warrior":{
+   title:{x:15,y:30,w:60,rotation:0,zIndex:10},
+   rules:{x:15,y:30,w:60,rotation:0,zIndex:60}
+  }
+ }};
+ page.once("dialog",dialog=>dialog.accept());
+ await page.locator("#import-file").setInputFiles({
+  name:"overlap.json",mimeType:"application/json",
+  buffer:Buffer.from(JSON.stringify(overlap))
+ });
+ await page.locator("#card-picker").selectOption("hero:warrior");
+ const card=page.locator("#editor-card .tt-card");
+ const title=card.locator(".tt-title");
+ const rules=card.locator(".tt-slip--lead");
+ await expect(title).toHaveCSS("z-index","10");
+ await expect(rules).toHaveCSS("z-index","60");
+ await expect(card.locator(".tt-collage")).toHaveCSS("z-index","auto");
+ // The title is not trapped above the rules by its former parent stacking context.
+ async function frontPiece(){
+  return card.evaluate(el=>{
+   const a=el.querySelector(".tt-title").getBoundingClientRect();
+   const b=el.querySelector(".tt-slip--lead").getBoundingClientRect();
+   const left=Math.max(a.left,b.left),right=Math.min(a.right,b.right);
+   const top=Math.max(a.top,b.top),bottom=Math.min(a.bottom,b.bottom);
+   if(left>=right||top>=bottom)return "no-overlap";
+   const hit=document.elementFromPoint((left+right)/2,(top+bottom)/2);
+   return hit?.closest(".tt-title,.tt-slip")?.classList.contains("tt-title")?"title":
+    hit?.closest(".tt-slip")?.classList.contains("tt-slip--lead")?"rules":"other";
+  });
+ }
+ expect(await frontPiece()).toBe("rules");
+ await page.locator("#piece-list").getByRole("button",{name:"TITLE"}).click();
+ await expect(page.locator("#position-zIndex")).toHaveValue("10");
+ await page.locator("#position-rotation").fill("-13.5");
+ await page.locator("#position-rotation").press("Tab");
+ const radians=await title.evaluate(el=>{
+  const numbers=getComputedStyle(el).transform.match(/matrix\(([^)]+)\)/)?.[1].split(",").map(Number);
+  return Math.atan2(numbers[1],numbers[0])*180/Math.PI;
+ });
+ expect(radians).toBeCloseTo(-13.5,0);
+ await page.locator("#position-zIndex").fill("90");
+ await page.locator("#position-zIndex").press("Tab");
+ await expect(title).toHaveCSS("z-index","90");
+ expect(await frontPiece()).toBe("title");
+ await page.getByRole("button",{name:"SEND TO BACK"}).click();
+ await expect(title).toHaveCSS("z-index","59");
+ expect(await frontPiece()).toBe("rules");
+ await page.getByRole("button",{name:"BRING TO FRONT"}).click();
+ await expect(title).toHaveCSS("z-index","61");
+ const downloadPromise=page.waitForEvent("download");
+ await page.getByRole("button",{name:/EXPORT JSON/}).click();
+ const download=await downloadPromise;
+ const saved=JSON.parse(await readFile(await download.path(),"utf8"));
+ assertKnownEditorExport(saved);
+ function assertKnownEditorExport(d){
+  expect(d.cards["hero:warrior"].title.rotation).toBe(-13.5);
+  expect(d.cards["hero:warrior"].title.zIndex).toBe(61);
+  expect(d.cards["hero:warrior"].rules.zIndex).toBe(60);
+ }
+});
