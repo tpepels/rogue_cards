@@ -82,6 +82,7 @@ export class ExpeditionState {
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
+   roomRollBands:{},objectRollBands:{},
    itemPassiveEffects:{},
    activated:0,magicActions:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
    corpses:0,banishments:0,recharged:0,overcharges:0,
@@ -383,6 +384,9 @@ export class ExpeditionState {
    this.hurt(h,this.die());face=6;
   }
   this.lastDamage=0;this.damageElement=null;
+  const objectBand=d6Band(card,face);
+  const objectKey=card.id+":"+objectBand;
+  this.metrics.objectRollBands[objectKey]=(this.metrics.objectRollBands[objectKey]||0)+1;
   applyCardRoll({apply:(kind,args,c)=>this.apply(kind,args,c)},card,face);
   if(consume&&["SCROLL","POTION"].includes(card.v2.kind)&&h.inventory.includes(card))
    this.consume(h,card);
@@ -705,6 +709,8 @@ export class ExpeditionState {
    if(judge){this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;}
   }
   const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
+  const roomKey=this.room.id+":"+band;
+  this.metrics.roomRollBands[roomKey]=(this.metrics.roomRollBands[roomKey]||0)+1;
   // A kept Reliquary can ignore one printed trap, then must be discarded.
   const traps={"u-gate":[0],"u-fall":[0,1],"u-mimic":[0],"m-vault":[0],
    "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0]};
