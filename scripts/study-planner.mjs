@@ -22,7 +22,11 @@ if(parts.length>1||flags.some(x=>!["--all","--progress"].includes(x))||
 const runs=Number(parts[0]??100);
 if(!Number.isSafeInteger(runs)||runs<1||runs>3000)throw Error(usage);
 const all=flags.includes("--all"),progress=flags.includes("--progress");
-const seedAt=i=>(seed+Math.imul(i,0x9e3779b1))>>>0;
+// Stratify deterministic seeds by strategy and party. Earlier reports reused
+// the same seed across every Hero party, understating aggregate uncertainty.
+const seedAt=(strategyIndex,partyIndex,runIndex)=>
+ (seed+Math.imul(runIndex,0x9e3779b1)+
+  Math.imul(partyIndex+1,0x85ebca6b)+Math.imul(strategyIndex+1,0xc2b2ae35))>>>0;
 const parties=all?[...HEROES.map(h=>[h.id]),
  ...HEROES.flatMap((h,i)=>HEROES.slice(i+1).map(other=>[h.id,other.id]))]:
  [...HEROES.map(h=>[h.id]),["warrior","priest"],["knight","wizard"],
@@ -83,19 +87,25 @@ const records=Object.fromEntries(strategies.map(strategy=>[
  duo:Object.fromEntries(candidates.map(x=>[x.name,counter()]))}]));
 const heroes=Object.fromEntries(HEROES.map(h=>[h.id,Object.fromEntries(strategies.map(st=>[
  st,Object.fromEntries(candidates.map(x=>[x.name,counter()]))]))]));
+// Per-party results expose weak Hero combinations hidden by the duo average.
+const partyRecords=Object.fromEntries(strategies.map(st=>[st,
+ Object.fromEntries(parties.map(p=>[p.join("+"),
+  Object.fromEntries(candidates.map(c=>[c.name,counter()]))]))]));
 let simulated=0,unresolved=0,stalls=0,partiesDone=0;
 function validate(r){
  simulated++;unresolved+=r.unresolved;stalls+=Number(r.roundLimit);
  return r;
 }
-for(const strategy of strategies)for(const party of parties){
+for(const [strategyIndex,strategy] of strategies.entries())
+for(const [partyIndex,party] of parties.entries()){
  for(let i=0;i<runs;i++){
-  const opts={seed:seedAt(i),heroes:party,strategy};
+  const opts={seed:seedAt(strategyIndex,partyIndex,i),heroes:party,strategy};
   const base=validate(simulateFullExpedition(opts));
   for(const variant of candidates){
    const result=validate(simulateFullExpedition({...opts,
     researchPolicy:variant.researchPolicy,plannerRisk:variant.plannerRisk||"balanced"}));
    record(records[strategy][party.length===1?"solo":"duo"][variant.name],base,result);
+   record(partyRecords[strategy][party.join("+")][variant.name],base,result);
    if(party.length===1)record(heroes[party[0]][strategy][variant.name],base,result);
   }
  }
@@ -107,12 +117,18 @@ let commit=null;
 try{commit=execFileSync("git",["rev-parse","HEAD"],{
  encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();}catch{}
 const output={
- experiment:"rogue-cards-planner-v1",commit,seed,
+ experiment:"rogue-cards-planner-v2",commit,seed,
+ randomization:"Independent deterministic seed sequences per strategy and Hero party; paired within each party/strategy/run",
+ policyProtocol:"Scripted full-effect simulator; held-out seed required for confirmatory comparison; not human play",
  runsPerPartyStrategy:runs,parties,strategies,candidates,
  simulated,unresolved,stalls,
  groups:Object.fromEntries(Object.entries(records).map(([st,cls])=>[
   st,Object.fromEntries(Object.entries(cls).map(([kind,modes])=>[
    kind,Object.fromEntries(Object.entries(modes).map(([name,c])=>[name,summary(c)]))
+  ]))])),
+ partyResults:Object.fromEntries(Object.entries(partyRecords).map(([st,ps])=>[st,
+  Object.fromEntries(Object.entries(ps).map(([party,variants])=>[party,
+   Object.fromEntries(Object.entries(variants).map(([name,c])=>[name,summary(c)]))
   ]))])),
  soloHeroes:Object.fromEntries(Object.entries(heroes).map(([h,sts])=>[
   h,Object.fromEntries(Object.entries(sts).map(([st,modes])=>[
@@ -120,10 +136,13 @@ const output={
   ]))])),
  limitations:[
   "Heuristic planning uses only available public state and approximate utility, not optimal play.",
-  "Paired seeds do not force matching random rolls after the two policy paths diverge.",
+  "Paired seeds start equivalent state generation, but random draw streams diverge after policy decisions; they are not identical future luck.",
   "Confidence intervals are approximate normal intervals, not adjusted for multiple tests.",
   "Policy win rates cannot by themselves identify a defective Item or Room rule.",
-  "Only Magic and Treasure strategies are altered in this experiment."
+  "Only Magic and Treasure strategies are altered in this experiment.",
+  "Room and Item execution still uses scripted autopilot heuristics outside the planner's decision points.",
+  "The candidate weights were refined after inspecting earlier planner-v1 reports. Use independent --seed holdout runs for confirmation.",
+  "No simulated win rate establishes what real human players will achieve; tabletop validation is required."
  ]
 };
 if(unresolved||stalls)process.exitCode=1;
