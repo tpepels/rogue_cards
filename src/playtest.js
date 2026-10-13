@@ -23,8 +23,8 @@ export const MONSTER_IDS = Object.freeze([
 // When these change, explicitly review the simulator instead of silently reporting
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
- rooms:"97b0efff",objects:"c25899f0",monsters:"79442be1",
- heroes:"c2cc081c",warden:"dea31008"
+ rooms:"97b0efff",objects:"32f8d44b",monsters:"79442be1",
+ heroes:"a36063cb",warden:"dea31008"
 });
 const digest=data=>{
  let h=2166136261;
@@ -195,9 +195,10 @@ function monsterAction(state,hero,monster,kind,{adv=false,atkBonus=0,damageBonus
   hero.shieldUsed=true;
   const roll=rng.die(6);if(roll>=5)damage=0;else if(roll>=3)damage=Math.max(0,damage-2);
  }
- if(hero.card.id==="knight"&&!hero.abilityUsed){
+ if(damage>0&&hero.card.id==="knight"&&!hero.abilityUsed){
   hero.abilityUsed=true;const roll=rng.die(6);
-  if(roll<=2)damage=2;else if(roll<=4)damage=Math.max(0,damage-rng.die(6));else damage=0;
+  if(roll<=2)damage=2;else if(roll<=4)damage=Math.max(0,damage-rng.die(6));
+  else {damage=0;if(roll===6)state.forcedMonsterRoll=1;}
  }
  hurt(hero,damage,state);
  if(kind==="poison"&&damage>0)hero.poisoned=true;
@@ -206,7 +207,18 @@ function monsterAction(state,hero,monster,kind,{adv=false,atkBonus=0,damageBonus
 function respond(state,active){
  const m=state.activeMonster;if(!m)return;
  if(state.monsterSkip>0){state.monsterSkip--;return;}
- const rng=state.rng,roll=state.forcedMonsterRoll||rng.die(6),band=roll<=2?0:roll<=4?1:roll===5?2:3;
+ const rng=state.rng;
+ let roll=state.forcedMonsterRoll||rng.die(6);
+ const monk=healthy(state.heroes).find(x=>x.card.id==="monk"&&!x.abilityUsed);
+ if(monk&&(roll>=3||m.id==="warden-fury")){
+  monk.abilityUsed=true;
+  const d=rng.die(6);
+  if(d<=2)hurt(monk,2,state);
+  else if(d<=4&&roll>=5)roll=4;
+  else if(d===5){roll=1;heal(monk,2);}
+  else if(d===6){heal(monk,2);state.forcedMonsterRoll=0;return;}
+ }
+ const band=roll<=2?0:roll<=4?1:roll===5?2:3;
  state.forcedMonsterRoll=0;
  state.monsterResponses++;
  const h=active.hp>0?active:pickHero(state.heroes);if(!h)return;
@@ -227,9 +239,6 @@ function respond(state,active){
  case "warden":if(band===1)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===2)h.attackDis=true;else if(band===3)atk({adv:true});break;
  case "warden-fury":if(band===0)healthy(state.heroes).forEach(x=>monsterAction(state,x,m));else if(band===1)monsterAction(state,h,m,"drain");else if(band===2)healthy(state.heroes).forEach(x=>hurt(x,1,state));else atk({adv:true,damageBonus:2});break;
  default:throw new Error("Unmodeled Monster "+m.id);
- }
- if(h.card.id==="monk"&&!h.abilityUsed&&h.hp>0){
-  h.abilityUsed=true;const d=rng.die(6);if(d>=5)heal(h,2);else if(d<=2)hurt(h,2,state);
  }
 }
 function castCombatMagic(state,hero){
@@ -281,14 +290,14 @@ function castCombatMagic(state,hero){
   else damage(rng.die(6)+rng.die(6));
   break;
  case "wand-frost":
-  if(die<=2)harm(2);else if(die<=4)state.skippedEffects++;
+  if(die<=2)harm(2);else if(die<=4)state.monsterSkip++;
   else {state.monsterSkip++;heal(hero,2);}
   break;
  case "wand-turn":
   if(die<=2)harm(1);else state.monsterSkip+=die<=4?1:2;
   break;
  case "wand-morph":
-  if(die<=2)hero.items.splice(hero.items.indexOf(spell),1);
+  if(die<=2)harm(2);
   else if(die<=4)state.skippedEffects++;
   else {state.monsterSkip++;takeCard(state);}
   break;
@@ -310,7 +319,7 @@ function heroTurn(state,hero){
  if(castCombatMagic(state,hero))return;
  if(hero.card.id==="wizard"&&!hero.abilityUsed){
   hero.abilityUsed=true;const d=rng.die(6);
-  if(d<=2)hurt(hero,rng.die(6),state);
+  if(d<=2)hurt(hero,Math.ceil(rng.die(6)/2),state);
   else if(d<=4)state.monsterHP-=rng.die(6)+2;
   else {state.monsterHP-=rng.die(6)+rng.die(6);state.monsterSkip++;}
   return;
