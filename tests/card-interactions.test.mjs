@@ -37,6 +37,25 @@ function finiteState(s,label){
  assert.ok(Number.isFinite(s.metrics.damage),label);
 }
 
+test("Objects cannot force a result on a Room with no printed d6 table",()=>{
+ const fate=ROOMS.find(r=>r.v2.fate);
+ assert.ok(fate);
+ const s=new ExpeditionState({seed:2198,heroes:["warrior"]});
+ s.beginRoom(fate);
+ const beforeState={drawn:s.metrics.drawn,activated:s.metrics.activated,roomChoices:{...s.metrics.roomChoices}};
+ assert.equal(s.roomRoll(6),false);
+ assert.equal(s.roomRoll(),false);
+ for(const id of ["scroll-unlock","wand-door"]){
+  const item=OBJECTS.find(o=>o.id===id),h=s.heroes[0];
+  s.add(h,item);
+  assert.equal(s.activate(h,item,{face:6}),false);
+  assert.ok(h.inventory.includes(item),id+" was consumed without a roll target");
+  assert.equal(s.exhausted.has(item),false);
+ }
+ assert.equal(s.metrics.drawn,beforeState.drawn);
+ assert.equal(s.metrics.activated,beforeState.activated);
+ assert.deepEqual(s.metrics.roomChoices,beforeState.roomChoices);
+});
 test("every unordered Object pair coexists and resolves triggered effects",()=>{
  assert.equal(pairwiseObjectPairs.length,OBJECTS.length*(OBJECTS.length-1)/2);
  for(const [i,[a,b]] of pairwiseObjectPairs.entries()){
