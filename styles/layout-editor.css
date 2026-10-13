@@ -22,7 +22,7 @@
 .le-card-host{width:90mm;height:130mm;transform:scale(var(--zoom));transform-origin:0 0}
 .le-card-host>.tt-card{margin:0}
 .le-card-host .tt-card .tt-title,
-.le-card-host .tt-card .tt-slip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.le-card-host .tt-card .tt-slip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:auto}
 .le-card-host .tt-card .tt-title:active,
 .le-card-host .tt-card .tt-slip:active{cursor:grabbing}
 .le-card-host .tt-card .tt-title:hover,
