@@ -9,7 +9,7 @@ import {ExpeditionState} from "../src/expedition-runtime.js";
 import {PLANNER_RISKS,plannerWeights,hitProbability,estimatedDice,
  forecastCombat,planCombat,planParley,planRoom,planSeal,
  fixedRoomFace,legalCombatActions,expectedAttack} from "../src/decision-planner.js";
-import {simulateFullExpedition,researchPolicies} from "../src/expedition-campaign.js";
+import {simulateFullExpedition,researchPolicies,PLANNER_FEATURES} from "../src/expedition-campaign.js";
 
 function state(seed=21){
  const s=new ExpeditionState({seed,heroes:["wizard"],strategy:"magic"});
@@ -108,6 +108,86 @@ test("advanced planner is opt-in, reproducible and reports decisions",()=>{
   assert.ok(a.plannerTrace.length<=12);
  }
  assert.throws(()=>simulateFullExpedition({plannerRisk:"zero"}),/Unknown planner risk/);
+});
+test("ablations isolate only selected planner decisions and preserve original baseline",()=>{
+ assert.deepEqual(PLANNER_FEATURES,["room","combat","parley","seal"]);
+ const observable=r=>({
+  won:r.won,cleared:r.cleared,remainingHP:r.remainingHP,
+  damage:r.damage,drawn:r.drawn,spent:r.spent,rounds:r.rounds,
+  negotiations:r.negotiations,sealAttempt:r.sealAttempt,sealWin:r.sealWin,
+  activated:r.activated,magicActions:r.magicActions,
+  failureStage:r.failureStage,objectsEverOwned:r.objectsEverOwned
+ });
+ for(const strategy of ["magic","treasure"])
+ for(const heroes of [["warrior"],["wizard"],["warrior","priest"]])
+ for(const seed of [72,8103]){
+  const opts={seed,heroes,strategy};
+  const scripted=simulateFullExpedition(opts);
+  const neutral=simulateFullExpedition({...opts,researchPolicy:"planner",
+   plannerRisk:"cautious",plannerFeatures:[]});
+  assert.deepEqual(observable(neutral),observable(scripted),
+   "Empty planner must execute the unchanged scripted game");
+  assert.deepEqual(neutral.plannerDecisions,{});
+  const full=simulateFullExpedition({...opts,researchPolicy:"planner",
+   plannerRisk:"cautious"});
+  const explicit=simulateFullExpedition({...opts,researchPolicy:"planner",
+   plannerRisk:"cautious",plannerFeatures:[...PLANNER_FEATURES]});
+  assert.deepEqual(full,explicit,"All-enabled must reproduce existing planner");
+  for(const feature of PLANNER_FEATURES){
+   const x=simulateFullExpedition({...opts,researchPolicy:"planner",
+    plannerRisk:"cautious",plannerFeatures:[feature]});
+   assert.deepEqual(x.plannerFeatures,[feature]);
+   const allowed=feature==="room"?"room":feature==="combat"?"combat":feature;
+   assert.ok(Object.keys(x.plannerDecisions).every(k=>k.startsWith(allowed+"_")||
+    k.startsWith(allowed+"E")||feature==="combat"&&k.startsWith("combat")),
+    "No planner decisions for disabled features: "+Object.keys(x.plannerDecisions));
+   assert.equal(x.unresolved,0);assert.equal(x.roundLimit,false);
+  }
+ }
+ const base={seed:1,heroes:["warrior"],strategy:"magic"};
+ for(const features of [["room","room"],["unknown"],"room",{}]){
+  assert.throws(()=>simulateFullExpedition({...base,
+   researchPolicy:"planner",plannerFeatures:features}),/Invalid planner features/);
+ }
+ assert.throws(()=>simulateFullExpedition({...base,plannerFeatures:["room"]}),
+  /require researchPolicy/);
+});
+test("full 16-configuration ablation CLI records paired contrasts and behaviour",()=>{
+ const runStudy=run("scripts/study-planner-ablation.mjs",["1","--seed","987634"]);
+ assert.equal(runStudy.status,0,runStudy.stderr);
+ const x=JSON.parse(runStudy.stdout);
+ assert.equal(x.experiment,"rogue-cards-planner-ablation-v1");
+ assert.equal(x.simulated,12*2*16);
+ assert.equal(x.unresolved,0);assert.equal(x.stalls,0);
+ assert.equal(x.configs.length,16);
+ assert.deepEqual(x.configs[0].enabled,[]);
+ assert.deepEqual(x.configs[15].enabled,PLANNER_FEATURES);
+ assert.equal(x.groups.all.configurations.length,16);
+ assert.equal(x.groups.all.configurations[0].n,24);
+ assert.equal(x.groups.magic.solo.configurations[15].n,8);
+ for(const feature of PLANNER_FEATURES){
+  assert.equal(x.groups.all.effects.alone[feature].n,24);
+  assert.equal(x.groups.all.effects.removed[feature].n,24);
+  assert.equal(x.groups.all.effects.average[feature].n,24);
+  assert.equal(x.groups.all.effects.alone[feature].estimate,
+   x.groups.all.configurations[1<<PLANNER_FEATURES.indexOf(feature)].winRate-
+   x.groups.all.configurations[0].winRate);
+ }
+ assert.equal(Object.keys(x.groups.all.effects.pairwise).length,6);
+ const tmp=mkdtempSync(join(tmpdir(),"rogue-ablation-"));
+ try{
+  const fp=join(tmp,"results.json");writeFileSync(fp,runStudy.stdout);
+  const md=run("scripts/report-planner-ablation.mjs",[fp]);
+  assert.equal(md.status,0,md.stderr);
+  assert.match(md.stdout,/All sixteen configurations/);
+  assert.match(md.stdout,/Pairwise interactions/);
+  assert.match(md.stdout,/Leave-one-out/);
+ }finally{rmSync(tmp,{recursive:true,force:true});}
+ for(const flags of [["0"],["2001"],["1","--seed","bad"],["1","--wat"]]){
+  const err=run("scripts/study-planner-ablation.mjs",flags);
+  assert.notEqual(err.status,0);
+  assert.match(err.stderr,/Usage:/);
+ }
 });
 function run(file,args){return spawnSync(process.execPath,[file,...args],
  {encoding:"utf8",maxBuffer:16*1024*1024});}
