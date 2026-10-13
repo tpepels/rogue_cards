@@ -241,6 +241,30 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Full-effect stochastic planning
+
+The [state-fork rollout laboratory](docs/stochastic-rollouts.md) evaluates
+legal Room and combat decisions by actually executing printed effects,
+Item outcomes, Monster responses, and optionally the entire remaining
+expedition through the Vault. The fair agent samples hidden decks using
+publicly known cards; the Oracle retains their actual order. Both use
+independent sampled dice, matched across alternative decisions. The
+actual expedition dice and game state are never touched by planning.
+
+To validate real-state rollouts locally and compare 0/8/32/128 samples:
+
+~~~sh
+npm test
+npm run agent:budgets -- --runs 2 --seeds 71001 --budgets 0,8 --parties solo --strategies magic --out results/rollout-smoke-01
+npm run agent:budgets -- --runs 100 --seeds 71001,72001,73001 --budgets 0,8,32,128 --workers 8 --out results/rollout-budgets-01
+~~~
+
+Older agent results remain reproducible because approximate heuristic
+planning is still the default unless the new rollout mode is selected.
+Shorter horizons use a stated nonterminal score; full-horizon mode uses
+actual terminal wins/losses. These are modeled policies, not proven
+optimal agents or human play.
+
 ## Fair-information versus deck-Oracle agent
 
 The [local agent optimization study](docs/agent-oracle.md) trains the
