@@ -696,10 +696,15 @@ function finishWardenAfterPhaseOne(s,vaultChoice){
    choice==="bargain"&&s.strategy==="negotiation"||
    choice==="unthrone"&&s.strategy==="magic");
  if(canSmuggle&&prefer("smuggle")){
+  // The retained Gilded Hallway is spent when its printed exit is used.
+  const map=s.keptRooms.findIndex(x=>x.card.id==="d-gilded");
+  if(map>=0)s.keptRooms.splice(map,1);
   s.discard(1,{tag:"MAGIC"});s.discard();
   s.metrics.won=true;s.endingKind="smuggled_amulet";return report(s);
  }
  if(v.smuggleAvailable&&s.discardable()&&vaultChoice==="escape-if-available"){
+  const map=s.keptRooms.findIndex(x=>x.card.id==="d-gilded");
+  if(map>=0)s.keptRooms.splice(map,1);
   s.discard();s.endingKind="escaped_empty_handed";s.metrics.escaped=true;
   return report(s);
  }
