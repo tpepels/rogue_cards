@@ -29,7 +29,7 @@ test("per-card CSS uses millimetres, independent title / rules / results overrid
  assert.match(css,/min-height:29mm/);
  assert.match(css,/height:auto/);
  assert.match(css,/tt-slip--results/);
- assert.doesNotMatch(css,/position:fixed|height:29mm/);
+ assert.doesNotMatch(css,/position:fixed|[;\n]height:29mm/);
  assert.deepEqual(normalizePlacements(sample).cards["room:m-well"],sample.cards["room:m-well"]);
 });
 test("layout imports reject nonphysical sizes and CSS selector injection",()=>{
