@@ -4,14 +4,14 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/");
  await expect(page.getByRole("heading",{name:/One dungeon. One deck. One rulebook/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(111);
- await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(111);
- await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(111);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(129);
+ await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(129);
+ await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(129);
  await expect(page.locator(".tt-grid .tt-needs-art")).toHaveCount(0);
  await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
  await expect(page.getByRole("link",{name:/READ \/ PRINT THE A4 RULES/})).toBeVisible();
  const filter=page.getByRole("combobox",{name:"Card category"});
- const checks=[["hero",8],["room",37],["monster",14],["TOOL",8],["EQUIPMENT",6],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
+ const checks=[["hero",8],["room",55],["monster",14],["TOOL",8],["EQUIPMENT",6],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
  for(const [type,count] of checks){
   await filter.selectOption(type);
   await expect(page.locator(".tt-grid .tt-card")).toHaveCount(count);
@@ -103,7 +103,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
     stampOverlapY:Math.max(0,Math.min(stamp.bottom,title.bottom)-Math.max(stamp.top,title.top)),
     notes};
   }));
-  expect(cards).toHaveLength(111);
+  expect(cards).toHaveLength(129);
   for(const card of cards){
    expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
    expect(card.imageH,card.id+" illustration too small").toBeGreaterThan(110*96/25.4);
@@ -147,7 +147,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    y:n.scrollHeight-n.clientHeight,x:n.scrollWidth-n.clientWidth
   }))
  })));
- expect(printed).toHaveLength(111);
+ expect(printed).toHaveLength(129);
  for(const card of printed){
   expect(card.w).toBeGreaterThan(90*96/25.4-2);
   expect(card.h).toBeLessThan(130*96/25.4+2);
@@ -185,7 +185,7 @@ test("physical card families have distinct illustration frames and artifact layo
 
 
 
-test("north-east notes and footer depth marks are consistent across all 111 cards",async({page})=>{
+test("north-east notes and footer depth marks are consistent across all 129 cards",async({page})=>{
  test.setTimeout(180000);
  await page.goto("/");
  const checks=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
@@ -202,7 +202,7 @@ test("north-east notes and footer depth marks are consistent across all 111 card
    aboveTitle:lead.top<card.querySelector(".tt-title").getBoundingClientRect().bottom
   };
  }));
- expect(checks).toHaveLength(111);
+ expect(checks).toHaveLength(129);
  for(const x of checks){
   expect(x.leadEast,x.id+" first note not north-east").toBe(true);
   expect(x.leadTopMm,x.id+" first note too high").toBeGreaterThan(26);
