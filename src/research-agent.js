@@ -49,12 +49,12 @@ export function validateAgentConfig(config){
  const rolloutRooms=config.rolloutRooms??2;
  const combatActions=config.combatActions??14;
  const combatRoomDepth=config.combatRoomDepth??0;
- if(!Number.isInteger(rolloutRooms)||rolloutRooms<1||rolloutRooms>3)
-  throw Error("rolloutRooms must be 1..3");
- if(!Number.isInteger(combatActions)||combatActions<4||combatActions>32)
-  throw Error("combatActions must be 4..32");
+ if(!Number.isInteger(rolloutRooms)||rolloutRooms<1||rolloutRooms>9)
+  throw Error("rolloutRooms must be 1..9");
+ if(!Number.isInteger(combatActions)||combatActions<4||combatActions>600)
+  throw Error("combatActions must be 4..600");
  if(!Number.isInteger(combatRoomDepth)||combatRoomDepth<0||
-  combatRoomDepth>2)throw Error("combatRoomDepth must be 0..2");
+  combatRoomDepth>9)throw Error("combatRoomDepth must be 0..9");
  const weights={...AGENT_WEIGHTS,...(config.weights||{})};
  if(!config.weights||typeof config.weights!=="object"||Array.isArray(config.weights))
   throw Error("Agent weights must be an object");
