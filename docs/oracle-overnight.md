@@ -19,7 +19,21 @@ Requirements: Node 22+, current Git checkout, sufficient disk space.
 Leave the laptop plugged in, allow airflow, and keep its lid open.
 Use 7 workers to leave some processing capacity for the desktop.
 
-From the `rogue_cards` repository directory:
+From the `rogue_cards` repository directory, the easiest method is:
+
+```bash
+git pull --ff-only
+bash scripts/start-oracle-night.sh
+```
+
+This validates the engine and card deck, previews the workload, then launches
+a background, full-deck Oracle study using seven workers. The default
+log is `results/oracle-night-01.log`. After the time cap, use
+`RESUME=1 bash scripts/start-oracle-night.sh` to continue **without
+pulling new code**. Set `OUT=results/another-run` and `SEED=...`
+for a separately seeded replication.
+
+Alternatively, run the individual commands below:
 
 ```bash
 git pull --ff-only
