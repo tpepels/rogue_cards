@@ -6,7 +6,8 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createGame,observeGame,enterNextRoom,legalRoomChoices,
  chooseRoom,finishCurrentRoom,legalCombatActions,takeCombatAction,
- takeMonsterResponse,randomSource,d6Band,playerAttack,monsterRespond}
+ takeMonsterResponse,randomSource,d6Band,playerAttack,monsterRespond,
+ seal,sealCost}
  from "../src/engine/index.js";
 import {ExpeditionState} from "../src/expedition-runtime.js";
 import {randomSource as legacyRandomSource}
@@ -14,7 +15,8 @@ import {randomSource as legacyRandomSource}
 import {ROOMS,OBJECTS} from "../src/tabletop-data.js";
 import {simulateFullExpedition,
  playerAttack as simulationPlayerAttack,
- monsterRespond as simulationMonsterRespond}
+ monsterRespond as simulationMonsterRespond,
+ seal as simulationSeal,sealCost as simulationSealCost}
  from "../src/expedition-campaign.js";
 
 const folder=fileURLToPath(new URL("../src/engine/",import.meta.url));
@@ -36,6 +38,8 @@ test("Stable engine exports and legacy compatibility paths have identical identi
  assert.strictEqual(ExpeditionState,createGame({seed:1900}).constructor);
  assert.strictEqual(playerAttack,simulationPlayerAttack);
  assert.strictEqual(monsterRespond,simulationMonsterRespond);
+ assert.strictEqual(seal,simulationSeal);
+ assert.strictEqual(sealCost,simulationSealCost);
  for(const seed of [0,1,91238,0xffffffff]){
   const a=randomSource(seed),b=legacyRandomSource(seed);
   for(let i=0;i<64;i++){
@@ -132,4 +136,14 @@ test("shared-scenario speed benchmark checks output equivalence before timing",(
   assert.ok(metric.medianMs>0);
   assert.equal(metric.runs.length,5);
  }
+});
+
+test("SEAL attempt is an engine command, independent of simulation policy",()=>{
+ const a=createGame({seed:78127,heroes:["warrior","wizard"]});
+ const b=createGame({seed:78127,heroes:["warrior","wizard"]});
+ assert.equal(sealCost(a),6);
+ assert.equal(sealCost(a),simulationSealCost(b));
+ assert.equal(seal(a),simulationSeal(b));
+ assert.equal(a.metrics.sealAttempt,b.metrics.sealAttempt);
+ assert.equal(a.metrics.sealWin,b.metrics.sealWin);
 });
