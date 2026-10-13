@@ -1,0 +1,53 @@
+name: V4 Item marginal utility study
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Matched seeds per Item / party / strategy (1-400)"
+        type: number
+        required: true
+        default: 60
+      seed:
+        description: "Starting independent seed"
+        type: number
+        default: 20261013
+        required: true
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/v4-item-value.yml
+      - scripts/study-v4-item-value.mjs
+
+jobs:
+  items:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate research source and canonical game
+        run: |
+          node --check scripts/study-v4-item-value.mjs
+          node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/retained-paths.test.mjs
+          npm run validate:deck
+      - name: Run V4 matched Item marginal utility study
+        env:
+          STUDY_RUNS: ${{ inputs.runs || '60' }}
+          STUDY_SEED: ${{ inputs.seed || '20261013' }}
+        run: |
+          npm run --silent study:v4-item-value -- \
+            --runs "$STUDY_RUNS" --seed "$STUDY_SEED" \
+            --out results/v4-item-value-ci
+      - name: Publish report
+        if: success()
+        run: cat results/v4-item-value-ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Item-specific data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogue-v4-item-utility
+          path: results/v4-item-value-ci/
+          if-no-files-found: warn
