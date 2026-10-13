@@ -563,3 +563,112 @@
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
  }
 }
+
+
+/* -------------------------------------------------------------------------
+   FULL-BLEED, NOT FRAMED
+   The illustration reaches all four trimmed edges. Distress is ink loss,
+   rubbed paper and irregular edge abrasion - never an inset picture frame.
+   The paper labels stay on top of the illustration and retain their positions.
+   ------------------------------------------------------------------------- */
+.tt-card.tt-paper-collage{
+ padding:0;
+ border:0;
+ border-radius:1mm 1.4mm .8mm 1.1mm;
+ box-shadow:none;
+ background:#13100c;
+ overflow:hidden;
+}
+/* Remove older double frame lines and fake inset highlights. */
+.tt-card.tt-paper-collage::before{
+ z-index:48;
+ opacity:.55;
+ background:
+  radial-gradient(circle at 2.5% 2%,#ecdfc7 0 .45mm,transparent .7mm),
+  radial-gradient(circle at 97% 96%,#ede0ca 0 .65mm,transparent .9mm),
+  radial-gradient(circle at 1% 69%,#efe3ce 0 .65mm,transparent .95mm),
+  radial-gradient(circle at 98% 24%,#efe3ce 0 .55mm,transparent .9mm),
+  repeating-linear-gradient(88deg,transparent 0 22px,#e4d4b40c 22px 23px);
+ pointer-events:none;
+}
+.tt-card.tt-paper-collage::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:49;
+ pointer-events:none;
+ border:0;
+ border-radius:0;
+ box-shadow:none;
+ opacity:.85;
+ /* A narrow, damaged ink edge; no rectangular inner border. */
+ background:
+  radial-gradient(ellipse at 0 0,#f0e4ce 0 1.2mm,transparent 3.6mm),
+  radial-gradient(ellipse at 100% 0,#eee1ca 0 .9mm,transparent 3.1mm),
+  radial-gradient(ellipse at 0 100%,#ede0c8 0 1.1mm,transparent 3.3mm),
+  radial-gradient(ellipse at 100% 100%,#eddfc6 0 1.6mm,transparent 3.5mm),
+  linear-gradient(90deg,#e8dbc36e 0,.55mm transparent 1.5mm,transparent calc(100% - 1.5mm),#e9ddc269 100%),
+  linear-gradient(0deg,#ebddc35a 0,transparent 1.8mm,transparent calc(100% - 1.8mm),#eee2cd52 100%);
+}
+.tt-card.tt-paper-collage .tt-collage{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ min-height:0;
+ margin:0;
+ padding:0;
+ overflow:visible;
+ isolation:auto;
+ z-index:auto;
+ background:transparent;
+}
+.tt-card.tt-paper-collage .tt-collage > .tt-visual{
+ position:absolute;
+ inset:0;
+ top:0;right:0;bottom:0;left:0;
+ height:100%;width:100%;
+ min-height:0;
+ margin:0;
+ transform:none;
+ border:0;
+ box-shadow:none;
+ background:#15120f;
+ overflow:hidden;
+ z-index:0;
+}
+.tt-card.tt-paper-collage .tt-collage > .tt-visual .tt-illustration,
+.tt-card.tt-paper-collage .tt-collage > .tt-visual .tt-art-image,
+.tt-card.tt-paper-collage .tt-collage > .tt-visual .tt-art-placeholder{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ margin:0;
+ border:0;
+ object-fit:cover;
+}
+.tt-card.tt-paper-collage .tt-collage > .tt-visual::after{
+ border:0;box-shadow:none;
+}
+.tt-card.tt-paper-collage .tt-collage > .tt-content{
+ z-index:auto;
+ isolation:auto;
+}
+/* Titles and slips share the same stacking context; exported zIndex really
+   controls which paper lies on top of another, even above the title. */
+.tt-card.tt-paper-collage .tt-title{z-index:30}
+.tt-card.tt-paper-collage .tt-slip--lead{z-index:20}
+.tt-card.tt-paper-collage .tt-slip--results{z-index:21}
+.tt-card.tt-paper-collage .tt-card-kind{z-index:42}
+.tt-card.tt-paper-collage .tt-footer{z-index:41}
+/* The card is battered; its individual pieces are torn paper, not steel. */
+.tt-card.tt-paper-collage .tt-slip{
+ border:0;
+ box-shadow:.45mm .65mm 0 #0b0909a6;
+}
+@media print{
+ .tt-card.tt-paper-collage{border:0!important;box-shadow:none!important}
+ .tt-card.tt-paper-collage::after,
+ .tt-card.tt-paper-collage::before{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
