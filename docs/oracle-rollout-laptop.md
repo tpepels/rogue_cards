@@ -111,6 +111,26 @@ be changed on resume, but not the study design.
 If larger studies are blocked by the workload gate, use smaller
 subsets rather than bypassing the safety limit.
 
+## Verified functional smoke test
+
+[GitHub Actions terminal and two-ply verification](https://github.com/tpepels/rogue_cards/actions/runs/38461336084)
+passed on 13 October 2026. The data is available as the
+`oracle-terminal-smoke` artifact.
+
+| Functional test | Fair | Oracle |
+|---|---:|---:|
+| Full-horizon sampled branches (8 solo Heroes, 1 seed) | 304 | 251 |
+| Hypothetical branches scored nonterminal | 0 | 0 |
+| Root sampled branches (Wizard, nested study) | 30 | 25 |
+| Further sampled branches at future decisions | 628 | 348 |
+| Nonterminal branches in nested study | 0 | 0 |
+
+The study above was purposely too small to compare victory rates.
+Its purpose is to prove that the engine executes and resolves the
+actual alternatives, including additional branches at later
+decisions. These counts are not independent completed expeditions
+and cannot establish balance or an Oracle advantage.
+
 ## Reading the results
 
 - `summary.md`: real full-expedition win rates and paired Fair / Oracle
