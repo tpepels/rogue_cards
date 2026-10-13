@@ -20,6 +20,15 @@ export function plannerWeights(risk="balanced"){
  if(!PLANNER_RISKS.includes(risk))throw Error("Unknown planner risk "+risk);
  return PROFILE[risk];
 }
+// Experimental agent multipliers affect only the decision heuristic, never
+// card definitions or actual dice. Old research policies remain unchanged.
+export function effectivePlannerWeights(s){
+ const base=plannerWeights(s.plannerRisk);
+ if(!s.agentConfig)return base;
+ return Object.fromEntries(Object.entries(base).map(([key,value])=>[
+  key,value*(s.agentConfig.weights[key]??1)
+ ]));
+}
 export function estimatedDice(expr){
  if(typeof expr!=="string")return Number(expr)||0;
  const m=/^(?:(\d+))?d6(?:\+(\d+))?$/.exec(expr);
@@ -184,7 +193,7 @@ export function fixedRoomFace(s,room){
  return null;
 }
 export function planRoom(s,legal){
- const w=plannerWeights(s.plannerRisk),party=partySummary(s);
+ const w=effectivePlannerWeights(s),party=partySummary(s);
  const room=s.room,raw=ROOM_EFFECTS[room.id];
  const score=idx=>{
   const ops=raw.choices[idx];
@@ -223,7 +232,7 @@ const exactWitChance=(wit,difficulty)=>{
  return wins/400;
 };
 export function planParley(s,m){
- const party=partySummary(s),w=plannerWeights(s.plannerRisk),battle=forecastCombat(s,m);
+ const party=partySummary(s),w=effectivePlannerWeights(s),battle=forecastCombat(s,m);
  const cost=party.resourceValue*weightsFactor(w);
  let chance=1,costValue=0,bonus=0,feasible=true;
  switch(m.id){
@@ -359,7 +368,7 @@ export function expectedAttack(s,h,m=s.monster){
  * arbitrary constant. Strategy, stage, current resources, and risk all matter.
  */
 export function futureItemValue(s,h,card,mode="action",risk=s.plannerRisk){
- const w=plannerWeights(risk),party=partySummary(s);
+ const w=s.agentConfig?effectivePlannerWeights(s):plannerWeights(risk),party=partySummary(s);
  const rooms=party.roomsLeft;
  const current=s.monster?.stage==="FINAL";
  if(mode==="overcharge")return current?0.5:1.2;
@@ -380,7 +389,9 @@ export function futureItemValue(s,h,card,mode="action",risk=s.plannerRisk){
  const otherMagic=party.magic-1;
  // A solo party needs three MAGIC cards; duo needs six. Approximate future
  // collection from publicly known Room count, not actual shuffled deck.
- const expectedAcquisitions=rooms*.45;
+ const expectedAcquisitions=s.agentConfig?.knowledge==="oracle"&&
+  s.agentInformation?
+  s.agentInformation.expectedMagicDraws:rooms*.45;
  const plausibleSeal=!current&&
   otherMagic+expectedAcquisitions>=party.sealCost-1.25;
  const sealPremium=plausibleSeal&&otherMagic<party.sealCost?
@@ -389,7 +400,7 @@ export function futureItemValue(s,h,card,mode="action",risk=s.plannerRisk){
  const futureOption=Math.min(2.7,laterFights*.33)*
   (card.id==="scroll-last"||card.id==="scroll-lightning"?1.1:.85);
  return (futureOption+sealPremium)*(duplicates>1?.55:1)*
-  (w.damage/2.25)**.25;
+  (w.damage/2.25)**.25*(s.agentConfig?.weights.itemReserve??1);
 }
 /** Printed behavior is not merely immediate damage: rewriting face 6,
  * poisoning, and skipped responses can change multiple upcoming turns.
@@ -397,7 +408,7 @@ export function futureItemValue(s,h,card,mode="action",risk=s.plannerRisk){
  */
 export function responseThreat(s,h,m=s.monster){
  if(!m)return 0;
- const w=plannerWeights(s.plannerRisk);
+ const w=effectivePlannerWeights(s);
  const rate=hitProbability(m.atk,s.stats(h).def);
  const dangerousSix=["rat","goblin","bat","wisp","eye","mold","wraith",
   "rust","cultist","sentinel","warden","warden-fury"].includes(m.id);
@@ -409,7 +420,7 @@ export function responseThreat(s,h,m=s.monster){
  return {perResponse:perResponse*w.damage*risk,faceSix:dangerousSix?1:0.2};
 }
 function projectedEffect(s,h,option,remaining,threat,attack){
- const {card,mode}=option,party=partySummary(s),w=plannerWeights(s.plannerRisk);
+ const {card,mode}=option,party=partySummary(s),w=effectivePlannerWeights(s);
  const response=threat.perResponse;
  if(mode==="torch-skip"||mode==="lantern-skip")return response;
  if(mode==="lantern-recharge")return s.exhaustedWand()?1.8:0;
@@ -464,7 +475,7 @@ export function legalCombatActions(s,h){
 export function planCombat(s,h,{trial="normal",focus=null}={}){
  if(!["normal","free","force","target"].includes(trial))throw Error("Unknown Item trial "+trial);
  if(trial==="target"&&typeof focus!=="string")throw Error("Target Item trial requires an Item ID");
- const w=plannerWeights(s.plannerRisk),m=s.monster;
+ const w=effectivePlannerWeights(s),m=s.monster;
  if(!m)return {action:"attack",score:0,options:0,legal:[]};
  const remaining=Math.max(1,remainingMonsterHP(s,m));
  const attack=expectedAttack(s,h,m),threat=responseThreat(s,h,m);
@@ -487,13 +498,14 @@ export function planCombat(s,h,{trial="normal",focus=null}={}){
  // the normal decision rule, including the same future reservation model.
  if(focused)return {...focused,attackScore,options:eligible.length,
   legal:eligible,forcedTarget:focus};
- if(winner&&(trial==="force"||winner.score>attackScore+0.1))
+ if(winner&&(trial==="force"||winner.score>
+  attackScore+(s.agentConfig?.weights.itemMargin??0.1)))
   return {...winner,attackScore,options:eligible.length,legal:eligible};
  return {action:"attack",score:attackScore,attackScore,
   options:eligible.length,legal:eligible};
 }
 export function planSeal(s){
- const w=plannerWeights(s.plannerRisk),party=partySummary(s);
+ const w=effectivePlannerWeights(s),party=partySummary(s);
  const affordable=s.discardable(party.sealCost,"MAGIC");
  if(!affordable)return {attempt:false,reason:"unaffordable",sealChance:0};
  const crownOwner=s.heroes.find(h=>h.hp>0&&
