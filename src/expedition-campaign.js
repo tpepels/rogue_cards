@@ -665,6 +665,7 @@ function finishVault(s){
  s.monster=WARDEN;s.monsterHP=Math.max(11,WARDEN.hp-s.vaultModifiers.wardenDamage);
  if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
  if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
+ if(s.vaultModifiers.wardenOpeningSkip)s.monsterSkip++;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
  return finishWardenAfterPhaseOne(s,vaultChoice);
