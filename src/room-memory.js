@@ -148,7 +148,7 @@ const rows=[
   "stairs",
   "The ladder has two exits.",
   "CLIMB",
-  "Reveal 2 Rooms; enter 1. If LAIR, gain ADV on your first attack; otherwise draw 1 Item.",
+  "Reveal 2 Rooms; enter 1. LAIR: first attack ADV; otherwise draw 1 Item.",
   "TAKE THE SHAFT",
   "Roll d6 for the shaft. Skip remaining Rooms; resolve the destination below.",
   "SHAFT",
