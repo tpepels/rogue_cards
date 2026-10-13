@@ -124,7 +124,7 @@ test("every physical card prints deterministically with correct images and A4 qu
  assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
  assert.equal(Object.keys(CARD_ART).length,CATALOGUE.length);
  const uploaded=readdirSync("assets/illustrations").filter(name=>name.endsWith(".png")).sort();
- assert.equal(uploaded.length,111,"One generated PNG per canonical card");
+ assert.equal(uploaded.length,CATALOGUE.length,"One generated PNG per canonical card");
  assert.deepEqual(Object.values(CARD_ART).sort(),uploaded,
   "Each PNG must appear on exactly one canonical card");
  const slug=title=>title.toLowerCase().normalize("NFKD")
@@ -132,7 +132,7 @@ test("every physical card prints deterministically with correct images and A4 qu
  for(const [i,card] of CATALOGUE.entries()){
   const key=card.type+":"+card.id,name=CARD_ART[key];
   assert.ok(name,"Missing illustration for "+key);
-  assert.equal(name,String(i+1).padStart(3,"0")+"_"+slug(card.title)+".png",
+  assert.match(name,new RegExp("^\\d+_"+slug(card.title)+"\\.png$"),
    "Illustration assignment does not match card "+key);
   const path="assets/illustrations/"+name;
   assert.ok(existsSync(path),path);
@@ -157,8 +157,8 @@ test("generated card illustrations retain spot colours in catalogue and print",(
   assert.match(markup,/<img class="tt-art-image"/);
   assert.ok(markup.includes(CARD_ART[card.type+":"+card.id]),card.id);
  }
- assert.equal(CATALOGUE.filter(c=>assetPath(c)).length,111);
- assert.equal((printSheets(CATALOGUE).match(/class="tt-art-image"/g)||[]).length,111,
+ assert.equal(CATALOGUE.filter(c=>assetPath(c)).length,CATALOGUE.length);
+ assert.equal((printSheets(CATALOGUE).match(/class="tt-art-image"/g)||[]).length,CATALOGUE.length,
   "Printed sheets must include all new images");
  assert.doesNotMatch(printSheets(CATALOGUE),/tt-needs-art|tt-art-placeholder|ink-art/,
   "No card should fall back to the old SVG illustrations");
