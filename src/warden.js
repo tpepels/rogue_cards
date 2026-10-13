@@ -3,7 +3,7 @@
 export const VAULT={
  id:"vault",type:"room",stage:"FINAL",title:"The Amulet Vault",art:"amulet",copies:1,
  flavor:"The prize was never unattended.",rule:"Face the Warden.",
- v2:{kind:"FINAL",number:37,prompt:"On entry, roll OMEN d6. Choose FIGHT or SEAL.",
+ v2:{kind:"FINAL",number:37,prompt:"On entry, roll OMEN d6. Choose FIGHT or SEAL. Kept Rooms can unlock SMUGGLE, BARGAIN or UNTHRONE after Phase I.",
  choices:[
   {label:"FIGHT",effect:"Face the Warden, Phase I. At 10 HP switch to Phase II."},
   {label:"SEAL",effect:"Discard 3 MAGIC Items (6 with two Heroes). Opposed d20+WIT vs d20+6. Win: Amulet. Lose: fight Warden; its first attack has ADV."}
@@ -17,7 +17,7 @@ export const VAULT={
 const beast=(id,title,flavor,behavior,phase,extra)=>({
  id,type:"monster",title,art:"warden",stage:"FINAL",hp:phase===1?20:10,atk:6,def:5,copies:1,flavor,
  behavior,v2:{kind:"WARDEN",number:phase===1?13:14,phase,
- tags:["MAGIC","CURSED"],weakness:extra,parley:"No PARLEY. Only the Vault's SEAL can bypass this fight.",
+ tags:["MAGIC","CURSED"],weakness:extra,parley:"Ignores ELBERETH. No PARLEY; kept Rooms may unlock alternatives after Phase I.",
  remains:"No corpse to eat. Defeat Phase II to win the Amulet."}
 });
 export const WARDEN=beast("warden","Amulet Warden","It hears your heartbeat.",[
