@@ -1,0 +1,60 @@
+name: V4 Gameplay Coherence Study
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Full expeditions per party / strategy / policy (1-200)"
+        type: number
+        default: 15
+        required: true
+      choice_runs:
+        description: "Matched initial seeds per retained fate Room (1-1000)"
+        type: number
+        default: 250
+        required: true
+      seed:
+        description: "Starting seed"
+        type: number
+        default: 20261013
+        required: true
+      party_set:
+        description: "Party cohort"
+        type: choice
+        options: [compact, solo, all]
+        default: compact
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/study-v4.yml
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Study V4 policy coherence and matched choices
+        env:
+          RUNS: ${{ inputs.runs || '15' }}
+          CHOICE_RUNS: ${{ inputs.choice_runs || '250' }}
+          STUDY_SEED: ${{ inputs.seed || '20261013' }}
+          PARTY_SET: ${{ inputs.party_set || 'compact' }}
+        run: |
+          npm run study:v4 -- \
+            --runs "$RUNS" --choice-runs "$CHOICE_RUNS" \
+            --seed "$STUDY_SEED" --party-set "$PARTY_SET" \
+            --out results/v4-coherence-ci
+      - name: Publish results summary
+        if: success()
+        run: cat results/v4-coherence-ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload full result data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogue-cards-v4-coherence
+          path: results/v4-coherence-ci/
+          if-no-files-found: warn
