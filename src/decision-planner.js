@@ -56,11 +56,10 @@ export function forecastCombat(s,m=s.monster){
  if(!m)return {heroDamage:0,monsterDamage:0,turns:0,expectedLoss:0,lethalRisk:0};
  const living=s.living(),count=living.length;
  if(!count)return {heroDamage:0,monsterDamage:0,turns:100,expectedLoss:100,lethalRisk:1};
- const heroDamage=living.reduce((n,h)=>n+
-  hitProbability(s.stats(h).atk+(h.recruitedGoblin?1:0),m.def,
-   {dis:h.poison||h.nextDis>0,adv:h.nextAdv>0})*
-  (3.5+(h.nextDamage||0)+s.basicAttackBonus(h)+(h.slots.weapon?.id==="sword"?0.8:0)),0);
- const remaining=m===s.monster?Math.max(0,s.monsterHP):m.hp;
+ // Attack forecast follows the actual scripted Hero attack dispatcher,
+ // including automatic Wizard/Warrior/weapon effects and the phase-I threshold.
+ const heroDamage=living.reduce((n,h)=>n+expectedAttack(s,h,m).damage,0);
+ const remaining=remainingMonsterHP(s,m);
  const turns=clamp(remaining/Math.max(0.5,heroDamage),0.3,18);
  const target=living.reduce((a,h)=>a+h.hp,0)/count;
  const atk=m.atk;
@@ -293,16 +292,48 @@ function criticalProbability({adv=false,dis=false}={}){
  if(dis&&!adv)return 1/400;
  return 1/20;
 }
+export function remainingMonsterHP(s,m=s.monster){
+ if(!m)return 0;
+ const current=m===s.monster?s.monsterHP:m.hp;
+ // Warden Phase I ends at 10 HP; all excess damage in that action is wasted.
+ return Math.max(0,current-(m.id==="warden"?10:0));
+}
 export function expectedAttack(s,h,m=s.monster){
- if(!m)return {damage:0,killChance:0,hitChance:0};
- const remaining=Math.max(0,m===s.monster?s.monsterHP:m.hp);
- if(!remaining)return {damage:0,killChance:1,hitChance:1};
+ if(!m)return {damage:0,killChance:0,hitChance:0,backfire:0,skipChance:0};
+ const remaining=remainingMonsterHP(s,m);
+ if(!remaining)return {damage:0,killChance:1,hitChance:1,backfire:0,skipChance:0};
+ // The printed Wild Spark replaces Wizard's ordinary attack the first time,
+ // not a bonus to a normal opposed roll.
+ if(h.card.id==="wizard"&&!h.used.has("hero")&&
+   (s.strategy==="magic"||(m===s.monster?s.monsterHP:m.hp)>=8)){
+  let total=0,kill=0;
+  for(let roll=1;roll<=6;roll++){
+   const medium=roll+2;
+   total+=Math.min(remaining,medium)/18;
+   kill+=Number(medium>=remaining)/18;
+   for(let other=1;other<=6;other++){
+    const high=roll+other;
+    total+=Math.min(remaining,high)/36;
+    kill+=Number(high>=remaining)/36;
+   }
+  }
+  return {damage:total,killChance:kill,hitChance:2/3,
+   backfire:3.5/3,skipChance:1/3};
+ }
  const modifiers={dis:h.poison||h.nextDis>0,adv:h.nextAdv>0};
  const hitChance=hitProbability(s.stats(h).atk+(h.recruitedGoblin?1:0)+(h.nextAtk||0),
   m.def,modifiers);
  const critChance=criticalProbability(modifiers);
  const ordinaryChance=Math.max(0,hitChance-critChance);
- const bonus=(h.nextDamage||0)+s.basicAttackBonus(h);
+ // Automatic once-per-Room attack riders each resolve after the attack hits.
+ const riders=[
+  h.card.id==="warrior"&&!h.used.has("hero"),
+  h.slots.weapon?.id==="sword"&&!h.used.has(h.slots.weapon),
+  h.slots.companion?.id==="dog"&&!h.used.has(h.slots.companion),
+  h.slots.ring?.id==="ring-ashes"&&!h.used.has(h.slots.ring)
+ ].filter(Boolean).length;
+ const riderDamage=riders*(2+3.5)/3;
+ const bonus=(h.nextDamage||0)+s.basicAttackBonus(h)+riderDamage;
  let ordinary=0,lethalNormal=0,critical=0,lethalCritical=0;
  for(let die=1;die<=6;die++){
   const amount=bonus+die;
@@ -314,8 +345,13 @@ export function expectedAttack(s,h,m=s.monster){
    lethalCritical+=Number(critAmount>=remaining)/36;
   }
  }
+ const backfire=hitChance*(Number(h.slots.weapon?.id==="cursed-blade")+
+  (h.card.id==="warrior"&&!h.used.has("hero")?2/3:0)+
+  (h.slots.weapon?.id==="sword"&&!h.used.has(h.slots.weapon)?1/3:0))+
+  (h.slots.ring?.id==="ring-ashes"&&!h.used.has(h.slots.ring)?2/3:0);
  return {damage:ordinaryChance*ordinary+critChance*critical,
-  killChance:ordinaryChance*lethalNormal+critChance*lethalCritical,hitChance};
+  killChance:ordinaryChance*lethalNormal+critChance*lethalCritical,hitChance,
+  backfire,skipChance:0};
 }
 export function legalCombatActions(s,h){
  if(!s.monster||h.hp<=0)return [];
@@ -326,10 +362,12 @@ export function legalCombatActions(s,h){
 export function planCombat(s,h){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s),m=s.monster;
  if(!m)return {action:"attack",score:0,options:0};
- const remaining=Math.max(1,s.monsterHP);
+ const remaining=Math.max(1,remainingMonsterHP(s,m));
  const attack=expectedAttack(s,h,m),fore=forecastCombat(s,m);
  const incoming=fore.monsterDamage*w.damage;
- const attackScore=attack.damage*w.damage+attack.killChance*incoming;
+ const attackScore=attack.damage*w.damage+
+  (attack.killChance+(1-attack.killChance)*attack.skipChance)*incoming-
+  attack.backfire*w.damage;
  const eligible=legalCombatActions(s,h);
  let winner=null;
  for(const card of eligible){
