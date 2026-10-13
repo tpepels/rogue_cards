@@ -227,7 +227,7 @@ test("retrieving an Item from the Bottomless Well does not remove a new deck car
  const deepRoom=s.rooms.DEEP.splice(deep,1)[0];
  s.beginRoom(deepRoom);
  assert.equal(JSON.stringify(s.deckRemovedCounts),before);
- assert.notEqual(JSON.stringify(s.metrics.objectAcquisitions),acquisitions);
+ assert.equal(JSON.stringify(s.metrics.objectAcquisitions),acquisitions);
  const prepared=prepareRolloutDecks(s,"fair");
  assert.equal(prepared.items.length,s.deck.length);
  const fork=forkExpeditionState(s,{knowledge:"fair",diceSeed:123,
