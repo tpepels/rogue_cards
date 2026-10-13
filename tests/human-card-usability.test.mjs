@@ -14,10 +14,10 @@ const fragments=card=>{
  if(card.type==="monster")return [...card.behavior,v.weakness,v.parley,v.remains];
  return [v.trigger,...(v.roll?.outcomes||[]).map(x=>x.effect),v.alternative].filter(Boolean);
 };
-test("all 111 cards supply legible complete instructions without a second manual",()=>{
- assert.equal(CATALOGUE.length,111);
+test("all 129 cards supply legible complete instructions without a second manual",()=>{
+ assert.equal(CATALOGUE.length,129);
  assert.equal(verifyObjectCoverage().objects,52);
- assert.equal(verifyRoomCoverage().rooms,37);
+ assert.equal(verifyRoomCoverage().rooms,55);
  const failures=[];
  for(const c of CATALOGUE){
   const f=fragments(c);
