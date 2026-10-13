@@ -241,6 +241,23 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Fair-information versus deck-Oracle agent
+
+The [local agent optimization study](docs/agent-oracle.md) trains the
+ordinary-information and full-deck-information agents separately, with
+**disjoint training, validation and held-out seeds**. A fixed-weight Oracle
+control isolates the value of deck visibility from parameter re-tuning.
+The Oracle never sees actual future dice or the simulator's RNG state.
+
+```sh
+npm run agent:study -- --preset smoke --dry-run
+npm run agent:study -- --preset smoke --out results/agent-smoke-01
+npm run agent:study -- --preset standard --workers 8 --out results/agent-standard-01
+```
+
+This is a benchmark of increasingly informed, tuned heuristics, not an exact
+optimal solver. No cards or rules are changed by the research harness.
+
 ## Local multi-seed validation (no CI required)
 
 The [laptop validation laboratory](docs/local-validation.md) tests every Hero,
