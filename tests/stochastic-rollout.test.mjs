@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/expedition-runtime.js";
 import {HEROES,MONSTERS,ROOMS} from "../src/tabletop-data.js";
-import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState}
- from "../src/rollout-state.js";
+import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState,
+ sampleRolloutDecks} from "../src/rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "../src/expedition-campaign.js";
 import {pairedRoomRollouts,pairedCombatRollouts}
@@ -77,6 +77,68 @@ test("prepared public-deck pools are bit-identical to uncached forks",()=>{
   assert.throws(()=>forkExpeditionState(another,{
    diceSeed:1,deckSeed:1,knowledge,blueprint:prepared}),/blueprint/);
  }
+});
+test("direct sampled-deck reuse is exact, independent, and never consumes real RNG",()=>{
+ const stageNames=["UPPER","MIDDLE","DEEP"];
+ const view=f=>({
+  deck:f.deck.map(c=>c.id),
+  rooms:Object.fromEntries(stageNames.map(stage=>
+   [stage,f.rooms[stage].map(c=>c.id)])),
+  monsters:Object.fromEntries(stageNames.map(stage=>
+   [stage,f.monsters[stage].map(c=>c.id)])),
+  hp:f.heroes.map(h=>h.hp),metrics:f.metrics,
+  inventory:f.heroes.map(h=>h.inventory.map(c=>c.id))
+ });
+ for(const knowledge of ["fair","oracle"]){
+  const s=roomState(knowledge);
+  const control=roomState(knowledge);
+  const original=view(s);
+  const prepared=prepareRolloutDecks(s,knowledge);
+  for(const n of [811,2941,10017]){
+   const opts={knowledge,diceSeed:n,deckSeed:n*3,blueprint:prepared};
+   const scenario=sampleRolloutDecks(s,opts);
+   if(knowledge==="fair"){
+    assert.notStrictEqual(scenario.deck,s.deck);
+    assert.notStrictEqual(scenario.rooms.UPPER,s.rooms.UPPER);
+   }else assert.equal(scenario,null);
+   const beforePiles=knowledge==="fair"?{
+    deck:scenario.deck.map(x=>x.id),
+    rooms:stageNames.map(k=>scenario.rooms[k].map(x=>x.id))
+   }:null;
+   for(const choice of [0,1]){
+    const fresh=forkExpeditionState(s,opts);
+    const reused=forkExpeditionState(s,{...opts,sampledDecks:scenario});
+    assert.deepEqual(view(reused),view(fresh));
+    const first=rolloutRoomContinuation(fresh,choice,{depth:2});
+    const second=rolloutRoomContinuation(reused,choice,{depth:2});
+    assert.equal(second.complete,first.complete);
+    assert.equal(second.won,first.won);
+    assert.deepEqual(view(reused),view(fresh));
+   }
+   if(beforePiles){
+    assert.deepEqual(scenario.deck.map(x=>x.id),beforePiles.deck);
+    assert.deepEqual(stageNames.map(k=>scenario.rooms[k].map(x=>x.id)),
+     beforePiles.rooms,"One action mutated another action's sampled pile");
+   }
+   assert.deepEqual(view(s),original,"Actual game was mutated by rollouts");
+  }
+  assert.equal(s.die(),control.die(),"Rollouts consumed actual dice");
+ }
+});
+test("sampled deck reuse rejects cross-seed, cross-source and Oracle leaks",()=>{
+ const s=roomState("fair"),other=roomState("fair");
+ const blueprint=prepareRolloutDecks(s,"fair");
+ const piles=sampleRolloutDecks(s,{knowledge:"fair",deckSeed:555,
+  blueprint});
+ assert.throws(()=>forkExpeditionState(s,{
+  knowledge:"fair",diceSeed:4,deckSeed:556,blueprint,
+  sampledDecks:piles}),/Sampled rollout decks/);
+ assert.throws(()=>forkExpeditionState(other,{
+  knowledge:"fair",diceSeed:4,deckSeed:555,
+  sampledDecks:piles}),/Sampled rollout decks/);
+ assert.throws(()=>forkExpeditionState(s,{
+  knowledge:"oracle",diceSeed:4,deckSeed:555,
+  sampledDecks:piles}),/Sampled rollout decks/);
 });
 test("card-aware clone matches structuredClone on Room and combat game outcomes",()=>{
  const view=s=>({
