@@ -90,7 +90,7 @@ export class ExpeditionState {
    sealAvailable:false,
    sealAttempt:false,sealWin:false,won:false,roundLimit:false,unresolved:0,
    operationCounts:{},cardCounts:{},roomChoices:{},roomOptionAvailable:{},
-   monsterVisits:{},objectAcquisitions:{},objectActivations:{},
+   monsterVisits:{},monsterBehaviorBands:{},objectAcquisitions:{},objectActivations:{},
    objectRoomExposures:{},objectEquippedRoomExposures:{},
    wipeCause:null,wipeStage:null};
   for(const h of this.heroes){
