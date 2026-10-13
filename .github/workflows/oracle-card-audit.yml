@@ -1,0 +1,62 @@
+name: Oracle all-card audit smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/oracle-card-audit.yml
+      - scripts/study-oracle-overnight.mjs
+      - src/expedition-campaign.js
+      - src/engine/combat.js
+
+jobs:
+  all-cards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Canonical rules and code syntax
+        run: |
+          node --check scripts/study-oracle-overnight.mjs
+          npm run validate:deck
+          npm run test:rollout
+      - name: Inspect whole-card workload
+        run: |
+          npm run oracle:overnight -- \
+            --runs 2 --budget 1 --replan-budget 0 \
+            --workers 4 --hours 1 --seed 20261014 \
+            --out results/oracle-all-card-smoke --dry-run
+      - name: Test every real Room and Item intervention with terminal rollouts
+        run: |
+          npm run oracle:overnight -- \
+            --runs 2 --budget 1 --replan-budget 0 \
+            --workers 4 --chunk-size 2 --hours 1 --seed 20261014 \
+            --out results/oracle-all-card-smoke
+      - name: Fail if card experiments were skipped or misrepresented
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const s=JSON.parse(readFileSync('results/oracle-all-card-smoke/summary.json','utf8'));
+          const v=JSON.parse(readFileSync('results/oracle-all-card-smoke/validation.json','utf8'));
+          if(s.cards.length!==116||s.actualPairedTrials!==232||
+             !s.everyCardFullySampled||v.complete!==true)
+            throw Error('Missing one or more attempted canonical Room/Item experiments');
+          if(v.pass!==false||s.conclusionReady!==false||
+             s.coverageGaps.knownUnsearchedDecisionTypes.length===0)
+            throw Error('Coverage contract falsely declared a complete solver');
+          if(!s.coverage.branchSamples||!s.coverage.vaults)
+            throw Error('No real full-horizon action forks/Vaults');
+          for(const h of ['warrior','knight','wizard','witch','rogue','thief','priest','monk'])
+            if(!s.coverage.heroes[h])throw Error('Hero unvisited: '+h);
+          NODE
+      - name: Save audit, incomplete coverage evidence and checkpoints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-all-card-smoke
+          path: results/oracle-all-card-smoke/
+          if-no-files-found: ignore
