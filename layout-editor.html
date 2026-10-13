@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="theme-color" content="#171510">
+ <title>Rogue Cards - Card layout editor</title>
+ <link rel="stylesheet" href="./styles/tabletop.css">
+ <link rel="stylesheet" href="./styles/compositions.css">
+ <link rel="stylesheet" href="./styles/pasted-notes.css">
+ <link rel="stylesheet" href="./styles/layout-editor.css">
+</head>
+<body class="le-page">
+ <header class="le-head">
+  <div><a href="./index.html" class="le-back">← CARD CATALOGUE</a>
+  <h1>Card layout editor</h1>
+  <p>Move the title, rules and dice/results paper directly on each card. Nothing here changes gameplay text or print size.</p></div>
+  <div class="le-actions">
+   <button id="undo" type="button" disabled>UNDO</button>
+   <button id="redo" type="button" disabled>REDO</button>
+   <button id="import" type="button">IMPORT JSON</button>
+   <button id="export" type="button" class="le-primary">EXPORT JSON ↓</button>
+   <input id="import-file" type="file" accept=".json,application/json" hidden>
+  </div>
+ </header>
+ <main class="le-main">
+  <section class="le-view">
+   <div class="le-navigator">
+    <label>TYPE <select id="family">
+     <option value="all">ALL CARDS</option>
+     <option value="hero">HEROES</option>
+     <option value="room">ROOMS</option>
+     <option value="monster">MONSTERS</option>
+     <option value="item">ITEMS</option>
+     <option value="potion">POTIONS</option>
+    </select></label>
+    <button id="prev" type="button" aria-label="Previous card">←</button>
+    <label class="le-card-picker">CARD <select id="card-picker" aria-label="Card to edit"></select></label>
+    <button id="next" type="button" aria-label="Next card">→</button>
+   </div>
+   <div class="le-stage">
+    <div id="card-frame" class="le-card-frame">
+     <div id="editor-card" class="le-card-host" aria-label="Editable printed card"></div>
+    </div>
+   </div>
+   <div class="le-bottom">
+    <label>ZOOM <input id="zoom" type="range" min="1" max="1.6" step=".1" value="1.3"> <output id="zoom-value">130%</output></label>
+    <label><input id="snap" type="checkbox" checked> SNAP TO 0.5 MM</label>
+    <span id="draft-status" role="status">Loading placements…</span>
+   </div>
+  </section>
+  <aside class="le-inspector">
+   <h2>Paper pieces</h2>
+   <p class="le-help">Click a piece, drag it anywhere on the card, or use its bottom-right square to resize. The text expands automatically if needed.</p>
+   <div id="piece-list" class="le-piece-list" role="group" aria-label="Select paper piece"></div>
+   <div class="le-measurements">
+    <h3 id="selected-name">SELECT A PIECE</h3>
+    <div class="le-measure-grid">
+     <label>LEFT (MM) <input id="position-x" type="number" min="0" max="90" step=".5"></label>
+     <label>TOP (MM) <input id="position-y" type="number" min="0" max="130" step=".5"></label>
+     <label>WIDTH (MM) <input id="position-w" type="number" min="10" max="90" step=".5"></label>
+     <label>MIN. HEIGHT (MM) <input id="position-h" type="number" min="0" max="130" step=".5"></label>
+    </div>
+    <div class="le-row"><button id="reset-piece" type="button">RESET SELECTED</button><button id="reset-card" type="button">RESET THIS CARD</button></div>
+   </div>
+   <div id="layout-warning" class="le-warning" role="status"></div>
+   <h2>How to save your work</h2>
+   <p>Changes autosave in this browser. Choose <strong>EXPORT JSON</strong> to make a portable backup. Upload that file in ChatGPT and I can commit it to the repository and generate the permanent CSS for every adjusted card at once.</p>
+   <p><strong>Tip:</strong> Use arrow keys for fine positioning (Shift + arrow for 2 mm), or the measurements above. The JSON stores physical millimetres, so it matches printing.</p>
+   <p class="le-subtle">The exported file can be imported here later. It includes every adjusted card, not just the one currently visible.</p>
+  </aside>
+ </main>
+ <script type="module" src="./src/layout-editor.js"></script>
+</body>
+</html>
