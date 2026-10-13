@@ -51,6 +51,9 @@ export class ExpeditionState {
   this.deck=copyDeck(this.rng,OBJECTS);
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s)).slice(0,3)]));
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
+  this.seenRooms=new Set();
+  // Publicly revealed future Rooms from printed scout/peek effects.
+  this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
   this.monsterQueue=[];this.monster=null;this.monsterHP=0;this.monsterSkip=0;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites=new Map();
   this.damageElement=null;this.actor=this.heroes[0];this.room=null;
@@ -165,6 +168,9 @@ export class ExpeditionState {
    const danger=r=>r.v2.roll.outcomes.some(o=>/draw an? .* monster/i.test(o.effect));
    if(danger(deck[0])&&!danger(deck[1]))[deck[0],deck[1]]=[deck[1],deck[0]];
   }
+  // Scouted card identities are public knowledge to a fair-information
+  // player, not merely a metric. Preserve their next-to-play order.
+  this.peekedRoomIds[this.room.stage]=deck.slice(0,n).map(r=>r.id);
  }
  discardable(n=1,tag=null){return this.heroes.reduce((total,h)=>
    total+h.inventory.filter(c=>(!tag||can(c,tag))&&!(can(c,"CURSED")&&this.equipped(h,c.id))).length,0)>=n;}
@@ -230,6 +236,10 @@ export class ExpeditionState {
  }
  beginRoom(room){
   this.room=room;
+  this.seenRooms.add(room.id);
+  // The current Room has left the pile; any earlier peek of it is spent.
+  if(this.peekedRoomIds[room.stage]?.[0]===room.id)
+   this.peekedRoomIds[room.stage].shift();
   // Exposure means present at entry; it is NOT proof of a legal activation.
   for(const h of this.living()){
    for(const o of h.inventory)
