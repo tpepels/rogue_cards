@@ -51,9 +51,25 @@ explicit activations.
 | Whispering Blade | -1.41 | -4.10 to +1.28 |
 | Wand of Questionable Shapes | -1.31 | -4.60 to +1.97 |
 
-Six Items have nominal paired intervals entirely above zero, two
-entirely below zero. The 95% intervals are **not adjusted** for 52
-comparisons. These are screening signals, not grounds to rebalance
+Six Items have nominal paired Wald intervals entirely above zero,
+two entirely below zero. However, exact two-sided matched-discordance
+(binomial/McNemar) tests corrected for **52 simultaneous Items using
+Holm's procedure** leave **only Notched Sword and Ashwood Staff**
+statistically distinguishable from zero at familywise 5%:
+
+- Notched Sword: 147 gift-only victories versus 70 baseline-only
+  victories, exact p ≈ 1.86e-7, Holm-adjusted p ≈ 9.69e-6.
+- Ashwood Staff: 122 gift-only victories versus 55 baseline-only
+  victories, exact p ≈ 5.19e-7, Holm-adjusted p ≈ 2.65e-5.
+
+For comparison, Spore Jar's exact unadjusted p ≈ .037 becomes
+Holm-adjusted p = 1.0; Very Helpful Skull's exact unadjusted
+p ≈ .057 is not even below .05 (the nominal Wald interval
+is too optimistic for that sample).
+
+All these tests concern **early Item acquisition** with the current
+scripted policy. Neither familywise significance nor a large gift
+effect demonstrates an overpowered card in its ordinary draw context. These are screening signals, not grounds to rebalance
 specific cards automatically.
 
 ## Interpretation of unusually strong or weak cards
