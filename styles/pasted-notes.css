@@ -1,242 +1,363 @@
 /* Pasted-paper composition: a full-bleed illustration remains the card.
    Two independent, readable rule clippings sit ON the original ink picture.
    Print and screen deliberately share the same 90 x 130 mm coordinates. */
-.tt-card.tt-paper-collage .tt-collage{
- position:relative;
- display:block;
- overflow:hidden;
- padding:0;
- isolation:isolate;
- background:#17130e;
+.tt-card.tt-paper-collage .tt-collage {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  isolation: isolate;
+  background: #17130e;
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-visual{
- position:absolute;
- inset:-.5mm -.4mm 1.2mm;
- top:-.5mm;bottom:1.2mm;left:-.4mm;right:-.4mm;
- width:auto;height:auto;min-height:0;margin:0;
- transform:none;
- border:0;box-shadow:none;
- overflow:hidden;
- z-index:0;
+.tt-card.tt-paper-collage .tt-collage > .tt-visual {
+  position: absolute;
+  inset: -0.5mm -0.4mm 1.2mm;
+  top: -0.5mm;
+  bottom: 1.2mm;
+  left: -0.4mm;
+  right: -0.4mm;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  transform: none;
+  border: 0;
+  box-shadow: none;
+  overflow: hidden;
+  z-index: 0;
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-visual .tt-illustration{
- position:absolute;inset:0;
- width:100%;height:100%;min-width:0;
+.tt-card.tt-paper-collage .tt-collage > .tt-visual .tt-illustration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-visual .tt-art-image{
- display:block;
- width:100%;height:100%;
- object-fit:cover;
- object-position:var(--image-focus-x,center) var(--image-focus-y,center);
- filter:none;
+.tt-card.tt-paper-collage .tt-collage > .tt-visual .tt-art-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--image-focus-x, center) var(--image-focus-y, center);
+  filter: none;
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-visual:after{
- opacity:.12;
- background:repeating-linear-gradient(105deg,transparent 0 23px,#34261915 23px 24px);
+.tt-card.tt-paper-collage .tt-collage > .tt-visual:after {
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    105deg,
+    transparent 0 23px,
+    #34261915 23px 24px
+  );
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-content{
- position:absolute;
- top:0;right:0;bottom:0;left:0;
- width:100%;height:100%;
- max-height:none;max-width:none;min-height:0;
- margin:0;padding:0;
- transform:none;
- border:0;background:transparent;background-image:none;box-shadow:none;
- clip-path:none;
- overflow:visible;
- z-index:5;
- pointer-events:none;
+.tt-card.tt-paper-collage .tt-collage > .tt-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  transform: none;
+  border: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  clip-path: none;
+  overflow: visible;
+  z-index: 5;
+  pointer-events: none;
 }
-.tt-card.tt-paper-collage .tt-collage>.tt-content:before{content:none}
-.tt-card.tt-paper-collage .tt-slip{
- position:absolute;
- z-index:2;
- box-sizing:border-box;
- width:var(--paper-width,43mm);
- max-width:calc(100% - 2mm);
- height:auto;max-height:none;
- margin:0;
- padding:.9mm 1.2mm 1mm;
- overflow:visible;
- overflow-wrap:break-word;
- background:#f0e5d0;
- background-image:
-  radial-gradient(ellipse at 15% 20%,#fff7e35e,transparent 60%),
-  repeating-linear-gradient(178deg,transparent 0 15px,#3023140d 15px 16px);
- color:#17110b;
- border:1px solid #24190d;
- box-shadow:.5mm .65mm 0 #14100d;
- clip-path:polygon(0 1%,12% 0,26% 1%,40% 0,59% 1.2%,75% 0,100% 1%,99.5% 97%,86% 100%,65% 98.9%,44% 100%,21% 99%,0 98%);
- transform:rotate(var(--paper-angle,-.3deg));
- transform-origin:40% 85%;
+.tt-card.tt-paper-collage .tt-collage > .tt-content:before {
+  content: none;
 }
-.tt-card.tt-paper-collage .tt-slip--lead{
- --paper-width:36mm;
- left:1mm;right:auto;bottom:7.6mm;
- --paper-angle:-.55deg;
+.tt-card.tt-paper-collage .tt-slip {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  width: var(--paper-width, 43mm);
+  max-width: calc(100% - 2mm);
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0.9mm 1.2mm 1mm;
+  overflow: visible;
+  overflow-wrap: break-word;
+  background: #f0e5d0;
+  background-image:
+    radial-gradient(ellipse at 15% 20%, #fff7e35e, transparent 60%),
+    repeating-linear-gradient(178deg, transparent 0 15px, #3023140d 15px 16px);
+  color: #17110b;
+  border: 1px solid #24190d;
+  box-shadow: 0.5mm 0.65mm 0 #14100d;
+  clip-path: polygon(
+    0 1%,
+    12% 0,
+    26% 1%,
+    40% 0,
+    59% 1.2%,
+    75% 0,
+    100% 1%,
+    99.5% 97%,
+    86% 100%,
+    65% 98.9%,
+    44% 100%,
+    21% 99%,
+    0 98%
+  );
+  transform: rotate(var(--paper-angle, -0.3deg));
+  transform-origin: 40% 85%;
 }
-.tt-card.tt-paper-collage .tt-slip--results{
- --paper-width:40mm;
- right:.8mm;left:auto;bottom:7.3mm;
- --paper-angle:.45deg;
+.tt-card.tt-paper-collage .tt-slip--lead {
+  --paper-width: 36mm;
+  left: 1mm;
+  right: auto;
+  bottom: 7.6mm;
+  --paper-angle: -0.55deg;
 }
-.tt-card.tt-paper-collage .tt-slip--results:before{
- content:"";display:block;
- height:1px;width:23%;margin:-1.4mm auto .8mm;
- background:#16100a;
- opacity:.6;
+.tt-card.tt-paper-collage .tt-slip--results {
+  --paper-width: 40mm;
+  right: 0.8mm;
+  left: auto;
+  bottom: 7.3mm;
+  --paper-angle: 0.45deg;
+}
+.tt-card.tt-paper-collage .tt-slip--results:before {
+  content: "";
+  display: block;
+  height: 1px;
+  width: 23%;
+  margin: -1.4mm auto 0.8mm;
+  background: #16100a;
+  opacity: 0.6;
 }
 /* Four bookish arrangements, deterministically chosen from each card ID. */
-.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead{
- left:auto;right:1mm;--paper-angle:.55deg;
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead {
+  left: auto;
+  right: 1mm;
+  --paper-angle: 0.55deg;
 }
-.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results{
- right:auto;left:.8mm;--paper-angle:-.65deg;
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results {
+  right: auto;
+  left: 0.8mm;
+  --paper-angle: -0.65deg;
 }
-.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead{
- bottom:35mm;left:1mm;right:auto;--paper-angle:-1.0deg;
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead {
+  bottom: 35mm;
+  left: 1mm;
+  right: auto;
+  --paper-angle: -1deg;
 }
-.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results{
- bottom:7mm;right:.6mm;left:auto;--paper-angle:.7deg;
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results {
+  bottom: 7mm;
+  right: 0.6mm;
+  left: auto;
+  --paper-angle: 0.7deg;
 }
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead{
- bottom:34mm;left:auto;right:.9mm;--paper-angle:.9deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead {
+  bottom: 34mm;
+  left: auto;
+  right: 0.9mm;
+  --paper-angle: 0.9deg;
 }
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results{
- bottom:7mm;right:auto;left:.7mm;--paper-angle:-.75deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results {
+  bottom: 7mm;
+  right: auto;
+  left: 0.7mm;
+  --paper-angle: -0.75deg;
 }
 /* The art stays central. The first slip can float to a corner on a
    shorter card, but it never becomes a full-width opaque text panel. */
-.tt-card.tt-paper-collage .tt-v2-results>.tt-v2-result,
-.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result{
- margin:.12mm 0;
- padding:.32mm .2mm;
- line-height:1.12;
- border-left:0;
- background:transparent;
- transform:none;
+.tt-card.tt-paper-collage .tt-v2-results > .tt-v2-result,
+.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result {
+  margin: 0.12mm 0;
+  padding: 0.32mm 0.2mm;
+  line-height: 1.12;
+  border-left: 0;
+  background: transparent;
+  transform: none;
 }
-.tt-card.tt-paper-collage .tt-v2-result b{
- display:inline-block;
- width:auto;min-width:9.8mm;
- padding:.13mm .25mm;
- font-size:10px;
+.tt-card.tt-paper-collage .tt-v2-result b {
+  display: inline-block;
+  width: auto;
+  min-width: 9.8mm;
+  padding: 1mm 0.25mm;
+  font-size: 13px;
 }
-.tt-card.tt-paper-collage .tt-v2-result span{
- min-width:0;
+.tt-card.tt-paper-collage .tt-v2-result span {
+  min-width: 0;
 }
-.tt-card.tt-paper-collage .tt-v2-kind{
- margin:0 0 .35mm;
- font-size:8.3px;
- padding:0 0 .3mm;
+.tt-card.tt-paper-collage .tt-v2-kind {
+  margin: 0 0 0.35mm;
+  font-size: 8.3px;
+  padding: 0 0 0.3mm;
 }
-.tt-card.tt-paper-collage .tt-v2-tag{
- font-size:7.6px;
- padding:.2mm .4mm;
+.tt-card.tt-paper-collage .tt-v2-tag {
+  font-size: 7.6px;
+  padding: 0.2mm 0.4mm;
 }
-.tt-card.tt-paper-collage .tt-v2-trigger{
- margin:.35mm 0 0;
- padding:0;
- font-size:10.2px;line-height:1.18;
- border:0;
+.tt-card.tt-paper-collage .tt-v2-trigger {
+  margin: 0.35mm 0 0;
+  padding: 0;
+  font-size: 10.2px;
+  line-height: 1.18;
+  border: 0;
 }
-.tt-card.tt-paper-collage .tt-v2-roll-heading{
- margin:0 0 .4mm;
- padding:.4mm .5mm;
- font-size:9.5px;line-height:1.1;
+.tt-card.tt-paper-collage .tt-v2-roll-heading {
+  margin: 0 0 0.4mm;
+  padding: 0.4mm 0.5mm;
+  font-size: 9.5px;
+  line-height: 1.1;
 }
-.tt-card.tt-paper-collage .tt-v2-alternative{
- margin:.5mm 0 0;padding:.4mm .3mm 0;
- font-size:9.6px;line-height:1.13;
+.tt-card.tt-paper-collage .tt-v2-alternative {
+  margin: 0.5mm 0 0;
+  padding: 0.4mm 0.3mm 0;
+  font-size: 9.6px;
+  line-height: 1.13;
 }
-.tt-card.tt-paper-collage .tt-v2-identity{
- margin:.4mm 0 0;padding:.25mm 0 0;
+.tt-card.tt-paper-collage .tt-v2-identity {
+  margin: 0.4mm 0 0;
+  padding: 0.25mm 0 0;
 }
 /* Heroes: tall portrait with a starter note and a separate d6 ability strip.
    Stats stay pinned directly to the left edge of the portrait. */
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-slip--lead{--paper-width:31mm}
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-slip--results{--paper-width:44mm}
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-collage .tt-stats{
- top:15mm;left:0;width:14.5mm;height:47mm;
- z-index:4;
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-slip--lead {
+  --paper-width: 31mm;
 }
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-v2-hero-start{
- font-size:9px;padding:.4mm .5mm;
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-slip--results {
+  --paper-width: 44mm;
 }
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-v2-hero-trigger{
- font-size:10px;line-height:1.13;margin:.45mm 0 0;
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-collage .tt-stats {
+  top: 15mm;
+  left: 0;
+  width: 14.5mm;
+  height: 47mm;
+  z-index: 4;
 }
-.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-content--v2-hero .tt-v2-result{
- font-size:10px;line-height:1.12;
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-v2-hero-start {
+  font-size: 9px;
+  padding: 0.4mm 0.5mm;
+}
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-v2-hero-trigger {
+  font-size: 10px;
+  line-height: 1.13;
+  margin: 0.45mm 0 0;
+}
+.tt-card.tt-paper-collage.tt-layout-v2-hero .tt-content--v2-hero .tt-v2-result {
+  font-size: 10px;
+  line-height: 1.12;
 }
 /* Monsters: d6 behavior on one scrap, lore/bargain on the other. */
-.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-slip--lead{--paper-width:43mm}
-.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-slip--results{--paper-width:33mm}
-.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-collage .tt-stats{
- top:15.8mm;left:0;width:14mm;height:37mm;
- z-index:4;
+.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-slip--lead {
+  --paper-width: 43mm;
 }
-.tt-card.tt-paper-collage .tt-v2-monster-head{
- font-size:8px;line-height:1.1;padding-bottom:.35mm;
+.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-slip--results {
+  --paper-width: 33mm;
 }
-.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result{
- padding:.32mm .15mm;font-size:9.2px;line-height:1.1;
+.tt-card.tt-paper-collage.tt-layout-v2-monster .tt-collage .tt-stats {
+  top: 15.8mm;
+  left: 0;
+  width: 14mm;
+  height: 37mm;
+  z-index: 4;
 }
-.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result b{
- font-size:9.5px;min-width:9mm;
+.tt-card.tt-paper-collage .tt-v2-monster-head {
+  font-size: 8px;
+  line-height: 1.1;
+  padding-bottom: 0.35mm;
+}
+.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result {
+  padding: 0.32mm 0.15mm;
+  font-size: 9.2px;
+  line-height: 1.1;
+}
+.tt-card.tt-paper-collage .tt-v2-monster-rows .tt-v2-result b {
+  font-size: 9.5px;
+  min-width: 9mm;
 }
 .tt-card.tt-paper-collage .tt-v2-monster-rule,
-.tt-card.tt-paper-collage .tt-v2-monster-remains{
- font-size:9px;line-height:1.13;
- padding:.3mm 0 0;margin:.4mm 0 0;
+.tt-card.tt-paper-collage .tt-v2-monster-remains {
+  font-size: 9px;
+  line-height: 1.13;
+  padding: 0.3mm 0 0;
+  margin: 0.4mm 0 0;
 }
 /* Rooms: the choice ticket and the outcomes are physically distinct. */
-.tt-card.tt-paper-collage.tt-layout-v2-room .tt-slip--lead{--paper-width:37mm}
-.tt-card.tt-paper-collage.tt-layout-v2-room .tt-slip--results{--paper-width:39mm}
-.tt-card.tt-paper-collage .tt-v2-prompt{
- margin:.35mm 0 .4mm;font-size:10px;line-height:1.11;
+.tt-card.tt-paper-collage.tt-layout-v2-room .tt-slip--lead {
+  --paper-width: 37mm;
 }
-.tt-card.tt-paper-collage .tt-v2-choices{gap:.15mm;padding:0}
-.tt-card.tt-paper-collage .tt-v2-choice{
- padding:.3mm .25mm;margin:.15mm 0;
- grid-template-columns:13mm 1fr;gap:.45mm;
- font-size:9.3px;line-height:1.12;
+.tt-card.tt-paper-collage.tt-layout-v2-room .tt-slip--results {
+  --paper-width: 39mm;
 }
-.tt-card.tt-paper-collage .tt-v2-choice b{
- padding:.2mm .35mm;font-size:8.9px;
+.tt-card.tt-paper-collage .tt-v2-prompt {
+  margin: 0.35mm 0 0.4mm;
+  font-size: 10px;
+  line-height: 1.11;
+}
+.tt-card.tt-paper-collage .tt-v2-choices {
+  gap: 0.15mm;
+  padding: 0;
+}
+.tt-card.tt-paper-collage .tt-v2-choice {
+  padding: 0.3mm 0.25mm;
+  margin: 0.15mm 0;
+  grid-template-columns: 13mm 1fr;
+  gap: 0.45mm;
+  font-size: 9.3px;
+  line-height: 1.12;
+}
+.tt-card.tt-paper-collage .tt-v2-choice b {
+  padding: 0.2mm 0.35mm;
+  font-size: 8.9px;
 }
 /* Found items: tool and gear instructions are almost a single small label;
    scrolls and wands carry a secondary d6 receipt. */
-.tt-card.tt-paper-collage.tt-layout-v2-object .tt-slip--lead{--paper-width:33mm}
-.tt-card.tt-paper-collage.tt-layout-v2-object .tt-slip--results{--paper-width:43mm}
+.tt-card.tt-paper-collage.tt-layout-v2-object .tt-slip--lead {
+  --paper-width: 33mm;
+}
+.tt-card.tt-paper-collage.tt-layout-v2-object .tt-slip--results {
+  --paper-width: 43mm;
+}
 .tt-card.tt-paper-collage[data-v2-kind="TOOL"] .tt-slip--lead,
-.tt-card.tt-paper-collage[data-v2-kind="EQUIPMENT"] .tt-slip--lead{
- --paper-width:36mm;
+.tt-card.tt-paper-collage[data-v2-kind="EQUIPMENT"] .tt-slip--lead {
+  --paper-width: 36mm;
 }
 .tt-card.tt-paper-collage[data-v2-kind="SCROLL"] .tt-slip--results,
-.tt-card.tt-paper-collage[data-v2-kind="WAND"] .tt-slip--results{--paper-width:44mm}
+.tt-card.tt-paper-collage[data-v2-kind="WAND"] .tt-slip--results {
+  --paper-width: 44mm;
+}
 .tt-card.tt-paper-collage[data-v2-kind="SCROLL"] .tt-slip--lead,
-.tt-card.tt-paper-collage[data-v2-kind="WAND"] .tt-slip--lead{--paper-width:32mm}
+.tt-card.tt-paper-collage[data-v2-kind="WAND"] .tt-slip--lead {
+  --paper-width: 32mm;
+}
 .tt-card.tt-paper-collage[data-v2-kind="RELIC"] .tt-slip--results,
-.tt-card.tt-paper-collage[data-v2-kind="POTION"] .tt-slip--results{
- --paper-width:41mm;
+.tt-card.tt-paper-collage[data-v2-kind="POTION"] .tt-slip--results {
+  --paper-width: 41mm;
 }
-.tt-card.tt-paper-collage .tt-content--v2-object .tt-v2-result{
- font-size:9.5px;line-height:1.1;
+.tt-card.tt-paper-collage .tt-content--v2-object .tt-v2-result {
+  font-size: 9.5px;
+  line-height: 1.1;
 }
-.tt-card.tt-paper-collage .tt-content--v2-object .tt-v2-result b{
- font-size:10px;
+.tt-card.tt-paper-collage .tt-content--v2-object .tt-v2-result b {
+  font-size: 10px;
 }
-.tt-card.tt-paper-collage .tt-slip--lead:only-child{
- --paper-width:54mm;
- bottom:8mm;
+.tt-card.tt-paper-collage .tt-slip--lead:only-child {
+  --paper-width: 54mm;
+  bottom: 8mm;
 }
 /* Preserve genuine photo collage in both gallery and printed A4. */
-@media print{
- .tt-card.tt-paper-collage .tt-collage{overflow:hidden}
- .tt-card.tt-paper-collage .tt-slip{
-  print-color-adjust:exact;-webkit-print-color-adjust:exact;
- }
+@media print {
+  .tt-card.tt-paper-collage .tt-collage {
+    overflow: hidden;
+  }
+  .tt-card.tt-paper-collage .tt-slip {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }
 
 /* NORTH-EAST PAPER EDITION
@@ -245,77 +366,103 @@
 .tt-card.tt-paper-collage .tt-slip--lead,
 .tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead,
 .tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead,
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead{
- top:29mm;
- right:.9mm;
- bottom:auto;
- left:auto;
- --paper-angle:.48deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead {
+  top: 29mm;
+  right: 0.9mm;
+  bottom: auto;
+  left: auto;
+  --paper-angle: 0.48deg;
 }
-.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead{
- top:31mm;right:1.5mm;--paper-angle:-.68deg;
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--lead {
+  top: 31mm;
+  right: 1.5mm;
+  --paper-angle: -0.68deg;
 }
-.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead{
- top:33mm;right:.7mm;--paper-angle:.85deg;
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--lead {
+  top: 33mm;
+  right: 0.7mm;
+  --paper-angle: 0.85deg;
 }
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead{
- top:30mm;right:1.2mm;--paper-angle:-.9deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--lead {
+  top: 30mm;
+  right: 1.2mm;
+  --paper-angle: -0.9deg;
 }
-.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead{
- top:39mm;
+.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead {
+  top: 39mm;
 }
 .tt-card.tt-paper-collage .tt-slip--results,
 .tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results,
 .tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results,
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results{
- top:auto;
- bottom:7.4mm;
- left:1.1mm;
- right:auto;
- --paper-angle:-.4deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results {
+  top: auto;
+  bottom: 7.4mm;
+  left: 1.1mm;
+  right: auto;
+  --paper-angle: -0.4deg;
 }
-.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results{
- bottom:8mm;left:.9mm;--paper-angle:.65deg;
+.tt-card.tt-paper-collage[data-paste="b"] .tt-slip--results {
+  bottom: 8mm;
+  left: 0.9mm;
+  --paper-angle: 0.65deg;
 }
-.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results{
- bottom:7.2mm;left:.7mm;--paper-angle:-.75deg;
+.tt-card.tt-paper-collage[data-paste="c"] .tt-slip--results {
+  bottom: 7.2mm;
+  left: 0.7mm;
+  --paper-angle: -0.75deg;
 }
-.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results{
- bottom:7.5mm;left:1.5mm;--paper-angle:.6deg;
+.tt-card.tt-paper-collage[data-paste="d"] .tt-slip--results {
+  bottom: 7.5mm;
+  left: 1.5mm;
+  --paper-angle: 0.6deg;
 }
 /* A single small notice still belongs in the image's north-east.
    Do not expand it across the entire artwork merely because it is alone. */
-.tt-card.tt-paper-collage .tt-slip--lead:only-child{
- top:30mm;bottom:auto;
- --paper-width:45mm;
+.tt-card.tt-paper-collage .tt-slip--lead:only-child {
+  top: 30mm;
+  bottom: auto;
+  --paper-width: 45mm;
 }
-.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead:only-child{
- top:39mm;
+.tt-card.tt-paper-collage[data-title-band="long"] .tt-slip--lead:only-child {
+  top: 39mm;
 }
-.tt-card.tt-paper-collage .tt-footer{
- display:flex;
- align-items:center;
- justify-content:space-between;
- gap:1mm;
+.tt-card.tt-paper-collage .tt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1mm;
 }
-.tt-card.tt-paper-collage .tt-footer i{
- min-width:0;flex:1 1 auto;max-width:none;
+.tt-card.tt-paper-collage .tt-footer i {
+  min-width: 0;
+  flex: 1 1 auto;
+  max-width: none;
 }
-.tt-card.tt-paper-collage .tt-footer-meta{
- flex:0 0 auto;
- display:flex;align-items:center;gap:1.5mm;
- font:900 9px/1 "Courier New",monospace;
- white-space:nowrap;
+.tt-card.tt-paper-collage .tt-footer-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5mm;
+  font:
+    900 9px/1 "Courier New",
+    monospace;
+  white-space: nowrap;
 }
-.tt-card.tt-paper-collage .tt-footer-meta .tt-depth{
- display:inline-block;
- position:static;
- padding:.35mm .65mm;
- color:#eee2d1;background:#21180f;
- border:0;box-shadow:none;transform:none;
- font:900 9px/1 "Courier New",monospace;
- letter-spacing:.03em;
+.tt-card.tt-paper-collage .tt-footer-meta .tt-depth {
+  display: inline-block;
+  position: static;
+  padding: 0.35mm 0.65mm;
+  color: #eee2d1;
+  background: #21180f;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  font:
+    900 9px/1 "Courier New",
+    monospace;
+  letter-spacing: 2px;
 }
-.tt-card.tt-paper-collage .tt-footer-meta .tt-footer-number{
- font:8.5px/1 "Courier New",monospace;
+.tt-card.tt-paper-collage .tt-footer-meta .tt-footer-number {
+  font:
+    8.5px/1 "Courier New",
+    monospace;
 }
