@@ -241,6 +241,28 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Local multi-seed validation (no CI required)
+
+The [laptop validation laboratory](docs/local-validation.md) tests every Hero,
+all 28 two-Hero combinations, multiple independent random seed batches,
+scripted and alternative decision policies, Hero order, and every Item's
+opportunities and outcomes. It generates complete CSV/JSON/Markdown reports
+under the ignored `results/` directory.
+
+Wandering Knight is **intentionally the beginner-friendly strong class**.
+The validator monitors his performance without treating his advantage as
+a failed balance criterion. No cards or rules are modified by the validator.
+
+```sh
+git pull --ff-only
+npm run validate:local -- --preset smoke --out results/smoke-first --progress
+npm run validate:local -- --preset standard --workers 8 --out results/standard-01 --progress
+```
+
+For a full multi-seed, multi-policy study, see the deep preset and reproducibility
+instructions in the linked document. These experiments are intended to run
+on your own laptop, not GitHub CI.
+
 ## October 2026 Hero rebalance
 
 The [approved risky-power Hero and Item rebalance](docs/hero-balance-2026-10.md)
