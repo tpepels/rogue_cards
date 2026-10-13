@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/oracle-card-audit.yml
       - scripts/study-oracle-overnight.mjs
+      - scripts/start-oracle-night.sh
       - src/expedition-campaign.js
       - src/rollout-state.js
       - src/engine/combat.js
@@ -23,6 +24,7 @@ jobs:
       - name: Canonical rules and code syntax
         run: |
           node --check scripts/study-oracle-overnight.mjs
+          bash -n scripts/start-oracle-night.sh
           npm run validate:deck
           npm run test:rollout
       - name: Inspect whole-card workload
