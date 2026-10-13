@@ -17,20 +17,30 @@ const data=[
  ["monk","Roadless Monk","delver",19,4,4,4,"needle","STILLNESS · after a Monster rolls behaviour",
   [["1–2","Lose 2 HP."],["3–4","Change behaviour 5 or 6 to 3–4."],["5","Change result to 1–2; heal 2 HP."],["6","Cancel this Monster response; heal 2 HP."]],"The empty hand has room for more."]
 ];
-// A Hero can accept a modest certain benefit or gamble on the printed d6.
-// The trigger is once per Room; the choice is made when it fires.
+// One real choice, once per Room. Trigger, reliable effect, or printed d6.
 const reliable=Object.freeze({
- warrior:"PRESS: Lose 1 HP for +2 damage",
- knight:"GUARD: Lose 1 HP to prevent 3 damage from this hit",
- wizard:"CONTROL: Deal 2 damage to the Monster without rolling",
- witch:"DISTIL: Remove your POISONED; otherwise heal 1 HP",
- rogue:"BRIBE: Discard 1 Item for ADV on the coming d20",
- thief:"SWAP: Draw 1 Item, then discard 1 Item",
- priest:"BLESS: Lose 1 HP to add +2 to the Hero d20",
- monk:"ENDURE: Lose 2 HP to change behaviour 5–6 to 3–4"
+ warrior:"lose 1 HP to deal +2 damage",
+ knight:"lose 1 HP to reduce this hit's damage by 3",
+ wizard:"deal 2 damage to the Monster without rolling",
+ witch:"remove your POISONED; otherwise heal 1 HP",
+ rogue:"discard 1 Item to gain ADV on this d20",
+ thief:"draw 1 Item, then discard 1 Item",
+ priest:"lose 1 HP to add +2 to that Hero's d20",
+ monk:"lose 2 HP to change behaviour 5 or 6 to 3–4"
+});
+const timing=Object.freeze({
+ warrior:"after your attack hits",
+ knight:"after any Hero is hit",
+ wizard:"as your combat action",
+ witch:"after you use a Potion or Scroll",
+ rogue:"before you attack or negotiate",
+ thief:"when a Room gives a reward",
+ priest:"before a Hero d20 roll",
+ monk:"after a Monster rolls behaviour"
 });
 export const HEROES=Object.freeze(data.map(([id,title,art,hp,atk,def,wit,starter,trigger,outcomes,flavor],i)=>({
  id,type:"hero",title,art,hp,atk,def,wit,flavor,copies:1,rule:trigger,
- v2:{kind:"HERO",number:i+1,starter,trigger:"ONCE PER ROOM: "+trigger+". CHOOSE "+reliable[id]+"; or RISK: roll d6.",
- roll:{die:"d6",outcomes:outcomes.map(([range,effect])=>({range,effect}))}}
+ v2:{kind:"HERO",number:i+1,starter,
+  trigger:"ONCE PER ROOM, "+timing[id]+": "+reliable[id]+"; or roll d6 for a risky result.",
+  roll:{die:"d6",outcomes:outcomes.map(([range,effect])=>({range,effect}))}}
 })));
