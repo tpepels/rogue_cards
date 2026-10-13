@@ -1,0 +1,59 @@
+name: Retained Room outcomes and unused paths
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Paired seeds per retained Room and return decision (1-1200)"
+        type: number
+        default: 200
+        required: true
+      coverage_runs:
+        description: "Ordinary expeditions per Hero party / strategy (1-2000)"
+        type: number
+        default: 250
+        required: true
+      seed:
+        description: "Independent starting seed"
+        type: number
+        default: 20261013
+        required: true
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/retained-paths.yml
+      - scripts/study-retained-paths.mjs
+      - tests/retained-paths.test.mjs
+
+jobs:
+  retained:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate retained Room ablation and trace contracts
+        run: |
+          node --test tests/retained-paths.test.mjs
+          npm run validate:deck
+      - name: Simulate controlled outcomes and natural paths
+        env:
+          RUNS: ${{ inputs.runs || '200' }}
+          COVERAGE_RUNS: ${{ inputs.coverage_runs || '250' }}
+          STUDY_SEED: ${{ inputs.seed || '20261013' }}
+        run: |
+          npm run --silent study:retained -- \
+            --runs "$RUNS" --coverage-runs "$COVERAGE_RUNS" \
+            --seed "$STUDY_SEED" --out results/retained-paths-ci
+      - name: Publish findings
+        if: success()
+        run: cat results/retained-paths-ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Save full coverage and paired comparison data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retained-room-paths
+          path: results/retained-paths-ci/
+          if-no-files-found: warn
