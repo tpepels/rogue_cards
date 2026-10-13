@@ -20,7 +20,7 @@ jobs:
         run: node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/planner.test.mjs
       - name: Independent-seed Item trials for every Hero party
         run: |
-          npm run --silent study:items -- 250 --all --seed 58123017 > item-trials.json
+          npm run --silent study:items -- 250 --all --seed 73192543 > item-trials.json
           npm run --silent study:items:report -- item-trials.json > item-trials.md
       - name: Check coverage and display policy impact
         run: |
