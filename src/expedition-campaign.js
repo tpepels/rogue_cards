@@ -440,7 +440,9 @@ function useItemsInCombat(s,h){
   }
  }
  if(plannerUses(s,"combat")){
-  const decision=planCombat(s,h,{trial:s.itemTrial||"normal"});
+  const decision=planCombat(s,h,{
+   trial:s.itemTrial||"normal",focus:s.itemFocus||null
+  });
   recordPlan(s,"combat",decision);
   if(decision.action==="item")
    return executeItemOption(s,h,decision);
@@ -685,11 +687,13 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
- plannerFeatures=null,itemTrial="normal"}={}){
+ plannerFeatures=null,itemTrial="normal",itemFocus=null}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(!PLANNER_RISKS.includes(plannerRisk))throw Error("Unknown planner risk "+plannerRisk);
- if(!["normal","free","force"].includes(itemTrial))throw Error("Unknown Item trial "+itemTrial);
+ if(!["normal","free","force","target"].includes(itemTrial))throw Error("Unknown Item trial "+itemTrial);
+ if(itemTrial==="target"&&(typeof itemFocus!=="string"||!itemFocus.trim()))
+  throw Error("Target Item trial requires itemFocus");
  if(itemTrial!=="normal"&&(researchPolicy!=="planner"||
     plannerFeatures!==null&&!plannerFeatures.includes("combat")))
   throw Error("Item trial requires planner combat enabled");
@@ -709,6 +713,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  s.researchPolicy=researchPolicy;
  s.plannerRisk=plannerRisk;
  s.itemTrial=itemTrial;
+ s.itemFocus=itemFocus;
  s.plannerFeatures=new Set(plannerFeatures??PLANNER_FEATURES);
  s.plannerSeed=seed;
  s.plannerDecisions=researchPolicy==="planner"?{}:null;
@@ -787,6 +792,7 @@ function report(s){
   plannerSeed:s.researchPolicy==="planner"?s.plannerSeed:null,
   plannerFeatures:s.researchPolicy==="planner"?[...s.plannerFeatures].sort():null,
   itemTrial:s.researchPolicy==="planner"?s.itemTrial:null,
+  itemFocus:s.researchPolicy==="planner"?s.itemFocus:null,
   objectsEverOwned:[...s.objectsEverOwned].sort(),
   operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
   objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,
