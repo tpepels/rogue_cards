@@ -9,7 +9,7 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(139);
  await expect(page.locator(".tt-grid .tt-needs-art")).toHaveCount(0);
  await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
- await expect(page.getByRole("link",{name:/READ \/ PRINT THE A4 RULES/})).toBeVisible();
+ await expect(page.getByRole("link",{name:/READ \/ PRINT THE RULEBOOK/})).toBeVisible();
  const filter=page.getByRole("combobox",{name:"Card category"});
  const checks=[["hero",8],["room",65],["monster",14],["TOOL",8],["EQUIPMENT",6],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
  for(const [type,count] of checks){
@@ -51,18 +51,23 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  }
  expect(errors).toEqual([]);
 });
-test("the only A4 rulebook fits on one sheet and has complete combat and ending",async({page})=>{
+test("readable two-page guide prints as exactly two A4 pages without clipped content",async({page})=>{
  await page.goto("/rules.html");
  await expect(page.getByRole("heading",{name:"ROGUE CARDS"})).toBeVisible();
- await expect(page.getByText(/Opposed d20 combat/i)).toBeVisible();
- await expect(page.getByText(/final Vault/i)).toBeVisible();
+ await expect(page.getByRole("heading",{name:/Explore a Room/})).toBeVisible();
+ await expect(page.getByRole("heading",{name:/Reach the Amulet Vault/})).toBeVisible();
+ await expect(page.locator(".sheet")).toHaveCount(2);
  await page.emulateMedia({media:"print"});
- const size=await page.locator(".sheet").evaluate(el=>({w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height,
-  clipY:el.scrollHeight-el.clientHeight,clipX:el.scrollWidth-el.clientWidth}));
- expect(size.w).toBeLessThanOrEqual(192*96/25.4+2);
- expect(size.h).toBeLessThanOrEqual(279*96/25.4+2);
- expect(size.clipY,"One-A4 content overflow").toBeLessThanOrEqual(2);
- expect(size.clipX,"One-A4 width overflow").toBeLessThanOrEqual(2);
+ const sizes=await page.locator(".sheet").evaluateAll(elements=>elements.map(el=>({
+  width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,
+  clipY:el.scrollHeight-el.clientHeight,clipX:el.scrollWidth-el.clientWidth
+ })));
+ for(const [i,size] of sizes.entries()){
+  expect(size.width,"A4 page width "+i).toBeLessThanOrEqual(192*96/25.4+2);
+  expect(size.height,"A4 page height "+i).toBeLessThanOrEqual(279*96/25.4+2);
+  expect(size.clipY,"A4 text clipped on page "+(i+1)).toBeLessThanOrEqual(2);
+  expect(size.clipX,"A4 horizontal clipping on page "+(i+1)).toBeLessThanOrEqual(2);
+ }
 });
 test("small-screen catalogue controls and cards do not overflow horizontally",async({page})=>{
  await page.setViewportSize({width:390,height:840});
