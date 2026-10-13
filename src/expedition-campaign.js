@@ -373,7 +373,13 @@ export function playerAttack(s,h){
  const ring=h.slots.ring;
  s.noteOptions(itemOptions(s,h,"on-attack"));
  if(ring?.id==="ring-ashes"&&!h.used.has(ring))s.activate(h,ring);
- const stat=s.stats(h),r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
+ const stat=s.stats(h);
+ if(h.slots.weapon){
+  const bonus={sword:2,staff:1,"cursed-blade":4}[h.slots.weapon.id]||0;
+  if(bonus)s.notePassive(h.slots.weapon,"attack",bonus);
+ }
+ if(h.slots.ring?.id==="ring-hunger")s.notePassive(h.slots.ring,"attack",2);
+ const r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
  if(!r.hit||h.hp<=0)return;
  s.noteOptions(itemOptions(s,h,"on-hit"));
  let dmg=s.die()+(r.critical?s.die():0);
@@ -499,6 +505,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
  const atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
+ if(h.slots.armour){
+  const bonus={mail:2,shield:1,"cursed-mail":3}[h.slots.armour.id]||0;
+  if(bonus)s.notePassive(h.slots.armour,"defence",bonus);
+ }
  const blessing=blessBeforeD20(s,h);
  let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
@@ -644,6 +654,7 @@ export function seal(s){
  s.metrics.sealAttempt=true;
  s.discard(cost,{tag:"MAGIC"});
  const h=bestWit(s);if(!h)return false;
+ if(h.slots.armour?.id==="mail")s.notePassive(h.slots.armour,"wit",1);
  const boon=blessBeforeD20(s,h);
  let atk=s.rerollIfKept(h,rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
