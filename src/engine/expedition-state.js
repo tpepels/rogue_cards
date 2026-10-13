@@ -63,7 +63,7 @@ export class ExpeditionState {
    this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
-   this.trapdoorHistory=[];this.pendingTrapLanding=null;this.secretFinds=0;
+   this.trapdoorHistory=[];this.pendingTrapLanding=null;this.secretFinds=0;this.skipNextMonster=false;
    this.rerollHistory=[];this.heroAbilityModes={};this.returnChoices={};this.elberethAttempts=0;
    this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
@@ -342,6 +342,9 @@ export class ExpeditionState {
   return this.monsters[region].pop();
  }
  drawMonster(){
+   if(this.skipNextMonster&&this.room?.id==="u-nest"){
+    this.skipNextMonster=false;return;
+   }
    const m=this.nextMonster();if(!m)return;
    if(monsterEntry(this,m))return;
   if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;
@@ -493,7 +496,9 @@ export class ExpeditionState {
   case "SAVE_TRAP":this.trapGuard=true;return;
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
   case "SAVE_D20_REROLL":h.kept.push("reroll");return;
-  case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;return;
+  case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;
+   if(this.room?.id==="d-crown")this.keptRooms.push({card:this.room});
+   return;
   case "TRAPDOOR":this.fallThrough(v,{
     damage:args[1]?this.amount(args[1]):0,
     monster:args[2]==="MONSTER",
@@ -505,17 +510,26 @@ export class ExpeditionState {
   case "ROLL_ROOM_RISK_D6":this.roomRoll({risk:"d6"});return;
   case "ROLL_ROOM_COST_REROLL":this.roomRoll({risk:"item"});return;
   case "CHECK_ATK":case "CHECK_WIT":this.roomCheck(kind,Number(v),args[1],args[2]);return;
-  case "PUPPET_BRIBE":if(this.anyEquippedTag("CURSED")){
-    this.hurt(h,this.die());this.roomRoll(6);}
-    else if(this.discardable()){this.discard();this.peek();}return;
+  case "PUPPET_BRIBE":{
+   let granted=false;
+   if(this.anyEquippedTag("CURSED")){
+    this.hurt(h,this.die());this.roomRoll(6);granted=true;}
+   else if(this.discardable()){this.discard();this.peek();granted=true;}
+   if(granted&&this.alive())this.keptRooms.push({card:this.room});
+   return;
+  }
   case "BOOKCASE_FIRE_OR_SCROLL":if(this.has("torch")||this.anyEquippedTag("FIRE"))this.draw();
     else{const owner=this.heroes.find(x=>x.inventory.some(y=>y.v2.kind==="SCROLL"));
       if(owner){const item=owner.inventory.find(y=>y.v2.kind==="SCROLL");
        this.consume(owner,item);this.peek(2);}}return;
   case "FUNGUS_BURN":if(this.has("torch"))this.heal(h,this.die());
     else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.heal(h,this.die());}return;
-  case "CHOIR_SILENCE":if(this.has("torch"))this.draw(2);
-    else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.draw(2);}return;
+  case "CHOIR_SILENCE":{
+   const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
+   if(song){this.keptRooms.splice(this.keptRooms.indexOf(song),1);this.roomRoll(6);return;}
+   if(this.has("torch"))this.draw(2);
+   else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.draw(2);}return;
+  }
   case "SEAL":return;
   case "WARDEN_FIGHT":return;
   default:throw Error("Unsupported printed effect "+kind+" on "+(card?.id||this.room?.id));
@@ -671,6 +685,15 @@ export class ExpeditionState {
    face=this.pendingRoomFace;
   }
   this.pendingRoomFace=null;
+  // Spend saved links only when their linked encounters occur.
+  if(this.room.id==="d-bridge"&&face<=2&&this.returnChoices?.["m-wax-bridge"]!=="save"){
+   const wax=this.keptRooms.find(x=>x.card.id==="m-wax-bridge");
+   if(wax){this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=6;}
+  }
+  if(this.room.id==="d-mouth"&&this.returnChoices?.["u-puppet"]!=="save"){
+   const judge=this.keptRooms.find(x=>x.card.id==="u-puppet");
+   if(judge){this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;}
+  }
   const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
   // A kept Reliquary can ignore one printed trap, then must be discarded.
   const traps={"u-gate":[0],"u-fall":[0,1],"u-mimic":[0],"m-vault":[0],
