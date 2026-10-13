@@ -53,7 +53,7 @@ test("three improved combat alternatives match their exact executable rewards",(
   assert.equal(s.metrics.drawn,before,"Reward must wait for successful combat");
   assert.ok(s.monster||s.monsterQueue.length,"A Monster is present for "+id);
  }
- assert.equal(verifyRoomCoverage().rooms,37);
+ assert.equal(verifyRoomCoverage().rooms,55);
 });
 
 test("adjusted card data remains compatible with the full-effect simulator",()=>{
