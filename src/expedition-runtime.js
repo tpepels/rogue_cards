@@ -63,6 +63,7 @@ export class ExpeditionState {
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
+   itemPassiveEffects:{},
    activated:0,magicActions:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
    corpses:0,banishments:0,recharged:0,overcharges:0,sealAvailable:false,
    sealAttempt:false,sealWin:false,won:false,roundLimit:false,unresolved:0,
@@ -173,6 +174,17 @@ export class ExpeditionState {
   this.exhausted.delete(wand);this.metrics.recharged++;return true;}
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
   this.metrics.spent++;}
+ // Passive equipment is beneficial without a roll/activation. Count actual
+ // combat/WIT applications here, not merely possession or planner forecasts.
+ notePassive(card,kind,amount=0){
+  if(!card)return;
+  const p=this.metrics.itemPassiveEffects[card.id]??={
+   triggers:0,attackBonus:0,defenceBonus:0,witPenalties:0};
+  p.triggers++;
+  if(kind==="attack")p.attackBonus+=amount;
+  else if(kind==="defence")p.defenceBonus+=amount;
+  else if(kind==="wit")p.witPenalties+=amount;
+ }
  // A legal opportunity is a trigger actually available at the current timing,
  // not merely ownership. Record phase/mode separately to avoid calling a
  // reactive ability an unchosen combat action.
