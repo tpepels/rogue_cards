@@ -46,6 +46,11 @@
 .le-measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .le-measure-grid label{display:flex;flex-direction:column;gap:2px;font-size:10px;font-weight:900}
 .le-measure-grid input{width:100%}
+.le-angle-label{display:flex;flex-direction:column;gap:5px;margin:11px 0 4px;font-size:10px;font-weight:900}
+.le-angle-label input[type=range]{width:100%;accent-color:#9c612b;cursor:ew-resize}
+.le-layer-buttons{margin-top:7px}
+.le-layer-buttons button{background:#e7dbc7}
+.le-measure-grid input:focus-visible,.le-angle-label input:focus-visible,.le-layer-buttons button:focus-visible{outline:2px solid #ba611f;outline-offset:2px}
 .le-row{display:flex;gap:5px;margin:12px 0}
 .le-row button{flex:1;font-size:10px;padding:8px 2px}
 .le-warning{font-size:11px;font-weight:900;color:#7e3916;min-height:24px}
