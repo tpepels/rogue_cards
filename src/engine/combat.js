@@ -97,6 +97,30 @@ export function playerAttack(s,h){
  if(s.monster?.id==="troll"&&s.anyEquippedTag("FIRE"))s.trollScorched=true;
 }
 
+// ELBERETH is an emergency combat action, not permanent protection.
+export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
+ if(!s.monster||h.hp<=0||["sentinel","warden","warden-fury"].includes(s.monster.id)||
+    s.elberethAttempts>=2)return {legal:false};
+ s.setActor(h);
+ const attempt=++s.elberethAttempts;
+ const roll=face??rollD20(s,{dis:attempt===2});
+ const success=roll===20||roll!==1&&roll+h.card.wit>=15;
+ if(success){
+  if(mode==="flee"&&s.discardable()){
+   s.discard();s.monsterHP=0;s.banished=true;s.metrics.banishments++;
+   return {legal:true,success:true,fled:true};
+  }
+  s.monsterSkip++;return {legal:true,success:true,fled:false};
+ }
+ // A failed engraving provokes an immediate response; do not resolve that
+ // same turn's normal Monster response again. A second failure draws help.
+ if(attempt===2&&s.room?.stage!=="FINAL")s.drawMonster();
+ s.monsterAdv=true;
+ monsterRespond(s,h);
+ s.elberethSkipResponse=true;
+ return {legal:true,success:false,fled:false};
+}
+
 export function executeItemOption(s,h,option){
  const {card,mode}=option;
  s.setActor(h);
@@ -179,6 +203,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  if(drain&&done>0)s.discard(1);
 }
 export function monsterRespond(s,h){
+ if(s.elberethSkipResponse){s.elberethSkipResponse=false;return;}
  if(!s.monster||s.monsterHP<=0)return;
  if(s.monsterSkip>0){s.monsterSkip--;return;}
  const m=s.monster;
