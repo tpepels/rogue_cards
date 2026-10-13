@@ -14,8 +14,8 @@ const printedLines=card=>{
 };
 const words=s=>(s.match(/[\p{L}\p{N}]+/gu)||[]).length;
 
-test("all 111 canonical cards keep their printed instructions concise",()=>{
- assert.equal(CATALOGUE.length,111);
+test("all 129 canonical cards keep their printed instructions concise",()=>{
+ assert.equal(CATALOGUE.length,129);
  const issues=[];
  for(const card of CATALOGUE){
   const lines=printedLines(card),text=lines.join(" ");
