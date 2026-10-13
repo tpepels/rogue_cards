@@ -24,7 +24,7 @@ test("balance experiment tests all 52 Objects with controlled item gifts",()=>{
  }
 });
 
-test("all 54 regional Rooms have independently measurable legal choices",()=>{
+test("all 64 regional Rooms have independently measurable legal choices",()=>{
  const data=run("rooms",3);
  assert.equal(data.results.length,ROOMS.length);
  assert.equal(data.totalSimulatedExpeditions,ROOMS.length*12*3*3*2);
