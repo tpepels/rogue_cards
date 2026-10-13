@@ -172,6 +172,13 @@ function render(){
   corner.title="Drag to resize "+partNames[part].toLowerCase();
   corner.setAttribute("aria-hidden","true");
   el.append(corner);
+  const knob=document.createElement("span");
+  knob.className="le-rotate-handle";
+  knob.dataset.handle="rotate";
+  knob.textContent="↻";
+  knob.title="Drag to rotate "+partNames[part].toLowerCase();
+  knob.setAttribute("aria-hidden","true");
+  el.append(knob);
   el.addEventListener("pointerdown",startPointer);
   el.addEventListener("click",()=>selectPart(part));
  }
@@ -195,10 +202,14 @@ function startPointer(e){
  e.preventDefault();e.stopPropagation();
  selectPart(part);
  const resizing=Boolean(e.target.closest(".le-handle"));
- const current=positionOf(part);
+ const rotating=Boolean(e.target.closest(".le-rotate-handle"));
+ const current=positionOf(part),rect=el.getBoundingClientRect();
+ const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
  activePointer={
-  pointerId:e.pointerId,part,kind:resizing?"resize":"move",
-  startX:e.clientX,startY:e.clientY,position:current,changed:false
+  pointerId:e.pointerId,part,kind:rotating?"rotate":resizing?"resize":"move",
+  startX:e.clientX,startY:e.clientY,position:current,changed:false,
+  centerX:cx,centerY:cy,
+  initialAngle:Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI
  };
  try{el.setPointerCapture(e.pointerId);}catch{}
 }
@@ -208,7 +219,14 @@ function updatePointer(e){
  const dx=(e.clientX-active.startX)/(mmPx*scale());
  const dy=(e.clientY-active.startY)/(mmPx*scale());
  const p=active.position;
- if(active.kind==="resize"){
+ if(active.kind==="rotate"){
+  const angle=Math.atan2(e.clientY-active.centerY,e.clientX-active.centerX)*180/Math.PI;
+  const delta=angle-active.initialAngle;
+  const raw=((p.rotation+delta+540)%360)-180;
+  const step=ui.snap.checked?.5:.1;
+  const degrees=round(Math.round(raw/step)*step);
+  patchPlacement(active.part,{rotation:degrees});
+ }else if(active.kind==="resize"){
   const w=clamp(quant(p.w+dx),10,90-p.x);
   const h=clamp(quant(p.h+dy),0,130-p.y);
   patchPlacement(active.part,{x:p.x,y:p.y,w,h});
