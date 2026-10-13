@@ -28,7 +28,9 @@
     "study:planner:report": "node scripts/report-planner.mjs",
     "study:planner:ablation": "node scripts/study-planner-ablation.mjs",
     "study:planner:ablation:report": "node scripts/report-planner-ablation.mjs",
-    "study:items:report": "node scripts/report-items.mjs"
+    "study:items:report": "node scripts/report-items.mjs",
+    "study:items:targets": "node scripts/study-item-targets.mjs",
+    "study:items:targets:report": "node scripts/report-item-targets.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
