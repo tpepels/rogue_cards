@@ -127,27 +127,60 @@ export function prepareRolloutDecks(s,knowledge){
  }
  return {source:s,knowledge,items,rooms,monsters};
 }
-export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,
- blueprint=null,cloneMode="card-aware"}){
+/**
+ * Draw ONE immutable hypothetical hidden-deck scenario for every action
+ * competing at a decision. The deck RNG sequence is identical to the
+ * original per-action fork: Items, all stage Rooms, all stage Monsters.
+ *
+ * Each later fork copies the sampled pile ARRAYS so drawing/reordering in
+ * one branch cannot mutate another branch's piles. Canonical card objects
+ * are immutable and may safely be shared.
+ *
+ * No real hidden card identities are read for a fair scenario.
+ */
+export function sampleRolloutDecks(s,{knowledge,deckSeed,blueprint=null}){
+ if(knowledge!=="fair"&&knowledge!=="oracle")
+  throw Error("Bad rollout knowledge");
  if(blueprint&&(blueprint.source!==s||blueprint.knowledge!==knowledge))
   throw Error("Rollout deck blueprint does not match this state/knowledge");
+ if(knowledge==="oracle")return null; // Existing real order already copied.
  const prepared=blueprint||prepareRolloutDecks(s,knowledge);
+ const deckRng=randomSource(deckSeed>>>0);
+ const deck=drawWithoutReplacement(prepared.items,s.deck.length,deckRng);
+ const rooms={},monsters={};
+ for(const stage of STAGES){
+  const {known,available,remaining}=prepared.rooms[stage];
+  const unknown=drawWithoutReplacement(available,remaining-known.length,deckRng);
+  rooms[stage]=[...known,...unknown];
+ }
+ for(const stage of STAGES){
+  const {pool,count}=prepared.monsters[stage];
+  monsters[stage]=drawWithoutReplacement(pool,count,deckRng);
+ }
+ return {source:s,knowledge,deckSeed:deckSeed>>>0,deck,rooms,monsters};
+}
+export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,
+ blueprint=null,cloneMode="card-aware",sampledDecks=null}){
+ if(blueprint&&(blueprint.source!==s||blueprint.knowledge!==knowledge))
+  throw Error("Rollout deck blueprint does not match this state/knowledge");
  if(!["fair","oracle"].includes(knowledge))throw Error("Bad rollout knowledge");
+ if(sampledDecks&&(sampledDecks.source!==s||
+    sampledDecks.knowledge!=="fair"||knowledge!=="fair"||
+    sampledDecks.deckSeed!==(deckSeed>>>0)))
+  throw Error("Sampled rollout decks do not match source, knowledge or seed");
+ const prepared=sampledDecks?null:
+  blueprint||prepareRolloutDecks(s,knowledge);
  const fork=cloneRolloutState(s,{mode:cloneMode});
  const rng=randomSource(diceSeed>>>0);
  fork.rng=rng;
- const deckRng=randomSource(deckSeed>>>0);
  if(knowledge==="fair"){
-  // All populations were derived from public card history before sampling.
-  fork.deck=drawWithoutReplacement(prepared.items,s.deck.length,deckRng);
+  const scenario=sampledDecks||sampleRolloutDecks(s,{
+   knowledge,deckSeed,blueprint:prepared});
+  // Shallow-copy *arrays*; the printed cards themselves are immutable.
+  fork.deck=scenario.deck.slice();
   for(const stage of STAGES){
-   const {known,available,remaining}=prepared.rooms[stage];
-   const unknown=drawWithoutReplacement(available,remaining-known.length,deckRng);
-   fork.rooms[stage]=[...known,...unknown];
-  }
-  for(const stage of STAGES){
-   const {pool,count}=prepared.monsters[stage];
-   fork.monsters[stage]=drawWithoutReplacement(pool,count,deckRng);
+   fork.rooms[stage]=scenario.rooms[stage].slice();
+   fork.monsters[stage]=scenario.monsters[stage].slice();
   }
  }else{
   // Hidden order is copied, not generated. The Oracle knows it already.
