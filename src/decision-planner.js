@@ -319,7 +319,7 @@ export function expectedAttack(s,h,m=s.monster){
    }
   }
   return {damage:total,killChance:kill,hitChance:2/3,
-   backfire:3.5/3,skipChance:1/3};
+   backfire:2/3,skipChance:1/3};
  }
  const modifiers={dis:h.poison||h.nextDis>0,adv:h.nextAdv>0};
  const hitChance=hitProbability(s.stats(h).atk+(h.recruitedGoblin?1:0)+(h.nextAtk||0),
