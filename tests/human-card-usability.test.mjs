@@ -69,7 +69,7 @@ test("TRAP effects have exact printed labels for the Reliquary",()=>{
 });
 test("previously ambiguous card language now names timing, rolls and locations",()=>{
  const witch=CATALOGUE.find(x=>x.id==="witch");
- assert.match(witch.v2.trigger,/after using a Potion or Scroll/);
+ assert.match(witch.v2.trigger,/after you use a Potion or Scroll/);
  assert.doesNotMatch(witch.v2.roll.outcomes.at(-1).effect,/Resolve that Potion/);
  const supply=ROOMS.find(x=>x.id==="u-supply");
  assert.ok(supply.v2.roll.outcomes.some(x=>/keep 1, discard 1/i.test(x.effect)));
