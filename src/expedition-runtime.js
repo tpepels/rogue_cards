@@ -56,6 +56,9 @@ export class ExpeditionState {
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s))]));
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
+  // Publicly revealed corridor alternatives permanently removed from the
+  // physical Room deck (not merely Rooms that were actually entered).
+  this.discardedRoomIds=new Set();
    this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
@@ -501,7 +504,10 @@ export class ExpeditionState {
  forkRooms(mode){
    const pile=this.rooms[this.room.stage],count=mode==="u-echoes"?3:2;
    const offered=pile.splice(0,Math.min(count,pile.length));if(!offered.length)return;
-   if(mode==="u-echoes"&&offered.length===3)offered.splice(this.die(3)-1,1);
+   if(mode==="u-echoes"&&offered.length===3){
+    const discarded=offered.splice(this.die(3)-1,1)[0];
+    this.discardedRoomIds.add(discarded.id);
+   }
    if(mode==="m-maps"&&this.discardable()&&pile.length){this.discard();offered.push(pile.shift());}
    const rank=r=>(r.v2.kind==="TREASURE"?(this.strategy==="treasure"?7:3):0)+
     (r.v2.kind==="SHRINE"&&this.chooseActor().hp<this.chooseActor().card.hp-2?4:0)-
@@ -517,6 +523,18 @@ export class ExpeditionState {
    else if(mode==="u-echoes")pile.push(...other);
    else if(mode==="d-gilded"&&other.some(x=>x.v2.kind==="TREASURE"))this.draw();
    if(mode==="m-ladder")this.nextLadder=true;
+   // Non-returning alternatives are now publicly known NOT to be in the
+   // hidden pile. The chosen next Room is revealed and remains public.
+   const returned=["u-mossy","u-candle","d-whisper-junction","u-echoes"]
+    .includes(mode);
+   if(!returned)for(const card of other)this.discardedRoomIds.add(card.id);
+   const shown=new Set(offered.map(card=>card.id));
+   const remainder=(this.peekedRoomIds[this.room.stage]||[])
+    .filter(id=>!shown.has(id)&&!this.discardedRoomIds.has(id));
+   this.peekedRoomIds[this.room.stage]=[
+    chosen.id,...(mode==="u-mossy"?other.map(card=>card.id):[]),
+    ...remainder
+   ];
    pile.unshift(chosen);
   }
   resolveKeptRoll(card){
