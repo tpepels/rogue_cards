@@ -34,9 +34,9 @@ function parse(args){
  const values={},flags=new Set(),allowed=new Set(["--runs","--seeds",
   "--budgets","--strategies","--workers","--out","--weights",
   "--rollout-rooms","--combat-actions","--combat-room-depth",
-  "--parties","--chunk-size"]);
+  "--replan-budget","--parties","--chunk-size"]);
  for(let i=0;i<args.length;i++){
-  if(["--dry-run","--resume","--allow-expensive"].includes(args[i])){
+  if(["--dry-run","--resume","--allow-expensive","--strict-terminal"].includes(args[i])){
    if(flags.has(args[i]))throw Error("Duplicate flag "+args[i]);
    flags.add(args[i]);continue;
   }
@@ -73,6 +73,10 @@ function parse(args){
  const rolloutRooms=integer(values["--rollout-rooms"]??2,"rolloutRooms",9);
  const combatActions=integer(values["--combat-actions"]??14,"combatActions",600);
  const combatRoomDepth=integer(values["--combat-room-depth"]??0,"combatRoomDepth",9);
+ const replanBudget=integer(values["--replan-budget"]??0,"replanBudget",8);
+ const strictTerminal=flags.has("--strict-terminal");
+ if(strictTerminal&&(rolloutRooms!==9||combatActions!==600||combatRoomDepth!==9))
+  throw Error("--strict-terminal requires --rollout-rooms 9 --combat-actions 600 --combat-room-depth 9");
  const chunkSize=integer(values["--chunk-size"]??10,"chunk-size",3000);
  if(!rolloutRooms||combatActions<4||!chunkSize)
   throw Error("Invalid rollout horizon or chunk size");
@@ -93,15 +97,15 @@ function parse(args){
  const chanceSamplesPerDecision=partyList.length*strategies.length*
   seeds.length*runs*2*budgets.reduce((a,b)=>a+b,0);
  const c={runs,seeds,budgets,strategies,workers,partyList,arms,
-  weights,rolloutRooms,combatActions,combatRoomDepth,chunkSize,
+  weights,rolloutRooms,combatActions,combatRoomDepth,replanBudget,strictTerminal,chunkSize,
   out:resolve(values["--out"]||"results/rollout-budgets"),
   plannedExpeditions,chanceSamplesPerDecision,
   dryRun:flags.has("--dry-run"),resume:flags.has("--resume"),
   allowExpensive:flags.has("--allow-expensive")};
  // Worker count/out/path/docs do NOT affect simulated outcomes.
  c.signature=hash({
-  schema:2,runs,seeds,budgets,strategies,partyList,weights,
-  rolloutRooms,combatActions,combatRoomDepth,chunkSize,
+  schema:3,runs,seeds,budgets,strategies,partyList,weights,
+  rolloutRooms,combatActions,combatRoomDepth,replanBudget,strictTerminal,chunkSize,
   samplingSeed:0x4a6f792d
  });
  return c;
@@ -128,7 +132,8 @@ function trialOptions(c,arm){
   weights:c.weights,budget:Number(arm.split("-")[1]),
   planning:"rollout",samplingSeed:0x4a6f792d,
   rolloutRooms:c.rolloutRooms,combatActions:c.combatActions,
-  combatRoomDepth:c.combatRoomDepth
+  combatRoomDepth:c.combatRoomDepth,
+  replanBudget:c.replanBudget,strictTerminal:c.strictTerminal
  })};
 }
 function execute(task,c){
@@ -137,7 +142,9 @@ function execute(task,c){
  const row={arm:task.arm,batchSeed:task.batchSeed,strategy:task.strategy,
   party:task.party.join("+"),start:task.start,n:task.count,wins:0,
   unresolved:0,stalls:0,rolloutRoomDecisions:0,rolloutCombatDecisions:0,
-  winBits:null};
+  winBits:null,rolloutAudit:{roomBranches:0,combatBranches:0,
+   terminalBranches:0,nonterminalBranches:0,terminalWins:0,
+   futureReplannedBranches:0}};
  const started=Date.now();
  for(let offset=0;offset<task.count;offset++){
   const index=task.start+offset;
@@ -153,6 +160,8 @@ function execute(task,c){
   row.stalls+=Number(r.roundLimit);
   row.rolloutRoomDecisions+=(r.plannerDecisions?.rolloutRoomDecisions||0);
   row.rolloutCombatDecisions+=(r.plannerDecisions?.rolloutCombatDecisions||0);
+  for(const key of Object.keys(row.rolloutAudit))
+   row.rolloutAudit[key]+=r.rolloutAudit?.[key]||0;
   // Report within one task, not only after thousands of games.
   parentPort.postMessage({type:"progress",id:task.id,done:offset+1,
    total:task.count,elapsedMs:Date.now()-started});
@@ -221,7 +230,9 @@ function aggregate(c,tasks,completed){
    entry={arm:row.arm,batchSeed:row.batchSeed,strategy:row.strategy,
     party:row.party,n:c.runs,wins:0,unresolved:0,stalls:0,
     rolloutRoomDecisions:0,rolloutCombatDecisions:0,
-    winBits:Buffer.alloc(Math.ceil(c.runs/8)),covered:0};
+    winBits:Buffer.alloc(Math.ceil(c.runs/8)),covered:0,
+    rolloutAudit:{roomBranches:0,combatBranches:0,terminalBranches:0,
+     nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0}};
    group.set(key,entry);
   }
   const bits=Buffer.from(row.winBits,"base64");
@@ -231,6 +242,8 @@ function aggregate(c,tasks,completed){
   entry.covered+=row.n;entry.wins+=row.wins;
   for(const field of ["unresolved","stalls","rolloutRoomDecisions",
    "rolloutCombatDecisions"])entry[field]+=row[field];
+  for(const key of Object.keys(entry.rolloutAudit))
+   entry.rolloutAudit[key]+=row.rolloutAudit?.[key]||0;
  }
  for(const r of group.values()){
   if(r.covered!==c.runs)throw Error("Incomplete cohort "+r.party);
@@ -245,7 +258,11 @@ function aggregate(c,tasks,completed){
   const rows=[...group.values()].filter(r=>r.arm===arm);
   const n=rows.reduce((a,r)=>a+r.n,0),
    wins=rows.reduce((a,r)=>a+r.wins,0);
-  return [arm,{n,wins,winRate:wins/n,rows}];
+  const rolloutAudit={roomBranches:0,combatBranches:0,terminalBranches:0,
+   nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0};
+  for(const row of rows)for(const key of Object.keys(rolloutAudit))
+   rolloutAudit[key]+=row.rolloutAudit?.[key]||0;
+  return [arm,{n,wins,winRate:wins/n,rolloutAudit,rows}];
  }));
 }
 function render(summary){
@@ -261,6 +278,15 @@ function render(summary){
   out.push("| "+arm+" | "+a.n+" | "+pct(a.winRate)+" | "+
    (contrast?pp(contrast.delta):"baseline")+" | "+
    (contrast?contrast.ci95.map(pp).join(" to "):"-")+" |");
+ }
+ out.push("","## Rollout coverage and terminal completeness","",
+  "| Arm | Room branches | Combat branches | Terminal sampled | Incomplete | Future search branches |",
+  "|---|---:|---:|---:|---:|---:|");
+ for(const arm of summary.arms){
+  const totals=summary.results[arm].rolloutAudit;
+  out.push("| "+arm+" | "+totals.roomBranches+" | "+
+   totals.combatBranches+" | "+totals.terminalBranches+" | "+
+   totals.nonterminalBranches+" | "+totals.futureReplannedBranches+" |");
  }
  out.push("","## Oracle information advantage (identical weights/budget)","",
   "| Budget | Oracle − fair | 95% paired CI |",
@@ -368,10 +394,11 @@ async function parallel(tasks,c,complete){
  process.stderr.write("All chunks checkpointed; elapsed "+
   Math.round((Date.now()-started)/1000)+" seconds.\n");
 }
-const designConfig=c=>({schema:2,signature:c.signature,
+const designConfig=c=>({schema:3,signature:c.signature,
  runs:c.runs,seeds:c.seeds,budgets:c.budgets,strategies:c.strategies,
  weights:c.weights,rolloutRooms:c.rolloutRooms,
  combatActions:c.combatActions,combatRoomDepth:c.combatRoomDepth,
+ replanBudget:c.replanBudget,strictTerminal:c.strictTerminal,
  chunkSize:c.chunkSize,partyList:c.partyList.map(p=>p.join("+")),
  samplingSeed:0x4a6f792d});
 async function main(){
@@ -418,7 +445,11 @@ async function main(){
  atomicWrite(join(c.out,"summary.md"),render(summary));
  atomicWrite(join(c.out,"validation.json"),JSON.stringify({
   pass:true,unresolved:0,stalls:0,checkpoints:completed.size,
-  supportsIdenticalSeedPairing:true,usesRealGameActions:true},null,2)+"\n");
+  supportsIdenticalSeedPairing:true,usesRealGameActions:true,
+  strictTerminalRequested:c.strictTerminal,
+  allRolloutBranchesTerminal:Object.values(results).every(x=>x.rolloutAudit.nonterminalBranches===0),
+  incompleteRolloutBranches:Object.values(results).reduce(
+   (n,x)=>n+x.rolloutAudit.nonterminalBranches,0)},null,2)+"\n");
  process.stderr.write("Study complete: "+join(c.out,"summary.md")+"\n");
 }
 if(isMainThread&&process.argv[1]&&resolve(process.argv[1])===
