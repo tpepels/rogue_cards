@@ -208,6 +208,7 @@ function finishRoom(s){
 }
 function actRoom(s,{prepared=false,choiceOverride=null}={}){
  const room=s.room;
+ if(s.skipRoom)return;
  if(!prepared){
   const entry=room.v2.prompt.match(/Draw an? (UPPER|MIDDLE|DEEP) Monster/);
   if(entry)s.drawMonster();
@@ -697,16 +698,17 @@ function finishMonsters(s){
 function advanceRolloutRooms(s,maxRooms){
  let visited=0;
  while(s.alive()&&visited<maxRooms){
-  const next=["UPPER","MIDDLE","DEEP"].find(stage=>s.rooms[stage].length);
+  const next=["UPPER","MIDDLE","DEEP"].find(stage=>s.rooms[stage].length&&s.stageProgress[stage]<3);
   if(!next)break;
   const room=s.rooms[next].shift();s.beginRoom(room);
   actRoom(s);
   if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
-  finishRoom(s);s.metrics.cleared++;visited++;
+  finishRoom(s);visited++;
+  if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[next]++;}
   if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
  }
  if(!s.alive())return {complete:true,state:s,won:false};
- if(["UPPER","MIDDLE","DEEP"].some(stage=>s.rooms[stage].length))
+ if(["UPPER","MIDDLE","DEEP"].some(stage=>s.rooms[stage].length&&s.stageProgress[stage]<3))
   return {complete:false,state:s,roomsAdvanced:visited};
  // The printed Vault/SEAL/Warden rules are executed rather than estimated.
  finishVault(s);
@@ -719,7 +721,7 @@ export function rolloutRoomContinuation(s,choice,{depth=2}={}){
  // already occurred, so replaying those would double-count actions/Items.
  actRoom(s,{prepared:true,choiceOverride:choice});
  if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
- finishRoom(s);s.metrics.cleared++;
+ finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
  return advanceRolloutRooms(s,depth-1);
 }
@@ -749,7 +751,7 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
   return {complete:true,state:s,won:true};
  }
  if(!finishMonsters(s))return {complete:true,state:s,won:false};
- finishRoom(s);s.metrics.cleared++;
+ finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  return advanceRolloutRooms(s,roomDepth);
 }
 export function seal(s){
@@ -836,11 +838,11 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  s.researchAllowParley=researchAllowParley;
  s.choiceComparison=null;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
-  while(s.rooms[stage].length){
+  while(s.rooms[stage].length&&s.stageProgress[stage]<3){
    const room=s.rooms[stage].shift();s.beginRoom(room);
    actRoom(s);
    if(!s.alive()||!finishMonsters(s))return report(s);
-   finishRoom(s);s.metrics.cleared++;
+   finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[stage]++;}
    if(s.metrics.roundLimit)return report(s);
   }
  }
