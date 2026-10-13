@@ -696,20 +696,30 @@ function finishMonsters(s){
  * horizon does not secretly roll dice or pretend a Room was completed.
  */
 function advanceRolloutRooms(s,maxRooms){
- let visited=0;
- while(s.alive()&&visited<maxRooms){
-  const next=["UPPER","MIDDLE","DEEP"].find(stage=>s.rooms[stage].length&&s.stageProgress[stage]<3);
-  if(!next)break;
-  const room=s.rooms[next].shift();s.beginRoom(room);
+ // Budget counts ordinary Rooms, exactly as the live expedition does.
+ // CORRIDOR cards reveal paths but do not consume one of the 3 stage
+ // progress slots. Counting them against the horizon would incorrectly
+ // call a 9-Room search "full expedition" before reaching the Vault.
+ let visited=0,steps=0;
+ const available=()=>["UPPER","MIDDLE","DEEP"].find(stage=>
+  s.rooms[stage].length&&s.stageProgress[stage]<3);
+ while(s.alive()&&visited<maxRooms&&available()){
+  // A protective cap prevents an accidental recurring corridor loop.
+  // Do not fabricate a win/loss if the cap is reached: score nonterminal.
+  if(++steps>128)return {complete:false,state:s,
+   roomsAdvanced:visited,corridorLimit:true};
+  const stage=available(),room=s.rooms[stage].shift();
+  s.beginRoom(room);
   actRoom(s);
   if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
-  finishRoom(s);visited++;
-  if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[next]++;}
+  finishRoom(s);
+  if(!s.room.v2.special?.corridor){
+   visited++;s.metrics.cleared++;s.stageProgress[stage]++;
+  }
   if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
  }
  if(!s.alive())return {complete:true,state:s,won:false};
- if(["UPPER","MIDDLE","DEEP"].some(stage=>s.rooms[stage].length&&s.stageProgress[stage]<3))
-  return {complete:false,state:s,roomsAdvanced:visited};
+ if(available())return {complete:false,state:s,roomsAdvanced:visited};
  // The printed Vault/SEAL/Warden rules are executed rather than estimated.
  finishVault(s);
  return {complete:true,state:s,won:Boolean(s.metrics.won)};
@@ -721,9 +731,13 @@ export function rolloutRoomContinuation(s,choice,{depth=2}={}){
  // already occurred, so replaying those would double-count actions/Items.
  actRoom(s,{prepared:true,choiceOverride:choice});
  if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
- finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
+ finishRoom(s);
+ const corridor=!!s.room.v2.special?.corridor;
+ if(!corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
- return advanceRolloutRooms(s,depth-1);
+ // If the chosen Room is only a corridor, the next real Room still
+ // belongs to the same search horizon.
+ return advanceRolloutRooms(s,depth-(corridor?0:1));
 }
 export function rolloutCombatContinuation(s,heroIndex,decision,
  {maxHeroActions=14,roomDepth=1}={}){
