@@ -116,7 +116,9 @@ export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
     s.elberethAttempts>=2)return {legal:false};
  s.setActor(h);
  const attempt=++s.elberethAttempts;
- const roll=face??rollD20(s,{dis:attempt===2});
+ const chalk=h.inventory.find(x=>x.id==="chalk"&&!h.used.has(x));
+ if(chalk&&face===null)h.used.add(chalk);
+ const roll=face??rollD20(s,{adv:!!chalk,dis:attempt===2});
  const success=roll===20||roll!==1&&roll+h.card.wit>=15;
  if(success){
   if(mode==="flee"&&s.discardable()){
