@@ -11,8 +11,9 @@
  */
 import {Worker,isMainThread,parentPort,workerData} from "node:worker_threads";
 import {availableParallelism} from "node:os";
-import {existsSync,mkdirSync,writeFileSync,readFileSync} from "node:fs";
-import {resolve,dirname} from "node:path";
+import {existsSync,mkdirSync,writeFileSync} from "node:fs";
+import {resolve} from "node:path";
+import {fileURLToPath} from "node:url";
 import {execFileSync,spawnSync} from "node:child_process";
 import {HEROES,OBJECTS} from "../src/tabletop-data.js";
 import {simulateFullExpedition} from "../src/expedition-campaign.js";
@@ -282,4 +283,7 @@ async function main(){
  process.stderr.write("Read "+resolve(options.out,"summary.md")+"\n");
  if(result.validation.errors.length)process.exitCode=1;
 }
-if(isMainThread)await main();else await workerMain();
+// Importing this module in unit tests must NEVER launch simulations.
+if(!isMainThread)await workerMain();
+else if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))
+ await main();
