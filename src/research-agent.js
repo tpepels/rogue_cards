@@ -225,8 +225,8 @@ function roomOptionRollout(s,legal,choice,observation){
   for(let depth=0;depth<2;depth++){
    const upcoming=futureRoom(s,observation,depth,die);
    if(!upcoming)break;
-   const outcome=ROOM_EFFECTS[upcoming.id].outcomes[
-    bandFor(upcoming,die(6))];
+   const outcome=upcoming.v2.roll?ROOM_EFFECTS[upcoming.id].outcomes[
+    bandFor(upcoming,die(6))]:[];
    // Future available Room choices are estimated, not solved recursively.
    const hazard=approximate(s,outcome,die,true,observation);
    const healthPenalty=hazard.utility<0?
