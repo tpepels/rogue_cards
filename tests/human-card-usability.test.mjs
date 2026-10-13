@@ -57,7 +57,7 @@ test("TRAP effects have exact printed labels for the Reliquary",()=>{
   "d-bridge":["1–2","3–4"],"d-last-chest":["1–2"],"d-shadow":["1–2"]
  };
  for(const room of ROOMS){
-  const actual=(room.v2.roll?.outcomes||[]).filter(x=>x.effect.startsWith("TRAP:"))
+  const actual=(room.v2.roll?.outcomes||[]).filter(x=>/^(?:TRAP|TRAPDOOR):/.test(x.effect))
     .map(x=>x.range);
   assert.deepEqual(actual,expected[room.id]||[],room.title+" trap labeling");
  }
