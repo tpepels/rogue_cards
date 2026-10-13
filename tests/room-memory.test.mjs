@@ -6,12 +6,13 @@ import {verifyRoomCoverage} from "../src/room-effect-model.js";
 const card=id=>{const result=ROOMS.find(c=>c.id===id);assert.ok(result,id);return result;};
 const state=()=>new ExpeditionState({seed:317,heroes:["warrior"],roomPolicy:"scripted"});
 const enter=(s,id,choice=0)=>{s.beginRoom(card(id));s.apply("ROOM_SPECIAL",[String(choice)],s.room);};
-test("18 additional cards plus four revised Rooms use existing Room machinery",()=>{
- assert.equal(ROOMS.length,54);
+test("expanded Room catalogue, memory cards and fate cards all have executable coverage",()=>{
+ assert.ok(ROOMS.length>=64);
  assert.equal(ROOMS.filter(c=>c.v2.special).length,22);
  assert.equal(ROOMS.filter(c=>c.v2.special?.corridor).length,10);
- assert.equal(verifyRoomCoverage().rooms,55);
- assert.equal(new Set(ROOMS.map(c=>c.id)).size,54);
+ assert.equal(ROOMS.filter(c=>c.v2.fate).length,10);
+ assert.equal(verifyRoomCoverage().rooms,ROOMS.length+1);
+ assert.equal(new Set(ROOMS.map(c=>c.id)).size,ROOMS.length);
 });
 test("a corridor reveals genuine alternatives and queues the chosen Room",()=>{
  const s=state();const original=s.rooms.UPPER.length;
