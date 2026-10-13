@@ -11,28 +11,28 @@ All cards, dice ranges, behaviours, rewards and strange exceptions are printed o
 | Family | Unique cards |
 | --- | ---: |
 | Heroes | 8 |
-| Regional Rooms | 36 (12 UPPER, 12 MIDDLE, 12 DEEP) |
+| Regional Rooms | 54 (20 UPPER, 18 MIDDLE, 16 DEEP) |
 | Final Room | 1 Amulet Vault |
 | Regional Monsters | 12 |
 | Final Monsters | 2 Warden phases |
 | Items | 44 (8 tools, 6 equipment, 4 companions, 4 relics, 8 scrolls, 7 rings, 7 wands) |
 | Potions | 8 |
-| **Total** | **111 card designs** |
+| **Total** | **129 card designs** |
 
 The catalogue can show **one of each** or **full physical print quantities**, filter by card family and dungeon depth, and print four **90 × 130 mm** cards per A4.
 
 ## Generated card illustrations
 
-Every one of the **111 unique cards** now uses its corresponding PNG in
-`assets/illustrations/`. The source of truth for the card-to-file assignment
-is `CARD_ART` in `src/tabletop-view.js`. Numeric prefixes (001-111)
-preserve the catalogue order; the rest of each filename follows the printed
-card title. Some filenames differ from older artwork names.
+All **129 card designs** display a PNG from `assets/illustrations/`.
+The original 111 retain their dedicated illustrations; the 18 new Rooms
+currently reuse appropriate existing artwork pending individual illustrations. The source of truth for the card-to-file assignment
+is `CARD_ART` in `src/tabletop-view.js`. Numeric prefixes (001-111) identify the original artwork set.
+The new Room cards currently share those PNGs rather than introducing SVGs.
 
 The same PNG is used in the on-screen gallery and A4 print sheets.
 The old generic SVG drawings are no longer substituted. `npm test`
-checks all 111 mappings for missing, duplicated, wrongly named or
-invalid PNG files.
+checks card mappings and the original 111 PNG assets. Reused
+illustrations are explicitly permitted for the new Rooms.
 
 ### Generate only artwork for newly added cards
 
@@ -186,7 +186,7 @@ npm run --silent balance:room-cards -- 200 > room-card-balance.json
   difference, discordant outcomes, damage, and approximate uncertainty.
   **This measures the value of receiving an extra Item, not an intrinsic
   ranking or proof that two Item cards are equally strong.**
-- **Room-choice balance:** all **36 regional Rooms**, same setups and seeds.
+- **Room-choice balance:** all **54 regional Rooms**, same setups and seeds.
   Run each legal Room option at the same pre-decision HP, inventory and
   pending Monster. Only samples that actually reach the Room **and can take
   both choices** enter the comparison. Reports conditional paired outcomes
