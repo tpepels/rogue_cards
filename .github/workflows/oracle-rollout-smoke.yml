@@ -1,0 +1,58 @@
+name: Full-effect Oracle rollout smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/oracle-rollout-smoke.yml
+      - src/rollout-state.js
+      - src/rollout-evaluator.js
+      - src/research-agent.js
+      - scripts/study-rollout-budgets.mjs
+      - tests/stochastic-rollout.test.mjs
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Real engine and rollout regression suite
+        run: npm run test:rollout
+      - name: Tiny full-terminal Fair and Oracle scenario study
+        run: |
+          npm run agent:budgets -- \
+            --runs 1 --seeds 91001 --budgets 1 \
+            --parties solo --strategies magic \
+            --rollout-rooms 9 --combat-actions 600 --combat-room-depth 9 \
+            --strict-terminal --workers 4 --chunk-size 1 \
+            --out results/oracle-terminal-ci
+      - name: Assert sampled branch completeness
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const v=JSON.parse(readFileSync('results/oracle-terminal-ci/validation.json','utf8'));
+          const s=JSON.parse(readFileSync('results/oracle-terminal-ci/summary.json','utf8'));
+          if(!v.pass||!v.allRolloutBranchesTerminal||v.incompleteRolloutBranches!==0)
+            throw Error('Oracle sampled continuation did not finish at a terminal result');
+          for(const arm of ['fair-1','oracle-1']){
+            const a=s.results[arm]?.rolloutAudit;
+            if(!a||(a.roomBranches+a.combatBranches)<1)
+              throw Error(arm+' did not actually branch');
+            if(!a.terminalBranches)throw Error(arm+' recorded no full outcomes');
+          }
+          NODE
+      - name: Publish rollout evidence
+        if: success()
+        run: cat results/oracle-terminal-ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload detailed oracle/fair outcome evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-terminal-smoke
+          path: results/oracle-terminal-ci/
+          if-no-files-found: ignore
