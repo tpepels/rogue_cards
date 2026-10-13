@@ -82,6 +82,22 @@ This is not proof that its effect is irrelevant: the companion
 Crown of the Unking is rare and the card may change other tactical
 choices. The ability to reach UNTHRONE has been demonstrated.
 
+### Dead printed d6 table: Gilded Hallway
+
+The three d6 outcome bands still not observed by either policy are
+**exactly** `d-gilded:0`, `d-gilded:1`, and `d-gilded:2`.
+All 2,951 Gilded Hallway encounters in the random-legal cohort could
+take either of its two printed options, but **neither printed option
+calls the Room d6 table**. The special Room data currently still
+defines its generic `path` table and the print validator requires
+a d6 table on every non-fate Room. This is a genuine orphaned
+printing/handler entry, not evidence of insufficient sampling.
+
+Remove the unused Gilded Hallway d6 table only after deliberately
+changing the validator's non-fate Room contract and adding a
+regression test; do not invent an extra d6 roll in either option,
+because that would change the established SMUGGLE route.
+
 Several retained effects produced zero observed victory changes,
 including Treasure That Sings, Clockwork Confessional, Leech Pool,
 and The Puppet Judge, despite changes in some endings.
