@@ -28,7 +28,7 @@ export const MONSTER_IDS = Object.freeze([
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
  rooms:"f127e964",objects:"186ff050",monsters:"3d029731",
- heroes:"f2bae526",warden:"4611237b"
+ heroes:"de6d0884",warden:"4611237b"
 });
 const digest=data=>{
  let h=2166136261;
