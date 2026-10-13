@@ -1,6 +1,6 @@
 import {CATALOGUE} from "./tabletop-data.js";
 import {cardMarkup} from "./tabletop-view.js";
-import {emptyPlacements,normalizePlacements,placementCSS,PARTS} from "./card-layouts.js";
+import {emptyPlacements,normalizePlacements,placementCSS,PARTS,DEFAULT_LAYERS} from "./card-layouts.js";
 
 const $=selector=>document.querySelector(selector);
 const mmPx=96/25.4;
@@ -44,13 +44,27 @@ function physical(el){
   w:round(el.offsetWidth/mmPx),h:round(el.offsetHeight/mmPx)
  };
 }
+// Unedited cutouts keep their original CSS tilt until it is customized.
+function cssRotation(el){
+ const matrix=getComputedStyle(el).transform;
+ if(!matrix||matrix==="none")return 0;
+ const match=matrix.match(/^matrix\(([^)]+)\)$/);
+ if(!match)return 0;
+ const numbers=match[1].split(",").map(Number);
+ return round(Math.atan2(numbers[1],numbers[0])*180/Math.PI);
+}
 function existing(part){
  return layout.cards[cardKey(currentCard)]?.[part]||{};
 }
 function positionOf(part){
  const el=piece(part);
  if(!el)return null;
- return {...physical(el),...existing(part)};
+ return {
+  ...physical(el),
+  rotation:cssRotation(el),
+  zIndex:DEFAULT_LAYERS[part],
+  ...existing(part)
+ };
 }
 function patchPlacement(part,patch){
  const key=cardKey(currentCard);
@@ -113,11 +127,15 @@ function warningCheck(){
 }
 function updateInspector(){
  const pos=positionOf(selectedPart);
- for(const key of ["x","y","w","h"]){
+ for(const key of ["x","y","w","h","rotation","zIndex"]){
   const input=$("#position-"+key);
   input.disabled=!pos;
   input.value=pos?pos[key]:"";
  }
+ const slider=$("#rotation-slider");
+ slider.disabled=!pos;
+ if(pos)slider.value=String(clamp(pos.rotation,-45,45));
+ for(const id of ["layer-behind","layer-ahead"])$("#"+id).disabled=!pos;
  warningCheck();
  showStatus();
 }
@@ -224,6 +242,14 @@ function applyNumber(field,value){
  const before=positionOf(selectedPart);
  if(!before)return;
  const p={...before,[field]:value};
+ if(field==="rotation"){
+  patchPlacement(selectedPart,{rotation:round(clamp(value,-180,180))});
+  historyPush();populatePicker();return;
+ }
+ if(field==="zIndex"){
+  patchPlacement(selectedPart,{zIndex:clamp(Math.round(value),1,99)});
+  historyPush();populatePicker();return;
+ }
  p.w=clamp(p.w,10,90);
  p.x=clamp(p.x,0,90-p.w);
  p.y=clamp(p.y,0,130);
@@ -270,9 +296,28 @@ function installEvents(){
  $("#reset-card").addEventListener("click",()=>discard(null));
  ui.undo.addEventListener("click",()=>historyRestore(historyIndex-1));
  ui.redo.addEventListener("click",()=>historyRestore(historyIndex+1));
- for(const key of ["x","y","w","h"]){
+ for(const key of ["x","y","w","h","rotation","zIndex"]){
   $("#position-"+key).addEventListener("change",e=>applyNumber(key,Number(e.target.value)));
  }
+ const angleSlider=$("#rotation-slider");
+ angleSlider.addEventListener("input",e=>{
+  if(!piece(selectedPart))return;
+  patchPlacement(selectedPart,{rotation:Number(e.target.value)});
+ });
+ angleSlider.addEventListener("change",()=>{historyPush();populatePicker();});
+ // Place the selected paper above or below its siblings in one click.
+ function moveLayer(front){
+  if(!piece(selectedPart))return;
+  const others=PARTS.filter(p=>p!==selectedPart&&piece(p))
+   .map(p=>positionOf(p).zIndex);
+  const target=front?
+   clamp(Math.max(...others,0)+1,1,99):
+   clamp(Math.min(...others,100)-1,1,99);
+  patchPlacement(selectedPart,{zIndex:target});
+  historyPush();populatePicker();
+ }
+ $("#layer-ahead").addEventListener("click",()=>moveLayer(true));
+ $("#layer-behind").addEventListener("click",()=>moveLayer(false));
  document.addEventListener("keydown",e=>{
   const input=e.target?.closest?.("input,select,textarea");
   if(input)return;
