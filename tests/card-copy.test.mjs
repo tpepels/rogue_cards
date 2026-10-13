@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {CATALOGUE,OBJECTS} from "../src/tabletop-data.js";
-import {cardMarkup} from "../src/tabletop-view.js";
+import {cardMarkup,ruleMarkup} from "../src/tabletop-view.js";
 
 const printedLines=card=>{
  const v=card.v2;
@@ -46,4 +46,15 @@ test("brief tools do not repeat their ordinary Room interactions",()=>{
   assert.equal((cardMarkup(card).match(/tt-slip tt-slip--lead/g)||[]).length,1);
   assert.doesNotMatch(cardMarkup(card),/tt-slip tt-slip--results/);
  }
+});
+
+test("dice, statistics and conditions are bold but retain exact safe printed words",()=>{
+ const example="Roll d6+2 vs d20+WIT. Gain ADV or lose 2 HP; become POISONED.";
+ const html=ruleMarkup(example);
+ for(const token of ["d6","d20","WIT","ADV","HP","POISONED"])
+  assert.ok(html.includes(">"+token+"</strong>"),"Missing typographic emphasis: "+token);
+ assert.equal(html.replace(/<[^>]*>/g,""),example);
+ assert.equal(ruleMarkup("<b>1d6 & WIT</b>").replace(/<[^>]*>/g,""),
+  "&lt;b&gt;1d6 &amp; WIT&lt;/b&gt;");
+ assert.doesNotMatch(ruleMarkup("<img src=x onerror=alert(1)>"),/<img/);
 });
