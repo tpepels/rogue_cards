@@ -36,7 +36,7 @@ function parse(args){
   "--rollout-rooms","--combat-actions","--combat-room-depth",
   "--parties","--chunk-size"]);
  for(let i=0;i<args.length;i++){
-  if(["--dry-run","--resume"].includes(args[i])){
+  if(["--dry-run","--resume","--allow-expensive"].includes(args[i])){
    if(flags.has(args[i]))throw Error("Duplicate flag "+args[i]);
    flags.add(args[i]);continue;
   }
@@ -96,7 +96,8 @@ function parse(args){
   weights,rolloutRooms,combatActions,combatRoomDepth,chunkSize,
   out:resolve(values["--out"]||"results/rollout-budgets"),
   plannedExpeditions,chanceSamplesPerDecision,
-  dryRun:flags.has("--dry-run"),resume:flags.has("--resume")};
+  dryRun:flags.has("--dry-run"),resume:flags.has("--resume"),
+  allowExpensive:flags.has("--allow-expensive")};
  // Worker count/out/path/docs do NOT affect simulated outcomes.
  c.signature=hash({
   schema:2,runs,seeds,budgets,strategies,partyList,weights,
@@ -379,6 +380,11 @@ async function main(){
   ...c,partyList:c.partyList.length,chunks:tasks.length
  },null,2)+"\n");
  if(c.dryRun)return;
+ if(c.chanceSamplesPerDecision>500000&&!c.allowExpensive)
+  throw Error("This study requests "+c.chanceSamplesPerDecision.toLocaleString()+
+   " hypothetical samples PER applicable decision across cohorts. "+
+   "Reduce --runs, --seeds or --budgets. If this large workload is "+
+   "intentional, explicitly pass --allow-expensive.");
  const design=designConfig(c),commit=sha();
  if(c.resume){
   if(!existsSync(c.out))throw Error("No study to resume: "+c.out);
