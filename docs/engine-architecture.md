@@ -138,6 +138,7 @@ full-expedition rollouts.
 ~~~sh
 npm run bench:rollout-forks -- --samples 300
 npm run bench:rollout-scenarios -- --samples 300 --choices 4
+npm run bench:expeditions -- --runs 10 --budgets 0,8 --repeats 3
 ~~~
 
 The scenario microbenchmark compares **three versions**:
@@ -156,6 +157,16 @@ These are microbenchmarks, not whole-game CPU measurements.
 Do not assume a 2x faster fork makes the complete 128-rollout study 2x
 faster; combat resolution and the number of alternative actions remain
 important.
+
+The `bench:expeditions` command measures complete full-effect expeditions
+(including hypothetical Room and combat continuations) for the cautious
+planner and the fair/Oracle agents at matching rollout budgets. It
+reports median time per expedition, expeditions per second, relative
+runtime, rollout decision counts and deterministic checksums across
+repeated runs on identical initial seeds. Unlike the microbenchmarks,
+this reveals whether optimizations improve actual experiment throughput.
+Keep `--runs` and `--budgets` small initially; this is a CPU
+performance test, not a statistically valid game-balance study.
 
 Profile full-worker hotspots with Node \`--cpu-prof\` before considering
 native compilation. If it becomes worthwhile, a Rust Node-API addon is
