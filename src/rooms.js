@@ -29,11 +29,11 @@ const upper=make("UPPER",[
  ["u-shrine","Abandoned Shrine","altar","SHRINE","An empty bowl waits for an offering.",
   [["PRAY","Roll d6."],["OFFER","Discard 1 Item; heal d6 HP. If it was CURSED, straighten a Wand too."]],"PRAY",
   [["1–2","The god bites. Lose d6 HP."],["3–4","It forgives. Heal d6 HP."],["5–6","Cleanse one cursed Item and heal 2 HP."]],["cursed Items","Antidote"],"Even silence expects a gift."],
- ["u-fall","Collapsing Stairs","stairs","HAZARD","The bottom step has no bottom.",
+ ["u-fall","Collapsing Stairs","stairs","HAZARD","A tempting shaft descends into the dark.",
   [["JUMP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose 1 HP; peek at the next Room."]],"JUMP",
-  [["1–2","TRAP: Fall; lose d6 HP."],["3–4","TRAP: Land hard; lose 2 HP."],["5–6","Catch a satchel. Draw 1 Item."]],["Knotted Rope"],"Stairs should be trustworthy."],
+  [["1–2","TRAPDOOR: Fall to MIDDLE. Lose d6 HP; face a MIDDLE Monster."],["3–4","TRAPDOOR: Fall to MIDDLE; lose 2 HP."],["5–6","Draw 2 Items; descend to MIDDLE."]],["Knotted Rope"],"Stairs should be trustworthy."],
  ["u-fountain","Laughing Fountain","water","MYSTERY","Its reflection smiles a little late.",
-  [["DRINK","Roll d6. You may lose 2 HP to roll twice and choose either result."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if it has ALCHEMY."]],"DRINK",
+  [["DRINK","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. A rerolled 1 also draws a Monster."],["FILL","Discard 1 Item; heal 2 HP, or d6 HP if it has ALCHEMY."]],"DRINK",
   [["1–2","The water laughs. Lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP and draw 1 Item."]],["Bandages"],"Do not smile back."],
  ["u-merchant","Merchant in a Sack","shop","ENCOUNTER","A sack demands to see your inventory.",
   [["TRADE","Roll d6."],["PAY","Discard 2 Items; draw 3 Items."]],"TRADE",
@@ -95,7 +95,7 @@ const deep=make("DEEP",[
   [["1–2","TRAP: Draw a DEEP Monster; first attack has ADV."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Pitch Torch"],"The dark is watching."],
  ["d-bridge","Broken Bridge","stairs","HAZARD","The far side looks almost reachable.",
   [["LEAP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose d6 HP; draw 1 Item."]],"LEAP",
-  [["1–2","TRAP: Fall; lose 2d6 HP."],["3–4","TRAP: Lose d6 HP."],["5–6","Draw 1 Item."]],["Knotted Rope"],"Do not look down."],
+  [["1–2","TRAPDOOR: Fall to the Vault; lose 2d6 HP."],["3–4","TRAP: Lose d6 HP."],["5–6","Draw 1 Item."]],["Knotted Rope"],"Do not look down."],
  ["d-reliquary","Lost Reliquary","amulet","TREASURE","A shining reliquary needs one more sacrifice.",
   [["TAKE","Roll d6."],["GIVE","Discard 2 Items; draw 3. If one was MAGIC, heal 2 HP."]],"TAKE",
   [["1–2","Lose d6 HP; draw 1 Item."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; keep this Room to ignore the next TRAP result, then discard it."]],["Rusty Key"],"It feels strangely warm."],
@@ -124,7 +124,7 @@ const deep=make("DEEP",[
   [["WEAR","Roll d6."],["OFFER","Cleanse and discard 1 CURSED Item; draw 2 Items and recharge a Wand."]],"WEAR",
   [["1–2","Lose d6 HP; become POISONED."],["3–4","Remove POISONED."],["5","Heal d6 HP; remove POISONED."],["6","Keep this Room: +2 DEF through the next Room; then discard."]],["cursed Items"],"It does not fit anyone."],
  ["d-last-chest","The Last Chest","door","TREASURE","A box contains exactly what you fear.",
-  [["OPEN","Roll d6; you may reroll once after losing d6 HP. Discard Rusty Key to choose 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
+  [["OPEN","Roll d6. You may REROLL for 1 HP, then 2, then 3. Use the new result. A rerolled 1 also draws a Monster. Rusty Key chooses 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
   [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
