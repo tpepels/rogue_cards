@@ -36,7 +36,10 @@
     "validate:local": "node scripts/validate-local.mjs",
     "agent:study": "node scripts/study-agent.mjs",
     "test:rollout": "node --test tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs",
-    "agent:budgets": "node scripts/study-rollout-budgets.mjs"
+    "agent:budgets": "node scripts/study-rollout-budgets.mjs",
+    "art:missing": "python3 scripts/generate-illustrations.py",
+    "art:check": "python3 scripts/generate-illustrations.py --list",
+    "art:test": "python3 -m unittest discover -s tests -p test_illustration_generator.py"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
