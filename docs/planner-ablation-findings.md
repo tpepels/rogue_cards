@@ -45,7 +45,7 @@ The Room/Combat interaction is **-0.10 pp** (-0.89 to +0.68 pp); the available e
 2. The 16 variants share initial random seeds, but **consume different later die rolls** when their actions diverge. Paired contrasts reduce some variance; they do not hold the future dice fixed.
 3. The intervals reflect simulated seed variation; they are unadjusted for multiple comparisons and for code/model misspecification.
 4. Emergency Potions and triggered abilities remain governed by common scripted rules. The Combat switch controls the planner's optional attack-versus-Item action choices; turning it off restores the existing scripted policy rather than banning Items.
-5. Combat Items remain scarce in planner-selected actions: with all features enabled, one was selected in **4.1% of combats where at least one legal Item action was available**. This cannot be interpreted as evidence that those Items are weak, because inventory opportunity costs may be misestimated.
+5. Combat Items remain scarce in planner-selected actions: with all features enabled, one was selected in **4.1% of combat turns where at least one legal Item action was available**. This cannot be interpreted as evidence that those Items are weak, because inventory opportunity costs may be misestimated.
 6. The current study covers **magic and treasure strategies, cautious planner weights only**. It does not cover other policies or different human risk preferences.
 7. The weights were tuned during earlier planner studies; this seed is held out from those studies but the simulator itself was reviewed and corrected before the run.
 
