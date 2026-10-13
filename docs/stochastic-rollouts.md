@@ -70,50 +70,105 @@ This performs a tiny end-to-end validation of the same search and
 reporting components used by larger studies. No network or cloud
 execution is required.
 
-## 2. Compare 0, 8, 32 and 128 rollout samples
+## 2. Run an affordable, checkpointed experiment
 
-Hold the heuristic parameters fixed and use the **same initial
-expedition seeds across all agents**. This is the correct way to
-measure the effect of planning budget (as opposed to changing
-heuristics and budget at the same time).
+**The previous 100-runs × 3-seeds × 0/8/32/128 command was
+excessively expensive.** It launched 194,400 actual expeditions,
+and 7,257,600 hypothetical scenarios *per applicable decision
+position* across the cohorts. Each scenario copies the state and
+potentially runs several Rooms/Monster responses. The original
+runner printed nothing until each 7,200-expedition Worker job had
+completed, so the 32- and 128-sample arms could appear hung for hours.
 
-~~~sh
-npm run agent:budgets -- \
-  --runs 100 --seeds 71001,72001,73001 \
-  --budgets 0,8,32,128 --workers 8 \
-  --parties all --strategies magic,treasure \
-  --rollout-rooms 2 --combat-actions 14 --combat-room-depth 0 \
-  --out results/rollout-budgets-01
-~~~
+That command is **deprecated and should not be restarted**.
 
-Study configurations include the original cautious planner,
-fair at each budget and Oracle at **the same weights and each
-budget**. Each arm plays all eight solo Heroes and 28 two-Hero
-parties by default.
-
-A zero-sample agent is the existing tuned-value heuristic
-with no real state-fork lookahead. Other budgets use that
-number of independent matched hypothetical scenarios *per
-legal action*. Therefore, 128 means a substantial number of
-actual cloned game continuations, not 128 algebraic dice calls.
-
-For a pure effect-of-information comparison, compare fair versus
-Oracle **within the same budget**.
-
-If you still have the previous optimizer's full `holdout.json`,
-reuse its **frozen fair weights** for every arm:
+The new runner is checkpointed, can resume, and reports active Workers.
+Start with a smaller run:
 
 ~~~sh
 npm run agent:budgets -- \
-  --runs 100 --seeds 81001,82001,83001 \
-  --budgets 0,8,32,128 --workers 8 \
-  --weights results/agent-standard-01/holdout.json \
-  --out results/rollout-frozen-weights-02
+  --runs 5 --seeds 71001 \
+  --budgets 0,8,16 --parties solo --strategies magic \
+  --workers 4 --chunk-size 1 \
+  --out results/rollout-pilot-v2
 ~~~
 
-Otherwise, the default parameter vector is used. **Do not
-select weights based on the same seed batches on which you
-report the planning-budget comparison.**
+If that works, collect a moderate amount of useful data across
+all 8 Heroes and 28 pairs:
+
+~~~sh
+npm run agent:budgets -- \
+  --runs 25 --seeds 71001,72001,73001 \
+  --budgets 0,8,16 --parties all \
+  --strategies magic,treasure \
+  --workers 4 --chunk-size 5 \
+  --out results/rollout-standard-v2
+~~~
+
+A 32- or 128-sample arm should only be added after confirming
+that the smaller budget consistently helps. Compare higher
+budgets in separately scoped runs:
+
+~~~sh
+npm run agent:budgets -- \
+  --runs 10 --seeds 71001 \
+  --budgets 0,8,32,128 \
+  --parties solo --strategies magic \
+  --workers 4 --chunk-size 1 \
+  --out results/rollout-highbudget-v2
+~~~
+
+Use `--dry-run` to see the scope. The runner prints a
+**hypothetical scenario workload** as well as expedition count.
+The estimate does not even include the number of actual Room and
+combat decisions or the cost of the state copies, so it is not
+a wall-clock runtime prediction.
+
+### Progress and resume
+
+Each complete chunk writes a separate atomic JSON checkpoint in
+`results/<run>/checkpoints/`. The terminal prints
+a line for each chunk, and a 15-second heartbeat showing how many
+games have completed inside active chunks.
+
+If the run is interrupted with Ctrl-C, execute **the exact same command
+with `--resume` added**:
+
+~~~sh
+npm run agent:budgets -- \
+  --runs 25 --seeds 71001,72001,73001 \
+  --budgets 0,8,16 --parties all \
+  --strategies magic,treasure \
+  --workers 4 --chunk-size 5 \
+  --out results/rollout-standard-v2 --resume
+~~~
+
+The runner verifies the study settings and current Git commit before
+resuming and refuses to silently merge incompatible data. You may
+change `--workers`, but keep the other settings
+including `--chunk-size` identical.
+Only a partly completed chunk is retried. **Runs started with the
+old version had no checkpoints and cannot be recovered from their
+progress logs.**
+
+The scripts produce a complete `summary.json` and
+`summary.md` only after every chunk has been
+validated; an interrupted run retains its intermediate checkpoints.
+
+### How to interpret the results
+
+A zero-sample agent uses the current heuristic without state-fork
+planning. Positive budgets use the indicated number of independent
+matched hypothetical scenarios **per legal action**. Both fair
+and Oracle have the **same weights and same budget**.
+
+For the effect of hidden information, compare Oracle against
+fair at one budget. For the effect of planning depth, compare
+different budgets on the same information level.
+
+If you have the previous optimizer's frozen fair weights, use
+`--weights results/agent-standard-01/holdout.json`
+in all arms, rather than selecting weights on the new holdout seeds.
 
 ## 3. Evaluate the full expedition as a win/loss
 
@@ -122,8 +177,8 @@ inside each decision, start with a small Hero/seed cohort:
 
 ~~~sh
 npm run agent:budgets -- \
-  --runs 10 --seeds 91001,92001 \
-  --budgets 0,8,32 --workers 8 \
+  --runs 2 --seeds 91001 \
+  --budgets 0,4,8 --workers 4 --chunk-size 1 \
   --parties solo --strategies magic,treasure \
   --rollout-rooms 9 --combat-actions 600 \
   --combat-room-depth 9 \
@@ -161,6 +216,7 @@ The fixed-weight budget command writes a new output directory with:
   outcomes and the actual frozen parameters.
 - `validation.json` - unresolved/stalled game checks.
 - `manifest.json` - complete configuration and source commit.
+- `checkpoints/*.json` - individually recoverable completed chunks.
 
 Partial horizon scores are used **only to choose** actions; the
 reported win rate is always the outcome of the actual unmodified
