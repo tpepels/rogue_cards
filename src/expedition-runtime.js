@@ -424,6 +424,7 @@ export class ExpeditionState {
   let wit=kind==="CHECK_WIT";
   const stat=wit?h.card.wit+this.witBonus:this.stats(h).atk;
   let dis=h.poison||h.nextDis>0||(wit&&h.slots.armour?.id==="mail");
+  if(wit&&h.slots.armour?.id==="mail")this.notePassive(h.slots.armour,"wit",1);
   let adv=h.nextAdv>0,blessBonus=0;
   h.nextDis=0;h.nextAdv=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
@@ -434,6 +435,7 @@ export class ExpeditionState {
   }
   const roll=()=>this.die(20),a=roll();
   let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
+  this.noteOptions(itemOptions(this,h,"after-roll"));
   const ring=h.slots.ring;
   if(ring?.id==="ring-luck"&&!h.used.has(ring)){
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,ring);
