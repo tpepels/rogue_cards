@@ -10,14 +10,14 @@ const words=text=>(text.match(/[\p{L}\p{N}]+/gu)||[]).length;
 const fragments=card=>{
  const v=card.v2;
  if(card.type==="hero")return [v.trigger,...v.roll.outcomes.map(x=>x.effect)];
- if(card.type==="room")return [v.prompt,...v.choices.flatMap(x=>[x.label,x.effect]),...v.roll.outcomes.map(x=>x.effect)];
+ if(card.type==="room")return [v.prompt,...v.choices.flatMap(x=>[x.label,x.effect]),...(v.roll?.outcomes||[]).map(x=>x.effect)];
  if(card.type==="monster")return [...card.behavior,v.weakness,v.parley,v.remains];
  return [v.trigger,...(v.roll?.outcomes||[]).map(x=>x.effect),v.alternative].filter(Boolean);
 };
-test("all 129 cards supply legible complete instructions without a second manual",()=>{
- assert.equal(CATALOGUE.length,129);
+test("all 139 cards supply legible complete instructions without a second manual",()=>{
+ assert.equal(CATALOGUE.length,139);
  assert.equal(verifyObjectCoverage().objects,52);
- assert.equal(verifyRoomCoverage().rooms,55);
+ assert.equal(verifyRoomCoverage().rooms,65);
  const failures=[];
  for(const c of CATALOGUE){
   const f=fragments(c);
@@ -57,7 +57,7 @@ test("TRAP effects have exact printed labels for the Reliquary",()=>{
   "d-bridge":["1–2","3–4"],"d-last-chest":["1–2"],"d-shadow":["1–2"]
  };
  for(const room of ROOMS){
-  const actual=room.v2.roll.outcomes.filter(x=>x.effect.startsWith("TRAP:"))
+  const actual=(room.v2.roll?.outcomes||[]).filter(x=>x.effect.startsWith("TRAP:"))
     .map(x=>x.range);
   assert.deepEqual(actual,expected[room.id]||[],room.title+" trap labeling");
  }
