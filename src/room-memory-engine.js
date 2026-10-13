@@ -7,6 +7,9 @@ export function resolveRoomChoice(s,choice){
  if(s.room.v2.special.corridor){
   if(id==="u-smuggler"&&choice===0){s.hurt(h,1);if(s.alive())s.draw();}
   if(id==="u-mossy"&&choice===0)s.heal(h,1);
+  if(["m-ladder","d-whisper-junction"].includes(id)&&choice===1){
+   s.roomRoll();return;
+  }
   if(choice===1||id==="m-red-detour"&&choice===0)s.roomRoll();
   if(id==="u-smuggler"&&choice===1)return;
   s.forkRooms(choice===0?id:"plain");return;
