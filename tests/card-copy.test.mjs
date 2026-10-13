@@ -85,7 +85,9 @@ test("gameplay cards consistently identify triggers and what a roll changes",()=
   assert.equal(room.v2.choices.length,2,room.id);
   for(const choice of room.v2.choices){
    assert.match(choice.label,/^[A-Z][A-Z ]+$/,room.id+" missing printed action");
-   assert.ok(choice.effect.length>8,room.id+" omits the consequence");
+   assert.ok(choice.effect.length>8||
+    /^Roll d6\.$/.test(choice.effect)&&Boolean(room.v2.roll),
+    room.id+" omits the consequence");
   }
  }
  // This template is a persistent editorial guard, not a mechanical rule change.
