@@ -1,0 +1,59 @@
+name: Confirm planner decisions (holdout)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/planner-validation.yml
+
+jobs:
+  full-party-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run independent held-out comparison (all Hero combinations)
+        run: |
+          npm run --silent study:planner -- 300 --all --seed 40269471 > planner-holdout.json
+          npm run --silent study:planner:report -- planner-holdout.json > planner-holdout.md
+      - name: Validate sample integrity and summarize findings
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync("planner-holdout.json","utf8"));
+          if(r.experiment!=="rogue-cards-planner-v2"||r.simulated!==108000||
+            r.stalls!==0||r.unresolved!==0||
+            Object.keys(r.partyResults?.magic||{}).length!==36)
+            throw Error("Incomplete holdout study or unresolved simulation effects");
+          const lines=["## Planner v2 independent seed holdout",
+            "Commit: "+r.commit+" | 108,000 simulated expeditions | no unresolved effects or stalls",
+            "This is a scripted simulation, not a physical tabletop playtest.",
+            "",
+            "| Strategy | Party | Legacy | Cautious | Item uses / eligible fights |",
+            "|---|---|---:|---:|---:|"];
+          for(const st of r.strategies)for(const size of ["solo","duo"]){
+            const legacy=r.groups[st][size]["legacy-adaptive"];
+            const cautious=r.groups[st][size]["planner-cautious"];
+            const c=cautious.choices;
+            const rate=c.combat_with_legal_item?
+              100*(c.combat_item||0)/c.combat_with_legal_item:0;
+            lines.push("| "+st+" | "+size+" | "+
+              (100*legacy.winRate).toFixed(1)+"% | "+
+              (100*cautious.winRate).toFixed(1)+"% | "+
+              rate.toFixed(1)+"% |");
+          }
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join("\n")+"\n");
+          NODE
+      - name: Upload full comparison and readable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planner-v2-holdout
+          path: |
+            planner-holdout.json
+            planner-holdout.md
+          if-no-files-found: ignore
