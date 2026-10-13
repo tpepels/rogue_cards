@@ -119,6 +119,16 @@ export const CARD_ART=Object.freeze({
  "potion:midnight":"109_midnight_ink.png",
  "potion:antidote":"110_antidote.png",
  "potion:laughing":"111_laughing_water.png",
+ "room:u-cartographer":"037_broken_oracle.png",
+ "room:u-hollow-knight":"024_opened_crypt.png",
+ "room:u-scribe-dust":"019_bookcase_of_teeth.png",
+ "room:u-bone-seed":"025_fungal_garden.png",
+ "room:m-ferryman-oath":"021_flooded_chamber.png",
+ "room:m-choir-nails":"041_choir_of_mushrooms.png",
+ "room:m-hourglass":"037_broken_oracle.png",
+ "room:m-drowned-banner":"026_candle_altar.png",
+ "room:d-sleeping-crown":"043_crown_of_the_unking.png",
+ "room:d-last-witness":"029_ghostly_auction.png",
  "room:u-fork":"009_dripping_passage.png",
  "room:u-echoes":"037_broken_oracle.png",
  "room:u-mossy":"025_fungal_garden.png",
@@ -212,13 +222,13 @@ function content(card,{sidebar=false}={}){
  if(card.v2&&card.type==="room"){
   const v=card.v2;
   const choices=v.choices.map(choice=>'<div class="tt-v2-choice"><b>'+esc(choice.label)+'</b><span>'+esc(choice.effect)+'</span></div>').join("");
-  const results=v.roll.outcomes.map(outcome=>'<div class="tt-v2-result"><b>'+esc(outcome.range)+'</b><span>'+esc(outcome.effect)+'</span></div>').join("");
+  const results=(v.roll?.outcomes||[]).map(outcome=>'<div class="tt-v2-result"><b>'+esc(outcome.range)+'</b><span>'+esc(outcome.effect)+'</span></div>').join("");
   return '<section class="tt-content tt-content--v2" aria-label="Room choices and d6 results">'+
    '<div class="tt-slip tt-slip--lead"><div class="tt-v2-kind">'+esc(v.kind)+' <span>CHOOSE ONE</span></div>'+
    '<p class="tt-v2-prompt">'+esc(v.prompt)+'</p>'+
    '<div class="tt-v2-choices">'+choices+'</div></div>'+
-   '<div class="tt-slip tt-slip--results"><div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
-   '<div class="tt-v2-results">'+results+'</div></div></section>';
+   (v.roll?'<div class="tt-slip tt-slip--results"><div class="tt-v2-roll-heading">'+esc(v.roll.label)+' · ROLL '+esc(v.roll.die)+'</div>'+
+   '<div class="tt-v2-results">'+results+'</div></div>':'')+'</section>';
  }
  throw new TypeError("No canonical card effects: "+card.type);
 }

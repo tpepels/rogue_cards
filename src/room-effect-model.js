@@ -81,7 +81,9 @@ export const ROOM_EFFECTS=Object.freeze({
  "vault":C(["WARDEN_FIGHT"],["SEAL"],[
  ["MONSTER_ADV"],["NONE"],["NEXT_ADV"]]),
  ...Object.fromEntries(ROOMS.filter(r=>r.v2.special).map(r=>[r.id,
-  C(["ROOM_SPECIAL:0"],["ROOM_SPECIAL:1"],r.v2.special.rollOps)]))
+  C(["ROOM_SPECIAL:0"],["ROOM_SPECIAL:1"],r.v2.special.rollOps)])),
+ ...Object.fromEntries(ROOMS.filter(r=>r.v2.fate).map(r=>[r.id,
+ C(["ROOM_FATE:0"],["ROOM_FATE:1"],[])]))
 });
 export const ROOM_OPERATIONS=new Set([
  "NONE","ROLL_ROOM","ROLL_ROOM_RISK","ROLL_ROOM_RISK_D6","ROLL_ROOM_COST_REROLL",
@@ -90,20 +92,20 @@ export const ROOM_OPERATIONS=new Set([
  "CURSED_RECHARGE","SUPPLY_BARTER","PUPPET_BRIBE","BOOKCASE_FIRE_OR_SCROLL","FUNGUS_BURN",
  "CHOIR_SILENCE","ALCHEMY_HEAL_OR_TWO","MAGIC_HEAL","CURSED_EXTRA_DRAW","CLEANSE_COST",
  "NEXT_ADV","NEXT_DIS","NEXT_WIT","SAVE_TRAP","SAVE_ATTACK_ADV","SAVE_D20_REROLL",
- "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL"
+ "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL","ROOM_FATE"
 ]);
 export function verifyRoomCoverage(){
  const cards=[...ROOMS,VAULT],existing=new Set(cards.map(r=>r.id));
  for(const card of cards){
   const data=ROOM_EFFECTS[card.id];
   if(!data||data.choices.length!==card.v2.choices.length||
-    data.outcomes.length!==card.v2.roll.outcomes.length)
+    data.outcomes.length!==(card.v2.roll?.outcomes.length||0))
    throw new Error("Unimplemented printed Room "+card.id);
   for(const row of [...data.choices,...data.outcomes])for(const op of row)
    if(!ROOM_OPERATIONS.has(op.split(":")[0]))throw new Error("Unknown Room instruction "+card.id+" "+op);
  }
  for(const id of Object.keys(ROOM_EFFECTS))if(!existing.has(id))throw new Error("Orphaned Room "+id);
  return {rooms:cards.length,choices:cards.reduce((n,c)=>n+c.v2.choices.length,0),
-  rollBands:cards.reduce((n,c)=>n+c.v2.roll.outcomes.length,0)};
+  rollBands:cards.reduce((n,c)=>n+(c.v2.roll?.outcomes.length||0),0)};
 }
 verifyRoomCoverage();

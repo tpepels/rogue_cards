@@ -95,6 +95,9 @@ const chooseRoom=s=>{
   };
   if(ok0&&ok1)return s.forceRoomChoice.choice;
  }
+ // Longer-term Room choices are assessed by policy, not short-horizon Room utilities.
+ if(room.v2.fate)return s.roomPolicy==="uniform"?(ok0&&ok1?s.die(2)-1:ok0?0:1):
+  s.roomPolicy==="second-when-legal"?1:s.strategy==="treasure"?1:0;
  if(!ok0&&!ok1)return null;
  if(plannerUses(s,"room")){
   const result=s.researchPolicy==="agent"?agentPlanRoom(s,[ok0,ok1]):
@@ -222,7 +225,7 @@ function actRoom(s,{prepared=false,choiceOverride=null}={}){
  s.setActor(s.chooseActor());
  // The Staff or the printed Shrine option replaces the single Room choice:
  // it cannot grant both Room rewards and a Wand recharge.
- if(room.v2.kind==="SHRINE"&&s.exhaustedWand()&&s.strategy==="magic"){
+ if(room.v2.kind==="SHRINE"&&!room.v2.fate&&s.exhaustedWand()&&s.strategy==="magic"){
   if(s.has("staff")||!ops.some(op=>op==="RECHARGE")){s.recharge();return;}
  }
  // A reusable crowbar, one-use Scroll, or exhausted-on-use Wand can
@@ -768,8 +771,9 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
  finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  return advanceRolloutRooms(s,roomDepth);
 }
+export const sealCost=s=>Math.max(1,(s.heroes.length===2?6:3)+(s.vaultModifiers?.sealCostDelta||0));
 export function seal(s){
- const cost=s.heroes.length===2?6:3;
+ const cost=sealCost(s);
  const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(cost,"MAGIC");
  if(!s.metrics.sealAvailable)return false;
  s.metrics.sealAttempt=true;
@@ -866,8 +870,8 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
 function finishVault(s){
  const vaultChoice=s.vaultChoice??"policy",strategy=s.strategy;
  if(!s.alive())return report(s);
- s.beginRoom(VAULT);s.roomRoll();
- s.metrics.sealAvailable=s.discardable(s.heroes.length===2?6:3,"MAGIC");
+ s.beginRoom(VAULT);if(!s.alive())return report(s);s.roomRoll();
+ s.metrics.sealAvailable=s.discardable(sealCost(s),"MAGIC");
  // Captured *before* the branch: same seed + policy must yield the same state
  // regardless of whether the Vault decision is fight or seal-if-available.
  s.vaultState={
@@ -876,6 +880,7 @@ function finishVault(s){
   equipped:s.heroes.map(h=>Object.fromEntries(
    Object.entries(h.slots).map(([slot,item])=>[slot,item.id]))),
   magicHeld:s.partyCount("MAGIC"),
+  sealCost:sealCost(s),
   sealAffordable:s.metrics.sealAvailable,
   potions:s.heroes.reduce((n,h)=>n+h.inventory.filter(o=>o.v2.kind==="POTION").length,0),
   scrolls:s.heroes.reduce((n,h)=>n+h.inventory.filter(o=>o.v2.kind==="SCROLL").length,0),
@@ -897,10 +902,12 @@ function finishVault(s){
  if(plannerSeal)recordPlan(s,"seal",plannerSeal);
  const preferSeal=vaultChoice==="seal-if-available"||plannerSeal?.attempt||sealPreferred||
   (vaultChoice==="policy"&&(strategy==="seal"||(strategy==="survival"&&
-   s.partyCount("MAGIC")>=3&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
+   s.partyCount("MAGIC")>=sealCost(s)&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
  if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
  if(s.metrics.sealAttempt)s.monsterAdv=true;
- s.monster=WARDEN;s.monsterHP=WARDEN.hp;
+ s.monster=WARDEN;s.monsterHP=Math.max(11,WARDEN.hp-s.vaultModifiers.wardenDamage);
+ if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
+ if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
  s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
@@ -918,6 +925,9 @@ function report(s){
   failureCause:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
    s.metrics.wipeCause||"unknown",
   vaultState:s.vaultState,
+  fateChoices:s.fateChoices,
+  ending:s.metrics.won?s.endingMemory:null,
+  vaultModifiers:{...s.vaultModifiers},
   extraObjectGranted:s.extraObjectGranted,
   choiceComparison:s.choiceComparison,
   researchDecisions:s.researchPolicy==="none"?null:s.researchDecisions,

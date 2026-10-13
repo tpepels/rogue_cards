@@ -59,6 +59,8 @@ export class ExpeditionState {
    this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
+   this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
+   this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
   this.monsterQueue=[];this.monster=null;this.monsterHP=0;this.monsterSkip=0;
@@ -180,7 +182,7 @@ export class ExpeditionState {
   const deck=this.rooms[this.room.stage];if(!deck)return;
   this.metrics.scouted++;this.actor.scouting++;
   if(swap&&n>1&&deck.length>=2){
-   const danger=r=>r.v2.roll.outcomes.some(o=>/draw an? .* monster/i.test(o.effect));
+   const danger=r=>(r.v2.roll?.outcomes||[]).some(o=>/draw an? .* monster/i.test(o.effect));
    if(danger(deck[0])&&!danger(deck[1]))[deck[0],deck[1]]=[deck[1],deck[0]];
   }
   // Scouted card identities are public knowledge to a fair-information
@@ -296,7 +298,7 @@ export class ExpeditionState {
  }
  drawMonster(){
    const m=this.nextMonster();if(!m)return;
-   if(monsterEntry(this))return;
+   if(monsterEntry(this,m))return;
   if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;}
   else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
@@ -359,7 +361,7 @@ export class ExpeditionState {
   const h=this.actor||this.chooseActor(),v=args[0],n=()=>this.amount(v||0);
   switch(kind){
   case "NONE":case "KEEP_ROOM_ROLL":return;
-   case "ROOM_SPECIAL":resolveRoomChoice(this,Number(v));return;
+   case "ROOM_SPECIAL":case "ROOM_FATE":resolveRoomChoice(this,Number(v));return;
   case "HURT":this.hurt(h,n());return;
   case "HEAL":this.heal(h,n());return;
   case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n());return;
@@ -524,6 +526,9 @@ export class ExpeditionState {
   roomRoll(forced=null){
   if(!this.room)throw Error("Room roll without Room");
   let face=typeof forced==="number"?forced:this.die();
+   if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
+    const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
+   }
    const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
    if(lamp>=0&&face<=4){face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);}
   const risk=forced&&typeof forced==="object"?forced.risk:null;
