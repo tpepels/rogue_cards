@@ -69,7 +69,7 @@ nested replanning:
 ```bash
 npm run agent:budgets -- \
   --runs 1 --seeds 91001 \
-  --budgets 0,1 --parties solo --strategies magic \
+  --budgets 0,1 --party wizard --strategies magic \
   --rollout-rooms 9 --combat-actions 600 --combat-room-depth 9 \
   --strict-terminal --workers 4 --chunk-size 1 \
   --out results/oracle-terminal-smoke-01 --dry-run
@@ -77,6 +77,11 @@ npm run agent:budgets -- \
 
 Repeat the exact command without `--dry-run` to run it. This is a small
 mechanical/scheduling test, **not a statistical balance study**.
+
+Use `--party wizard` for one Hero or `--party warrior+wizard` for one pair.
+The previous `--parties solo` / `--parties duo` / `--parties all` options
+still run the larger cohorts. A single-party experiment is a mechanical
+pilot and cannot establish game-wide balance.
 
 After confirming that the terminal branches finish, run a **two-ply**
 study: each real Room/combat decision branches every legal option with
@@ -88,7 +93,7 @@ zero, so no recursive explosion or oracle future-die leakage.
 npm run agent:budgets -- \
   --runs 1 --seeds 92001 \
   --budgets 0,2 --replan-budget 1 \
-  --parties solo --strategies magic \
+  --party wizard --strategies magic \
   --rollout-rooms 9 --combat-actions 600 --combat-room-depth 9 \
   --strict-terminal --workers 4 --chunk-size 1 \
   --out results/oracle-two-ply-01 --dry-run
