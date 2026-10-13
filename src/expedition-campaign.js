@@ -570,7 +570,7 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available",
  "smuggle-if-available","bargain-if-available","unthrone-if-available","escape-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
- heroAbilityMode="policy",
+ heroAbilityMode="policy",returnChoices=null,retainedRoomAblation=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
  plannerFeatures=null,itemTrial="normal",itemFocus=null,agentConfig=null}={}){
  verifyPrintedData();
@@ -596,6 +596,11 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   throw Error("Invalid planner features; choose a unique subset of "+PLANNER_FEATURES.join(", "));
  if(plannerFeatures!==null&&researchPolicy!=="planner"&&researchPolicy!=="agent")
   throw Error("Planner features require researchPolicy=planner or agent");
+ if(returnChoices!==null&&(typeof returnChoices!=="object"||Array.isArray(returnChoices)||
+  Object.entries(returnChoices).some(([id,mode])=>!id||typeof mode!=="string")))
+  throw Error("Invalid retained Room return-choice overrides");
+ if(retainedRoomAblation!==null&&(typeof retainedRoomAblation!=="string"||!retainedRoomAblation))
+  throw Error("Invalid retained Room ablation ID");
  if(forceRoomChoice!==null&&
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
    ![0,1].includes(forceRoomChoice.choice)))
@@ -621,6 +626,10 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  s.researchDecisions={parleyConsidered:0,parleySelected:0,
   spellsReserved:0,sealConsidered:0,sealSelected:0};
  s.forceRoomChoice=forceRoomChoice;
+ if(returnChoices!==null)s.returnChoices={...returnChoices};
+ // Experiment-only removal of a saved Room AFTER its initial printed effect.
+ // The reusable game engine never depends on this intervention.
+ s.researchRetainedAblations=[];
  s.researchAllowParley=researchAllowParley;
  s.choiceComparison=null;
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
@@ -628,7 +637,16 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
    const room=s.rooms[stage].shift();s.beginRoom(room);
    actRoom(s);
    if(!s.alive()||!finishMonsters(s))return report(s);
-   finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[stage]++;}
+   finishRoom(s);
+   if(retainedRoomAblation!==null){
+    const kept=s.keptRooms.filter(x=>x.card.id===retainedRoomAblation);
+    if(kept.length){
+     s.researchRetainedAblations.push(...kept.map(x=>({id:x.card.id,
+      choice:x.choice??null,stage:s.room.stage,after:s.room.id})));
+     s.keptRooms=s.keptRooms.filter(x=>x.card.id!==retainedRoomAblation);
+    }
+   }
+   if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[stage]++;}
    if(s.metrics.roundLimit)return report(s);
   }
  }
@@ -741,6 +759,8 @@ function report(s){
    s.metrics.wipeCause||"unknown",
   vaultState:s.vaultState,
   fateChoices:s.fateChoices,
+  roomsEncountered:[...s.seenRooms].sort(),
+  retainedRoomAblations:s.researchRetainedAblations??[],
   ending:s.metrics.won?s.endingMemory:null,
   vaultModifiers:{...s.vaultModifiers},
   extraObjectGranted:s.extraObjectGranted,
