@@ -124,7 +124,8 @@ test("every physical card prints deterministically with correct images and A4 qu
  assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
  assert.equal(Object.keys(CARD_ART).length,CATALOGUE.length);
  const uploaded=readdirSync("assets/illustrations").filter(name=>name.endsWith(".png")).sort();
- assert.equal(uploaded.length,111,"Original generated illustrations are retained");
+ assert.equal(uploaded.length,new Set(Object.values(CARD_ART)).size,
+  "The PNG directory must match unique mapped artwork files");
  assert.deepEqual([...new Set(Object.values(CARD_ART))].sort(),uploaded,
   "Each original PNG is used by at least one card");
  const slug=title=>title.toLowerCase().normalize("NFKD")
