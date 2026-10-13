@@ -201,13 +201,15 @@ function finishRoom(s){
  }
  s.endRoom();
 }
-function actRoom(s){
+function actRoom(s,{prepared=false,choiceOverride=null}={}){
  const room=s.room;
- const entry=room.v2.prompt.match(/Draw an? (UPPER|MIDDLE|DEEP) Monster/);
- if(entry)s.drawMonster();
- setupPrepared(s);
- for(const h of s.living())s.noteOptions(itemOptions(s,h,"room-choice"));
- const n=chooseRoom(s);
+ if(!prepared){
+  const entry=room.v2.prompt.match(/Draw an? (UPPER|MIDDLE|DEEP) Monster/);
+  if(entry)s.drawMonster();
+  setupPrepared(s);
+  for(const h of s.living())s.noteOptions(itemOptions(s,h,"room-choice"));
+ }
+ const n=choiceOverride===null?chooseRoom(s):choiceOverride;
  if(n===null)return;
  s.metrics.roomChoices[room.id+":"+n]=(s.metrics.roomChoices[room.id+":"+n]||0)+1;
  const ops=ROOM_EFFECTS[room.id].choices[n];
@@ -626,22 +628,39 @@ export function monsterRespond(s,h){
   }
  }
 }
-function fight(s,{warden=false}={}){
+function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
+  firstDecision=null,maxHeroActions=Infinity}={}){
  if(!s.monster||!s.alive())return false;
- s.metrics.battles++;s.trollScorched=false;
+ if(!continuation){s.metrics.battles++;s.trollScorched=false;}
  const m=s.monster,threshold=warden&&m.id==="warden"?10:0;
- let turns=0;
+ let turns=0,actions=0,truncated=false;
  while(s.alive()&&s.monsterHP>threshold&&turns<300){
   turns++;
-  for(const hero of s.heroes){
+  for(let i=turns===1?firstHeroIndex:0;i<s.heroes.length;i++){
+   const hero=s.heroes[i];
    if(hero.hp<=0||s.monsterHP<=threshold)continue;
-   if(!useItemsInCombat(s,hero))playerAttack(s,hero);
-   if(s.monsterHP<=threshold)break;
-   monsterRespond(s,hero);
-   if(!s.alive())break;
+   if(firstDecision!==null){
+    const forced=firstDecision;
+    firstDecision=null;
+    if(forced.action==="item"){
+     s.setActor(hero);
+     const option=itemOptions(s,hero,"combat")[forced.itemIndex];
+     if(!option||!executeItemOption(s,hero,option))
+      throw Error("Rollout tried illegal combat Item option");
+    }else if(forced.action==="attack")playerAttack(s,hero);
+    else throw Error("Bad rollout combat choice "+forced.action);
+   }else if(!useItemsInCombat(s,hero))playerAttack(s,hero);
+   actions++;
+   if(s.monsterHP>threshold&&s.alive())monsterRespond(s,hero);
+   if(!s.alive()||s.monsterHP<=threshold)break;
+   if(actions>=maxHeroActions){truncated=true;break;}
   }
+  if(truncated)break;
  }
  s.metrics.rounds+=turns;
+ // Rollout cutoffs retain the living Monster and its state. The ordinary
+ // combat simulation never truncates: maxHeroActions defaults to Infinity.
+ if(truncated)return null;
  if(turns>=300)s.metrics.roundLimit=true;
  const completed=s.monsterHP<=threshold;
  if(completed&&threshold===0){
