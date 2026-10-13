@@ -5,6 +5,7 @@
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 import {randomSource} from "./random.js";
+import {d6Band} from "./dice-bands.js";
 import {applyCardRoll,NON_ROLL_EFFECTS} from "../effect-model.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {resolveRoomChoice,protectHero,roomEntry,monsterEntry} from "../room-memory-engine.js";
@@ -20,9 +21,9 @@ const dice=(rng,expression)=>{
  return n;
 };
 const ranges=(card,face)=>{
- const index=card.v2.roll.outcomes.findIndex(o=>{
-  const [a,b=a]=o.range.split("–").map(Number);return face>=a&&face<=b;
- });if(index<0)throw Error("Unprinted result "+card.id+" "+face);return index;
+ const index=d6Band(card,face);
+ if(index<0)throw Error("Unprinted result "+card.id+" "+face);
+ return index;
 };
 const stageNames=["UPPER","MIDDLE","DEEP"];
 const copyDeck=(rng,source)=>rng.shuffle(source.flatMap(c=>Array.from({length:c.copies},()=>c)));
