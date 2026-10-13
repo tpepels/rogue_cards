@@ -131,7 +131,9 @@ test("shared-scenario speed benchmark checks output equivalence before timing",(
  assert.equal(json.checksumsMatch,true);
  assert.equal(json.samples,20);
  assert.equal(json.choices,3);
- assert.equal(json.measurements.length,2);
+ assert.equal(json.measurements.length,3);
+ assert.ok(Number.isFinite(json.speedup));
+ assert.ok(Number.isFinite(json.previousRegressionSpeedup));
  for(const metric of json.measurements){
   assert.ok(metric.medianMs>0);
   assert.equal(metric.runs.length,5);
