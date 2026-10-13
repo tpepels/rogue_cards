@@ -64,6 +64,17 @@ for(const id of IDs){
  Object.entries(x.byMode).sort((a,b)=>b[1]-a[1])
   .map(([mode,n])=>mode+" ("+n+")").join(", ")+" |");
 }
+out.push("","## Passive equipment applications (separate from activations)","",
+ "Passive bonuses work without consuming a Hero action. Their trigger totals",
+ "should not be treated as dice-activation counts.","",
+ "| Item | Passive applications | Added ATK totals | Added DEF totals | WIT disadvantage applications |",
+ "|---|---:|---:|---:|---:|");
+for(const id of IDs){
+ const p=all.normal.items[id].passive;
+ if(!p||!p.triggers)continue;
+ out.push("| "+id+" | "+p.triggers+" | "+p.attackBonus+
+  " | "+p.defenceBonus+" | "+p.witPenalties+" |");
+}
 out.push("","## Observed direct outcomes from actual activations","",
  "These are totals over normal-policy simulations, NOT intrinsic item power;",
  "they depend on encounters, draws, targets, survival and sequencing.","",
