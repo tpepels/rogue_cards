@@ -50,7 +50,11 @@ export function observeGame(s){
    [stage,s.monsters[stage].length])),
   scoutedRooms:Object.fromEntries(STAGES.map(stage=>
    [stage,[...(s.peekedRoomIds[stage]||[])]])),
-  ended:!s.alive()||s.metrics.won,
+  keptRooms:s.keptRooms.map(x=>({id:x.card.id,
+     choice:x.choice??null,item:x.item?.id??null})),
+   returnChoices:{...s.returnChoices},
+   endingOptions:s.room?.stage==="FINAL"?{...s.vaultModifiers}:null,
+   ended:!s.alive()||s.metrics.won||!!s.metrics.escaped,
   won:!!s.metrics.won,
    elberethAttempts:s.elberethAttempts,
    trapdoors:s.trapdoorHistory.map(x=>({...x})),
@@ -59,6 +63,22 @@ export function observeGame(s){
  };
 }
 
+// A UI can select an ability's reliable or risky branch before its trigger.
+export function setHeroAbilityMode(s,heroId,mode){
+ if(!["steady","risk"].includes(mode)||!s.heroes.some(h=>h.card.id===heroId))
+  throw Error("Invalid Hero ability choice");
+ s.heroAbilityModes[heroId]=mode;
+ return observeGame(s);
+}
+// Kept Rooms explicitly offer a second decision when their trigger occurs.
+export function setReturnChoice(s,roomId,choice){
+ if(!["save","escape","leave","recover","smuggle","heal","burn","roll"].includes(choice))
+  throw Error("Invalid return choice");
+ if(!s.keptRooms.some(x=>x.card.id===roomId))
+  throw Error("Room not retained: "+roomId);
+ s.returnChoices[roomId]=choice;
+ return observeGame(s);
+}
 /** A UI chooses the Room; it never needs to inspect the hidden pile. */
 export function enterNextRoom(s){
  if(!s.alive())throw Error("Party has been defeated");
