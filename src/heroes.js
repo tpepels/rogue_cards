@@ -22,7 +22,7 @@ const reliable=Object.freeze({
  warrior:"lose 1 HP to deal +2 damage",
  knight:"lose 1 HP to reduce this hit's damage by 3",
  wizard:"deal 2 damage to the Monster without rolling",
- witch:"remove your POISONED; otherwise heal 1 HP",
+ witch:"remove your POISONED (otherwise heal 1 HP)",
  rogue:"discard 1 Item to gain ADV on this d20",
  thief:"draw 1 Item, then discard 1 Item",
  priest:"lose 1 HP to add +2 to that Hero's d20",
@@ -33,8 +33,8 @@ const timing=Object.freeze({
  knight:"after any Hero is hit",
  wizard:"as your combat action",
  witch:"after you use a Potion or Scroll",
- rogue:"before you attack or negotiate",
- thief:"when a Room gives a reward",
+ rogue:"before your attack or a PARLEY d20 roll",
+ thief:"when a Room lets you draw an Item",
  priest:"before a Hero d20 roll",
  monk:"after a Monster rolls behaviour"
 });
