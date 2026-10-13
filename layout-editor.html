@@ -60,6 +60,8 @@
      <label>TOP (MM) <input id="position-y" type="number" min="0" max="130" step=".5"></label>
      <label>WIDTH (MM) <input id="position-w" type="number" min="10" max="90" step=".5"></label>
      <label>MIN. HEIGHT (MM) <input id="position-h" type="number" min="0" max="130" step=".5"></label>
+     <label>ROTATION (°) <input id="position-angle" type="number" min="-45" max="45" step=".5"></label>
+     <label>OVERLAP LAYER <input id="position-z" type="number" min="0" max="80" step="1"></label>
      <label>ROTATION (°) <input id="position-rotation" type="number" min="-180" max="180" step=".5"></label>
      <label>LAYER (Z-INDEX) <input id="position-zIndex" type="number" min="1" max="99" step="1"></label>
     </div>
@@ -71,12 +73,15 @@
      <button id="layer-ahead" type="button">BRING TO FRONT</button>
     </div>
     <p class="le-subtle">Higher layers sit in front of lower ones. Rotation and stacking are saved with each piece in the same JSON export.</p>
+    <div class="le-row"><button id="layer-back" type="button">SEND BACK</button><button id="layer-front" type="button">BRING FRONT</button></div>
+    <div class="le-row"><button id="reset-rotation" type="button">STRAIGHTEN</button></div>
     <div class="le-row"><button id="reset-piece" type="button">RESET SELECTED</button><button id="reset-card" type="button">RESET THIS CARD</button></div>
    </div>
    <div id="layout-warning" class="le-warning" role="status"></div>
    <h2>How to save your work</h2>
    <p>Changes autosave in this browser. Choose <strong>EXPORT JSON</strong> to make a portable backup. Upload that file in ChatGPT and I can commit it to the repository and generate the permanent CSS for every adjusted card at once.</p>
    <p><strong>Tip:</strong> Use arrow keys for fine positioning (Shift + arrow for 2 mm), or the measurements above. Position and size use physical millimetres; rotation uses degrees, and layer controls which cutout sits on top. All values work in print.</p>
+   <p class="le-subtle">Rotation and overlap order are saved with each piece. Higher layer numbers sit in front. The image stays behind all paper pieces.</p>
    <p class="le-subtle">The exported file can be imported here later. It includes every adjusted card, not just the one currently visible.</p>
   </aside>
  </main>
