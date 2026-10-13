@@ -51,7 +51,7 @@
   </section>
   <aside class="le-inspector">
    <h2>Paper pieces</h2>
-   <p class="le-help">Click a piece, drag it anywhere on the card, or use its bottom-right square to resize. The text expands automatically if needed.</p>
+   <p class="le-help">Click and drag a piece, resize it using its corner handle, or adjust its angle and overlap layer below. Select a hidden piece by its name.</p>
    <div id="piece-list" class="le-piece-list" role="group" aria-label="Select paper piece"></div>
    <div class="le-measurements">
     <h3 id="selected-name">SELECT A PIECE</h3>
@@ -60,13 +60,23 @@
      <label>TOP (MM) <input id="position-y" type="number" min="0" max="130" step=".5"></label>
      <label>WIDTH (MM) <input id="position-w" type="number" min="10" max="90" step=".5"></label>
      <label>MIN. HEIGHT (MM) <input id="position-h" type="number" min="0" max="130" step=".5"></label>
+     <label>ROTATION (°) <input id="position-rotation" type="number" min="-180" max="180" step=".5"></label>
+     <label>LAYER (Z-INDEX) <input id="position-zIndex" type="number" min="1" max="99" step="1"></label>
     </div>
+    <label class="le-angle-label" for="rotation-slider">ROTATE THIS CUTOUT
+     <input id="rotation-slider" type="range" min="-45" max="45" step=".5" value="0">
+    </label>
+    <div class="le-row le-layer-buttons">
+     <button id="layer-behind" type="button">SEND TO BACK</button>
+     <button id="layer-ahead" type="button">BRING TO FRONT</button>
+    </div>
+    <p class="le-subtle">Higher layers sit in front of lower ones. Rotation and stacking are saved with each piece in the same JSON export.</p>
     <div class="le-row"><button id="reset-piece" type="button">RESET SELECTED</button><button id="reset-card" type="button">RESET THIS CARD</button></div>
    </div>
    <div id="layout-warning" class="le-warning" role="status"></div>
    <h2>How to save your work</h2>
    <p>Changes autosave in this browser. Choose <strong>EXPORT JSON</strong> to make a portable backup. Upload that file in ChatGPT and I can commit it to the repository and generate the permanent CSS for every adjusted card at once.</p>
-   <p><strong>Tip:</strong> Use arrow keys for fine positioning (Shift + arrow for 2 mm), or the measurements above. The JSON stores physical millimetres, so it matches printing.</p>
+   <p><strong>Tip:</strong> Use arrow keys for fine positioning (Shift + arrow for 2 mm), or the measurements above. Position and size use physical millimetres; rotation uses degrees, and layer controls which cutout sits on top. All values work in print.</p>
    <p class="le-subtle">The exported file can be imported here later. It includes every adjusted card, not just the one currently visible.</p>
   </aside>
  </main>
