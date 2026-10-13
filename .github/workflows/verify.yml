@@ -19,6 +19,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install headless Chromium
         run: npx playwright install --with-deps chromium
+      - name: Audit every canonical card, handler, print sheet and illustration mapping
+        run: npm run validate:deck -- --out deck-validation.json
       - name: Validate tabletop cards and one-sheet rules
         run: npm test
       - name: Check printed card audit and seeded balance report
@@ -35,6 +37,13 @@ jobs:
           if [ -f game-verification.json ]; then
             node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync("game-verification.json"));const rows=["## Rogue Cards verification","Expeditions: "+r.totals.expeditions,"Unresolved effects: "+r.totals.unresolvedEffects,"Stalls: "+r.totals.stalledExpeditions,"Baseline groups changed: "+(r.comparison?.changedGroups??"N/A"),"Solo win rate: "+(100*r.soloWinRate).toFixed(1)+"%","Duo win rate: "+(100*r.duoWinRate).toFixed(1)+"%"];fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n\n")+"\n");'
           fi
+      - name: Upload whole-deck printed and artwork audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-deck-validation
+          path: deck-validation.json
+          if-no-files-found: ignore
       - name: Upload per-edit whole-game verification report
         if: always()
         uses: actions/upload-artifact@v4
