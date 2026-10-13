@@ -27,8 +27,8 @@ ARGS=(--runs "$RUNS" --knowledge "$KNOWLEDGE"
  --budget "$BUDGET" --replan-budget "$REPLAN"
  --workers "$WORKERS" --hours "$HOURS" --chunk-size "$CHUNK_SIZE"
  --seed "$SEED" --out "$OUT")
-if [[ "$RESUME" = "1" ]]; then ARGS+=(--resume); fi
 npm run oracle:overnight -- "${ARGS[@]}" --dry-run
+if [[ "$RESUME" = "1" ]]; then ARGS+=(--resume); fi
 LOG="$OUT.log"
 echo "Launching: $OUT"
 echo "Progress log: $LOG"
