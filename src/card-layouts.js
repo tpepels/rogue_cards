@@ -11,7 +11,8 @@ const SELECTOR=Object.freeze({
  results:".tt-collage > .tt-content .tt-slip--results"
 });
 const CARD_KEY=/^(hero|room|monster|item|potion):([a-z0-9-]+)$/;
-const LIMITS=Object.freeze({x:[0,90],y:[0,130],w:[10,90],h:[0,130]});
+const LIMITS=Object.freeze({x:[0,90],y:[0,130],w:[10,90],h:[0,130],rotation:[-180,180],zIndex:[1,99]});
+export const DEFAULT_LAYERS=Object.freeze({title:30,rules:20,results:21});
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const obj=o=>o!==null&&typeof o==="object"&&!Array.isArray(o);
 const rounded=n=>Number(n.toFixed(2));
@@ -30,7 +31,8 @@ export function normalizePlacements(input){
    for(const [field,value]of Object.entries(position)){
     if(!own(LIMITS,field))throw new Error("Unexpected field: "+key+"/"+part+"/"+field);
     const [min,max]=LIMITS[field];
-    if(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max)
+    if(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max||
+     field==="zIndex"&&!Number.isInteger(value))
      throw new Error("Invalid mm value: "+key+"/"+part+"/"+field);
     entry[field]=rounded(value);
    }
@@ -50,6 +52,16 @@ export function placementCSS(input){
  for(const [key,pieces]of Object.entries(data.cards).sort(([a],[b])=>a.localeCompare(b))){
   const [,type,id]=key.match(CARD_KEY);
   const prefix='.tt-card.tt-paper-collage[data-type="'+type+'"][data-id="'+id+'"] ';
+  // The title lives beside .tt-collage in the DOM. To let a rules slip
+  // cross in front of it, remove the two nested stacking contexts ONLY
+  // for cards with explicit custom z-index values. Other cards are untouched.
+  if(PARTS.some(part=>own(pieces[part]||{},"zIndex"))){
+   lines.push(prefix+".tt-collage{z-index:auto;isolation:auto}");
+   lines.push(prefix+".tt-collage > .tt-content{z-index:auto;isolation:auto}");
+   lines.push(prefix+".tt-title{z-index:"+DEFAULT_LAYERS.title+"}");
+   for(const part of ["rules","results"])
+    lines.push(prefix+SELECTOR[part]+"{z-index:"+DEFAULT_LAYERS[part]+"}");
+  }
   for(const part of PARTS){
    const place=pieces[part];
    if(!place)continue;
@@ -59,6 +71,8 @@ export function placementCSS(input){
    if(own(place,"w"))decl.push("width:"+mm(place.w),"max-width:none");
    // min-height rather than fixed height: copy stays readable when text wraps.
    if(own(place,"h"))decl.push("min-height:"+mm(place.h),"height:auto");
+   if(own(place,"rotation"))decl.push("transform:rotate("+place.rotation+"deg)","transform-origin:50% 50%");
+   if(own(place,"zIndex"))decl.push("z-index:"+place.zIndex);
    lines.push(prefix+SELECTOR[part]+"{\n "+decl.join(";\n ")+";\n}");
   }
  }
