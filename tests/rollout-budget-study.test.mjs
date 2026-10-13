@@ -119,3 +119,25 @@ test("local CLI exposes finite nested search and strictly full terminal scoring"
  assert.notEqual(invalid.status,0);
  assert.match(invalid.stderr,/replanBudget/);
 });
+
+test("single-party selection is exact and does not run all eight solo Heroes",()=>{
+ const solo=cli(["--runs","1","--seeds","91001",
+  "--budgets","0,1","--party","wizard","--strategies","magic",
+  "--workers","1","--dry-run"]);
+ assert.equal(solo.status,0,solo.stderr);
+ assert.match(solo.stderr,/"partyList": 1/);
+ assert.match(solo.stderr,/"plannedExpeditions": 5/);
+ const pair=cli(["--runs","1","--seeds","91001",
+  "--budgets","1","--party","wizard+warrior","--dry-run"]);
+ assert.equal(pair.status,0,pair.stderr);
+ assert.match(pair.stderr,/"partyList": 1/);
+ assert.match(pair.stderr,/"plannedExpeditions": 6/);
+ for(const args of [
+  ["--party","wizard+wizard","--dry-run"],
+  ["--party","unknown","--dry-run"],
+  ["--party","wizard","--parties","solo","--dry-run"]
+ ]){
+  const bad=cli(args);
+  assert.notEqual(bad.status,0,args.join(" "));
+ }
+});
