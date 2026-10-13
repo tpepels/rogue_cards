@@ -54,7 +54,7 @@ const add=(to,from)=>{for(const [key,n] of Object.entries(from||{}))
  to[key]=(to[key]||0)+n;};
 const bump=(obj,key,value=1)=>{obj[key]=(obj[key]||0)+value;};
 const newMeasure=()=>({
- n:0,wins:0,cleared:0,deep:0,battles:0,damage:0,rounds:0,drawn:0,spent:0,
+ n:0,wins:0,seatSubsetN:0,seatSubsetWins:0,cleared:0,deep:0,battles:0,damage:0,rounds:0,drawn:0,spent:0,
  activated:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
  corpses:0,banishments:0,sealAvailable:0,sealAttempt:0,sealWin:0,
  hpRemaining:0,hpFraction:0,missingHp:0,
@@ -126,13 +126,20 @@ function addResult(row,result,party){
 async function workerMain(){
  for(const task of workerData.tasks){
   const row=newMeasure(),party=task.reversed?[...task.party].reverse():task.party;
+  const outcomes=Buffer.alloc(Math.ceil(task.runs/8));
   for(let i=0;i<task.runs;i++){
    const seed=stableSeed(task.seed,task.strategyIndex,task.partyIndex,i);
    const result=simulateFullExpedition({seed,heroes:party,strategy:task.strategy,
     ...RESEARCH_POLICIES[task.policy]});
    addResult(row,result,party);
+   if(result.won)outcomes[i>>>3]|=1<<(i&7);
+   if(i<task.seatRuns){
+    row.seatSubsetN++;
+    row.seatSubsetWins+=Number(result.won);
+   }
   }
-  parentPort.postMessage({type:"result",row:{batchSeed:task.seed,
+  parentPort.postMessage({type:"result",row:{winBits:outcomes.toString("base64"),
+   batchSeed:task.seed,
    strategy:task.strategy,policy:task.policy,party:task.party.join("+"),
    orientation:task.reversed?"reversed":"canonical",...row}});
  }
@@ -235,10 +242,10 @@ async function main(){
  for(const [pi,party] of PARTIES.entries())
  for(const policy of options.policies){
   tasks.push({seed,bi,strategy,strategyIndex:si,party,partyIndex:pi,
-   policy,runs:options.runs,reversed:false});
+   policy,runs:options.runs,seatRuns:options.seatRuns,reversed:false});
   if(party.length===2&&options.seatRuns>0)
    tasks.push({seed,bi,strategy,strategyIndex:si,party,partyIndex:pi,
-    policy,runs:options.seatRuns,reversed:true});
+    policy,runs:options.seatRuns,seatRuns:options.seatRuns,reversed:true});
  }
  const buckets=Array.from({length:Math.min(tasks.length,options.workers)},()=>[]);
  for(let i=0;i<tasks.length;i++)buckets[i%buckets.length].push(tasks[i]);
