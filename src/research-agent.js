@@ -15,7 +15,8 @@ import {ROLL_EFFECTS,bandFor} from "./effect-model.js";
 import {itemOptions} from "./item-access.js";
 import {planRoom,planParley,planCombat,planSeal,partySummary,forecastCombat,
  estimatedDice,hitProbability,expectedAttack,remainingMonsterHP,
- responseThreat,futureItemValue,effectivePlannerWeights} from "./decision-planner.js";
+ responseThreat,futureItemValue,effectivePlannerWeights,
+ fixedRoomFace} from "./decision-planner.js";
 
 export const AGENT_KNOWLEDGE=Object.freeze(["fair","oracle"]);
 export const AGENT_WEIGHTS=Object.freeze({
@@ -86,21 +87,28 @@ function observationScores(s,obs){
  const region=s.room?.stage;
  const coming=region==="FINAL"?null:obs.monsters[region]?.at(-1);
  const m=MONSTERS.find(mon=>mon.id===coming);
- const f=m?forecastCombat(s,m):null;
  return Object.freeze({expectedMagicDraws:Math.min(9-s.metrics.cleared,
    futureMagic),nextItemValue:cards.length?
    cards.reduce((sum,id)=>sum+(OBJECTS.find(c=>c.id===id)?.v2.tags.includes("MAGIC")?5:3),0)/cards.length:0,
-  nextMonsterThreat:f?.expectedLoss||0});
+  nextMonsterThreat:m?m.atk*Math.max(1,m.hp/5):0});
 }
 /** All policy observations are derived afresh from the current state, never
  * cached across mutable Room / deck changes. The fair agent only receives
  * aggregate counts and public card definitions; it cannot inspect pile order.
  */
-export function prepareAgentObservation(s){
+export function prepareAgentObservation(s,needFullDecks=false){
  if(!s.agentConfig)throw Error("Research agent not configured");
- const observation=observeDecks(s,s.agentConfig.knowledge);
- const scores=observationScores(s,observation);
- s.agentInformation=scores; // purely derived advisory features
+ const knowledge=s.agentConfig.knowledge;
+ // Full ordered copies are needed only for Room lookahead. Frequent combat
+ // decisions use the relevant small suffix, keeping large studies practical.
+ const region=s.room?.stage;
+ const observation=needFullDecks?observeDecks(s,knowledge):
+  knowledge==="fair"?observeDecks(s,"fair"):
+  Object.freeze({knowledge:"oracle",
+   items:Object.freeze(s.deck.slice(-12).map(idOf)),
+   monsters:Object.freeze({[region]:Object.freeze(
+    (s.monsters[region]||[]).slice(-1).map(idOf))})});
+ s.agentInformation=observationScores(s,observation);
  return observation;
 }
 const hash=str=>{
@@ -195,7 +203,8 @@ function roomOptionRollout(s,legal,choice,observation){
  const weights=s.agentConfig.weights;
  let total=0;
  for(let i=0;i<budget;i++){
-  const face=die(6),out=ops.outcomes[bandFor(room,face)];
+  const face=fixedRoomFace(s,room)??die(6);
+  const out=ops.outcomes[bandFor(room,face)];
   const immediate=approximate(s,[...ops.choices[choice],...out],die,true,observation);
   let future=0;
   for(let depth=0;depth<2;depth++){
@@ -215,7 +224,7 @@ function roomOptionRollout(s,legal,choice,observation){
  return weights.lookahead*total/budget;
 }
 export function agentPlanRoom(s,legal){
- const obs=prepareAgentObservation(s);
+ const obs=prepareAgentObservation(s,true);
  const baseline=planRoom(s,legal);
  if(!s.agentConfig.budget)return baseline;
  s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
