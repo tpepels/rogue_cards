@@ -8,14 +8,14 @@ const printedLines=card=>{
  if(card.type==="hero")return [v.trigger,...v.roll.outcomes.map(o=>o.effect)];
  if(card.type==="monster")return [...card.behavior,v.weakness,v.parley,v.remains];
  if(card.type==="room")return [v.prompt,...v.choices.map(o=>o.label+": "+o.effect),
-  ...v.roll.outcomes.map(o=>o.range+": "+o.effect)];
+  ...(v.roll?.outcomes||[]).map(o=>o.range+": "+o.effect)];
  return [v.trigger,...(v.roll?.outcomes||[]).map(o=>o.range+": "+o.effect),v.alternative]
   .filter(Boolean);
 };
 const words=s=>(s.match(/[\p{L}\p{N}]+/gu)||[]).length;
 
-test("all 129 canonical cards keep their printed instructions concise",()=>{
- assert.equal(CATALOGUE.length,129);
+test("all 139 canonical cards keep their printed instructions concise",()=>{
+ assert.equal(CATALOGUE.length,139);
  const issues=[];
  for(const card of CATALOGUE){
   const lines=printedLines(card),text=lines.join(" ");
