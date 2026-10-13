@@ -63,6 +63,9 @@ export class ExpeditionState {
    this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
+   this.trapdoorHistory=[];this.pendingTrapLanding=null;this.secretFinds=0;
+   this.rerollHistory=[];this.heroAbilityModes={};this.elberethAttempts=0;
+   this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
    this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
   // Publicly revealed future Rooms from printed scout/peek effects.
@@ -105,6 +108,37 @@ export class ExpeditionState {
     this.extraObjectGranted=true;
    }
   }
+ }
+ // Push-your-luck rerolls cost 1, then 2, then 3 HP. The new result stands.
+ pushLuck(face,{sides=6,accept=null,max=3,onOne=false}={}){
+  for(let count=1;count<=max;count++){
+   const h=this.chooseActor();
+   const take=accept?accept(face,count,h):
+    ["treasure","magic"].includes(this.strategy)&&face<=2&&h.hp>count+4;
+   if(!take||h.hp<=count)break;
+   this.hurt(h,count);if(!this.alive())break;
+   face=this.die(sides);
+   this.rerollHistory.push({room:this.room?.id||null,cost:count,face});
+   if(onOne&&face===1&&this.room?.stage!=="FINAL")this.drawMonster();
+  }
+  return face;
+ }
+ fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
+  const order=["UPPER","MIDDLE","DEEP","FINAL"];
+  const from=order.indexOf(this.room?.stage),to=order.indexOf(destination);
+  if(from<0||to<=from)throw Error("Trapdoor must descend to a deeper stage");
+  for(let i=from;i<to;i++)if(order[i]!=="FINAL")this.stageProgress[order[i]]=3;
+  this.pendingTrapLanding={stage:destination,damage,monster};
+  this.trapdoorHistory.push({from:this.room.stage,to:destination,damage,monster,treasure});
+  if(treasure)this.draw(treasure);
+ }
+ // One bonus Room from an earlier depth; returns to current depth.
+ cursedDetour(){
+  const old=this.room,pile=this.rooms.MIDDLE;
+  if(!pile?.length){this.draw();return;}
+  const lost=pile.shift();this.secretFinds++;this.room=lost;
+  try{if(lost.v2.roll)this.roomRoll();}
+  finally{this.room=old;}
  }
  die(n=6){return this.rng.die(n);}
  amount(x){return dice(this.rng,x);}
@@ -286,6 +320,11 @@ export class ExpeditionState {
    h.damageVulnerability=0;
    });
    roomEntry(this);
+   if(this.pendingTrapLanding?.stage===room.stage){
+    const landing=this.pendingTrapLanding;this.pendingTrapLanding=null;
+    if(landing.damage)this.hurt(this.chooseActor(),landing.damage);
+    if(this.alive()&&landing.monster&&room.stage!=="FINAL")this.drawMonster();
+   }
   }
   endRoom(){
   this.heroes.forEach(h=>{
@@ -303,7 +342,8 @@ export class ExpeditionState {
  drawMonster(){
    const m=this.nextMonster();if(!m)return;
    if(monsterEntry(this,m))return;
-  if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;}
+  if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;
+   this.elberethAttempts=0;this.elberethSkipResponse=false;}
   else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
  }
@@ -445,6 +485,12 @@ export class ExpeditionState {
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
   case "SAVE_D20_REROLL":h.kept.push("reroll");return;
   case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;return;
+  case "TRAPDOOR":this.fallThrough(v,{
+    damage:args[1]?this.amount(args[1]):0,
+    monster:args[2]==="MONSTER",
+    treasure:args[2]?.startsWith("DRAW")?Number(args[2].slice(4)):0
+   });return;
+  case "CURSED_DETOUR":this.cursedDetour();return;
   case "ROLL_ROOM":this.roomRoll();return;
   case "ROLL_ROOM_RISK":this.roomRoll({risk:"2"});return;
   case "ROLL_ROOM_RISK_D6":this.roomRoll({risk:"d6"});return;
@@ -558,7 +604,9 @@ export class ExpeditionState {
    if(lamp>=0&&face<=4){face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);}
   const risk=forced&&typeof forced==="object"?forced.risk:null;
   const firstSpent=this.lastSpent;
-  if(risk){
+  if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
+    face=this.pushLuck(face,{onOne:true});
+   }else if(risk){
    const willing=this.strategy!=="survival"&&this.actor.hp>this.actor.card.hp*.4;
    if(willing){
     if(risk==="item"){if(this.discardable()){this.discard();face=Math.max(face,this.die());}}
