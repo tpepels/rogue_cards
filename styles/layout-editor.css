@@ -28,7 +28,7 @@
 .le-card-host .tt-card .tt-title:hover,
 .le-card-host .tt-card .tt-slip:hover{outline:1.5px dashed #bf7020;outline-offset:1px}
 .le-card-host .tt-card .le-selected{outline:2.5px solid #c46912!important;outline-offset:1px}
-.le-card-host .tt-card .le-handle{position:absolute;bottom:-3px;right:-3px;width:12px;height:12px;display:none;background:#eab04e;border:2px solid #24170f;z-index:20;cursor:nwse-resize;touch-action:none;transform:rotate(-8deg)}
+.le-card-host .tt-card .le-handle{position:absolute;bottom:5px;right:5px;width:12px;height:12px;display:none;background:#eab04e;border:2px solid #24170f;z-index:20;cursor:nwse-resize;touch-action:none;transform:rotate(-8deg)}
 .le-card-host .tt-card .le-selected>.le-handle{display:block}
 .le-bottom{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:11px 12px;background:#eee5d7;border:2px solid #221a14;border-top:0}
 .le-bottom label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900}
