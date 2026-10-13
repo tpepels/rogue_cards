@@ -154,5 +154,13 @@ export function finishCurrentRoom(s){
  return observeGame(s);
 }
 export function createGame(options={}){
+ // Do not allow experiment-only policy parameters to leak into the
+ // future computer game's public constructor. AI/equipment decisions
+ // are currently handled by the old scripted runner, not by this API.
+ const allowed=new Set(["seed","heroes"]);
+ for(const key of Object.keys(options))
+  if(!allowed.has(key))
+   throw Error("Unknown public game option "+key+
+    " (experiment policies belong in expedition-campaign.js)");
  return new ExpeditionState(options);
 }
