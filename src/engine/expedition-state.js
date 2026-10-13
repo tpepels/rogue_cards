@@ -303,6 +303,9 @@ export class ExpeditionState {
      else this.rooms[room.stage].push(alternative);
     }}
    this.room=room;this.skipRoom=false;
+   // Trapdoors can reach the Vault before nine ordinary Rooms.
+   // Entering FINAL is the authoritative arrival metric, not cleared===9.
+   if(room.stage==="FINAL")this.metrics.vaultEntered=true;
   this.seenRooms.add(room.id);
   // The current Room has left the pile; any earlier peek of it is spent.
   if(this.peekedRoomIds[room.stage]?.[0]===room.id)
