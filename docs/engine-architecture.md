@@ -62,7 +62,7 @@ import {
   finishCurrentRoom
 } from "./src/engine/index.js";
 
-const state=createGame({seed:1234,heroes:["knight"],strategy:"survival"});
+const state=createGame({seed:1234,heroes:["knight"]});
 const publicView=observeGame(state); // JSON-serializable, no hidden deck order
 enterNextRoom(state);
 
