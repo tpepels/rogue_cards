@@ -241,6 +241,42 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## Planner v2: how to interpret results
+
+The planner study is a scripted simulation. It is not a measure of human win
+rates and cannot establish whether an Item is fun, understandable, or balanced.
+The first uploaded `planner-study` and `planner-all` results were **v1**;
+do not reuse those numbers as post-fix balance evidence.
+
+Planner v2 rejects combat actions whose printed triggers are for Rooms,
+negotiation or reactive rolls. It scores actual remaining Monster HP, the
+Warden's 10-HP phase transition, automatic Hero attacks, known Room-die
+overrides, and the real cost of optional Room rerolls. It records how often
+a legal combat Item was held, how often one was chosen, and outcomes for
+every solo Hero and all 28 Hero pairings.
+
+The study uses separate deterministic seed sequences per strategy and party,
+paired within each party and run. Later dice outcomes still diverge as
+policies make different choices; these are not identical alternative futures.
+The utility model, card automation outside planner decisions, and the
+decision strategies are still approximate.
+
+To run a **new independent holdout** after making planner changes, choose a
+seed that has not been used while tuning:
+
+```sh
+npm test
+npm run --silent study:planner -- 300 --all --seed 78126014 > planner-holdout.json
+npm run --silent study:planner:report -- planner-holdout.json > planner-holdout.md
+```
+
+The opt-in [GitHub Actions planner holdout](.github/workflows/planner-validation.yml)
+also exports the complete JSON and readable Markdown report as downloadable
+artifacts. Check the report's commit, seed, `unresolved=0`, and `stalls=0`.
+Watch **combat Item selections divided by combat turns with a legal Item**,
+not just the share of all combat turns. Large improvements over an old
+scripted policy do not imply an optimal player.
+
 ## Advanced, risk-aware decision planning (opt-in)
 
 This is the most detailed automated player model. It does **not**
