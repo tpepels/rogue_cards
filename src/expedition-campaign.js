@@ -321,7 +321,7 @@ function blessBeforeD20(s,target){
  const priest=s.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
  if(!priest)return {bonus:0,adv:false};
  priest.used.add("hero");const d=s.die();
- if(d<=2){s.hurt(priest,s.die());return {bonus:0,adv:false};}
+ if(d<=2){s.hurt(priest,Math.ceil(s.die()/2));return {bonus:0,adv:false};}
  if(d<=4)return {bonus:2,adv:false};
  target.poison=false;return {bonus:0,adv:true};
 }
@@ -370,7 +370,7 @@ export function playerAttack(s,h){
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
   (s.strategy==="magic"||s.monsterHP>=8)){
   h.used.add("hero");const d=s.die();
-  if(d<=2)s.hurt(h,s.die());else if(d<=4)s.monsterHP-=s.die()+2;
+  if(d<=2)s.hurt(h,Math.ceil(s.die()/2));else if(d<=4)s.monsterHP-=s.die()+2;
   else{s.monsterHP-=s.die()+s.die();s.monsterSkip++;}
   return;
  }
@@ -538,13 +538,14 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  s.pendingDamage=damage;
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour))
   s.activate(h,h.slots.armour);
- const knight=s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero"));
+ const knight=s.pendingDamage>0?s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero")):null;
  if(knight){
   knight.used.add("hero");const d=s.die();
   if(d<=2){
    if(knight===h)s.pendingDamage=2;
    else{s.hurt(knight,2);s.pendingDamage=0;}
   } else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
+  else if(d===5)s.pendingDamage=0;
   else{s.pendingDamage=0;s.forcedBehavior=1;}
  }
  const done=s.hurt(h,s.pendingDamage);
@@ -567,11 +568,15 @@ export function monsterRespond(s,h){
  const a=h.hp>0?h:s.chooseActor();s.setActor(a);
  // Monk may transform the revealed monster result BEFORE the result happens.
  const monk=s.living().find(x=>x.card.id==="monk"&&!x.used.has("hero"));
- if(monk){
+ // A human can wait until a worthwhile response rather than spending
+ // STILLNESS on the first harmless result. Preserve the gamble: 1-2 hurts.
+ const dangerous=face>=3||m.id==="warden-fury";
+ if(monk&&dangerous){
   monk.used.add("hero");const d=s.die();
   if(d<=2)s.hurt(monk,2);
   else if(d<=4&&face>=5)face=4;
-  else if(d>=5){face=1;s.heal(monk,2);}
+  else if(d===5){face=1;s.heal(monk,2);}
+  else if(d===6){s.heal(monk,2);return;}
  }
  const band=face<=2?0:face<=4?1:face===5?2:3;
  const hit=(o={})=>monsterAttack(s,a,o);
