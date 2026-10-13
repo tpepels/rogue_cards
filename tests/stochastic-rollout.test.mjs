@@ -134,6 +134,29 @@ test("full-effect rollout matches across repeated decisions at fixed seeds",()=>
   assert.ok(c.plannerDecisions);
  }
 });
+test("optional terminal horizon actually plays the Vault or an ordinary party wipe",()=>{
+ const original=roomState("oracle");
+ const fork=forkExpeditionState(original,{
+  diceSeed:11338,deckSeed:25552,knowledge:"oracle"});
+ const result=rolloutRoomContinuation(fork,0,{depth:9});
+ assert.equal(result.complete,true);
+ assert.ok(!fork.alive()||fork.metrics.roundLimit||
+  fork.metrics.cleared===9);
+ if(fork.alive()&&fork.metrics.cleared===9){
+  assert.ok(fork.vaultState,"The actual Vault was played");
+  assert.equal(typeof fork.metrics.won,"boolean");
+ }
+});
+test("combat continuation can reach terminal expedition result",()=>{
+ const original=fightState("oracle");
+ const fork=forkExpeditionState(original,{
+  diceSeed:2333,deckSeed:7753,knowledge:"oracle"});
+ const result=rolloutCombatContinuation(fork,0,{action:"attack"},{
+  maxHeroActions:600,roomDepth:9});
+ assert.equal(result.complete,true);
+ assert.equal(fork.metrics.unresolved,0);
+ assert.ok(fork.metrics.cleared<=9);
+});
 test("rollout validation rejects invalid horizons and supports 0-budget fallback",()=>{
  assert.throws(()=>validateAgentConfig({weights:{},planning:"time-machine"}));
  assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",rolloutRooms:10}));
