@@ -39,12 +39,6 @@ const RETURNS=[
 ];
 const CHECK_PARTIES=[["wizard"],["warrior","wizard"]];
 const CHECK_STRATEGIES=["magic","treasure"];
-const COVERAGE_PARTIES=[
- ...HEROES.map(x=>[x.id]),
- [["warrior","wizard"],["knight","priest"],["rogue","monk"],
-  ["thief","witch"],["knight","wizard"],["monk","witch"]]
-].flatMap(x=>Array.isArray(x[0])?x:[x]);
-// Above expansion is explicitly checked so nested party arrays cannot become a Hero id.
 const PARTIES=[...HEROES.map(x=>[x.id]),
  ["warrior","wizard"],["knight","priest"],["rogue","monk"],
  ["thief","witch"],["knight","wizard"],["monk","witch"]];
@@ -286,7 +280,7 @@ function render(result){
    (c.acquiredNoOpportunity.map(x=>x.id).join(", ")||"none"),
   "",
   "**Interpretation:** An unobserved path is not proven unreachable. A used or frequently triggered Item is not necessarily worth its cost. Pairwise win differences are exploratory and are not adjusted for testing many Rooms.",
-  "","See detail.json for per-card opportunity counts, matched confidence intervals, and example seeds where an ending changed."];
+  "","See detail.json for per-card opportunity counts, matched confidence intervals, and example seeds where an ending changed.");
  return out.join("\n")+"\n";
 }
 const result={kind:"retained-room-path-outcome-study-v1",
