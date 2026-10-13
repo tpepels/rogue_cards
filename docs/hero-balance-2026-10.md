@@ -58,6 +58,34 @@ The approved changes helped address extremely dominant two-Hero combinations, bu
 4. Validate Item effectiveness on the new card set, considering drawn, accessible and activated Items separately rather than optimizing for the raw number of activations.
 5. Run physical playtests; scripted-agent results are not human player win rates.
 
+## Post-rebalance Item validation
+
+Both independent-seed Item experiments were repeated **after** these
+card changes, using the new printed effects.
+
+- [72,000-expedition Item-use holdout](https://github.com/tpepels/rogue_cards/actions/runs/38378012704)
+  at seed 26940317: scripted policy **60.1%**, normal planner **72.6%**,
+  zero-reservation **72.7%**, forced-legal Item use **69.4%**.
+  No unresolved effects or stalls.
+- [165,600-expedition one-card-at-a-time experiment](https://github.com/tpepels/rogue_cards/actions/runs/38378018604)
+  at seed 26940411: forcing **Spore Jar** produces a +0.10 pp effect
+  (95% CI -0.37 to +0.56); **Wand of Cold Shoulders** -0.01 pp
+  (-0.41 to +0.38); **Wand of Questionable Shapes** -0.25 pp
+  (-0.69 to +0.19). None of these contrasts reliably differs from zero.
+  No unresolved effects or stalls.
+
+The approved Items now have better printed options. Their *optimal timing*
+and power relative to a free attack remain uncertain. Importantly, a null
+forced-use contrast does **not** establish that the card is intrinsically
+weak or has no strategically valuable opportunity. This study has
+limited ability to establish the design goal that **every** consumable
+offers an attractive reason to play it.
+
+The Item opportunity report still records some triggered uses without a
+matching prior opportunity in the same phase, especially conditional
+poison-related triggers. Those usage fractions should not be interpreted
+as probabilities until their event pairing is reconciled.
+
 ## Reproduce
 
     npm test
