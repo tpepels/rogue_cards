@@ -570,10 +570,13 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available",
  "smuggle-if-available","bargain-if-available","unthrone-if-available","escape-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
+ heroAbilityMode="policy",
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
  plannerFeatures=null,itemTrial="normal",itemFocus=null,agentConfig=null}={}){
  verifyPrintedData();
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
+ if(!["policy","steady","risk"].includes(heroAbilityMode))
+  throw Error("Unknown Hero ability policy "+heroAbilityMode);
  if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(!PLANNER_RISKS.includes(plannerRisk))throw Error("Unknown planner risk "+plannerRisk);
  if(researchPolicy==="agent"&&agentConfig===null)
@@ -601,6 +604,9 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   roomPolicy==="scripted"?"contextual":roomPolicy;
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
  s.vaultChoice=vaultChoice;
+ if(heroAbilityMode!=="policy")
+  s.heroAbilityModes=Object.fromEntries(heroes.map(id=>[id,heroAbilityMode]));
+ s.heroAbilityMode=heroAbilityMode;
  s.researchPolicy=researchPolicy;
  s.plannerRisk=researchPolicy==="agent"?"cautious":plannerRisk;
  s.agentConfig=checkedAgent;
@@ -721,7 +727,8 @@ function report(s){
   if(!s.endingMemory)s.endingMemory="The dungeon keeps a cursed soul.";
  }
  return {...m,remainingHP:s.heroes.map(h=>h.hp),magicHeld:s.partyCount("MAGIC"),
-  endingKind:s.endingKind,rerolls:s.rerollHistory,
+  endingKind:s.endingKind,heroAbilityMode:s.heroAbilityMode,
+  rerolls:s.rerollHistory,
   trapdoors:s.trapdoorHistory,secretFinds:s.secretFinds,
   failureStage:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
    s.metrics.wipeStage||s.room?.stage||"unknown",
