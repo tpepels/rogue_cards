@@ -34,6 +34,7 @@ export function normalizePlacements(input){
     if(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max||
      field==="zIndex"&&!Number.isInteger(value))
      throw new Error("Invalid mm value: "+key+"/"+part+"/"+field);
+    if(field==="z"&&!Number.isInteger(value))throw new Error("Layer must be a whole number: "+key+"/"+part);
     entry[field]=rounded(value);
    }
    if(Object.keys(entry).length)saved[part]=entry;
@@ -71,6 +72,8 @@ export function placementCSS(input){
    if(own(place,"w"))decl.push("width:"+mm(place.w),"max-width:none");
    // min-height rather than fixed height: copy stays readable when text wraps.
    if(own(place,"h"))decl.push("min-height:"+mm(place.h),"height:auto");
+   if(own(place,"angle"))decl.push("transform:rotate("+place.angle+"deg)");
+   if(own(place,"z"))decl.push("z-index:"+place.z);
    if(own(place,"rotation"))decl.push("transform:rotate("+place.rotation+"deg)","transform-origin:50% 50%");
    if(own(place,"zIndex"))decl.push("z-index:"+place.zIndex);
    lines.push(prefix+SELECTOR[part]+"{\n "+decl.join(";\n ")+";\n}");
