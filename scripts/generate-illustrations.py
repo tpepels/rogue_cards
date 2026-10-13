@@ -245,8 +245,22 @@ def main() -> int:
         p.error("--delay must be non-negative")
     try:
         return run(args)
-    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
-        print(f"Artwork generator error: {exc}", file=sys.stderr)
+    except Exception as exc:
+        # Google genai v2.30.1 can wrap a 402 response in APIStatusError,
+        # sometimes after a ResponseValidationError. Keep the log actionable.
+        message = str(exc)
+        lowered = message.lower()
+        if ("prepayment credits are depleted" in lowered or
+                ("402" in lowered and "resource_exhausted" in lowered)):
+            print(
+                "Gemini billing error (HTTP 402): prepaid credits are depleted.\n"
+                "Add credits to your Google AI Studio project at "
+                "https://ai.studio/projects before retrying.\n"
+                "No image was saved for the failed card. Existing artwork is intact.",
+                file=sys.stderr,
+            )
+        else:
+            print(f"Artwork generator error: {message[:600]}", file=sys.stderr)
         return 1
 
 
