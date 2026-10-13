@@ -25,7 +25,7 @@ export const MONSTER_IDS = Object.freeze([
 // When these change, explicitly review the simulator instead of silently reporting
 // probabilities for unrecognized abilities or outcomes.
 export const REVIEWED_CARD_HASHES=Object.freeze({
- rooms:"7c105222",objects:"32f8d44b",monsters:"79442be1",
+ rooms:"485592fe",objects:"32f8d44b",monsters:"79442be1",
  heroes:"a36063cb",warden:"dea31008"
 });
 const digest=data=>{
