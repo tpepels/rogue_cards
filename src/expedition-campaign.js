@@ -8,13 +8,16 @@ import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
+import {validateAgentConfig,agentPlanRoom,agentPlanParley,
+ agentPlanCombat,agentPlanSeal} from "./research-agent.js";
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
 const isAlive=s=>s.alive();
-export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive","planner"]);
+export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive","planner","agent"]);
 // Independent opt-in switches. An empty set must execute exactly the existing
 // scripted policy; the all-enabled set is the existing cautious/balanced/bold planner.
 export const PLANNER_FEATURES=Object.freeze(["room","combat","parley","seal"]);
-const plannerUses=(s,feature)=>s.researchPolicy==="planner"&&s.plannerFeatures.has(feature);
+const plannerUses=(s,feature)=>(s.researchPolicy==="planner"||
+ s.researchPolicy==="agent")&&s.plannerFeatures.has(feature);
 const researchUses=(s,feature)=>s.researchPolicy===feature||s.researchPolicy==="adaptive";
 function recordPlan(s,kind,detail){
  const d=s.plannerDecisions; if(!d)return;
@@ -89,7 +92,8 @@ const chooseRoom=s=>{
  }
  if(!ok0&&!ok1)return null;
  if(plannerUses(s,"room")){
-  const result=planRoom(s,[ok0,ok1]);
+  const result=s.researchPolicy==="agent"?agentPlanRoom(s,[ok0,ok1]):
+   planRoom(s,[ok0,ok1]);
   recordPlan(s,"room",result);
   return result.choice;
  }
@@ -241,7 +245,8 @@ function attemptParley(s,m){
  if(m.stage==="FINAL"||(!defaultParley&&!s.researchAllowParley&&!heuristicParley&&!planner))
   return false;
  if(planner){
-  const selection=planParley(s,m);
+  const selection=s.researchPolicy==="agent"?agentPlanParley(s,m):
+   planParley(s,m);
   recordPlan(s,"parley",selection);
   if(!selection.attempt)return false;
  }
@@ -444,9 +449,10 @@ function useItemsInCombat(s,h){
   }
  }
  if(plannerUses(s,"combat")){
-  const decision=planCombat(s,h,{
-   trial:s.itemTrial||"normal",focus:s.itemFocus||null
-  });
+  const decision=s.researchPolicy==="agent"?agentPlanCombat(s,h):
+   planCombat(s,h,{
+    trial:s.itemTrial||"normal",focus:s.itemFocus||null
+   });
   recordPlan(s,"combat",decision);
   if(decision.action==="item")
    return executeItemOption(s,h,decision);
@@ -696,10 +702,15 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
- plannerFeatures=null,itemTrial="normal",itemFocus=null}={}){
+ plannerFeatures=null,itemTrial="normal",itemFocus=null,agentConfig=null}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(!PLANNER_RISKS.includes(plannerRisk))throw Error("Unknown planner risk "+plannerRisk);
+ if(researchPolicy==="agent"&&agentConfig===null)
+  throw Error("Agent policy requires agentConfig");
+ if(researchPolicy!=="agent"&&agentConfig!==null)
+  throw Error("agentConfig requires researchPolicy=agent");
+ const checkedAgent=agentConfig===null?null:validateAgentConfig(agentConfig);
  if(!["normal","free","force","target"].includes(itemTrial))throw Error("Unknown Item trial "+itemTrial);
  if(itemTrial==="target"&&(typeof itemFocus!=="string"||!itemFocus.trim()))
   throw Error("Target Item trial requires itemFocus");
@@ -710,8 +721,8 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
     new Set(plannerFeatures).size!==plannerFeatures.length||
     plannerFeatures.some(f=>!PLANNER_FEATURES.includes(f))))
   throw Error("Invalid planner features; choose a unique subset of "+PLANNER_FEATURES.join(", "));
- if(plannerFeatures!==null&&researchPolicy!=="planner")
-  throw Error("Planner features require researchPolicy=planner");
+ if(plannerFeatures!==null&&researchPolicy!=="planner"&&researchPolicy!=="agent")
+  throw Error("Planner features require researchPolicy=planner or agent");
  if(forceRoomChoice!==null&&
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
    ![0,1].includes(forceRoomChoice.choice)))
@@ -720,12 +731,15 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   roomPolicy==="scripted"?"contextual":roomPolicy;
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
  s.researchPolicy=researchPolicy;
- s.plannerRisk=plannerRisk;
+ s.plannerRisk=researchPolicy==="agent"?"cautious":plannerRisk;
+ s.agentConfig=checkedAgent;
+ s.agentDecisionSerial=0;
+ s.agentInformation=null;
  s.itemTrial=itemTrial;
  s.itemFocus=itemFocus;
  s.plannerFeatures=new Set(plannerFeatures??PLANNER_FEATURES);
  s.plannerSeed=seed;
- s.plannerDecisions=researchPolicy==="planner"?{}:null;
+ s.plannerDecisions=["planner","agent"].includes(researchPolicy)?{}:null;
  s.plannerTrace=[];
  s.researchDecisions={parleyConsidered:0,parleySelected:0,
   spellsReserved:0,sealConsidered:0,sealSelected:0};
@@ -769,7 +783,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   (bestWit(s).card.wit>=3||partyHpFraction(s)<.75);
  if(sealPreferred)s.researchDecisions.sealSelected++;
  const plannerSeal=plannerUses(s,"seal")&&vaultChoice==="policy"?
-  planSeal(s):null;
+  (s.researchPolicy==="agent"?agentPlanSeal(s):planSeal(s)):null;
  if(plannerSeal)recordPlan(s,"seal",plannerSeal);
  const preferSeal=vaultChoice==="seal-if-available"||plannerSeal?.attempt||sealPreferred||
   (vaultChoice==="policy"&&(strategy==="seal"||(strategy==="survival"&&
@@ -798,7 +812,10 @@ function report(s){
   choiceComparison:s.choiceComparison,
   researchDecisions:s.researchPolicy==="none"?null:s.researchDecisions,
   plannerDecisions:s.plannerDecisions,plannerTrace:s.plannerTrace,
-  plannerSeed:s.researchPolicy==="planner"?s.plannerSeed:null,
+  plannerSeed:["planner","agent"].includes(s.researchPolicy)?s.plannerSeed:null,
+  agent:s.agentConfig?{knowledge:s.agentConfig.knowledge,
+   weights:s.agentConfig.weights,budget:s.agentConfig.budget,
+   samplingSeed:s.agentConfig.samplingSeed}:null,
   plannerFeatures:s.researchPolicy==="planner"?[...s.plannerFeatures].sort():null,
   itemTrial:s.researchPolicy==="planner"?s.itemTrial:null,
   itemFocus:s.researchPolicy==="planner"?s.itemFocus:null,
