@@ -811,6 +811,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  const appliedRoomPolicy=(researchPolicy==="rooms"||researchPolicy==="adaptive")&&
   roomPolicy==="scripted"?"contextual":roomPolicy;
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
+ s.vaultChoice=vaultChoice;
  s.researchPolicy=researchPolicy;
  s.plannerRisk=researchPolicy==="agent"?"cautious":plannerRisk;
  s.agentConfig=checkedAgent;
@@ -836,6 +837,11 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
    if(s.metrics.roundLimit)return report(s);
   }
  }
+ return finishVault(s);
+}
+
+function finishVault(s){
+ const vaultChoice=s.vaultChoice??"policy",strategy=s.strategy;
  if(!s.alive())return report(s);
  s.beginRoom(VAULT);s.roomRoll();
  s.metrics.sealAvailable=s.discardable(s.heroes.length===2?6:3,"MAGIC");
