@@ -53,7 +53,7 @@ export function partySummary(s){
  const heroes=s.living(),max=heroes.reduce((n,h)=>n+h.card.hp,0);
  const hp=heroes.reduce((n,h)=>n+h.hp,0);
  const cards=s.heroes.flatMap(h=>h.inventory);
- const reserve=s.heroes.length===2?6:3;
+ const reserve=Math.max(1,(s.heroes.length===2?6:3)+(s.vaultModifiers?.sealCostDelta||0));
  const magic=cards.filter(c=>c.v2.tags.includes("MAGIC")).length;
  return {heroes,hp,max,hpFraction:max?hp/max:0,missing:max-hp,
   maxWit:Math.max(0,...heroes.map(h=>h.card.wit)),

@@ -13,6 +13,7 @@ import assert from "node:assert/strict";
 import {HEROES,ROOMS,VAULT,OBJECTS,MONSTERS,WARDEN,WARDEN_FURY} from "../src/tabletop-data.js";
 import {ExpeditionState} from "../src/expedition-runtime.js";
 import {ROOM_EFFECTS} from "../src/room-effect-model.js";
+import {ROLL_EFFECTS} from "../src/effect-model.js";
 
 const ALL_MONSTERS=[...MONSTERS,WARDEN,WARDEN_FURY];
 const ALL_ROOMS=[...ROOMS,VAULT];
@@ -22,6 +23,11 @@ const feed=(s,h)=>{const item=OBJECTS.find(o=>o.id==="smoky");
  for(let n=0;n<8;n++)s.add(h,item);};
 function activate(s,h,o,face=4){
  if(!o.v2.roll||!h.inventory.includes(o))return;
+ // Scroll of Unlocking / Wand of Doors can select a printed Room d6
+ // outcome. Persistent fate Rooms deliberately have no Room die table;
+ // those specific activations are not legal in that context.
+ if(!s.room?.v2.roll&&ROLL_EFFECTS[o.id]?.some(band=>
+  band.some(op=>op.startsWith("ROOM_OUTCOME:"))))return;
  s.activate(h,o,{face});
 }
 function finiteState(s,label){
@@ -31,6 +37,25 @@ function finiteState(s,label){
  assert.ok(Number.isFinite(s.metrics.damage),label);
 }
 
+test("Objects cannot force a result on a Room with no printed d6 table",()=>{
+ const fate=ROOMS.find(r=>r.v2.fate);
+ assert.ok(fate);
+ const s=new ExpeditionState({seed:2198,heroes:["warrior"]});
+ s.beginRoom(fate);
+ const beforeState={drawn:s.metrics.drawn,activated:s.metrics.activated,roomChoices:{...s.metrics.roomChoices}};
+ assert.equal(s.roomRoll(6),false);
+ assert.equal(s.roomRoll(),false);
+ for(const id of ["scroll-unlock","wand-door"]){
+  const item=OBJECTS.find(o=>o.id===id),h=s.heroes[0];
+  s.add(h,item);
+  assert.equal(s.activate(h,item,{face:6}),false);
+  assert.ok(h.inventory.includes(item),id+" was consumed without a roll target");
+  assert.equal(s.exhausted.has(item),false);
+ }
+ assert.equal(s.metrics.drawn,beforeState.drawn);
+ assert.equal(s.metrics.activated,beforeState.activated);
+ assert.deepEqual(s.metrics.roomChoices,beforeState.roomChoices);
+});
 test("every unordered Object pair coexists and resolves triggered effects",()=>{
  assert.equal(pairwiseObjectPairs.length,OBJECTS.length*(OBJECTS.length-1)/2);
  for(const [i,[a,b]] of pairwiseObjectPairs.entries()){
@@ -58,7 +83,12 @@ test("every Object can coexist with every regional Room and its choices",()=>{
    }
    // Test one printed d6 value in the context of this Item. Full d6
    // coverage for all Rooms remains a separate dedicated exhaustive test.
-   s.roomRoll(1+((j+option)%6));
+   if(room.v2.roll)s.roomRoll(1+((j+option)%6));
+   else{
+    assert.equal(room.v2.fate,true,
+     "Only persistent fate Rooms may intentionally omit a Room die");
+    assert.equal(ROOM_EFFECTS[room.id].outcomes.length,0);
+   }
    finiteState(s,o.id+" / "+room.id+" / "+option);
    scenarios++;
   }
