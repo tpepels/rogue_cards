@@ -134,7 +134,7 @@ const rows=[
   "wizard",
   "Three maps disagree.",
   "STUDY",
-  "Reveal 2 Rooms; discard an Item to reveal a third. Enter 1.",
+  "Reveal 2 Rooms; you may discard an Item to reveal a third. Enter 1.",
   "TEAR",
   "Roll d6. Reveal 2 Rooms and enter 1.",
   "TEAR",
