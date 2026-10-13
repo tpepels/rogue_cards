@@ -112,6 +112,28 @@ test("Combat action matches extracted engine combat and legacy adapter",()=>{
   assert.equal(response.heroes[0].hp,b.heroes[0].hp);
  }
 });
+test("new ELBERETH is executable through public engine commands, not an Item",()=>{
+ const a=createGame({seed:50331,heroes:["warrior"]});
+ const b=createGame({seed:50331,heroes:["warrior"]});
+ const rat={id:"rat",title:"Rat",hp:5,atk:1,def:1,v2:{tags:[]},stage:"UPPER"};
+ for(const s of [a,b]){s.monster=rat;s.monsterHP=5;}
+ // Force success to validate command routing and the response window.
+ for(const s of [a,b])s.die=()=>20;
+ assert.ok(legalCombatActions(a,0).some(x=>
+  x.kind==="elbereth"&&x.mode==="ward"));
+ const action={kind:"elbereth",heroIndex:0,mode:"ward"};
+ const after=takeCombatAction(a,action);
+ const expected=takeCombatAction(b,action);
+ assert.deepEqual(after,expected);
+ assert.equal(a.elberethAttempts,1);
+ assert.equal(a.monsterSkip,1);
+ takeMonsterResponse(a,0);
+ assert.equal(a.monsterSkip,0);
+ assert.equal(a.elberethSkipResponse,false);
+ // Only ward and flee are printed Elbereth modes.
+ assert.throws(()=>takeCombatAction(a,{
+  kind:"elbereth",heroIndex:0,mode:"teleport"}),/Illegal/);
+});
 test("Full research simulation still executes complete expeditions after engine extraction",()=>{
  const config={seed:3219981,heroes:["knight","wizard"],strategy:"magic"};
  const a=simulateFullExpedition(config);
