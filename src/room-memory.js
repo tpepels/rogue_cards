@@ -36,7 +36,7 @@ const rows=[
   "water",
   "An offering is never truly lost.",
   "OFFER",
-  "Tuck 1 Item under this Room; heal 3 HP. Keep it. Upon entering DEEP: leave the Item to heal 3 HP, or roll d6 to recover it.",
+  "Tuck 1 Item under this Room; heal 3 HP. Keep this Room. On entering DEEP, leave the Item to heal 3 HP, or roll this Room's d6 and recover it.",
   "LISTEN",
   "Peek at the next Room.",
   "DEEP RETURN",
@@ -52,7 +52,7 @@ const rows=[
   "BORROW",
   "Draw 1 Item. Keep this Room. At the Vault, discard 1 Item or roll d6 to pay your debt.",
   "REFUSE",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "PAYMENT",
   "debt"
  ],
@@ -206,7 +206,7 @@ const rows=[
   "SAVE",
   "Keep this Room. Discard it before a later Room d6 roll to add +2 (maximum 6).",
   "PRAY",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "PRAYER",
   "lantern"
  ],
@@ -220,7 +220,7 @@ const rows=[
   "BORROW",
   "Heal 3 HP. Keep this Room. Entering DEEP, discard an Item or lose 2 HP.",
   "WADE",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "WADE",
   "leech"
  ],
@@ -234,7 +234,7 @@ const rows=[
   "ACCEPT",
   "Draw 1 Item. Keep this Room. Otherwise, at the next TREASURE Room discard 1 Item or lose its first Item draw.",
   "DECLINE",
-  "Roll d6 for a gift.",
+  "Roll this Room's d6 for a gift.",
   "GIFT",
   "rat"
  ],
@@ -248,7 +248,7 @@ const rows=[
   "REMEMBER",
   "Keep this Room. If damage would reduce a Hero to 0 HP, discard it; that Hero stays at 1 HP.",
   "FORGET",
-  "Roll d6 for a blessing.",
+  "Roll this Room's d6 for a blessing.",
   "BLESSING",
   "name"
  ],
@@ -262,7 +262,7 @@ const rows=[
   "SAVE",
   "Keep this Room. Discard it to flee a Monster (lose 1 HP), or at Broken Bridge to avoid falling and draw 1 Item.",
   "CROSS",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "CROSS",
   "wax"
  ],
@@ -274,9 +274,9 @@ const rows=[
   "door",
   "Its hinges chew quietly.",
   "BORROW",
-  "Draw 2 Items; discard 1. Keep this Room. At the Vault, discard an Item or roll d6.",
+  "Draw 2 Items, then discard 1 Item. Keep this Room. At the Vault, discard 1 Item or roll this Room's d6.",
   "LEAVE",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "PAYMENT",
   "hungry"
  ],
@@ -290,7 +290,7 @@ const rows=[
   "SAVE",
   "Keep this Room. When you next take damage, discard it to prevent 2 damage.",
   "DRINK",
-  "Roll d6 for medicine.",
+  "Roll this Room's d6 for medicine.",
   "MEDICINE",
   "apothecary"
  ],
@@ -302,9 +302,9 @@ const rows=[
   "altar",
   "No one knows who rings the bell.",
   "DEFER",
-  "Keep this Room. At the Vault, ring it: roll d6.",
+  "Keep this Room. At the Vault, ring this Bell: roll this Room's d6.",
   "RING",
-  "Roll d6 now.",
+  "Roll this Room's d6 now.",
   "THE BELL",
   "bell"
  ]
