@@ -172,6 +172,30 @@ test("retrieving an Item from the Bottomless Well does not remove a new deck car
   deckSeed:456,blueprint:prepared});
  assert.equal(fork.deck.length,s.deck.length);
 });
+test("fair Room rollouts preserve revealed corridor choice and exclude discarded paths",()=>{
+ const s=roomState("fair");
+ const forkRoom=ROOMS.find(r=>r.id==="u-fork");
+ assert.ok(forkRoom?.v2.special?.corridor);
+ const index=s.rooms.UPPER.findIndex(r=>r.id===forkRoom.id);
+ assert.ok(index>=0);
+ s.rooms.UPPER.splice(index,1);
+ s.beginRoom(forkRoom);
+ const firstCount=s.rooms.UPPER.length;
+ s.apply("ROOM_SPECIAL",["0"],forkRoom);
+ assert.equal(s.rooms.UPPER.length,firstCount-1);
+ const chosen=s.rooms.UPPER[0].id;
+ assert.equal(s.peekedRoomIds.UPPER[0],chosen);
+ assert.ok(s.discardedRoomIds.size>0);
+ const prepared=prepareRolloutDecks(s,"fair");
+ const excluded=new Set([...s.discardedRoomIds]);
+ for(const seed of [1,2,3,4,5]){
+  const state=forkExpeditionState(s,{knowledge:"fair",diceSeed:seed,
+   deckSeed:seed*31,blueprint:prepared});
+  assert.equal(state.rooms.UPPER[0].id,chosen);
+  assert.ok(state.rooms.UPPER.every(c=>!excluded.has(c.id)));
+  assert.equal(state.rooms.UPPER.length,s.rooms.UPPER.length);
+ }
+});
 test("fair resampling depends on public information, not hidden actual card IDs/order",()=>{
  const a=roomState("fair"),b=roomState("fair");
  b.deck.reverse();
