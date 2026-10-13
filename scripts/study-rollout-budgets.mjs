@@ -51,9 +51,9 @@ function parse(args){
  const workers=integer(values["--workers"]??
   Math.min(6,Math.max(1,availableParallelism()-1)),"workers",16);
  if(!workers)throw Error("Need at least one worker");
- const rolloutRooms=integer(values["--rollout-rooms"]??2,"rolloutRooms",3);
- const combatActions=integer(values["--combat-actions"]??14,"combatActions",32);
- const combatRoomDepth=integer(values["--combat-room-depth"]??0,"combatRoomDepth",2);
+ const rolloutRooms=integer(values["--rollout-rooms"]??2,"rolloutRooms",9);
+ const combatActions=integer(values["--combat-actions"]??14,"combatActions",600);
+ const combatRoomDepth=integer(values["--combat-room-depth"]??0,"combatRoomDepth",9);
  if(!rolloutRooms||combatActions<4)throw Error("Bad rollout horizon");
  const source=values["--weights"];
  let weights={...AGENT_WEIGHTS};
