@@ -1,0 +1,58 @@
+name: Rogue Cards targeted Item weakness study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/item-targeted-study.yml
+
+jobs:
+  targeted-item-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify actual Item timing and targeted interventions
+        run: node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/planner.test.mjs
+      - name: Run all-party matched-seed per-card interventions
+        run: |
+          npm run --silent study:items:targets -- 100 --all --seed 10983427 > item-targets.json
+          npm run --silent study:items:targets:report -- item-targets.json > item-targets.md
+      - name: Audit completeness and summarize intervention confidence
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync("item-targets.json","utf8"));
+          if(r.experiment!=="rogue-cards-targeted-items-v1"||
+             r.simulated!==165600||r.unresolved||r.stalls||
+             r.candidates.length!==22)
+            throw Error("Targeted Item trial incomplete");
+          const pp=n=>(n*100).toFixed(2)+" pp";
+          const ranked=Object.entries(r.overall).sort((a,b)=>a[1].delta-b[1].delta);
+          const rows=["## Rogue Cards targeted Item use (165,600 runs)",
+           "Normal planner versus **forcing one named Item only when usable**.",
+           "No printed Item costs are waived. Future dice paths can diverge.",
+           "",
+           "| Item | Forced-use expeditions | Win-rate change | 95% paired interval |",
+           "|---|---:|---:|---:|"];
+          for(const [id,x] of ranked.slice(0,12))
+           rows.push("| "+id+" | "+x.exposedRuns+" | "+pp(x.delta)+
+            " | ["+pp(x.ci95[0])+", "+pp(x.ci95[1])+"] |");
+          rows.push("","Commit: "+r.commit+" | Seed: "+r.seed,
+           "Full per-card and cohort results are available in the artifacts.",
+           "Treat multiple comparisons and underpowered card estimates cautiously.");
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
+          NODE
+      - name: Save complete per-card results and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-targeted-effects
+          path: |
+            item-targets.json
+            item-targets.md
+          if-no-files-found: ignore
