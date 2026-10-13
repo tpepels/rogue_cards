@@ -447,7 +447,9 @@ function useItemsInCombat(s,h){
  s.noteOptions(eligible);
  // Existing emergency-Potion autopilot is deliberately retained for both
  // baseline and planner. The planner evaluates other usable Potions normally.
- if(h.hp<h.card.hp*.4){
+ // Unlike the legacy scripted policy, the research agent evaluates a
+ // Potion or recovery tool alongside every other legal combat action.
+ if(s.researchPolicy!=="agent"&&h.hp<h.card.hp*.4){
   const p=h.inventory.find(o=>o.v2.kind==="POTION");
   if(p)return s.activate(h,p,{mode:"emergency"});
   for(const id of ["needle"]){
