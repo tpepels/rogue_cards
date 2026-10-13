@@ -15,7 +15,7 @@ export const ROOM_EFFECTS=Object.freeze({
  "u-shrine":C(["ROLL_ROOM"],["COST:1","HEAL:d6","CURSED_RECHARGE"],[
  ["HURT:d6"],["HEAL:d6"],["CLEANSE","HEAL:2"]]),
  "u-fall":C(["ROLL_ROOM"],["HURT:1","PEEK:1"],[
- ["HURT:d6"],["HURT:2"],["DRAW:1"]]),
+ ["TRAPDOOR:MIDDLE:d6:MONSTER"],["TRAPDOOR:MIDDLE:2"],["TRAPDOOR:MIDDLE:0:DRAW2"]]),
  "u-fountain":C(["ROLL_ROOM_RISK"],["COST:1","ALCHEMY_HEAL_OR_TWO"],[
  ["HURT:2"],["HEAL:d6"],["HEAL:d6","DRAW:1"]]),
  "u-merchant":C(["ROLL_ROOM"],["COST:2","DRAW:3"],[
@@ -57,7 +57,7 @@ export const ROOM_EFFECTS=Object.freeze({
  "d-shadow":C(["ROLL_ROOM"],["HURT:2","PEEK:1"],[
  ["MONSTER_DRAW","MONSTER_ADV"],["DRAW:1"],["DRAW:2"]]),
  "d-bridge":C(["ROLL_ROOM"],["HURT:d6","DRAW:1"],[
- ["HURT:2d6"],["HURT:d6"],["DRAW:1"]]),
+ ["TRAPDOOR:FINAL:2d6"],["HURT:d6"],["DRAW:1"]]),
  "d-reliquary":C(["ROLL_ROOM"],["COST:2","DRAW:3","MAGIC_HEAL:2"],[
  ["HURT:d6","DRAW:1"],["DRAW:2"],["DRAW:3","SAVE_TRAP"]]),
  "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:3"],[
@@ -92,7 +92,7 @@ export const ROOM_OPERATIONS=new Set([
  "CURSED_RECHARGE","SUPPLY_BARTER","PUPPET_BRIBE","BOOKCASE_FIRE_OR_SCROLL","FUNGUS_BURN",
  "CHOIR_SILENCE","ALCHEMY_HEAL_OR_TWO","MAGIC_HEAL","CURSED_EXTRA_DRAW","CLEANSE_COST",
  "NEXT_ADV","NEXT_DIS","NEXT_WIT","SAVE_TRAP","SAVE_ATTACK_ADV","SAVE_D20_REROLL",
- "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL","ROOM_FATE"
+ "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL","ROOM_FATE","TRAPDOOR","CURSED_DETOUR"
 ]);
 export function verifyRoomCoverage(){
  const cards=[...ROOMS,VAULT],existing=new Set(cards.map(r=>r.id));
