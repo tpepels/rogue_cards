@@ -58,6 +58,8 @@ test("planner does not play lock, scouting, reaction or merchant cards as combat
 test("planner scores current Monster health and can choose a valid attacking spell",()=>{
  const s=state(72),h=s.heroes[0];
  s.monster=WARDEN;s.monsterHP=16;h.hp=11;
+ // Wild Spark is already used in this Room; the next attack is ordinary.
+ h.used.add("hero");
  const spell=OBJECTS.find(c=>c.id==="scroll-last");
  s.add(h,spell);
  assert.equal(legalCombatActions(s,h).some(c=>c===spell),true);
@@ -66,11 +68,22 @@ test("planner scores current Monster health and can choose a valid attacking spe
  assert.equal(roll.action,"item");
  assert.equal(roll.card.id,"scroll-last");
  const e1=expectedAttack(s,h);
- s.monsterHP=2;
+ s.monsterHP=11; // Phase I ends at 10, so only 1 HP of damage matters.
  const e2=expectedAttack(s,h);
- assert.ok(e2.damage<=2);
+ assert.ok(e2.damage<=1);
  assert.ok(e2.damage<e1.damage);
  assert.ok(e2.killChance>e1.killChance);
+});
+test("Wizard's first combat action forecasts the printed Wild Spark",()=>{
+ const s=state(41),h=s.heroes[0];
+ assert.equal(h.card.id,"wizard");
+ const a=expectedAttack(s,h);
+ assert.equal(a.skipChance,1/3);
+ assert.equal(a.hitChance,2/3);
+ assert.ok(a.damage>0&&a.killChance>=0&&a.killChance<=1);
+ h.used.add("hero");
+ const b=expectedAttack(s,h);
+ assert.equal(b.skipChance,0);
 });
 test("planner accounts for a printed guaranteed d6 result",()=>{
  const s=state(26);
