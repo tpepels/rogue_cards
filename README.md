@@ -256,13 +256,17 @@ To validate real-state rollouts locally and compare 0/8/32/128 samples:
 ~~~sh
 npm test
 npm run agent:budgets -- --runs 2 --seeds 71001 --budgets 0,8 --parties solo --strategies magic --out results/rollout-smoke-01
-npm run agent:budgets -- --runs 100 --seeds 71001,72001,73001 --budgets 0,8,32,128 --workers 8 --out results/rollout-budgets-01
+npm run agent:budgets -- --runs 25 --seeds 71001,72001,73001 --budgets 0,8,16 --workers 4 --chunk-size 5 --out results/rollout-standard-v2
 ~~~
 
 Older agent results remain reproducible because approximate heuristic
 planning is still the default unless the new rollout mode is selected.
 Shorter horizons use a stated nonterminal score; full-horizon mode uses
-actual terminal wins/losses. These are modeled policies, not proven
+actual terminal wins/losses. The budget runner now checkpoints completed
+experiment chunks, reports active-worker progress, and supports
+`--resume` with unchanged settings after interruption. The earlier
+194,400-expedition 0/8/32/128 study command was far too expensive
+for a first local run. These are modeled policies, not proven
 optimal agents or human play.
 
 ## Fair-information versus deck-Oracle agent
