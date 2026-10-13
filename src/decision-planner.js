@@ -461,8 +461,9 @@ function projectedEffect(s,h,option,remaining,threat,attack){
 export function legalCombatActions(s,h){
  return itemOptions(s,h,"combat").filter(o=>o.mode==="action").map(o=>o.card);
 }
-export function planCombat(s,h,{trial="normal"}={}){
- if(!["normal","free","force"].includes(trial))throw Error("Unknown Item trial "+trial);
+export function planCombat(s,h,{trial="normal",focus=null}={}){
+ if(!["normal","free","force","target"].includes(trial))throw Error("Unknown Item trial "+trial);
+ if(trial==="target"&&typeof focus!=="string")throw Error("Target Item trial requires an Item ID");
  const w=plannerWeights(s.plannerRisk),m=s.monster;
  if(!m)return {action:"attack",score:0,options:0,legal:[]};
  const remaining=Math.max(1,remainingMonsterHP(s,m));
@@ -471,15 +472,21 @@ export function planCombat(s,h,{trial="normal"}={}){
   (attack.killChance+(1-attack.killChance)*attack.skipChance)*threat.perResponse-
   attack.backfire*w.damage;
  const eligible=itemOptions(s,h,"combat");
- let winner=null;
+ let winner=null,focused=null;
  for(const option of eligible){
   const immediate=projectedEffect(s,h,option,remaining,threat,attack);
   const reserved=trial==="free"?0:futureItemValue(s,h,option.card,option.mode);
   const utility=immediate-reserved;
-  if(!winner||utility>winner.score)
-   winner={action:"item",card:option.card,mode:option.mode,
+  const proposal={action:"item",card:option.card,mode:option.mode,
     score:utility,immediate,reserved};
+  if(!winner||utility>winner.score)winner=proposal;
+  if(trial==="target"&&option.card.id===focus&&
+     (!focused||utility>focused.score))focused=proposal;
  }
+ // The targeted experiment perturbs one card only; all other turns use
+ // the normal decision rule, including the same future reservation model.
+ if(focused)return {...focused,attackScore,options:eligible.length,
+  legal:eligible,forcedTarget:focus};
  if(winner&&(trial==="force"||winner.score>attackScore+0.1))
   return {...winner,attackScore,options:eligible.length,legal:eligible};
  return {action:"attack",score:attackScore,attackScore,
