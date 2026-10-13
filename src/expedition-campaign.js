@@ -683,6 +683,68 @@ function finishMonsters(s){
  }
  return s.alive();
 }
+/** Resolve upcoming Rooms using the same real effect engine as an ordinary
+ * expedition. Called only by isolated research forks. Setting a finite
+ * horizon does not secretly roll dice or pretend a Room was completed.
+ */
+function advanceRolloutRooms(s,maxRooms){
+ let visited=0;
+ while(s.alive()&&visited<maxRooms){
+  const next=["UPPER","MIDDLE","DEEP"].find(stage=>s.rooms[stage].length);
+  if(!next)break;
+  const room=s.rooms[next].shift();s.beginRoom(room);
+  actRoom(s);
+  if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
+  finishRoom(s);s.metrics.cleared++;visited++;
+  if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
+ }
+ if(!s.alive())return {complete:true,state:s,won:false};
+ if(["UPPER","MIDDLE","DEEP"].some(stage=>s.rooms[stage].length))
+  return {complete:false,state:s,roomsAdvanced:visited};
+ // The printed Vault/SEAL/Warden rules are executed rather than estimated.
+ finishVault(s);
+ return {complete:true,state:s,won:Boolean(s.metrics.won)};
+}
+export function rolloutRoomContinuation(s,choice,{depth=2}={}){
+ if(s.room?.stage==="FINAL"||![0,1].includes(choice)||depth<1)
+  throw Error("Invalid Room rollout decision");
+ // The fork is taken during chooseRoom: its entry Monster and preparation
+ // already occurred, so replaying those would double-count actions/Items.
+ actRoom(s,{prepared:true,choiceOverride:choice});
+ if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
+ finishRoom(s);s.metrics.cleared++;
+ if(s.metrics.roundLimit)return {complete:true,state:s,won:false};
+ return advanceRolloutRooms(s,depth-1);
+}
+export function rolloutCombatContinuation(s,heroIndex,decision,
+ {maxHeroActions=14,roomDepth=1}={}){
+ if(!s.monster||!Number.isInteger(heroIndex)||
+   heroIndex<0||heroIndex>=s.heroes.length)
+  throw Error("Combat rollout needs an active Monster and Hero");
+ if(!decision||!["attack","item"].includes(decision.action))
+  throw Error("Invalid rollout action");
+ const warden=s.monster.stage==="FINAL";
+ const phaseOne=s.monster.id==="warden";
+ const survived=fight(s,{warden,continuation:true,firstHeroIndex:heroIndex,
+  firstDecision:decision,maxHeroActions});
+ if(survived===null)return {complete:false,state:s,combatTruncated:true};
+ if(!s.alive()||!survived)return {complete:true,state:s,won:false};
+ if(warden){
+  if(phaseOne){
+   s.monster=WARDEN_FURY;
+   s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
+   s.metrics.monsterVisits["warden-fury"]=
+    (s.metrics.monsterVisits["warden-fury"]||0)+1;
+   if(!fight(s,{warden:true}))
+    return {complete:true,state:s,won:false};
+  }
+  s.metrics.won=true;
+  return {complete:true,state:s,won:true};
+ }
+ if(!finishMonsters(s))return {complete:true,state:s,won:false};
+ finishRoom(s);s.metrics.cleared++;
+ return advanceRolloutRooms(s,roomDepth);
+}
 export function seal(s){
  const cost=s.heroes.length===2?6:3;
  const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(cost,"MAGIC");
