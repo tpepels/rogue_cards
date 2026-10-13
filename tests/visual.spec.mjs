@@ -55,7 +55,7 @@ test("readable two-page guide prints as exactly two A4 pages without clipped con
  await page.goto("/rules.html");
  await expect(page.getByRole("heading",{name:"ROGUE CARDS"})).toBeVisible();
  await expect(page.getByRole("heading",{name:/Explore a Room/})).toBeVisible();
- await expect(page.getByRole("heading",{name:/Reach the Amulet Vault/})).toBeVisible();
+ await expect(page.getByRole("heading",{name:/The Amulet Vault/})).toBeVisible();
  await expect(page.locator(".sheet")).toHaveCount(2);
  await page.emulateMedia({media:"print"});
  const sizes=await page.locator(".sheet").evaluateAll(elements=>elements.map(el=>({
