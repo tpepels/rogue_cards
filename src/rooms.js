@@ -1,5 +1,5 @@
 // Rogue Cards — canonical Room data.
-// 36 unique Rooms, 12 per region. Every Room's full outcome range is printed.
+// 54 unique Rooms: 36 original Rooms, 18 additional Rooms. Every result range is printed.
 // No new universal actions, conditions, timers or external lookup tables.
 import {ROOM_REVISIONS,EXTRA_ROOMS} from "./room-memory.js";
 const make=(stage,rows)=>rows.map(([id,title,art,kind,prompt,choices,rollLabel,outcomes,links,flavor])=>({
