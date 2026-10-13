@@ -162,6 +162,27 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
   utility+=conditionalFightReward*weights.draw*(s.monster?0.75:0.55);
  return utility;
 }
+// Some printed Room/Item interactions fix the die result. Treating these
+// as an ordinary uniform d6 would mis-rank the Room's two options.
+export function fixedRoomFace(s,room){
+ const id=room.id;
+ if(s.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(id))return 6;
+ if(s.has("dog")&&["u-nest","m-beetle"].includes(id))return 6;
+ if(s.has("raven")&&id==="d-oracle")return 6;
+ if(s.has("key")&&s.strategy!=="seal"&&
+  ["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(id))return 6;
+ if((s.has("torch")||s.has("lantern-heart")||s.anyEquippedTag("FIRE"))&&
+  ["u-lamp","m-crypt"].includes(id))return 6;
+ if(s.anyEquippedTag("FIRE")&&id==="d-shadow")return 6;
+ if(s.anyEquippedTag("ICE")&&id==="d-shadow")return 4;
+ if(s.heroes.some(h=>s.equipped(h,"ring-eye"))&&id==="d-oracle")return 6;
+ if(s.heroes.some(h=>s.equipped(h,"ring-spores"))&&id==="m-fungus")return 6;
+ if(s.heroes.some(h=>s.equipped(h,"ring-hunger"))&&id==="d-crown")return 5;
+ if(id==="m-statue"&&s.lastSpent?.v2?.tags?.includes("MAGIC"))return 6;
+ if(id==="m-auction"&&s.lastSpent?.v2?.tags?.includes("MAGIC"))return 6;
+ if(id==="m-well"&&s.lastSpent?.v2?.tags?.includes("CURSED"))return 6;
+ return null;
+}
 export function planRoom(s,legal){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s);
  const room=s.room,raw=ROOM_EFFECTS[room.id];
@@ -176,10 +197,17 @@ export function planRoom(s,legal){
    roll==="ROLL_ROOM_COST_REROLL"&&s.discardable());
   if(reroll)initial-=risk*w.damage+
    Number(roll==="ROLL_ROOM_COST_REROLL")*party.resourceValue*weightsFactor(w);
+  const fixed=fixedRoomFace(s,room);
+  // Even when an Item fixes the final face, voluntary reroll costs are paid
+  // before the override by the executable roomRoll dispatcher.
+  if(fixed===6&&s.has("key")&&s.strategy!=="seal"&&
+   ["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(room.id))
+   initial-=party.resourceValue*weightsFactor(w);
   let result=0;
   for(let face=1;face<=6;face++){
+   if(fixed!==null&&face!==fixed)continue;
    const band=bandFor(room,face),out=raw.outcomes[band];
-   const likelihood=reroll?(2*face-1)/36:1/6;
+   const likelihood=fixed!==null?1:reroll?(2*face-1)/36:1/6;
    result+=textScore(s,out,w,party,room.stage,{outcome:true})*likelihood;
   }
   return initial+result;
