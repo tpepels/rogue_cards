@@ -53,3 +53,13 @@
 @media(max-width:920px){.le-main{grid-template-columns:1fr}.le-inspector{position:static;max-height:none}.le-stage{min-height:690px}}
 @media(max-width:600px){.le-head{padding:13px}.le-main{padding:9px;grid-template-columns:minmax(0,1fr)}.le-stage{justify-content:flex-start}.le-card-frame{margin:0 5px}}
 @media print{.le-head,.le-inspector,.le-navigator,.le-bottom{display:none!important}.le-stage{background:none;border:0;padding:0;min-height:0}.le-card-frame{--zoom:1!important;width:90mm;height:130mm}.le-card-host{transform:none!important}}
+
+/* Independent rotation grip stays inside the clipped paper silhouette. */
+.le-card-host .tt-card .le-rotate-handle{
+ position:absolute;top:4px;right:5px;z-index:90;
+ width:14px;height:14px;border-radius:50%;border:2px solid #26170d;
+ background:#f4d080;color:#24180c;font:900 10px/10px monospace;
+ display:none;text-align:center;cursor:grab;touch-action:none;
+}
+.le-card-host .tt-card .le-selected>.le-rotate-handle{display:block}
+.le-measurements .le-row button{min-height:34px}
