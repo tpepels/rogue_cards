@@ -690,8 +690,8 @@ function finishWardenAfterPhaseOne(s,vaultChoice){
   s.discard();s.endingKind="escaped_empty_handed";s.metrics.escaped=true;
   return report(s);
  }
- const challenge=(cost,kind)=>{
-  s.discard(cost);
+ const challenge=(cost,kind,tag=null)=>{
+  s.discard(cost,{tag});
   const h=bestWit(s),a=s.die(20),b=s.die(20);
   if(a===20||a!==1&&a+h.card.wit>b+6){
    s.metrics.won=true;s.endingKind=kind;return true;
@@ -699,7 +699,7 @@ function finishWardenAfterPhaseOne(s,vaultChoice){
   s.monsterAdv=true;return false;
  };
  if(canBargain&&prefer("bargain")&&challenge(2,"bargained_amulet"))return report(s);
- if(canUnthrone&&prefer("unthrone")&&challenge(1,"unthroned_warden"))return report(s);
+ if(canUnthrone&&prefer("unthrone")&&challenge(1,"unthroned_warden","MAGIC"))return report(s);
  s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
  s.metrics.monsterVisits["warden-fury"]=(s.metrics.monsterVisits["warden-fury"]||0)+1;
  if(!fight(s,{warden:true}))return report(s);
