@@ -466,3 +466,100 @@
     8.5px/1 "Courier New",
     monospace;
 }
+
+
+/* -------------------------------------------------------------------------
+   ROUGH-CUT ZINE EDITION
+   Use the real pasted-note positioning above. Deliberately change edges,
+   paper registration, and stamp shapes - NEVER the rule note's box geometry.
+   The card illustration remains full-bleed in gallery and printed sheets.
+   ------------------------------------------------------------------------- */
+.tt-card.tt-paper-collage{
+ border:3.2px solid #15100c;
+ border-radius:2.2mm 1.8mm 2.6mm 1.4mm;
+ box-shadow:2px 3px 0 #776958,inset 0 0 0 .35mm #201810;
+}
+.tt-card.tt-paper-collage::after{
+ border:1.5px solid #20170e;
+ border-radius:1.8mm 1.45mm 2.1mm 1.2mm;
+ opacity:.78;
+ box-shadow:inset 0 0 0 .4mm #1c140e8c;
+ background:
+  radial-gradient(ellipse at 0 0,#1c120adb 0 2mm,transparent 5mm),
+  radial-gradient(ellipse at 100% 0,#1c120ac2 0 1.9mm,transparent 4.8mm),
+  radial-gradient(ellipse at 0 100%,#1c120ad2 0 2.1mm,transparent 4.8mm),
+  radial-gradient(ellipse at 100% 100%,#1c120adf 0 2.4mm,transparent 5mm),
+  linear-gradient(90deg,#24180e79,transparent 4%,transparent 96%,#24180e79),
+  linear-gradient(0deg,#24180e69,transparent 4%,transparent 96%,#24180e7a);
+}
+.tt-card.tt-paper-collage .tt-title{
+ background:#f1e5d2;
+ box-shadow:.8mm .82mm 0 #17110b;
+ clip-path:polygon(0 7%,8% 1%,19% 4%,32% 0,48% 3%,61% 0,75% 4%,90% 1%,100% 5%,99% 49%,100% 95%,87% 100%,68% 97%,52% 100%,34% 98%,17% 100%,0 97%);
+}
+.tt-card.tt-paper-collage .tt-card-kind{
+ background:#ebe1cf;
+ box-shadow:.65mm .65mm 0 #19120c;
+ clip-path:polygon(0 8%,17% 1%,37% 5%,58% 0,79% 3%,100% 1%,99% 95%,79% 100%,56% 97%,29% 100%,0 96%);
+}
+/* A single scrap remains a real positioned element. Avoid wrapping text
+   in transformed children; the print checks rely on exact readable bounds. */
+.tt-card.tt-paper-collage .tt-slip{
+ position:absolute;
+ border:1.7px solid #1a130d;
+ border-radius:0;
+ clip-path:polygon(
+  0 3%,10% .4%,22% 2%,35% 0,49% 1.4%,63% 0,76% 2%,90% .4%,100% 2%,
+  99.6% 41%,100% 92%,87% 100%,72% 98.5%,56% 100%,40% 98%,23% 100%,8% 98%,0 99%
+ );
+ background:
+  radial-gradient(ellipse at 16% 6%,#fff9e369,transparent 46%),
+  linear-gradient(173deg,#f2e7d5,#e9dcc6);
+ box-shadow:.65mm .77mm 0 #15100b;
+ /* Retain original positioning, width, rotation and padding above. */
+ transform:rotate(var(--paper-angle,-.3deg));
+}
+.tt-card.tt-paper-collage .tt-slip--lead{
+ background:
+  radial-gradient(ellipse at 9% 14%,#fff9e355,transparent 54%),
+  linear-gradient(173deg,#f0e5d2,#e9dcc9);
+}
+.tt-card.tt-paper-collage .tt-slip--results{
+ border-color:#211810;
+ clip-path:polygon(
+  0 1%,15% 3%,28% 0,44% 1.8%,62% 0,79% 2.6%,92% 0,100% 4%,
+  99.2% 93%,87% 100%,71% 98%,54% 100%,36% 98.4%,17% 100%,0 97%
+ );
+ background:linear-gradient(179deg,#e7dbc7,#f0e4d0);
+}
+/* Fixed variations by card type, as on mismatched newspaper clippings. */
+.tt-card.tt-paper-collage[data-v2-kind="HAZARD"] .tt-slip--results{
+ border-left:3px solid #241810;
+}
+.tt-card.tt-paper-collage[data-v2-kind="SHRINE"] .tt-slip--lead{
+ border-top:2px double #21180f;
+ background:linear-gradient(170deg,#efe4d2,#e7dac7);
+}
+.tt-card.tt-paper-collage[data-v2-kind="ENCOUNTER"] .tt-slip--results{
+ background:linear-gradient(180deg,#f1e5d1,#e7d9c2);
+}
+.tt-card.tt-paper-collage[data-v2-kind="TREASURE"] .tt-slip--lead{
+ border-bottom:2px dashed #24190e;
+}
+.tt-card.tt-paper-collage[data-v2-kind="SCROLL"] .tt-slip--lead{
+ border-left:2px double #1a130d;
+}
+.tt-card.tt-paper-collage[data-v2-kind="WAND"] .tt-slip--results{
+ border-left:3px dashed #24190e;
+}
+.tt-card.tt-paper-collage[data-v2-kind="POTION"] .tt-slip--lead{
+ background:linear-gradient(178deg,#f5ebd9,#ebddc8);
+}
+@media print{
+ .tt-card.tt-paper-collage{box-shadow:none!important}
+ .tt-card.tt-paper-collage .tt-slip,
+ .tt-card.tt-paper-collage .tt-title,
+ .tt-card.tt-paper-collage .tt-card-kind{
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+ }
+}
