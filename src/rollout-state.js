@@ -108,9 +108,13 @@ export function prepareRolloutDecks(s,knowledge){
  const rooms={},monsters={};
  for(const stage of STAGES){
   const seen=s.seenRooms||new Set(s.room?[s.room.id]:[]);
-  const revealed=(s.peekedRoomIds?.[stage]||[]).filter(id=>!seen.has(id));
-  const available=STAGE_ROOMS[stage].filter(r=>
-   !seen.has(r.id)&&!revealed.includes(r.id));
+  const removed=s.discardedRoomIds||new Set();
+  const revealed=(s.peekedRoomIds?.[stage]||[])
+   .filter(id=>!seen.has(id)&&!removed.has(id));
+  const heldPaths=[s.savedPath,s.whisperRoom].filter(
+   card=>card?.stage===stage).map(card=>card.id);
+  const excluded=new Set([...seen,...removed,...revealed,...heldPaths]);
+  const available=STAGE_ROOMS[stage].filter(r=>!excluded.has(r.id));
   const remaining=s.rooms[stage]?.length||0;
   const known=revealed.slice(0,remaining).map(id=>ROOM_BY_ID.get(id));
   if(remaining-known.length>available.length)
