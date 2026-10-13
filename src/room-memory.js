@@ -149,10 +149,10 @@ const rows=[
   "The ladder has two exits.",
   "CLIMB",
   "Reveal 2 Rooms; enter 1. If LAIR, gain ADV on your first attack; otherwise draw 1 Item.",
-  "SLIDE",
-  "Roll d6. Reveal 2 Rooms and enter 1.",
-  "SLIDE",
-  "path"
+  "TAKE THE SHAFT",
+  "Roll d6. 1: Vault, lose 2d6 HP; 2–3: DEEP, lose 2 HP and face a Monster; 4–5: DEEP safely; 6: DEEP with 2 Items. Skip remaining Rooms.",
+  "SHAFT",
+  "shaft"
  ],
  [
   "m-red-detour",
@@ -177,10 +177,10 @@ const rows=[
   "One path promises to follow you.",
   "PROMISE",
   "Reveal 2 Rooms. Enter 1. After your next Monster, enter the other.",
-  "REFUSE",
-  "Roll d6. Reveal 2 Rooms and enter 1.",
-  "REFUSE",
-  "path"
+  "CURSED PASSAGE",
+  "Roll d6. 1–2: DEEP Monster; 3–4: visit a MIDDLE Room's d6 result, then return; 5–6: find a cache with 2 Items. Continue DEEP.",
+  "CURSED",
+  "cursed"
  ],
  [
   "d-gilded",
@@ -310,6 +310,17 @@ const rows=[
  ]
 ];
 const tables={
+ "shaft":[
+  ["1","Fall straight to the Vault; lose 2d6 HP.","TRAPDOOR:FINAL:2d6"],
+  ["2–3","Fall to DEEP; lose 2 HP; face a DEEP Monster.","TRAPDOOR:DEEP:2:MONSTER"],
+  ["4–5","Fall safely to DEEP.","TRAPDOOR:DEEP:0"],
+  ["6","Find 2 Items; descend to DEEP.","TRAPDOOR:DEEP:0:DRAW2"]
+ ],
+ "cursed":[
+  ["1–2","A DEEP Monster blocks the passage.","MONSTER_DRAW"],
+  ["3–4","Briefly return to a MIDDLE Room, then come back.","CURSED_DETOUR"],
+  ["5–6","Find a secret cache. Draw 2 Items.","DRAW:2"]
+ ],
  "path": [
   [
    "1–2",
