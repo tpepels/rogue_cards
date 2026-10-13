@@ -114,7 +114,8 @@ export class ExpeditionState {
   for(let count=1;count<=max;count++){
    const h=this.chooseActor();
    const take=accept?accept(face,count,h):
-    ["treasure","magic"].includes(this.strategy)&&face<=2&&h.hp>count+4;
+    ["treasure","magic"].includes(this.strategy)&&
+    face<=(sides===20?8:2)&&h.hp>count+4;
    if(!take||h.hp<=count)break;
    this.hurt(h,count);if(!this.alive())break;
    face=this.die(sides);
@@ -472,7 +473,11 @@ export class ExpeditionState {
    else{this.banished=true;this.monsterHP=0;this.metrics.banishments++;}return;
   case "CHOOSE_BEHAVIOR":if(this.monster)this.forcedBehavior=1;else this.peek(1);return;
   case "D20_MOD":this.pendingD20Modifier+=Number(v);return;
-  case "D20_REROLL":this.pendingD20=v==="HIGH"?Math.max(this.pendingD20,this.die(20)):this.die(20);return;
+  case "D20_REROLL":
+   this.pendingD20=v==="HIGH"?Math.max(this.pendingD20,this.die(20)):this.die(20);
+   if(["wand-undo","ring-luck"].includes(card?.id))
+    this.pendingD20=this.pushLuck(this.pendingD20,{sides:20,max:2});
+   return;
   case "ROOM_OUTCOME":this.roomRoll(Number(v));return;
   case "REROLL_ROOM":if(this.pendingRoomFace!=null){const d=this.die();
     this.pendingRoomFace=v==="BEST"?Math.max(d,this.pendingRoomFace):d;}return;
