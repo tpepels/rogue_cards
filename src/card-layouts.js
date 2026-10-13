@@ -28,13 +28,16 @@ export function normalizePlacements(input){
   for(const [part,position] of Object.entries(pieces)){
    if(!PARTS.includes(part)||!obj(position))throw new Error("Invalid piece: "+key+"/"+part);
    const entry={};
-   for(const [field,value]of Object.entries(position)){
+   for(const [rawField,rawValue]of Object.entries(position)){
+    // Older editor drafts used angle/z. Accept them, but always export a
+    // single canonical rotation/zIndex representation.
+    const field=rawField==="angle"?"rotation":rawField==="z"?"zIndex":rawField;
+    const value=rawField==="z"&&rawValue===0?1:rawValue;
     if(!own(LIMITS,field))throw new Error("Unexpected field: "+key+"/"+part+"/"+field);
     const [min,max]=LIMITS[field];
     if(typeof value!=="number"||!Number.isFinite(value)||value<min||value>max||
      field==="zIndex"&&!Number.isInteger(value))
-     throw new Error("Invalid mm value: "+key+"/"+part+"/"+field);
-    if(field==="z"&&!Number.isInteger(value))throw new Error("Layer must be a whole number: "+key+"/"+part);
+     throw new Error("Invalid layout value: "+key+"/"+part+"/"+field);
     entry[field]=rounded(value);
    }
    if(Object.keys(entry).length)saved[part]=entry;
@@ -72,8 +75,6 @@ export function placementCSS(input){
    if(own(place,"w"))decl.push("width:"+mm(place.w),"max-width:none");
    // min-height rather than fixed height: copy stays readable when text wraps.
    if(own(place,"h"))decl.push("min-height:"+mm(place.h),"height:auto");
-   if(own(place,"angle"))decl.push("transform:rotate("+place.angle+"deg)");
-   if(own(place,"z"))decl.push("z-index:"+place.z);
    if(own(place,"rotation"))decl.push("transform:rotate("+place.rotation+"deg)","transform-origin:50% 50%");
    if(own(place,"zIndex"))decl.push("z-index:"+place.zIndex);
    lines.push(prefix+SELECTOR[part]+"{\n "+decl.join(";\n ")+";\n}");
