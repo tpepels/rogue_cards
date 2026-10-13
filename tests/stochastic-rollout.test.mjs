@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/expedition-runtime.js";
-import {HEROES,MONSTERS} from "../src/tabletop-data.js";
+import {HEROES,MONSTERS,ROOMS} from "../src/tabletop-data.js";
 import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState}
  from "../src/rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
@@ -37,7 +37,8 @@ const fightState=(knowledge,budget=4)=>{
  // Supply an actually legal combat Item for comparing attack vs Item,
  // rather than relying on the random starting draw.
  const idx=s.deck.findIndex(x=>x.id==="scroll-flame");
- if(idx>=0)s.add(s.heroes[0],s.deck.splice(idx,1)[0]);
+ if(idx>=0){const scroll=s.deck.splice(idx,1)[0];
+  s.noteDeckRemoval(scroll);s.add(s.heroes[0],scroll);}
  return s;
 };
 test("state fork preserves alias identity, ownership, equipment and real random stream",()=>{
@@ -144,6 +145,26 @@ test("card-aware cloning shares printed definitions but isolates mutable state",
  assert.notEqual(original.heroes[0].inventory.length,
   fast.heroes[0].inventory.length);
  assert.throws(()=>cloneRolloutState(original,{mode:"alien"}));
+});
+test("retrieving an Item from the Bottomless Well does not remove a new deck card",()=>{
+ const s=roomState("fair");
+ const room=ROOMS.find(r=>r.id==="m-well");
+ assert.ok(room?.v2.special);
+ s.beginRoom(room);
+ s.apply("ROOM_SPECIAL",["0"],room);
+ const before=JSON.stringify(s.deckRemovedCounts);
+ const acquisitions=JSON.stringify(s.metrics.objectAcquisitions);
+ assert.ok(s.keptRooms.some(k=>k.card.id==="m-well"));
+ // Entering DEEP resolves the kept sacrifice and gives the same physical
+ // Item back. A second ownership acquisition is not a second deck draw.
+ s.beginRoom(ROOMS.find(r=>r.id==="d-shadow"));
+ assert.equal(JSON.stringify(s.deckRemovedCounts),before);
+ assert.notEqual(JSON.stringify(s.metrics.objectAcquisitions),acquisitions);
+ const prepared=prepareRolloutDecks(s,"fair");
+ assert.equal(prepared.items.length,s.deck.length);
+ const fork=forkExpeditionState(s,{knowledge:"fair",diceSeed:123,
+  deckSeed:456,blueprint:prepared});
+ assert.equal(fork.deck.length,s.deck.length);
 });
 test("fair resampling depends on public information, not hidden actual card IDs/order",()=>{
  const a=roomState("fair"),b=roomState("fair");
