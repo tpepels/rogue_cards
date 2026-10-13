@@ -123,7 +123,12 @@ function warningCheck(){
   const dy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
   if(dx>5&&dy>5)overs.push(rects[i].part+" / "+rects[j].part);
  }
- ui.warning.textContent=overs.length?"CHECK: "+[...new Set(overs)].join(", ")+" overlap or extend beyond the card.":"";
+ const outside=overs.filter(x=>!x.includes(" / "));
+ const overlapping=overs.filter(x=>x.includes(" / "));
+ ui.warning.textContent=[
+  outside.length?"Outside card: "+[...new Set(outside)].join(", "):"",
+  overlapping.length?"Overlapping: "+[...new Set(overlapping)].join(", ")+". Higher layer appears in front.":""
+ ].filter(Boolean).join(" · ");
 }
 function updateInspector(){
  const pos=positionOf(selectedPart);
@@ -135,7 +140,7 @@ function updateInspector(){
  const slider=$("#rotation-slider");
  slider.disabled=!pos;
  if(pos)slider.value=String(clamp(pos.rotation,-45,45));
- for(const id of ["layer-behind","layer-ahead"])$("#"+id).disabled=!pos;
+ for(const id of ["layer-behind","layer-ahead","reset-rotation"])$("#"+id).disabled=!pos;
  warningCheck();
  showStatus();
 }
@@ -310,14 +315,20 @@ function installEvents(){
   if(!piece(selectedPart))return;
   const others=PARTS.filter(p=>p!==selectedPart&&piece(p))
    .map(p=>positionOf(p).zIndex);
+  const current=positionOf(selectedPart).zIndex;
   const target=front?
-   clamp(Math.max(...others,0)+1,1,99):
-   clamp(Math.min(...others,100)-1,1,99);
+   clamp(Math.max(current,...others.map(n=>n+1)),1,99):
+   clamp(Math.min(current,...others.map(n=>n-1)),1,99);
   patchPlacement(selectedPart,{zIndex:target});
   historyPush();populatePicker();
  }
  $("#layer-ahead").addEventListener("click",()=>moveLayer(true));
  $("#layer-behind").addEventListener("click",()=>moveLayer(false));
+ $("#reset-rotation").addEventListener("click",()=>{
+  if(!piece(selectedPart))return;
+  patchPlacement(selectedPart,{rotation:0});
+  historyPush();populatePicker();
+ });
  document.addEventListener("keydown",e=>{
   const input=e.target?.closest?.("input,select,textarea");
   if(input)return;
