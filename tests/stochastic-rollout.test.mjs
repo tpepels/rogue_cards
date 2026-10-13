@@ -150,6 +150,9 @@ test("retrieving an Item from the Bottomless Well does not remove a new deck car
  const s=roomState("fair");
  const room=ROOMS.find(r=>r.id==="m-well");
  assert.ok(room?.v2.special);
+ const middle=s.rooms.MIDDLE.findIndex(r=>r.id===room.id);
+ assert.ok(middle>=0);
+ s.rooms.MIDDLE.splice(middle,1); // physically remove the entered Room
  s.beginRoom(room);
  s.apply("ROOM_SPECIAL",["0"],room);
  const before=JSON.stringify(s.deckRemovedCounts);
@@ -157,7 +160,10 @@ test("retrieving an Item from the Bottomless Well does not remove a new deck car
  assert.ok(s.keptRooms.some(k=>k.card.id==="m-well"));
  // Entering DEEP resolves the kept sacrifice and gives the same physical
  // Item back. A second ownership acquisition is not a second deck draw.
- s.beginRoom(ROOMS.find(r=>r.id==="d-shadow"));
+ const deep=s.rooms.DEEP.findIndex(r=>r.id==="d-shadow");
+ assert.ok(deep>=0);
+ const deepRoom=s.rooms.DEEP.splice(deep,1)[0];
+ s.beginRoom(deepRoom);
  assert.equal(JSON.stringify(s.deckRemovedCounts),before);
  assert.notEqual(JSON.stringify(s.metrics.objectAcquisitions),acquisitions);
  const prepared=prepareRolloutDecks(s,"fair");
