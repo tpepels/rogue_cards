@@ -25,7 +25,9 @@
     "study:decisions": "node scripts/study-decisions.mjs",
     "study:report": "node scripts/report-decisions.mjs",
     "study:planner": "node scripts/study-planner.mjs",
-    "study:planner:report": "node scripts/report-planner.mjs"
+    "study:planner:report": "node scripts/report-planner.mjs",
+    "study:planner:ablation": "node scripts/study-planner-ablation.mjs",
+    "study:planner:ablation:report": "node scripts/report-planner-ablation.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
