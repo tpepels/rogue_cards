@@ -482,3 +482,15 @@ test("rollout agent actually searches retained fate Room choices",()=>{
  }
  assert.ok(found,"no retained fate Room reached the actual rollout evaluator");
 });
+
+test("future Room decisions really branch with nonzero nested budget",()=>{
+ const s=roomState("oracle",2);
+ s.agentConfig=validateAgentConfig({...s.agentConfig,replanBudget:1});
+ const decision=pairedRoomRollouts(s,[true,true]);
+ assert.ok([0,1].includes(decision.choice));
+ assert.ok(s.metrics.rolloutAudit?.roomBranches>=4);
+ assert.ok(s.metrics.rolloutAudit.futureReplannedBranches>0,
+  "Inner continuation used the fixed policy instead of replanning");
+ assert.ok(s.metrics.rolloutAudit.terminalBranches+
+  s.metrics.rolloutAudit.nonterminalBranches>=4);
+});
