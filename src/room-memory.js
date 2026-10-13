@@ -36,7 +36,7 @@ const rows=[
   "water",
   "An offering is never truly lost.",
   "OFFER",
-  "Tuck 1 Item; heal 3 HP. Keep this Room. At DEEP choose: leave the Item to heal 3 HP, or roll this Room's d6 then recover it.",
+  "Tuck 1 Item under this Room. Heal 3 HP; keep this Room. At DEEP: leave Item to heal 3 HP, or roll this Room's d6; recover Item.",
   "LISTEN",
   "Peek at the next Room.",
   "DEEP RETURN",
