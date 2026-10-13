@@ -136,9 +136,9 @@ test("full-effect rollout matches across repeated decisions at fixed seeds",()=>
 });
 test("rollout validation rejects invalid horizons and supports 0-budget fallback",()=>{
  assert.throws(()=>validateAgentConfig({weights:{},planning:"time-machine"}));
- assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",rolloutRooms:4}));
+ assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",rolloutRooms:10}));
  assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",combatActions:0}));
- assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",combatRoomDepth:3}));
+ assert.throws(()=>validateAgentConfig({weights:{},planning:"rollout",combatRoomDepth:10}));
  const state=roomState("fair",0);
  const plan=agentPlanRoom(state,[true,true]);
  assert.equal(typeof plan.choice,"number");
