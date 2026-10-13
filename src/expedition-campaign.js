@@ -11,6 +11,8 @@ import {itemOptions} from "./item-access.js";
 import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption}
  from "./engine/combat.js";
 import {verifyPrintedData} from "./playtest.js";
+import {seal,sealCost} from "./engine/vault.js";
+export {seal,sealCost} from "./engine/vault.js";
 export {playerAttack,monsterRespond} from "./engine/combat.js";
 import {validateAgentConfig,agentPlanRoom,agentPlanParley,
  agentPlanCombat,agentPlanSeal} from "./research-agent.js";
@@ -540,41 +542,6 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
  if(!finishMonsters(s))return {complete:true,state:s,won:false};
  finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  return advanceRolloutRooms(s,roomDepth);
-}
-export const sealCost=s=>Math.max(1,(s.heroes.length===2?6:3)+(s.vaultModifiers?.sealCostDelta||0));
-export function seal(s){
- const cost=sealCost(s);
- const magic=s.partyCount("MAGIC");s.metrics.sealAvailable=s.discardable(cost,"MAGIC");
- if(!s.metrics.sealAvailable)return false;
- s.metrics.sealAttempt=true;
- s.discard(cost,{tag:"MAGIC"});
- const h=bestWit(s);if(!h)return false;
- if(h.slots.armour?.id==="mail")s.notePassive(h.slots.armour,"wit",1);
- const boon=blessBeforeD20(s,h);
- let atk=s.rerollIfKept(h,rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"}));
- s.noteOptions(itemOptions(s,h,"after-roll"));
- const ring=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
- if(ring&&!h.used.has(ring)){
-  s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,ring);
-  atk=s.pendingD20+s.pendingD20Modifier;
- }
- const undo=itemIn(s,h,"wand-undo");
- if(undo&&!s.exhausted.has(undo)&&atk+h.card.wit+s.witBonus+boon.bonus<15){
-  s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,undo);
-  atk=s.pendingD20+s.pendingD20Modifier;
- }
- const def=s.die(20);
- let good=atk===20||atk!==1&&atk+h.card.wit+s.witBonus+boon.bonus>def+6;
- if(!good){
-  for(const hero of s.living())s.noteOptions(itemOptions(s,hero,"failed-d20"));
-  // Crown of Rehearsals can rescue even a failed final magical test.
-  const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
-  if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
-   s.directItem(owner,crown,"rescue-failed-roll",()=>{
-    s.consume(owner,crown);s.hurt(owner,s.die());return true;});
-   good=true;}
- }
- s.metrics.sealWin=good;return good;
 }
 export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
