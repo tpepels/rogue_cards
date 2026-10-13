@@ -23,16 +23,14 @@ The catalogue can show **one of each** or **full physical print quantities**, fi
 
 ## Generated card illustrations
 
-All **139 card designs** display a PNG from `assets/illustrations/`.
-The original 111 retain their dedicated illustrations; the 28 added Rooms
-currently reuse appropriate existing artwork pending individual illustrations. The source of truth for the card-to-file assignment
-is `CARD_ART` in `src/tabletop-view.js`. Numeric prefixes (001-111) identify the original artwork set.
-The new Room cards currently share those PNGs rather than introducing SVGs.
+All **139 unique card designs** have dedicated PNG illustrations in
+`assets/illustrations/`; the 28 additional illustrations (112-139) have
+now been committed. `CARD_ART` in `src/tabletop-view.js` remains the
+single source of truth for card-to-image mapping.
 
 The same PNG is used in the on-screen gallery and A4 print sheets.
-The old generic SVG drawings are no longer substituted. `npm test`
-checks card mappings and the original 111 PNG assets. Reused
-illustrations are explicitly permitted for the new Rooms.
+The old generic SVG drawings are not substituted. `npm run validate:deck`
+checks all canonical card mappings and the referenced PNG files.
 
 ### Generate only artwork for newly added cards
 
@@ -77,11 +75,40 @@ All general rules fit on [one A4 sheet](rules.html). Individual card text is aut
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
 - `rules.html` — the one canonical rules sheet
 
+## Reusable engine and separate research experiments
+
+The [headless game-engine architecture](docs/engine-architecture.md)
+now exposes deterministic state, public game snapshots, printed Room
+commands, legal combat actions, and Monster responses without importing
+experiment agents or a browser UI.
+
+- `src/engine/` - canonical reusable rules state, combat, dice and public API
+- `src/expedition-runtime.js` - compatibility re-export for existing callers
+- `src/expedition-campaign.js` - policy-driven whole-expedition simulator
+- `src/research-agent.js` and `src/rollout-*.js` - experimental planning
+- `scripts/study-*.mjs` - laptop-only benchmarks, optimization and reports
+
+The engine does not require Node, external services, or Monte Carlo.
+A future computer-game UI can use it for atomic interactions. A full
+human-driven phase controller and save/load still need implementation.
+
+```sh
+npm run test:engine
+npm test
+npm run bench:rollout-forks -- --samples 300
+npm run bench:rollout-scenarios -- --samples 300 --choices 4
+```
+
+Performance work includes compiled d6 outcome tables, a standalone
+seeded RNG, card-aware clones, and sampling each hypothetical hidden
+deck only once across all legal action alternatives. Benchmarks
+report actual speed on the machine where they run, not estimates.
+
 ## Phase 5: full-effect expedition validation
 
 [Phase 5 measured audit and modeling limitations](docs/phase5-audit.md)
 
-The game now has explicit handlers for all **52 Object cards** and all **37 Room cards** (both choices and every d6 band), plus the canonical two-phase Warden, Hero abilities, Monster behaviour, item inventory, Potion identification, Wand recharging, curses, parley and corpses. Five deterministic play strategies support repeatable solo and two-Hero comparisons.
+The game now has explicit handlers for all **52 Object cards** and all **65 Room cards** (both choices and every d6 band), plus the canonical two-phase Warden, Hero abilities, Monster behaviour, item inventory, Potion identification, Wand recharging, curses, parley and corpses. Five deterministic play strategies support repeatable solo and two-Hero comparisons.
 
 ```sh
 npm run audit
