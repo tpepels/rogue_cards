@@ -117,12 +117,14 @@ test("V4 coherence CLI produces paired choice and strategy data",()=>{
   const report=JSON.parse(readFileSync(join(output,"summary.json"),"utf8"));
   assert.equal(report.schema,"rogue-cards-v4-coherence-v1");
   assert.equal(report.catalogue.fates,10);
-  assert.equal(report.settings.estimates.ordinary,8*10*2);
+  assert.equal(report.settings.estimates.ordinary,8*11*2);
   assert.equal(report.settings.estimates.counterfactual,10*2*3);
-  assert.equal(Object.keys(report.broad.arms).length,10);
+  assert.equal(Object.keys(report.broad.arms).length,11);
   assert.equal(Object.keys(report.choices).length,10);
   assert.equal(report.broad.arms.scripted.n,16);
   assert.equal(report.broad.arms["smuggle-route"].n,16);
+  assert.equal(report.broad.arms["smuggle-targeted"].n,16);
+  assert.ok(report.broad.arms["smuggle-targeted"].interventionSeen>=0);
   assert.equal(report.broad.arms.risky.n,16);
   assert.equal(report.broad.arms.steady.n,16);
   assert.equal(report.broad.pairedContrasts["risky-minus-steady"].n,16);
