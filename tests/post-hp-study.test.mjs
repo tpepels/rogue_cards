@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {simulateFullExpedition} from "../src/expedition-campaign.js";
+import {ROOMS,OBJECTS} from "../src/tabletop-data.js";
 
 test("PARLEY research switch does not change the canonical default",()=>{
  for(const seed of [1,12,617]){
@@ -37,8 +38,8 @@ test("post-HP study CLI is valid and all three modes produce reproducible JSON",
   assert.equal(x.runsPerSetup,1);
   assert.equal(x.unresolved,0);
   assert.equal(x.stalls,0);
-  if(mode==="items")assert.equal(x.results.length,52);
-  if(mode==="rooms")assert.equal(x.results.length,36);
+  if(mode==="items")assert.equal(x.results.length,OBJECTS.length);
+  if(mode==="rooms")assert.equal(x.results.length,ROOMS.length);
   if(mode==="strategies")assert.equal(x.partySetups.length,36);
  }
 });
