@@ -24,11 +24,13 @@ src/engine/index.js                           src/expedition-campaign.js
   - enterNextRoom() / chooseRoom()               - seeded scenario experiments
   - legalCombatActions() / takeCombatAction()            |
   - takeMonsterResponse()                                 |
-  - finishCurrentRoom()                                   |
+  - finishCurrentRoom()
+  - seal() / sealCost()                                   |
           |_______________________________________________|
                           |
                           v
                src/engine/combat.js
+               src/engine/vault.js
                src/engine/expedition-state.js
                src/engine/dice-bands.js
                src/engine/random.js
