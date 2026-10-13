@@ -14,6 +14,8 @@
  * are NOT executed by this baseline: treat those results as partial only.
  */
 import {HEROES, ROOMS, MONSTERS, OBJECTS, WARDEN, WARDEN_FURY, VAULT} from "./tabletop-data.js";
+import {randomSource} from "./engine/random.js";
+export {randomSource} from "./engine/random.js";
 
 export const MODEL_VERSION = "phase5-structured-baseline-v2";
 export const MONSTER_IDS = Object.freeze([
@@ -48,14 +50,7 @@ export function verifyPrintedData(){
  reviewed=true;return true;
 }
 
-export function randomSource(seed=1) {
- let state=(seed>>>0)||0x9e3779b9;
- const random=()=>{state^=state<<13;state^=state>>>17;state^=state<<5;return (state>>>0)/4294967296;};
- const die=sides=>1+Math.floor(random()*sides);
- return {die,choose:a=>a[Math.floor(random()*a.length)],shuffle:arr=>{
-   const out=[...arr];for(let i=out.length-1;i>0;i--){const j=die(i+1)-1;[out[i],out[j]]=[out[j],out[i]];}return out;
- }};
-}
+
 const clamp=(x,low,hi)=>Math.min(hi,Math.max(low,x));
 const inBand=(range,value)=>{const [low,high=low]=range.split("–").map(Number);return low<=value&&value<=high;};
 export const outcome=(rows,die)=>{
