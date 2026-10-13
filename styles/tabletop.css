@@ -1344,3 +1344,17 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  -webkit-print-color-adjust:exact;
  print-color-adjust:exact;
 }
+
+/* Rule typography: mechanical words are bold Courier, never faux italic.
+   No new background pills: the illustration and pasted notes stay primary. */
+.tt-card .tt-mechanic{
+ font-family:inherit;
+ font-style:normal;
+ font-weight:900;
+ letter-spacing:0;
+ white-space:nowrap;
+}
+.tt-card .tt-mechanic--die,
+.tt-card .tt-mechanic--stat{font-weight:900}
+.tt-card .tt-mechanic--condition,
+.tt-card .tt-mechanic--keyword{font-weight:900}
