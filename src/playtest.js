@@ -35,18 +35,24 @@ const digest=data=>{
  for(const char of JSON.stringify(data))h=Math.imul(h^char.charCodeAt(0),16777619)>>>0;
  return h.toString(16).padStart(8,"0");
 };
-let reviewed=false;
-export function verifyPrintedData(){
- if(reviewed)return true;
- const observed={
+export function observedPrintedDataHashes(){
+ return {
   rooms:digest(ROOMS.map(r=>[r.id,r.v2])),
   objects:digest(OBJECTS.map(o=>[o.id,o.copies,o.v2])),
   monsters:digest(MONSTERS.map(m=>[m.id,m.hp,m.atk,m.def,m.behavior,m.v2])),
   heroes:digest(HEROES.map(h=>[h.id,h.hp,h.atk,h.def,h.wit,h.v2])),
   warden:digest([VAULT.v2,WARDEN,WARDEN_FURY])
  };
+}
+let reviewed=false;
+export function verifyPrintedData(){
+ if(reviewed)return true;
+ const observed=observedPrintedDataHashes();
  const mismatches=Object.keys(observed).filter(key=>observed[key]!==REVIEWED_CARD_HASHES[key]);
- if(mismatches.length)throw new Error("Printed card content changed; review Phase 5 simulation coverage: "+mismatches.join(", "));
+ if(mismatches.length)throw new Error(
+  "Printed card content changed; review Phase 5 simulation coverage: "+
+  mismatches.join(", ")+". Observed content hashes: "+
+  JSON.stringify(observed));
  reviewed=true;return true;
 }
 
