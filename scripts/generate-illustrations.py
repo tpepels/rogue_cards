@@ -47,23 +47,32 @@ def get_catalogue() -> list[dict]:
 
 def plan_cards(cards: list[dict], art_dir: Path) -> list[dict]:
     """Keep all existing assignments stable; number additions above the maximum."""
+    # The original 111 PNGs may be provisionally reused by multiple new cards.
+    # Such borrowed art does not count as a completed illustration.
     used_names = [c["filename"] for c in cards if c["filename"]]
-    if len(set(used_names)) != len(used_names):
-        raise ValueError("Duplicate artwork filenames in CARD_ART")
     used_numbers = [int(m.group(1)) for name in used_names
                     if (m := re.match(r"^(\d+)_", name))]
-    next_number = max(used_numbers, default=0) + 1
+    disk_numbers = [int(m.group(1)) for p in art_dir.glob("*.png")
+                    if (m := re.match(r"^(\d+)_", p.name))]
+    next_number = max(used_numbers + disk_numbers, default=0) + 1
+    claimed = set()
     planned = []
     for card in cards:
-        filename = card["filename"]
-        new_mapping = filename is None
-        if new_mapping:
+        old_filename = card["filename"]
+        correct_name = bool(old_filename and re.fullmatch(
+            r"\d+_" + re.escape(slug(card["title"])) + r"\.png", old_filename))
+        if correct_name:
+            if old_filename in claimed:
+                raise ValueError(f"Duplicate owned artwork filename: {old_filename}")
+            claimed.add(old_filename)
+            filename = old_filename
+        else:
+            # Unmapped cards and borrowed illustrations need their own art.
             filename = f"{next_number:03d}_{slug(card['title'])}.png"
             next_number += 1
-        elif not re.fullmatch(r"\d+_[a-z0-9_]+\.png", filename):
-            raise ValueError(f"Unexpected existing filename for {card['key']}: {filename}")
         planned.append({**card, "filename": filename,
-                        "new_mapping": new_mapping,
+                        "previous_filename": old_filename,
+                        "new_mapping": filename != old_filename,
                         "missing": not (art_dir / filename).is_file()})
     return planned
 
@@ -73,8 +82,9 @@ def make_prompt(title: str, style: str) -> str:
     return title + "\n\n" + style
 
 
-def add_mapping(source: str, key: str, filename: str) -> str:
-    """Append one mapping to the existing CARD_ART object without renumbering."""
+def add_mapping(source: str, key: str, filename: str,
+                previous_filename: str | None = None) -> str:
+    """Add a new mapping or replace a provisional shared-art mapping safely."""
     begin = source.find("export const CARD_ART=Object.freeze({")
     if begin < 0:
         raise ValueError("Cannot find CARD_ART declaration in src/tabletop-view.js")
@@ -82,13 +92,22 @@ def add_mapping(source: str, key: str, filename: str) -> str:
     if end < 0:
         raise ValueError("Cannot find CARD_ART closing marker")
     body = source[begin:end]
-    if json.dumps(key, ensure_ascii=False) + ":" in body:
-        raise ValueError(f"Refusing to duplicate CARD_ART entry {key}")
+    entry = re.compile(r'("' + re.escape(key) + r'"\s*:\s*)"([^"]+)"')
+    matches = list(entry.finditer(body))
+    if len(matches) > 1:
+        raise ValueError(f"Duplicate CARD_ART keys: {key}")
+    if matches:
+        old_name = matches[0].group(2)
+        if previous_filename is None or old_name != previous_filename:
+            raise ValueError(f"CARD_ART mapping changed for {key}: {old_name}")
+        replaced = entry.sub(lambda m: m.group(1) + json.dumps(filename), body, count=1)
+        return source[:begin] + replaced + source[end:]
+    if previous_filename is not None:
+        raise ValueError(f"Expected a previous CARD_ART entry for {key}")
     prefix = source[:end].rstrip()
     if prefix.endswith('"'):
         prefix += ","
-    entry = f"\n {json.dumps(key)}:{json.dumps(filename)}"
-    return prefix + entry + source[end:]
+    return prefix + f"\n {json.dumps(key)}:{json.dumps(filename)}" + source[end:]
 
 
 def mime(path: Path) -> str:
@@ -170,16 +189,18 @@ def run(args: argparse.Namespace) -> int:
     client = genai.Client(api_key=key)
 
     to_generate = {c["key"] for c in missing}
-    last_art = Path(args.reference) if args.reference else None
+    # Use the highest-numbered completed artwork as the starting reference,
+    # including after a partial run. Thereafter, chain ONLY generated images.
+    completed = [c for c in cards if not c["missing"]]
+    completed.sort(key=lambda c: int(c["filename"].split("_", 1)[0]))
+    last_art = Path(args.reference) if args.reference else (
+        ART_DIR / completed[-1]["filename"] if completed else None)
     if last_art and not last_art.is_file():
         raise FileNotFoundError(last_art)
     generated = 0
-    # Walk the canonical order, so existing artwork anchors the next new card.
     for card in cards:
         path = ART_DIR / card["filename"]
         if card["key"] not in to_generate:
-            if path.is_file():
-                last_art = path
             continue
         if last_art is None:
             raise RuntimeError(
@@ -192,7 +213,8 @@ def run(args: argparse.Namespace) -> int:
             write_artwork(data, path)
             if card["new_mapping"]:
                 text = MAP_FILE.read_text(encoding="utf-8")
-                MAP_FILE.write_text(add_mapping(text, card["key"], card["filename"]),
+                MAP_FILE.write_text(add_mapping(text, card["key"], card["filename"],
+                                                   card["previous_filename"]),
                                     encoding="utf-8")
         except Exception:
             # Do not silently continue the chain with a missing predecessor.
