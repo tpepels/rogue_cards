@@ -104,7 +104,7 @@ test("one A4 rulebook describes entire adventure and alternate boss victory",()=
  assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
  assert.equal((html.match(/<section><h2>/g)||[]).length,8);
  assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
- assert.match(html,/Trapdoors skip Rooms/);
+ assert.match(html,/Trapdoors may skip Rooms/);
  assert.match(html,/After each Hero turn/);
  assert.match(html,/healing still needs a printed effect/);
  assert.match(html,/keeping the same HP die/);
