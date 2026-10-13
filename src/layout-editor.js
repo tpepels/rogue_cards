@@ -331,8 +331,17 @@ function installEvents(){
  // Place the selected paper above or below its siblings in one click.
  function moveLayer(front){
   if(!piece(selectedPart))return;
-  const others=PARTS.filter(p=>p!==selectedPart&&piece(p))
-   .map(p=>positionOf(p).zIndex);
+  const selectedBox=piece(selectedPart).getBoundingClientRect();
+  const overlaps=PARTS.filter(p=>p!==selectedPart&&piece(p)).filter(part=>{
+   const box=piece(part).getBoundingClientRect();
+   const dx=Math.min(box.right,selectedBox.right)-Math.max(box.left,selectedBox.left);
+   const dy=Math.min(box.bottom,selectedBox.bottom)-Math.max(box.top,selectedBox.top);
+   return dx>2&&dy>2;
+  });
+  // Put a piece immediately above or below the pieces it actually covers.
+  // Unrelated pieces must not silently change its stacking order.
+  const relevant=overlaps.length?overlaps:PARTS.filter(p=>p!==selectedPart&&piece(p));
+  const others=relevant.map(p=>positionOf(p).zIndex);
   const current=positionOf(selectedPart).zIndex;
   const target=front?
    clamp(Math.max(current,...others.map(n=>n+1)),1,99):
