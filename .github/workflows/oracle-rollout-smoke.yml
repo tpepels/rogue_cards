@@ -46,6 +46,29 @@ jobs:
             if(!a.terminalBranches)throw Error(arm+' recorded no full outcomes');
           }
           NODE
+      - name: One-Hero full-terminal search with nested action branching
+        run: |
+          npm run agent:budgets -- \
+            --runs 1 --seeds 92001 --budgets 1 \
+            --party wizard --strategies magic \
+            --replan-budget 1 \
+            --rollout-rooms 9 --combat-actions 600 --combat-room-depth 9 \
+            --strict-terminal --workers 2 --chunk-size 1 \
+            --out results/oracle-two-ply-ci
+      - name: Verify nontrivial future decision branching
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const s=JSON.parse(readFileSync('results/oracle-two-ply-ci/summary.json','utf8'));
+          const v=JSON.parse(readFileSync('results/oracle-two-ply-ci/validation.json','utf8'));
+          if(!v.pass||!v.allRolloutBranchesTerminal)
+            throw Error('Two-ply search did not finish its hypothetical expeditions');
+          for(const arm of ['fair-1','oracle-1']){
+            const a=s.results[arm]?.rolloutAudit;
+            if(!a?.futureReplannedBranches)
+              throw Error(arm+' used no future action-branch evaluations');
+          }
+          NODE
       - name: Publish rollout evidence
         if: success()
         run: cat results/oracle-terminal-ci/summary.md >> "$GITHUB_STEP_SUMMARY"
@@ -54,5 +77,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: oracle-terminal-smoke
-          path: results/oracle-terminal-ci/
+          path: |
+            results/oracle-terminal-ci/
+            results/oracle-two-ply-ci/
           if-no-files-found: ignore
