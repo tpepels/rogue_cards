@@ -1,0 +1,63 @@
+name: Rogue Cards Hero rebalance study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/hero-rebalance-study.yml
+
+jobs:
+  all-parties:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify exact printed mechanics and no unresolved effects
+        run: |
+          node --test tests/hero-item-balance.test.mjs tests/card-audit.test.mjs tests/item-contracts.test.mjs tests/planner.test.mjs
+      - name: Measure 8 solo Heroes and 28 two-Hero pairs with fresh seeds
+        run: |
+          npm run --silent study:hero-balance -- 500 --seed 78521739 > hero-balance.json
+          npm run --silent study:hero-balance:report -- hero-balance.json > hero-balance.md
+      - name: Verify cohort size and show design targets
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from "node:fs";
+          const r=JSON.parse(readFileSync("hero-balance.json","utf8"));
+          const all=Object.values(r.results).flatMap(s=>Object.values(s));
+          if(r.experiment!=="rogue-cards-hero-balance-v1"||
+             r.simulated!==36000||all.length!==72||
+             all.some(c=>c.n!==500||c.unresolved||c.stalls))
+            throw Error("Invalid, stalled or incomplete Hero study");
+          const pct=n=>(n*100).toFixed(1)+"%";
+          const lines=[
+           "## Rogue Cards - 36,000-expedition Hero balance check",
+           "All 8 solos and 28 Hero pairs, magic and treasure strategy.",
+           "",
+           "| Target | Observed | Pass? |","|---|---:|---|",
+           "| Solo Hero spread ≤10 pp | "+pct(r.spreads.solo.range)+" | "+(r.goals.soloRangeAtMost0_10?"Yes":"No")+" |",
+           "| Mean duo win rate 70–85% | "+pct(r.overall.duo.winRate)+" | "+(r.goals.duoMeanWithin0_70to0_85?"Yes":"No")+" |",
+           "| No duo ≥95% | "+pct(r.spreads.duo.highest.rate)+" maximum | "+(r.goals.noDuoAbove0_95?"Yes":"No")+" |",
+           "",
+           "Strongest solo: "+r.spreads.solo.highest.party+" ("+pct(r.spreads.solo.highest.rate)+")",
+           "Weakest solo: "+r.spreads.solo.lowest.party+" ("+pct(r.spreads.solo.lowest.rate)+")",
+           "Strongest duo: "+r.spreads.duo.highest.party+" ("+pct(r.spreads.duo.highest.rate)+")",
+           "Commit: "+r.commit+", seed: "+r.seed,
+           "",
+           "Targets are soft design guardrails. A failed target should guide further tests, not fail CI."
+          ];
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join("\n")+"\n");
+          NODE
+      - name: Upload all Heroes, party combinations and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-rebalance-results
+          path: |
+            hero-balance.json
+            hero-balance.md
+          if-no-files-found: ignore
