@@ -257,6 +257,8 @@ export function monsterRespond(s,h){
   }
  }
  const band=face<=2?0:face<=4?1:face===5?2:3;
+ const behaviourKey=m.id+":"+band;
+ s.metrics.monsterBehaviorBands[behaviourKey]=(s.metrics.monsterBehaviorBands[behaviourKey]||0)+1;
  const hit=(o={})=>monsterAttack(s,a,o);
  s.metrics.cardCounts[m.id]=(s.metrics.cardCounts[m.id]||0)+1;
  switch(m.id){
