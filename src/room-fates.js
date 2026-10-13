@@ -13,7 +13,7 @@ const rows=[
   [["PLANT","Tuck 1 Item beneath this Room. Keep it. Entering DEEP, recover it and draw 2 Items."],
    ["EAT","Heal 3 HP. Keep this Room. Entering DEEP, lose 2 HP."]]],
  ["m-ferryman-oath","MIDDLE","The Ferryman's Oath","water","ENCOUNTER","The ferryman accepts tomorrow's fare.",
-  [["PAY","Tuck 1 Item beneath this Room. Keep it. At Vault: recover and heal 3 HP, or sacrifice to unlock SMUGGLE after Phase I."],
+  [["PAY","Tuck 1 Item. Keep this Room. At Vault recover it; heal 3 HP, or sacrifice it. After Phase I discard 2 Items (1 MAGIC) to SMUGGLE."],
    ["CHEAT","Draw 2 Items. Keep this Room. At the Vault, lose 3 HP."]]],
  ["m-choir-nails","MIDDLE","Choir of Nails","bones","MYSTERY","Nails sing in the stone.",
   [["LISTEN","Keep this Room. The first DEEP Monster's first attack has DIS."],
@@ -24,12 +24,12 @@ const rows=[
  ["m-drowned-banner","MIDDLE","The Drowned Banner","altar","SHRINE","A lost army's colours drip black.",
   [["RAISE","Lose 2 HP. Keep this Room. At the Vault, the Warden begins with 3 less HP."],
    ["BURN","Draw 2 Items. Keep this Room. At the Vault, the Warden's first attack has ADV."]]],
- ["d-sleeping-crown","DEEP","The Sleeping Crown","bones","TREASURE","Something royal dreams beneath the gold.",
+ ["d-sleeping-crown","DEEP","The Sleeping Crown","bones","TREASURE","Both Crowns: UNTHRONE after Phase I. Discard 1 MAGIC Item; opposed d20+WIT vs d20+6. Win: Amulet; fail: Phase II ADV.",
   [["WEAR","Keep this Room. Your first Vault attack has ADV; SEAL costs 1 extra MAGIC Item."],
    ["BREAK","Discard 1 MAGIC Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."]]],
- ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","A chained ghost knows what happened here.",
-  [["FREE","Lose 2 HP. Keep this Room. At the Vault, heal 3 HP. After Warden Phase I, you may BARGAIN using the Witness's testimony."],
-   ["SILENCE","Draw 2 Items. Keep this Room. At the Vault, lose 2 HP. If you win, the witness remains lost."]]]
+ ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","Ghost witness: BARGAIN after Phase I. Discard 2 Items; opposed d20+WIT vs d20+6. Win: Amulet; fail: Phase II ADV.",
+  [["FREE","Lose 2 HP. Keep this Room; heal 3 HP at Vault. After Phase I, you may BARGAIN."],
+   ["SILENCE","Draw 2 Items. Keep this Room; lose 2 HP at Vault. Witness stays trapped."]]]
 ];
 export const FATE_ROOMS=Object.freeze(rows.map(([id,stage,title,art,kind,prompt,choices])=>({
  id,stage,title,art,type:"room",copies:1,rule:prompt,flavor:"",
