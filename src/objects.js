@@ -25,7 +25,7 @@ const tools=[
  ["chalk","Chalk of Detours","spiral","TOOL",["MAGIC","TOOL"],
   "ONCE PER ROOM: Mark sideways; roll d6.",
   [["1–2","Your mark vanishes; lose 1 HP."],["3–4","Peek at the next Room."],["5–6","Peek at the next 2 Rooms; swap them if both exist."]],
-  "Never change the fixed final Vault.",["u-bookcase","d-oracle","m-clock"],"Draw a door. Hope.",2],
+  "Cannot change Vault. At ELBERETH, turn sideways for ADV on engraving d20.",["u-bookcase","d-oracle","m-clock"],"Draw a door. Hope.",2],
  ["spore-jar","Spore Jar","mushroom","TOOL",["ALCHEMY","TOOL"],
   "ACTION: Discard and roll d6.",
   [["1–2","Become POISONED."],["3–4","Monster skips its next response."],["5–6","Monster skips its next 2 responses."]],
@@ -131,7 +131,7 @@ const scrolls=[
 ];
 const rings=[
  ["ring-luck","Ring of Crooked Luck","amulet","RING",["MAGIC","LUCK"],
-  "RING: ONCE PER ROOM after your d20 roll, roll d6.",
+  "RING: ONCE PER ROOM after d20 roll, roll d6. After 5–6, REROLL again for 1 then 2 HP; use newest result.",
   [["1–2","Subtract 2 from that roll."],["3–4","Add 2 to that roll."],["5–6","Reroll that d20; keep the higher."]],
   "At a SHRINE, cleanse and discard a CURSED Item to heal d6 HP.",["m-clock","d-oracle"],"It rolls off your finger.",1],
  ["ring-bargain","Ring of Small Deals","shop","RING",["MAGIC","BARGAIN"],
@@ -164,7 +164,7 @@ const wands=[
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
-  "AFTER A HERO d20 ROLL: If upright, roll d6; turn sideways until a SHRINE recharges it.",
+  "AFTER HERO d20: If upright, roll d6 and turn sideways. After a reroll, REROLL again for 1 then 2 HP; use newest result.",
   [["1–2","Misfire: lose 1 HP; nothing changes."],["3–4","Reroll the d20; use new result."],["5–6","Reroll the d20; keep higher."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
