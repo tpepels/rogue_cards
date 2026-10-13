@@ -20,7 +20,7 @@ jobs:
         run: node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/planner.test.mjs
       - name: Run all-party matched-seed per-card interventions
         run: |
-          npm run --silent study:items:targets -- 100 --all --seed 10983427 > item-targets.json
+          npm run --silent study:items:targets -- 100 --all --seed 26940411 > item-targets.json
           npm run --silent study:items:targets:report -- item-targets.json > item-targets.md
       - name: Audit completeness and summarize intervention confidence
         run: |
