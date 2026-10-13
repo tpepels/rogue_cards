@@ -352,7 +352,11 @@ async function parallel(tasks,c,complete){
     });
     worker.on("error",e=>{if(!rejected){rejected=e;no(e)}});
     worker.on("exit",code=>{
-     if(code!==0&&!rejected){rejected=Error("Worker exited "+code);no(rejected)}
+     if(!stopped&&!rejected){
+      rejected=Error("Worker exited unexpectedly (code "+code+
+       ") before its assigned study chunks completed");
+      no(rejected);
+     }
     });
     startNext(worker);
    }
