@@ -34,6 +34,24 @@ The old generic SVG drawings are no longer substituted. `npm test`
 checks all 111 mappings for missing, duplicated, wrongly named or
 invalid PNG files.
 
+### Generate only artwork for newly added cards
+
+The [Gemini illustration generator](docs/illustration-generator.md) reads the
+actual `CATALOGUE` and `CARD_ART` map; no CSV or visual hooks are involved.
+It uses the preceding illustration as the only style reference, sends only
+the card name and `scripts/illustration-style.txt`, and writes missing PNGs
+directly to `assets/illustrations/`. Existing artwork is not regenerated.
+
+```sh
+npm run art:check                 # free, list missing images
+npm run art:missing -- --limit 3 # up to three paid requests
+npm run art:missing               # generate all remaining missing images
+```
+
+After reviewing the results, commit the new PNGs and generated `CARD_ART`
+entries. The script uses Gemini 3.1 Flash Image at 1K; it is run locally, not
+by CI.
+
 ## Gameplay
 
 Select a Hero, take the named starting Object and draw one more. Shuffle UPPER, MIDDLE and DEEP Rooms and matching Monsters into regional piles. Descend through three Rooms of each level, one at a time, then the Amulet Vault.
