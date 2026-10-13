@@ -35,7 +35,8 @@
     "study:hero-balance:report": "node scripts/report-hero-balance.mjs",
     "validate:local": "node scripts/validate-local.mjs",
     "agent:study": "node scripts/study-agent.mjs",
-    "test:rollout": "node --test tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs"
+    "test:rollout": "node --test tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs",
+    "agent:budgets": "node scripts/study-rollout-budgets.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
