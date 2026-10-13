@@ -24,6 +24,10 @@ function recordPlan(s,kind,detail){
  const selected=kind+"_"+choice;
  d[selected]=(d[selected]||0)+1;
  if(kind==="combat"){
+  if(detail.forcedTarget){
+   d.targetForced=(d.targetForced||0)+1;
+   d["targetForced_"+detail.forcedTarget]=(d["targetForced_"+detail.forcedTarget]||0)+1;
+  }
   d.combatEligibleActions=(d.combatEligibleActions||0)+(detail.options||0);
   const label=detail.options>0?"combat_with_legal_item":"combat_no_legal_item";
   d[label]=(d[label]||0)+1;
