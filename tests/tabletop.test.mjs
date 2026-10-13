@@ -67,7 +67,7 @@ test("objects contain complete on-card outcomes, scrolls/rings/wands have safe f
   assert.match(cardMarkup(o),/tt-layout-v2-object/);
   if(o.v2.kind==="SCROLL")assert.match(o.v2.trigger,/discard/i);
   if(o.v2.kind==="WAND"){
-   assert.match(o.v2.trigger,/sideways until/i);
+   assert.match(o.v2.trigger,/sideways/i);
    assert.match(o.v2.alternative,/SHRINE:.*recharge/i);
    assert.match(o.v2.alternative,/OVERCHARGE: discard Wand, lose d6 HP;/i);
    assert.ok(o.v2.alternative.endsWith("choose "+o.v2.roll.outcomes.at(-1).range+"."));
@@ -103,7 +103,8 @@ test("one A4 rulebook describes entire adventure and alternate boss victory",()=
  assert.match(html,/Scrolls/);assert.match(html,/1 Ring/);
  assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
  assert.equal((html.match(/<section><h2>/g)||[]).length,8);
- assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
+ assert.match(html,/3 Rooms per depth/);
+ assert.match(html,/Trapdoors may skip Rooms/);
  assert.match(html,/After each Hero turn/);
  assert.match(html,/healing still needs a printed effect/);
  assert.match(html,/keeping the same HP die/);
