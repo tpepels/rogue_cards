@@ -7,6 +7,7 @@
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {ROLL_EFFECTS,bandFor} from "./effect-model.js";
 import {MONSTERS,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
+import {itemOptions} from "./item-access.js";
 
 export const PLANNER_RISKS=Object.freeze(["balanced","cautious","bold"]);
 const PROFILE=Object.freeze({
@@ -353,52 +354,136 @@ export function expectedAttack(s,h,m=s.monster){
   killChance:ordinaryChance*lethalNormal+critChance*lethalCritical,hitChance,
   backfire,skipChance:0};
 }
-export function legalCombatActions(s,h){
- if(!s.monster||h.hp<=0)return [];
- return h.inventory.filter(card=>COMBAT_ACTIONS.has(card.id)&&
-  !!card.v2.roll&&!s.exhausted.has(card)&&
-  !(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card)));
-}
-export function planCombat(s,h){
- const w=plannerWeights(s.plannerRisk),party=partySummary(s),m=s.monster;
- if(!m)return {action:"attack",score:0,options:0};
- const remaining=Math.max(1,remainingMonsterHP(s,m));
- const attack=expectedAttack(s,h,m),fore=forecastCombat(s,m);
- const incoming=fore.monsterDamage*w.damage;
- const attackScore=attack.damage*w.damage+
-  (attack.killChance+(1-attack.killChance)*attack.skipChance)*incoming-
-  attack.backfire*w.damage;
- const eligible=legalCombatActions(s,h);
- let winner=null;
- for(const card of eligible){
-  let sum=0;
-  for(let face=1;face<=6;face++){
-   const effect=effectScore(ROLL_EFFECTS[card.id][bandFor(card,face)],party,m);
-   // A direct spell that finishes the Monster prevents this turn's response.
-   // Do not value extra damage beyond the remaining HP.
-   const lethal=effect.damage>=remaining||effect.banish>0;
-   const skipped=lethal?1:clamp(effect.skips,0,2);
-   const heal=Math.min(party.missing,effect.healing);
-   const harm=Math.min(h.hp,effect.curse);
-   sum+=(Math.min(remaining,effect.damage)*w.damage+
-     (lethal?0:skipped)*incoming+Number(lethal)*incoming+
-     heal*w.damage+effect.draw*w.draw-
-     harm*w.damage-effect.resources*party.resourceValue*weightsFactor(w))/6;
-   // Being killed by a backfire cannot be compensated by a prospective draw.
-   if(effect.curse>=h.hp&&effect.curse>0)sum-=w.death/6;
-  }
-  const reserveMagic=m.stage!=="FINAL"&&party.magic<=party.sealCost;
-  const opportunity=card.v2.kind==="SCROLL"?
-   w.spell*(reserveMagic?1.45:1):
-   card.id==="spore-jar"?party.resourceValue*weightsFactor(w):
-   // A Wand turns sideways, but remains owned and can be recharged.
-   Math.max(.35,w.spell*(party.roomsLeft>1?.22:.09));
-  const utility=sum-opportunity;
-  if(!winner||utility>winner.score)
-   winner={action:"item",card,score:utility};
+/** Public-knowledge reservation value; never inspect hidden deck order.
+ * Consumables are reserved for credible future opportunities, not an
+ * arbitrary constant. Strategy, stage, current resources, and risk all matter.
+ */
+export function futureItemValue(s,h,card,mode="action",risk=s.plannerRisk){
+ const w=plannerWeights(risk),party=partySummary(s);
+ const rooms=party.roomsLeft;
+ const current=s.monster?.stage==="FINAL";
+ if(mode==="overcharge")return current?0.5:1.2;
+ if(["torch-skip","lantern-skip","lantern-recharge"].includes(mode))
+  return current?0.1:Math.min(2,rooms*.12);
+ if(mode==="recover"||mode==="drink"){
+  const missing=Math.max(0,h.card.hp-h.hp);
+  return missing>h.card.hp*.4?0:0.4+rooms*.11;
  }
- if(winner&&winner.score>attackScore+0.1)return {...winner,attackScore,options:eligible.length};
- return {action:"attack",score:attackScore,attackScore,options:eligible.length};
+ if(card.v2.kind==="WAND"){
+  // Future shrines can straighten sideways Wands, but their availability
+  // is uncertain; their permanent ownership is not spent on normal use.
+  return current?0:Math.min(1.7,.2+rooms*.14);
+ }
+ if(card.id==="spore-jar")return current?0.15:.15+rooms*.09;
+ if(card.v2.kind!=="SCROLL")return 0;
+ const duplicates=h.inventory.filter(c=>c.id===card.id).length;
+ const otherMagic=party.magic-1;
+ // A solo party needs three MAGIC cards; duo needs six. Approximate future
+ // collection from publicly known Room count, not actual shuffled deck.
+ const expectedAcquisitions=rooms*.45;
+ const plausibleSeal=!current&&
+  otherMagic+expectedAcquisitions>=party.sealCost-1.25;
+ const sealPremium=plausibleSeal&&otherMagic<party.sealCost?
+  (s.strategy==="magic"?1.15:.65)*Math.min(1.8,(rooms+1)/4):0;
+ const laterFights=current?Number(s.monster?.id==="warden"):Math.min(4,rooms*.65+1);
+ const futureOption=Math.min(2.7,laterFights*.33)*
+  (card.id==="scroll-last"||card.id==="scroll-lightning"?1.1:.85);
+ return (futureOption+sealPremium)*(duplicates>1?.55:1)*
+  (w.damage/2.25)**.25;
+}
+/** Printed behavior is not merely immediate damage: rewriting face 6,
+ * poisoning, and skipped responses can change multiple upcoming turns.
+ * These are estimated tactical values, not additional rules.
+ */
+export function responseThreat(s,h,m=s.monster){
+ if(!m)return 0;
+ const w=plannerWeights(s.plannerRisk);
+ const rate=hitProbability(m.atk,s.stats(h).def);
+ const dangerousSix=["rat","goblin","bat","wisp","eye","mold","wraith",
+  "rust","cultist","sentinel","warden","warden-fury"].includes(m.id);
+ const multi=m.id==="warden-fury"||m.id==="warden";
+ const direct=["wisp","mold"].includes(m.id)?0.35:0;
+ const perResponse=rate*3.5*(multi?1.2:1)+direct+
+  (["wraith","rust","goblin","cultist"].includes(m.id)?.5:0);
+ const risk=h.hp<7?1.5:1;
+ return {perResponse:perResponse*w.damage*risk,faceSix:dangerousSix?1:0.2};
+}
+function projectedEffect(s,h,option,remaining,threat,attack){
+ const {card,mode}=option,party=partySummary(s),w=plannerWeights(s.plannerRisk);
+ const response=threat.perResponse;
+ if(mode==="torch-skip"||mode==="lantern-skip")return response;
+ if(mode==="lantern-recharge")return s.exhaustedWand()?1.8:0;
+ let faces=[1,2,3,4,5,6],excess=0;
+ if(mode==="overcharge"){
+  faces=[6];excess=3.5;
+ }
+ if(card.v2.kind==="POTION"&&s.potionIdentities.has(card.id))
+  faces=[s.potionIdentities.get(card.id)];
+ let score=0;
+ for(const face of faces){
+  const ops=ROLL_EFFECTS[card.id]?.[bandFor(card,face)]||[];
+  const effect=effectScore(ops,party,s.monster);
+  // Magic/elemental synergies printed on both Items and Monsters.
+  if(ops.some(op=>op==="ELEMENT:LIGHTNING")&&s.monster.id==="sentinel"&&
+    effect.damage>0)effect.damage+=3.5;
+  if(ops.some(op=>/ELEMENT:(FIRE|LIGHTNING)/.test(op))&&
+    s.monster.id==="warden-fury"&&effect.damage>0)effect.skips+=1;
+  if(ops.some(op=>op==="REWRITE_BEHAVIOR:6:1")&&threat.faceSix)
+   effect.skips+=Math.min(1.3,remaining/Math.max(2,attack.damage))*.32;
+  if(ops.some(op=>op==="MONSTER_DIS"))
+   effect.skips+=.17;
+  if(ops.some(op=>op==="FORCE_BEHAVIOR:6"))
+   effect.skips-=threat.faceSix*.45;
+  const status=ops.some(op=>op==="POISON")&&!h.immune&&!h.poison?
+   2.25*(s.room?.stage==="FINAL"?1.3:1):0;
+  const delayed=ops.some(op=>op.startsWith("NEXT_ADV")||
+    op.startsWith("NEXT_ATK"))?Math.min(1,remaining/4)*1.3:0;
+  const cure=ops.some(op=>op==="CURE")&&h.poison?3:0;
+  const heal=Math.min(h.card.hp-h.hp,effect.healing);
+  const harm=Math.min(h.hp,effect.curse+excess);
+  const killed=effect.banish>0||effect.damage>=remaining;
+  const skip=Math.min(2,Math.max(0,effect.skips));
+  // Avoid counting a skip after lethal damage; permit one future response
+  // if the Monster survives and an additional skip is likely relevant.
+  const turnsRemaining=Math.max(0,(remaining-effect.damage)/
+   Math.max(1,attack.damage));
+  const prevented=killed?1:Math.min(skip,Math.max(1,turnsRemaining));
+  let value=Math.min(remaining,effect.damage)*w.damage+
+   prevented*response+heal*w.damage+effect.draw*w.draw+
+   delayed+Number(cure)*w.damage-
+   (harm+status)*w.damage-
+   effect.resources*party.resourceValue*weightsFactor(w);
+  if(harm>=h.hp)value-=w.death;
+  score+=value/faces.length;
+ }
+ return score;
+}
+export function legalCombatActions(s,h){
+ return itemOptions(s,h,"combat").filter(o=>o.mode==="action").map(o=>o.card);
+}
+export function planCombat(s,h,{trial="normal"}={}){
+ if(!["normal","free","force"].includes(trial))throw Error("Unknown Item trial "+trial);
+ const w=plannerWeights(s.plannerRisk),m=s.monster;
+ if(!m)return {action:"attack",score:0,options:0,legal:[]};
+ const remaining=Math.max(1,remainingMonsterHP(s,m));
+ const attack=expectedAttack(s,h,m),threat=responseThreat(s,h,m);
+ const attackScore=attack.damage*w.damage+
+  (attack.killChance+(1-attack.killChance)*attack.skipChance)*threat.perResponse-
+  attack.backfire*w.damage;
+ const eligible=itemOptions(s,h,"combat");
+ let winner=null;
+ for(const option of eligible){
+  const immediate=projectedEffect(s,h,option,remaining,threat,attack);
+  const reserved=trial==="free"?0:futureItemValue(s,h,option.card,option.mode);
+  const utility=immediate-reserved;
+  if(!winner||utility>winner.score)
+   winner={action:"item",card:option.card,mode:option.mode,
+    score:utility,immediate,reserved};
+ }
+ if(winner&&(trial==="force"||winner.score>attackScore+0.1))
+  return {...winner,attackScore,options:eligible.length,legal:eligible};
+ return {action:"attack",score:attackScore,attackScore,
+  options:eligible.length,legal:eligible};
 }
 export function planSeal(s){
  const w=plannerWeights(s.plannerRisk),party=partySummary(s);
