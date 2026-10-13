@@ -125,6 +125,46 @@ test("actual weapon and armour bonuses are reported apart from dice activations"
  assert.equal(s.metrics.itemPassiveEffects[card.id].attackBonus,2);
  assert.equal(s.metrics.itemUses[card.id],undefined);
 });
+test("targeted forced use changes only the chosen legal Item",()=>{
+ const {s,h}=fixture();
+ const wand=item("wand-frost");
+ s.add(h,wand);
+ const decision=planCombat(s,h,{trial:"target",focus:"wand-frost"});
+ assert.equal(decision.action,"item");
+ assert.equal(decision.card.id,"wand-frost");
+ assert.equal(decision.forcedTarget,"wand-frost");
+ const missing=planCombat(s,h,{trial:"target",focus:"scroll-unlock"});
+ assert.equal(missing.forcedTarget,undefined);
+ const opts={seed:547,heroes:["warrior"],strategy:"magic",
+  researchPolicy:"planner",plannerRisk:"cautious",
+  itemTrial:"target",itemFocus:"wand-frost"};
+ const a=simulateFullExpedition(opts);
+ assert.deepEqual(a,simulateFullExpedition(opts));
+ assert.equal(a.unresolved,0);
+ assert.equal(a.itemFocus,"wand-frost");
+ assert.throws(()=>simulateFullExpedition({...opts,itemFocus:null}),
+  /requires itemFocus/);
+});
+test("per-card intervention study exports every targeted combat action",()=>{
+ const run=(script,args)=>spawnSync(process.execPath,[script,...args],
+  {encoding:"utf8",maxBuffer:16*1024*1024});
+ const sample=run("scripts/study-item-targets.mjs",["1","--seed","8231"]);
+ assert.equal(sample.status,0,sample.stderr);
+ const result=JSON.parse(sample.stdout);
+ assert.equal(result.experiment,"rogue-cards-targeted-items-v1");
+ assert.equal(result.candidates.length,22);
+ assert.equal(result.simulated,12*2*23);
+ assert.equal(result.unresolved,0);
+ assert.equal(result.stalls,0);
+ const dir=mkdtempSync(join(tmpdir(),"rogue-targets-"));
+ try{
+  const path=join(dir,"targets.json");writeFileSync(path,sample.stdout);
+  const rendered=run("scripts/report-item-targets.mjs",[path]);
+  assert.equal(rendered.status,0,rendered.stderr);
+  assert.match(rendered.stdout,/Card-by-card policy effects/);
+  assert.match(rendered.stdout,/Potentially wasteful forced use/);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
 test("Item comparison produces per-card experiments and readable summary",()=>{
  const run=(script,args)=>spawnSync(process.execPath,[script,...args],
   {encoding:"utf8",maxBuffer:16*1024*1024});
