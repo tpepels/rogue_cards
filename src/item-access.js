@@ -63,13 +63,18 @@ export function itemOptions(s,h,phase){
     ["key","rope","torch","lantern-heart","scroll-flame","scroll-frost",
      "scroll-lightning","spore-jar"].includes(id))push(card,"room-option");
   }else if(phase==="after-roll"){
-   if(["ring-luck","wand-undo","crown-relic"].includes(id)&&
+   if(["ring-luck","wand-undo"].includes(id)&&
       (id!=="ring-luck"||equipped(h,card)))push(card,"d20-reaction");
+  }else if(phase==="failed-d20"){
+   if(id==="crown-relic")push(card,"rescue-failed-roll");
   }else if(phase==="before-defence"){
-   if(["mirror","shield"].includes(id)&&
-     (id!=="shield"||equipped(h,card)))push(card,"defence-reaction");
+   if(id==="mirror")push(card,"defence-reaction");
+  }else if(phase==="after-hit"){
+   if(id==="shield"&&equipped(h,card))push(card,"defence-reaction");
   }else if(phase==="on-attack"){
-   if(["sword","dog","ring-ashes"].includes(id)&&equipped(h,card))
+   if(id==="ring-ashes"&&equipped(h,card))push(card,"attack-trigger");
+  }else if(phase==="on-hit"){
+   if(["sword","dog"].includes(id)&&equipped(h,card))
     push(card,"attack-trigger");
   }else if(phase==="on-poison"){
    if(recover.has(id)&&(id==="needle"||equipped(h,card))&&h.poison)
@@ -95,9 +100,12 @@ export const ITEM_TIMING=Object.freeze(Object.fromEntries(OBJECTS.map(card=>{
  if(["key","rope","torch","lantern-heart","crowbar","scroll-unlock","wand-door",
    "scroll-flame","scroll-frost","scroll-lightning","spore-jar"].includes(id))
   phases.push("room-choice");
- if(["ring-luck","wand-undo","crown-relic"].includes(id))phases.push("after-roll");
- if(["mirror","shield"].includes(id))phases.push("before-defence");
- if(["sword","dog","ring-ashes"].includes(id))phases.push("on-attack");
+ if(["ring-luck","wand-undo"].includes(id))phases.push("after-roll");
+ if(id==="crown-relic")phases.push("failed-d20");
+ if(id==="mirror")phases.push("before-defence");
+ if(id==="shield")phases.push("after-hit");
+ if(["sword","dog"].includes(id))phases.push("on-hit");
+ if(id==="ring-ashes")phases.push("on-attack");
  if(recover.has(id))phases.push("on-poison");
  if(id==="ring-echo")phases.push("room-roll");
  if(["needle"].includes(id)||card.v2.kind==="POTION")phases.push("between-rooms");
