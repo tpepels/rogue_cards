@@ -65,7 +65,7 @@ Hero starting HP ranges from 18 to 20; the Warden starts at 20 HP and
 keeps the same die when it changes phase at 10 HP. At 0 HP, remove the die.
 Use separate d20s for opposed combat and WIT rolls.
 
-All general rules fit on [one A4 sheet](rules.html). Individual card text is authoritative when it overrides a shared rule. The print deck is self-contained; no online lookup or digital engine is required.
+The shared rules are explained in a [two-page printable guide](rules.html). Individual card text is authoritative when it overrides a shared rule. The print deck is self-contained; no online lookup or digital engine is required.
 
 ## Source layout
 
