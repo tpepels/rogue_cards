@@ -7,6 +7,7 @@ import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
+import {itemOptions} from "./item-access.js";
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
 const isAlive=s=>s.alive();
 export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive","planner"]);
@@ -127,6 +128,10 @@ function itemIn(s,h,id){return h.inventory.find(o=>o.id===id);}
 function itemWith(s,h,kind){return h.inventory.find(o=>o.v2.kind===kind);}
 function setupPrepared(s){
  const h=s.chooseActor();s.setActor(h);
+ for(const x of s.living()){
+  s.noteOptions(itemOptions(s,x,"explore"));
+  s.noteOptions(itemOptions(s,x,"passive"));
+ }
  // ONCE PER ROOM scout activations, not new universal actions.
  for(const x of s.heroes){
   if(x.hp<=0)continue;
@@ -171,6 +176,7 @@ function setupPrepared(s){
 }
 function finishRoom(s){
  for(const h of s.heroes){
+  if(h.hp>0)s.noteOptions(itemOptions(s,h,"between-rooms"));
   if(h.hp<=0)continue;
   // Outside combat the player may use a Potion. No once-per-room Potion limit.
   while(h.hp<=h.card.hp*.5&&h.inventory.some(o=>o.v2.kind==="POTION")){
@@ -186,6 +192,7 @@ function actRoom(s){
  const entry=room.v2.prompt.match(/Draw an? (UPPER|MIDDLE|DEEP) Monster/);
  if(entry)s.drawMonster();
  setupPrepared(s);
+ for(const h of s.living())s.noteOptions(itemOptions(s,h,"room-choice"));
  const n=chooseRoom(s);
  if(n===null)return;
  s.metrics.roomChoices[room.id+":"+n]=(s.metrics.roomChoices[room.id+":"+n]||0)+1;
@@ -326,6 +333,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const dis=attackDis||rogueDis;
  h.nextAdv=0;
  s.pendingD20=s.rerollIfKept(h,rollD20(s,{adv,dis}));
+ s.noteOptions(itemOptions(s,h,"after-roll"));
  s.pendingD20Modifier=0;
  const ring=h.slots.ring;
  if(ring?.id==="ring-luck"&&!h.used.has(ring)){s.activate(h,ring);}
@@ -354,9 +362,11 @@ export function playerAttack(s,h){
   return;
  }
  const ring=h.slots.ring;
+ s.noteOptions(itemOptions(s,h,"on-attack"));
  if(ring?.id==="ring-ashes"&&!h.used.has(ring))s.activate(h,ring);
  const stat=s.stats(h),r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
  if(!r.hit||h.hp<=0)return;
+ s.noteOptions(itemOptions(s,h,"on-attack"));
  let dmg=s.die()+(r.critical?s.die():0);
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
@@ -374,29 +384,54 @@ export function playerAttack(s,h){
  s.monsterHP-=dmg;
  if(s.monster?.id==="troll"&&s.anyEquippedTag("FIRE"))s.trollScorched=true;
 }
+function executeItemOption(s,h,option){
+ const {card,mode}=option;
+ s.setActor(h);
+ if(mode==="torch-skip"||mode==="lantern-skip"||mode==="lantern-recharge"){
+  return s.directItem(h,card,mode,()=>{
+   s.consume(h,card);
+   if(mode==="lantern-recharge")s.recharge();
+   else s.monsterSkip++;
+   return true;
+  });
+ }
+ if(mode==="overcharge"){
+  return s.directItem(h,card,mode,()=>{
+   s.metrics.overcharges++;s.hurt(h,s.die());
+   // Overcharge has the printed highest result, even if this kills the Hero.
+   // Its roll outcome must not be counted as a *second* activation.
+   s.activate(h,card,{face:6,record:false,mode});
+   if(h.inventory.includes(card))s.consume(h,card);
+   return true;
+  });
+ }
+ const used=s.activate(h,card,{mode});
+ if(used&&card.id==="spore-jar")s.consume(h,card);
+ return used;
+}
 function useItemsInCombat(s,h){
  if(!s.monster||h.hp<=0)return false;
  s.setActor(h);
+ const eligible=itemOptions(s,h,"combat");
+ s.noteOptions(eligible);
+ // Existing emergency-Potion autopilot is deliberately retained for both
+ // baseline and planner. The planner evaluates other usable Potions normally.
  if(h.hp<h.card.hp*.4){
   const p=h.inventory.find(o=>o.v2.kind==="POTION");
-  if(p)return s.activate(h,p);
+  if(p)return s.activate(h,p,{mode:"emergency"});
   for(const id of ["needle","moth"]){
    const x=itemIn(s,h,id);
-   if(x&&!h.used.has(x)){s.activate(h,x);return true;}
+   if(x&&!h.used.has(x)){s.activate(h,x,{mode:"emergency"});return true;}
   }
  }
  if(plannerUses(s,"combat")){
-  const decision=planCombat(s,h);
+  const decision=planCombat(s,h,{trial:s.itemTrial||"normal"});
   recordPlan(s,"combat",decision);
-  if(decision.action==="item"){
-   // Use the canonical dispatcher and consume printed discard-on-use tools.
-   // Ordinary SCROLL/POTION consumption and WAND exhaustion happen in activate.
-   const acted=s.activate(h,decision.card);
-   if(acted&&decision.card.id==="spore-jar")s.consume(h,decision.card);
-   return acted;
-  }
+  if(decision.action==="item")
+   return executeItemOption(s,h,decision);
   return false;
  }
+ // The legacy policy is unchanged, including its preference ordering.
  if(s.strategy==="survival"&&s.monsterHP<8)return false;
  if(s.strategy==="magic"&&researchUses(s,"conserve")&&
   s.monster.stage!=="FINAL"&&s.monsterHP<=6&&h.hp>=h.card.hp*.4){
@@ -407,12 +442,16 @@ function useItemsInCombat(s,h){
  if(s.strategy==="magic"&&["u-lamp","d-shadow","m-crypt"].includes(s.room?.id)){
   const torch=itemIn(s,h,"torch");
   if(torch&&s.monsterSkip===0){
-   s.consume(h,torch);s.monsterSkip++;return true;
+   s.directItem(h,torch,"torch-skip",()=>{
+    s.consume(h,torch);s.monsterSkip++;return true;});return true;
   }
  }
  if(s.strategy==="magic"&&s.exhaustedWand()){
   const lantern=itemIn(s,h,"lantern-heart");
-  if(lantern){s.consume(h,lantern);s.recharge();return true;}
+  if(lantern){
+   s.directItem(h,lantern,"lantern-recharge",()=>{
+    s.consume(h,lantern);s.recharge();return true;});return true;
+  }
  }
  if(!monsterThreat&&s.strategy!=="magic")return false;
  const names=s.strategy==="seal"?
@@ -429,8 +468,11 @@ function useItemsInCombat(s,h){
  // A Wand can be deliberately sacrificed for its highest band.
  if(s.monster.stage==="FINAL"&&h.hp>6&&s.strategy==="magic"){
   const wand=h.inventory.find(o=>o.v2.kind==="WAND"&&!s.exhausted.has(o));
-  if(wand){s.metrics.overcharges++;s.hurt(h,s.die());
-   s.activate(h,wand,{face:6});s.consume(h,wand);return true;}
+  if(wand){s.directItem(h,wand,"overcharge",()=>{
+   s.metrics.overcharges++;s.hurt(h,s.die());
+   s.activate(h,wand,{face:6,record:false});
+   if(h.inventory.includes(wand))s.consume(h,wand);
+   return true;});return true;}
  }
  return false;
 }
@@ -438,6 +480,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  if(h.hp<=0)return; s.setActor(h);
  let defenseAdv=h.nextDefenseAdv,hurtExtra=h.damageVulnerability;
  h.nextDefenseAdv=false;h.damageVulnerability=0;
+ s.noteOptions(itemOptions(s,h,"before-defence"));
  const mirror=itemIn(s,h,"mirror");
  if(mirror&&!h.used.has(mirror)){
   // Printed trigger: before opposed defence. Reflection cancels the pending hit.
@@ -539,6 +582,7 @@ export function monsterRespond(s,h){
  }
  // Trigger poison-sensitive equipped Rings and Companions.
  if(a.poison&&a.hp>0){
+  s.noteOptions(itemOptions(s,a,"on-poison"));
   for(const card of [a.slots.companion,a.slots.ring]){
    if(card&&["moth","ring-spores"].includes(card.id)&&!a.used.has(card))s.activate(a,card);
   }
@@ -591,6 +635,7 @@ export function seal(s){
  const h=bestWit(s);if(!h)return false;
  const boon=blessBeforeD20(s,h);
  let atk=s.rerollIfKept(h,rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"}));
+ s.noteOptions(itemOptions(s,h,"after-roll"));
  const ring=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
  if(ring&&!h.used.has(ring)){
   s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,ring);
@@ -615,10 +660,14 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
- plannerFeatures=null}={}){
+ plannerFeatures=null,itemTrial="normal"}={}){
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(!researchPolicies.includes(researchPolicy))throw Error("Unknown research policy "+researchPolicy);
  if(!PLANNER_RISKS.includes(plannerRisk))throw Error("Unknown planner risk "+plannerRisk);
+ if(!["normal","free","force"].includes(itemTrial))throw Error("Unknown Item trial "+itemTrial);
+ if(itemTrial!=="normal"&&(researchPolicy!=="planner"||
+    plannerFeatures!==null&&!plannerFeatures.includes("combat")))
+  throw Error("Item trial requires planner combat enabled");
  if(plannerFeatures!==null&&(!Array.isArray(plannerFeatures)||
     new Set(plannerFeatures).size!==plannerFeatures.length||
     plannerFeatures.some(f=>!PLANNER_FEATURES.includes(f))))
@@ -634,6 +683,7 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
  s.researchPolicy=researchPolicy;
  s.plannerRisk=plannerRisk;
+ s.itemTrial=itemTrial;
  s.plannerFeatures=new Set(plannerFeatures??PLANNER_FEATURES);
  s.plannerSeed=seed;
  s.plannerDecisions=researchPolicy==="planner"?{}:null;
@@ -711,6 +761,7 @@ function report(s){
   plannerDecisions:s.plannerDecisions,plannerTrace:s.plannerTrace,
   plannerSeed:s.researchPolicy==="planner"?s.plannerSeed:null,
   plannerFeatures:s.researchPolicy==="planner"?[...s.plannerFeatures].sort():null,
+  itemTrial:s.researchPolicy==="planner"?s.itemTrial:null,
   objectsEverOwned:[...s.objectsEverOwned].sort(),
   operationCounts,cardCounts,roomChoices,roomOptionAvailable,monsterVisits,
   objectAcquisitions,objectActivations,objectRoomExposures,objectEquippedRoomExposures,
