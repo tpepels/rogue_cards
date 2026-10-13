@@ -282,9 +282,9 @@ function render(summary){
 }
 async function parallel(tasks,c,complete){
  const pending=tasks.filter(t=>!complete.has(t.id));
+ const byId=new Map(tasks.map(t=>[t.id,t]));
  const total=tasks.length;
  let finished=complete.size,inFlight=0,next=0;
- let lastAdvance=Date.now();
  const started=Date.now();
  const statuses=new Map();
  process.stderr.write("Resuming "+finished+"/"+total+" completed chunks; "+
@@ -295,9 +295,10 @@ async function parallel(tasks,c,complete){
  function stat(){
   const recent=[...statuses.values()].map(x=>
    x.id+" "+x.done+"/"+x.total+" games");
+  const rss=Math.round(process.memoryUsage().rss/1048576);
   return "Checkpointed "+finished+"/"+total+" chunks ("+
    [...complete.values()].reduce((n,r)=>n+r.n,0)+
-   "/"+c.plannedExpeditions+" expeditions); active: "+
+   "/"+c.plannedExpeditions+" expeditions); memory "+rss+" MiB; active: "+
    (recent.join("; ")||"none");
  }
  // This heartbeat is on the parent event loop. Workers are independent
@@ -307,7 +308,6 @@ async function parallel(tasks,c,complete){
  let rejected=null;
  try{
   await new Promise((yes,no)=>{
-   let closed=0;
    function startNext(worker){
     if(rejected||stopped)return;
     if(next>=pending.length){
@@ -333,7 +333,7 @@ async function parallel(tasks,c,complete){
       no(rejected);return;
      }
      if(msg.type!=="result")return;
-     const status=statuses.get(worker),task=tasks.find(t=>t.id===msg.id);
+     const status=statuses.get(worker),task=byId.get(msg.id);
      if(!task||status?.id!==task.id){
       rejected=Error("Worker result for unknown task "+msg.id);
       no(rejected);return;
@@ -345,7 +345,6 @@ async function parallel(tasks,c,complete){
       complete.set(task.id,msg.row);
      }catch(e){rejected=e;no(e);return}
      statuses.delete(worker);inFlight--;finished++;
-     lastAdvance=Date.now();
      process.stderr.write("Completed "+finished+"/"+total+": "+task.id+
       " ("+msg.row.n+" expeditions; checkpointed)\n");
      startNext(worker);
@@ -353,7 +352,6 @@ async function parallel(tasks,c,complete){
     });
     worker.on("error",e=>{if(!rejected){rejected=e;no(e)}});
     worker.on("exit",code=>{
-     closed++;
      if(code!==0&&!rejected){rejected=Error("Worker exited "+code);no(rejected)}
     });
     startNext(worker);
