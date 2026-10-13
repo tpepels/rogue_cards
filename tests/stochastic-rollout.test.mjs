@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/expedition-runtime.js";
 import {HEROES,MONSTERS} from "../src/tabletop-data.js";
-import {forkExpeditionState} from "../src/rollout-state.js";
+import {forkExpeditionState,prepareRolloutDecks}
+ from "../src/rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "../src/expedition-campaign.js";
 import {pairedRoomRollouts,pairedCombatRollouts}
@@ -53,6 +54,28 @@ test("state fork preserves alias identity, ownership, equipment and real random 
  assert.ok(fork.seenRooms.has(s.room.id));
  assert.deepEqual(fork.deck.map(c=>c.id),s.deck.map(c=>c.id));
  assert.equal(s.die(),control.die(),"Fork consumed real expedition dice");
+});
+test("prepared public-deck pools are bit-identical to uncached forks",()=>{
+ for(const knowledge of ["fair","oracle"]){
+  const s=roomState(knowledge);
+  const prepared=prepareRolloutDecks(s,knowledge);
+  for(let i=0;i<6;i++){
+   const opts={diceSeed:17770+i,deckSeed:10808+i,knowledge};
+   const baseline=forkExpeditionState(s,opts);
+   const cached=forkExpeditionState(s,{...opts,blueprint:prepared});
+   for(const stage of ["UPPER","MIDDLE","DEEP"]){
+    assert.deepEqual(cached.rooms[stage].map(x=>x.id),
+     baseline.rooms[stage].map(x=>x.id));
+    assert.deepEqual(cached.monsters[stage].map(x=>x.id),
+     baseline.monsters[stage].map(x=>x.id));
+   }
+   assert.deepEqual(cached.deck.map(x=>x.id),baseline.deck.map(x=>x.id));
+   for(let d=0;d<5;d++)assert.equal(cached.die(),baseline.die());
+  }
+  const another=roomState(knowledge);
+  assert.throws(()=>forkExpeditionState(another,{
+   diceSeed:1,deckSeed:1,knowledge,blueprint:prepared}),/blueprint/);
+ }
 });
 test("fair resampling depends on public information, not hidden actual card IDs/order",()=>{
  const a=roomState("fair"),b=roomState("fair");
