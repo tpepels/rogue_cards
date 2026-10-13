@@ -291,7 +291,7 @@ export class ExpeditionState {
    this.consume(h,card);
   if(h.card.id==="witch"&&!h.used.has("witch-ability")&&
    ["SCROLL","POTION"].includes(card.v2.kind))this.witchReaction(h);
-  if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&
+  if(h.hp>0&&h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&
    can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
    this.noteOptions(itemOptions(this,h,"after-magic"));
    this.activate(h,h.slots.ring,{mode:"magic-reaction"});
@@ -506,7 +506,7 @@ export class ExpeditionState {
    const h=this.own(scrollSub[this.room.id]),card=byId(h.inventory,scrollSub[this.room.id]);
    this.consume(h,card);face=6;
   }
-  const owner=this.heroes.find(h=>h.slots.ring?.id==="ring-echo"&&
+  const owner=this.heroes.find(h=>h.hp>0&&h.slots.ring?.id==="ring-echo"&&
    !h.used.has(h.slots.ring));
   this.pendingRoomFace=face;
   if(owner){
