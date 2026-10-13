@@ -2,7 +2,7 @@
  * Results measure these explicit play policies, NOT "optimal" human players.
  * All d6 Item/Room operations go through the checked card transcriptions.
  */
-import {HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
+import {HEROES,ROOMS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {fateChoiceLegal} from "./room-fates.js";
