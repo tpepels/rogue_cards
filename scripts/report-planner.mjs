@@ -7,7 +7,8 @@ const input=process.argv[2];
 if(!input||process.argv.length!==3)
  throw Error("Usage: node scripts/report-planner.mjs planner-study.json");
 const r=JSON.parse(readFileSync(input,"utf8"));
-if(r.experiment!=="rogue-cards-planner-v1")throw Error("Not a planner study");
+if(!["rogue-cards-planner-v1","rogue-cards-planner-v2"].includes(r.experiment))
+ throw Error("Not a planner study");
 const pp=x=>(100*x).toFixed(2)+" pp";
 const pct=x=>(100*x).toFixed(1)+"%";
 const fmt=x=>x.toFixed(2);
@@ -19,8 +20,10 @@ const out=[
  "Runs per party and strategy: "+r.runsPerPartyStrategy,
  "Errors: "+r.unresolved+"; stalls: "+r.stalls,
  "",
- "Matched-seed, opt-in policy comparison. Printed cards and normal",
- "game rules are unchanged. Positive deltas mean the alternative wins more.",
+ r.randomization||"Earlier v1 study reused the same seeds across Hero parties.",
+ "Policies start with comparable seeds, but later random streams may diverge.",
+ "Printed cards and game rules are unchanged. Positive deltas favour the alternative.",
+ r.policyProtocol||"Opt-in scripted simulation, not a human playtest.",
  "",
  "## Win-rate comparison",
  "",
@@ -45,6 +48,34 @@ for(const st of r.strategies)for(const size of ["solo","duo"])
    " | "+fmt(x.magicActionDelta)+" | "+fmt(x.negotiationDelta)+
    " | "+fmt(x.sealAttemptDelta)+" |");
  }
+out.push("","## Combat Item eligibility and usage","",
+ "| Strategy | Party | Planner | Combat decisions | With legal Item | Item selected | Use when eligible |",
+ "|---|---|---|---:|---:|---:|---:|");
+for(const st of r.strategies)for(const size of ["solo","duo"])
+ for(const name of names.filter(n=>n.startsWith("planner-"))){
+  const c=r.groups[st][size][name].choices||{};
+  const evaluated=c.combatEvaluated||0;
+  const eligible=c.combat_with_legal_item||0;
+  const selected=c.combat_item||0;
+  out.push("| "+st+" | "+size+" | "+name+" | "+evaluated+
+   " | "+eligible+" | "+selected+" | "+
+   (eligible?pct(selected/eligible):"n/a")+" |");
+ }
+if(r.partyResults){
+ out.push("","## Per-party differences","",
+  "Every solo Hero and duo pairing is reported separately; the five weakest",
+  "planner-cautious parties in each strategy are shown below. Each party uses",
+  "a separate deterministic seed stream.","",
+  "| Strategy | Party | Baseline | Cautious | Change |",
+  "|---|---|---:|---:|---:|");
+ for(const st of r.strategies){
+  const rows=Object.entries(r.partyResults[st]).map(([party,plans])=>({
+   party,...plans["planner-cautious"]
+  })).sort((a,b)=>a.winRate-b.winRate).slice(0,5);
+  for(const x of rows)out.push("| "+st+" | "+x.party+" | "+
+   pct(x.baselineWinRate)+" | "+pct(x.winRate)+" | "+pp(x.delta)+" |");
+ }
+}
 out.push("","## Hero-specific estimates","",
  "| Hero | Strategy | Old policy | Planner-balanced | Planner-cautious | Planner-bold |",
  "|---|---|---:|---:|---:|---:|");
@@ -68,11 +99,16 @@ for(const st of r.strategies)for(const size of ["solo","duo"])
  }
 out.push("## Interpretation","",
  "- These planners use estimated expected utility, not exhaustive game-tree search.",
- "- The Room planner enumerates all six printed die faces.",
- "- Combat planning compares typed Item outcomes with the expected value of an ordinary attack.",
+ "- The Room planner enumerates printed d6 outcomes and adjusts known die overrides and reroll distributions.",
+ "- Combat planning restricts Item choices to printed combat ACTION triggers, comparing damage, response prevention, and opportunity cost.",
+ "- Combat choice counts must be interpreted relative to how often a legal Item was actually held.",
  "- PARLEY considers its cost and approximate chance of success; Seal uses a separate win-probability estimate.",
  "- Risk variants change the relative cost of damage, defeat, and expending resources.",
  "- These experiments test simulated *choices*, not whether card text is correct or whether they are fun.",
  "- Differences may include later random-number sequence divergence, despite common initial seeds.",
- "- Confidence intervals have not been corrected for multiple comparisons.","");
+ "- Confidence intervals are approximate, have not been corrected for multiple comparisons, and do not include simulator-model uncertainty.",
+ "- The game still automates many non-planner tactical decisions, including gear and potion usage.",
+ "- Use a different --seed for an independent confirmatory sample after tuning; do not call this human-level balance.","",
+ "## Stated limitations","",
+ ...(r.limitations||[]).map(x=>"- "+x),"");
 process.stdout.write(out.join("\n")+"\n");
