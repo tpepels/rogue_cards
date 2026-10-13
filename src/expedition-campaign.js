@@ -559,7 +559,8 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
  finishRoom(s);if(!s.room.v2.special?.corridor){s.metrics.cleared++;s.stageProgress[s.room.stage]++;}
  return advanceRolloutRooms(s,roomDepth);
 }
-export const vaultChoices=Object.freeze(["policy","fight","seal-if-available"]);
+export const vaultChoices=Object.freeze(["policy","fight","seal-if-available",
+ "smuggle-if-available","bargain-if-available","unthrone-if-available","escape-if-available"]);
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
@@ -657,23 +658,59 @@ function finishVault(s){
  const preferSeal=vaultChoice==="seal-if-available"||plannerSeal?.attempt||sealPreferred||
   (vaultChoice==="policy"&&(strategy==="seal"||(strategy==="survival"&&
    s.partyCount("MAGIC")>=sealCost(s)&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
- if(preferSeal&&seal(s)){s.metrics.won=true;return report(s);}
+ if(preferSeal&&seal(s)){
+  s.metrics.won=true;s.endingKind="amulet_sealed";return report(s);
+ }
  if(s.metrics.sealAttempt)s.monsterAdv=true;
  s.monster=WARDEN;s.monsterHP=Math.max(11,WARDEN.hp-s.vaultModifiers.wardenDamage);
  if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
  if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
+ // Rare alternative endings require earlier saved Rooms and payment.
+ const v=s.vaultModifiers;
+ const canSmuggle=v.smuggleAvailable&&s.discardable(2)&&s.discardable(1,"MAGIC");
+ const canBargain=v.bargainAvailable&&s.discardable(2);
+ const canUnthrone=v.unthroneAvailable&&s.discardable(1,"MAGIC");
+ const prefer=choice=>vaultChoice===choice+"-if-available"||
+  vaultChoice==="policy"&&(
+   choice==="smuggle"&&s.strategy==="survival"||
+   choice==="bargain"&&s.strategy==="negotiation"||
+   choice==="unthrone"&&s.strategy==="magic");
+ if(canSmuggle&&prefer("smuggle")){
+  s.discard(1,{tag:"MAGIC"});s.discard();
+  s.metrics.won=true;s.endingKind="smuggled_amulet";return report(s);
+ }
+ if(v.smuggleAvailable&&s.discardable()&&vaultChoice==="escape-if-available"){
+  s.discard();s.endingKind="escaped_empty_handed";s.metrics.escaped=true;
+  return report(s);
+ }
+ const challenge=(cost,kind)=>{
+  s.discard(cost);
+  const h=bestWit(s),a=s.die(20),b=s.die(20);
+  if(a===20||a!==1&&a+h.card.wit>b+6){
+   s.metrics.won=true;s.endingKind=kind;return true;
+  }
+  s.monsterAdv=true;return false;
+ };
+ if(canBargain&&prefer("bargain")&&challenge(2,"bargained_amulet"))return report(s);
+ if(canUnthrone&&prefer("unthrone")&&challenge(1,"unthroned_warden"))return report(s);
  s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
  s.metrics.monsterVisits["warden-fury"]=(s.metrics.monsterVisits["warden-fury"]||0)+1;
  if(!fight(s,{warden:true}))return report(s);
- s.metrics.won=true;return report(s);
+ s.metrics.won=true;s.endingKind="amulet_taken";return report(s);
 }
 function report(s){
  const {operationCounts,cardCounts,roomChoices,roomOptionAvailable,
   monsterVisits,objectAcquisitions,objectActivations,objectRoomExposures,
   objectEquippedRoomExposures,...m}=s.metrics;
+ if(!s.metrics.won&&!s.alive()&&s.anyEquippedTag("CURSED")){
+  s.endingKind="cursed_servant";
+  if(!s.endingMemory)s.endingMemory="The dungeon keeps a cursed soul.";
+ }
  return {...m,remainingHP:s.heroes.map(h=>h.hp),magicHeld:s.partyCount("MAGIC"),
+  endingKind:s.endingKind,rerolls:s.rerollHistory,
+  trapdoors:s.trapdoorHistory,secretFinds:s.secretFinds,
   failureStage:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
    s.metrics.wipeStage||s.room?.stage||"unknown",
   failureCause:s.metrics.won?null:s.metrics.roundLimit?"ROUND_LIMIT":
