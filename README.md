@@ -241,6 +241,15 @@ does **not** prove every free-form interaction, card-text nuance, alternative
 trigger timing or high-order combination is correct, or that Items are balanced.
 Situational cards still need targeted tabletop playtesting.
 
+## October 2026 Hero rebalance
+
+The [approved risky-power Hero and Item rebalance](docs/hero-balance-2026-10.md)
+keeps Knight's powerful exact-six result, lowers Veteran Warrior's HP/ATK,
+halves the Wizard and Priest d6 backlash (rounded up), and strengthens
+Monk STILLNESS. The all-36-party post-change study found **79.3% average
+two-Hero wins and no party at 95%**, but a **20.4-point solo spread** still
+exceeds the target. Item follow-up studies are linked in the balance report.
+
 ## Item opportunity and strength experiments
 
 The [Item timing audit and 72,000-expedition controlled study](docs/item-opportunity-study.md)
