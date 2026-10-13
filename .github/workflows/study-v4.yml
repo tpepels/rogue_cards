@@ -37,6 +37,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Validate canonical card and effect agreement
+        run: npm run validate:deck
+      - name: Check the V4 experimental study contract
+        run: node --test tests/v4-coherence.test.mjs
       - name: Study V4 policy coherence and matched choices
         env:
           RUNS: ${{ inputs.runs || '15' }}
