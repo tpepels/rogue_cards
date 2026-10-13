@@ -8,6 +8,7 @@ on:
       - .github/workflows/oracle-card-audit.yml
       - scripts/study-oracle-overnight.mjs
       - src/expedition-campaign.js
+      - src/rollout-state.js
       - src/engine/combat.js
 
 jobs:
