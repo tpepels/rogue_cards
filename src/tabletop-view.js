@@ -3,7 +3,7 @@ export {CARD_WIDTH_MM,CARD_HEIGHT_MM};
 export const CARDS_PER_SHEET=4;
 export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-/** Exact canonical card-to-art assignment (111 unique cards, 111 PNGs).
+/** Exact canonical card-to-art assignment (129 cards using 111 original PNGs; new Rooms reuse related art provisionally).
  * Artwork filenames are intentionally numbered, while card ids remain stable.
  * All entries must refer to a real file; tests enforce one-to-one coverage.
  */
@@ -118,7 +118,25 @@ export const CARD_ART=Object.freeze({
  "potion:mushroom":"108_mushroom_tea.png",
  "potion:midnight":"109_midnight_ink.png",
  "potion:antidote":"110_antidote.png",
- "potion:laughing":"111_laughing_water.png"
+ "potion:laughing":"111_laughing_water.png",
+ "room:u-fork":"009_dripping_passage.png",
+ "room:u-echoes":"037_broken_oracle.png",
+ "room:u-mossy":"025_fungal_garden.png",
+ "room:u-smuggler":"009_dripping_passage.png",
+ "room:u-candle":"026_candle_altar.png",
+ "room:m-maps":"019_bookcase_of_teeth.png",
+ "room:m-ladder":"014_collapsing_stairs.png",
+ "room:m-red-detour":"034_broken_bridge.png",
+ "room:d-whisper-junction":"027_bridge_of_whispering_rope.png",
+ "room:d-gilded":"042_midnight_bazaar.png",
+ "room:u-lantern-shrine":"013_abandoned_shrine.png",
+ "room:u-leech-pool":"015_laughing_fountain.png",
+ "room:u-rat-favor":"012_rat_nest.png",
+ "room:m-second-name":"026_candle_altar.png",
+ "room:m-wax-bridge":"027_bridge_of_whispering_rope.png",
+ "room:m-hungry-door":"040_the_talking_door.png",
+ "room:d-apothecary":"011_forgotten_supplies.png",
+ "room:d-last-bell":"026_candle_altar.png"
 });
 /** Fixed plate offsets for print reproducibility, not CSS randomness or game state.
  * Identical cards share an intentional slightly imperfect edition mark.
