@@ -14,10 +14,7 @@ export function wilson(wins,n){
  const half=z*Math.sqrt(p*(1-p)/n+z2/(4*n*n))/denom;
  return [Math.max(0,mid-half),Math.min(1,mid+half)];
 }
-const unpack=(str,index)=>{
- const b=Buffer.from(str,"base64");
- return Number(!!(b[index>>>3]&(1<<(index&7))));
-};
+const unpack=(buffer,index)=>Number(!!(buffer[index>>>3]&(1<<(index&7))));
 const empty=()=>({
  n:0,wins:0,seatSubsetN:0,seatSubsetWins:0,cleared:0,deep:0,battles:0,damage:0,
  rounds:0,drawn:0,spent:0,activated:0,potionsUsed:0,scouted:0,
@@ -83,8 +80,10 @@ function makePairedContrasts(rows){
   if(scripted.n!==alt.n)throw Error("Nonmatching cohort for paired estimate");
   const k=[alt.strategy,alt.party.includes("+")?"duo":"solo",alt.policy].join("\u0001");
   const cell=res[k]??={n:0,improved:0,harmed:0,baseWins:0,altWins:0};
+  const baselineBits=Buffer.from(scripted.winBits,"base64");
+  const variantBits=Buffer.from(alt.winBits,"base64");
   for(let i=0;i<alt.n;i++){
-   const b=unpack(scripted.winBits,i),a=unpack(alt.winBits,i);
+   const b=unpack(baselineBits,i),a=unpack(variantBits,i);
    cell.n++;cell.improved+=Number(a>b);cell.harmed+=Number(a<b);
   }
   cell.baseWins+=scripted.wins;cell.altWins+=alt.wins;
@@ -109,8 +108,10 @@ function makeSeatChecks(rows){
   if(!c)throw Error("Missing canonical seat trial");
   const k=[r.strategy,r.policy,r.party].join("\u0001");
   const x=pooled[k]??={n:0,canonicalWins:0,reversedWins:0,improved:0,harmed:0};
+  const canonicalBits=Buffer.from(c.winBits,"base64");
+  const reversedBits=Buffer.from(r.winBits,"base64");
   for(let i=0;i<r.n;i++){
-   const original=unpack(c.winBits,i),reverse=unpack(r.winBits,i);
+   const original=unpack(canonicalBits,i),reverse=unpack(reversedBits,i);
    x.n++;x.canonicalWins+=original;x.reversedWins+=reverse;
    x.improved+=Number(reverse>original);x.harmed+=Number(reverse<original);
   }
@@ -196,8 +197,7 @@ function validate(plan,rows,parties,items){
    errors.push("Bad compressed win sequence: "+k);
   if(r.item)for(const [id,x] of Object.entries(r.item)){
    if(!OBJECTS.some(o=>o.id===id))errors.push("Unknown Object in observations: "+id);
-   if((x.uses||0)>0&&(x.opportunities||0)===0&&
-    !(x.passive||0)){} // Triggers may occur between audit snapshots; report separately.
+
   }
  }
  for(const p of parties){
