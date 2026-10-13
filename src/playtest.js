@@ -10,6 +10,8 @@
  * potion identification, no recharging, and only selected Scroll/Wand combat actions in the optional magic policy. Thus this
  * is a CONSERVATIVE, BASIC-ATTACK policy, not the whole card game's win probability.
  * Unknown room effects are counted in skippedEffects for the audit.
+ * Persistent and corridor Room effects require the full expedition runner and
+ * are NOT executed by this baseline: treat those results as partial only.
  */
 import {HEROES, ROOMS, MONSTERS, OBJECTS, WARDEN, WARDEN_FURY, VAULT} from "./tabletop-data.js";
 
@@ -158,6 +160,7 @@ function rollAmount(expression,rng){
  return Number(expression);
 }
 function roomTurn(state,room){
+  if(room.v2.special)state.skippedEffects++;
  const rng=state.rng,hero=pickHero(state.heroes);
  if(!hero)return;
  state.region=room.stage;
