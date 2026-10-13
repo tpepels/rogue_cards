@@ -4,7 +4,7 @@ const rows=[
   [["TRUST","Keep this Room. Entering DEEP, look at the next 2 Rooms; put either first."],
    ["BURN","Draw 2 Items. Keep this Room. Entering DEEP, lose 2 HP."]]],
  ["u-hollow-knight","UPPER","The Hollow Knight","knight","ENCOUNTER","Its empty armour waits to be judged.",
-  [["SPARE","Keep this Room. Your first DEEP Monster leaves without fighting."],
+  [["SPARE","Keep this Room. At your first DEEP Monster, choose: discard this Room to escape; or save it for the Vault to cancel the Warden's first response."],
    ["STRIP","Draw 2 Items. Keep this Room. Your first DEEP Monster attacks with ADV."]]],
  ["u-scribe-dust","UPPER","The Scribe of Dust","wizard","MYSTERY","He writes your name on a blank scroll.",
   [["INSCRIBE","Discard 1 Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."],
@@ -13,7 +13,7 @@ const rows=[
   [["PLANT","Tuck 1 Item beneath this Room. Keep it. Entering DEEP, recover it and draw 2 Items."],
    ["EAT","Heal 3 HP. Keep this Room. Entering DEEP, lose 2 HP."]]],
  ["m-ferryman-oath","MIDDLE","The Ferryman's Oath","water","ENCOUNTER","The ferryman accepts tomorrow's fare.",
-  [["PAY","Tuck 1 Item beneath this Room. Keep it. At the Vault, recover it and heal 3 HP."],
+  [["PAY","Tuck 1 Item beneath this Room. Keep it. At the Vault choose: recover it and heal 3 HP; or sacrifice it to enable SMUGGLE after Warden Phase I."],
    ["CHEAT","Draw 2 Items. Keep this Room. At the Vault, lose 3 HP."]]],
  ["m-choir-nails","MIDDLE","Choir of Nails","bones","MYSTERY","Nails sing in the stone.",
   [["LISTEN","Keep this Room. The first DEEP Monster's first attack has DIS."],
@@ -28,7 +28,7 @@ const rows=[
   [["WEAR","Keep this Room. Your first Vault attack has ADV; SEAL costs 1 extra MAGIC Item."],
    ["BREAK","Discard 1 MAGIC Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."]]],
  ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","A chained ghost knows what happened here.",
-  [["FREE","Lose 2 HP. Keep this Room. At the Vault, heal 3 HP. If you win, the witness escapes with you."],
+  [["FREE","Lose 2 HP. Keep this Room. At the Vault, heal 3 HP. After Warden Phase I, you may BARGAIN using the Witness's testimony."],
    ["SILENCE","Draw 2 Items. Keep this Room. At the Vault, lose 2 HP. If you win, the witness remains lost."]]]
 ];
 export const FATE_ROOMS=Object.freeze(rows.map(([id,stage,title,art,kind,prompt,choices])=>({
@@ -102,15 +102,19 @@ export function fateStageEntry(s,stage){
 export function fateMonsterEntry(s,monster){
  if(monster.stage!=="DEEP")return false;
  const spared=s.keptRooms.find(entry=>entry.card.id==="u-hollow-knight"&&entry.choice===0);
- if(spared){complete(s,spared);return true;}
+ if(spared){
+  const chosen=s.returnChoices?.["u-hollow-knight"]||
+   (s.strategy==="survival"&&s.chooseActor().hp<s.chooseActor().card.hp*.5?"escape":"save");
+  if(chosen==="escape"){complete(s,spared);return true;}
+  // Saving the Knight is an actual second choice, not an automatic bonus.
+ }
  let dismissed=false;
  for(const entry of [...s.keptRooms]){
   if(!["u-hollow-knight","m-choir-nails"].includes(entry.card.id))continue;
+  if(entry.card.id==="u-hollow-knight"&&entry.choice===0)continue;
   complete(s,entry);
-  if(entry.card.id==="u-hollow-knight"){
-   if(entry.choice===0)dismissed=true;
-   else s.monsterAdv=true;
-  }else if(entry.choice===0)s.monsterDis=true;
+  if(entry.card.id==="u-hollow-knight")s.monsterAdv=true;
+  else if(entry.choice===0)s.monsterDis=true;
   else s.monsterAdv=true;
  }
  return dismissed;
@@ -118,6 +122,11 @@ export function fateMonsterEntry(s,monster){
 // Vault debts and permanent modifiers resolve when the Vault is entered.
 export function fateVaultEntry(s){
  const v=s.vaultModifiers;
+ v.smuggleAvailable=!!s.keptRooms.find(x=>x.card.id==="d-gilded"&&x.choice===1);
+ v.unthroneAvailable=false;v.bargainAvailable=false;v.wardenOpeningSkip=false;
+ const crownRoom=s.keptRooms.some(x=>x.card.id==="d-crown");
+ const savedKnight=s.keptRooms.find(x=>x.card.id==="u-hollow-knight"&&x.choice===0);
+ if(savedKnight){complete(s,savedKnight);v.wardenOpeningSkip=true;}
  for(const entry of [...s.keptRooms]){
   const id=entry.card.id,c=entry.choice;
   if(!["u-scribe-dust","m-ferryman-oath","m-hourglass",
@@ -126,7 +135,11 @@ export function fateVaultEntry(s){
   switch(id){
   case "u-scribe-dust":v.sealCostDelta+=c===0?-1:1;break;
   case "m-ferryman-oath":
-   if(c===0){returnTucked(s,entry.item);restore(s,3);}
+   if(c===0){
+    if(s.returnChoices?.["m-ferryman-oath"]==="smuggle"){
+     v.smuggleAvailable=true;
+    }else{returnTucked(s,entry.item);restore(s,3);}
+   }
    else dead(s,3);
    break;
   case "m-hourglass":v.omen=c===0?"high":"low";break;
@@ -135,11 +148,13 @@ export function fateVaultEntry(s){
    else v.wardenFirstAdv=true;
    break;
   case "d-sleeping-crown":
-   if(c===0){v.heroFirstAdv=true;v.sealCostDelta++;}
+   if(c===0){v.heroFirstAdv=true;v.sealCostDelta++;
+    if(crownRoom)v.unthroneAvailable=true;}
    else v.sealCostDelta--;
    break;
   case "d-last-witness":
-   if(c===0){restore(s,3);s.endingMemory="The witness escapes with the Amulet.";}
+   if(c===0){restore(s,3);v.bargainAvailable=true;
+    s.endingMemory="The witness escapes with the Amulet.";}
    else{dead(s,2);s.endingMemory="The witness remains lost beneath the dungeon.";}
    break;
   }
