@@ -52,9 +52,13 @@ by CI.
 
 ## Gameplay
 
-Select a Hero, take the named starting Object and draw one more. Shuffle UPPER, MIDDLE and DEEP Rooms and matching Monsters into regional piles. Descend through three Rooms of each level, one at a time, then the Amulet Vault.
+Choose a Hero and its starting Object, then draw one more. Shuffle UPPER, MIDDLE and DEEP Rooms and matching Monsters into regional piles. Ordinarily explore **three Rooms per depth** before reaching the Amulet Vault. Rare **trapdoors** can skip remaining Rooms, send you straight to the Vault or expose a dangerous detour.
 
-Every Room offers a decision, a printed roll and potentially a Monster. Combat is opposed **d20 + ATK vs d20 + DEF**, with **d6 damage** and a Monster's own **d6 behaviour after each Hero turn**. Scrolls, Rings and Wands interact with Monsters, Rooms, environmental properties and each other. At the Vault, choose whether to face the Warden or attempt an expensive magical seal; the Warden changes into its second phase at 10 HP.
+Most Rooms stay straightforward: fight a Monster, suffer a trap, explore, or risk a d6 roll. Some provide a meaningful bargain; rare Rooms can be **kept** to make a second decision later. Named Room, Monster and Item combinations reward discovery without a new quest or resource deck.
+
+Combat uses opposed **d20 + ATK vs d20 + DEF**, **d6 damage**, and Monster **d6 behaviour after each Hero turn**. All eight Heroes have a distinct, reliable ability choice and a riskier d6 alternative. Selected Items and Rooms allow **chained REROLLS** with increasing HP costs. **ELBERETH** provides a desperate, potentially dangerous chance to interrupt or escape combat.
+
+At the Vault, **FIGHT** and **SEAL** remain the normal ways to win the Amulet. Previous decisions may instead enable rare **SMUGGLE**, **BARGAIN** or **UNTHRONE** resolutions after Warden Phase I. Empty-handed escape is a defeat with a different ending; some curses create unusual epilogues.
 
 Every Hero and active Monster tracks remaining HP with its own d20 (never rolled).
 Hero starting HP ranges from 18 to 20; the Warden starts at 20 HP and
@@ -66,11 +70,11 @@ All general rules fit on [one A4 sheet](rules.html). Individual card text is aut
 ## Source layout
 
 - `src/tabletop-data.js` — **the single canonical catalogue and print-deck API**
-- `src/heroes.js` — Hero archetypes, starting Objects and d6 abilities
-- `src/rooms.js` — regional Room choices and dice outcomes
+- `src/heroes.js` — Hero archetypes, starting Objects and reliable/risky abilities
+- `src/rooms.js` — regional encounters, dangerous choices and trapdoor results
 - `src/objects.js` — Items, Potions, Scrolls, Rings and Wands
 - `src/monsters.js` — twelve Monsters with d6 behaviours and negotiation
-- `src/warden.js` — Amulet Vault, Warden Phase I and Phase II
+- `src/warden.js` — Amulet Vault and both Warden phases
 - `src/tabletop-view.js`, `styles/tabletop.css` — physical card layout
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
 - `rules.html` — the one canonical rules sheet
