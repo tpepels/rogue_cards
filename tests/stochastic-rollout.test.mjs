@@ -437,3 +437,48 @@ test("rollout validation rejects invalid horizons and supports 0-budget fallback
  const fast=agentPlanCombat(fight,fight.heroes[0]);
  assert.equal(typeof fast.action,"string");
 });
+
+
+test("one nested rollout ply branches future actions but cannot recurse without a limit",()=>{
+ const s=roomState("oracle",2);
+ s.agentConfig=validateAgentConfig({...s.agentConfig,replanBudget:2});
+ const first=forkExpeditionState(s,{knowledge:"oracle",diceSeed:38,deckSeed:49});
+ assert.equal(first.agentConfig.budget,2);
+ assert.equal(first.agentConfig.replanBudget,0);
+ assert.equal(first.rolloutActive,true);
+ const second=forkExpeditionState(first,{knowledge:"oracle",diceSeed:61,deckSeed:79});
+ assert.equal(second.agentConfig.budget,0);
+ assert.equal(second.agentConfig.replanBudget,0);
+ assert.equal(s.agentConfig.budget,2);
+ assert.equal(s.agentConfig.replanBudget,2);
+});
+test("strict terminal planning requires a complete horizon",()=>{
+ const s=roomState("oracle",2);
+ assert.throws(()=>validateAgentConfig({...s.agentConfig,
+  strictTerminal:true}),/strictTerminal requires/);
+ const config=validateAgentConfig({...s.agentConfig,
+  rolloutRooms:9,combatActions:600,combatRoomDepth:9,strictTerminal:true});
+ assert.equal(config.strictTerminal,true);
+ assert.throws(()=>validateAgentConfig({...s.agentConfig,
+  replanBudget:9}),/replanBudget/);
+});
+test("rollout agent actually searches retained fate Room choices",()=>{
+ let found=false;
+ for(let seed=5190;seed<5215;seed++){
+  const r=simulateFullExpedition({
+   seed,heroes:["warrior","wizard"],strategy:"magic",
+   researchPolicy:"agent",agentConfig:{
+    knowledge:"oracle",planning:"rollout",budget:1,
+    replanBudget:0,rolloutRooms:2,combatActions:8,combatRoomDepth:0,
+    weights:{...AGENT_WEIGHTS}
+   }
+  });
+  assert.equal(r.unresolved,0);
+  assert.equal(r.roundLimit,false);
+  assert.ok(r.rolloutAudit?.roomBranches>0);
+  assert.equal(r.rolloutAudit.roomBranches+r.rolloutAudit.combatBranches,
+   r.rolloutAudit.terminalBranches+r.rolloutAudit.nonterminalBranches);
+  if(r.plannerDecisions.fateRoomsPlanned>0){found=true;break;}
+ }
+ assert.ok(found,"no retained fate Room reached the actual rollout evaluator");
+});
