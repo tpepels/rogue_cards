@@ -41,7 +41,10 @@ for(const c of CATALOGUE){
  const id=key(c);
  check(!!(c.id&&c.title&&c.type&&c.art&&c.v2),id+" missing required printed metadata");
  check(Number.isInteger(c.copies)&&c.copies>=1,id+" has invalid copies");
- check(!!String(c.rule||"").trim(),id+" has no instruction");
+ // Monsters print a four-band behavior table instead of a single `rule`
+ // field. Absence of `rule` is canonical for all 14 Monster cards.
+ if(c.type!=="monster")
+  check(!!String(c.rule||"").trim(),id+" has no instruction");
  if(c.type==="hero"||c.type==="monster"){
   for(const k of ["hp","atk","def"])
    check(Number.isInteger(c[k])&&c[k]>0,id+" invalid "+k);
