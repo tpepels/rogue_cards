@@ -41,7 +41,7 @@ const tools=[
 ];
 const equipment=[
  ["sword","Notched Sword","key","EQUIPMENT",["METAL","WEAPON"],
-  "WEAPON: +2 ATK. ONCE PER ROOM after a hit, roll d6.",
+  "WEAPON: +2 ATK. ONCE PER ROOM after your attack hits, roll d6.",
   [["1–2","Blade catches: lose 1 HP. With equipped FIRE gear, treat its next behaviour 6 as 1–2."],["3–4","Deal +2 damage."],["5–6","Deal +d6 damage."]],
   "Turn sideways after rolling; straighten on entering a new Room.",["m-crypt","d-bones"],"Still sharp in the gaps.",2],
  ["staff","Ashwood Staff","wizard","EQUIPMENT",["WOOD","MAGIC","WEAPON"],
@@ -54,7 +54,7 @@ const equipment=[
   "ARMOUR: +2 DEF; your WIT rolls have DIS.",null,
   "At a SHRINE, remove and re-equip it freely after the Room's choice.",["m-bridge","u-shrine"],"It remembers every owner.",2],
  ["shield","Warded Shield","knight","EQUIPMENT",["MAGIC","ARMOUR"],
-  "ARMOUR: +1 DEF. ONCE PER ROOM when hit, roll d6.",
+  "ARMOUR: +1 DEF. ONCE PER ROOM when you are hit, roll d6.",
   [["1–2","No protection."],["3–4","Reduce damage by 2."],["5–6","Cancel all damage."]],
   "Turn sideways after rolling; straighten in the next Room.",["d-shadow","m-crypt"],"A ward drawn by a fool.",2],
  ["cursed-mail","Burial Mail","bones","EQUIPMENT",["METAL","CURSED","ARMOUR"],
@@ -63,7 +63,7 @@ const equipment=[
 ];
 const companions=[
  ["dog","Loyal Hound","dog","COMPANION",["BEAST"],
-  "COMPANION: When you hit, ONCE PER ROOM roll d6.",
+  "COMPANION: ONCE PER ROOM after your attack hits, roll d6.",
   [["1–2","It barks: no damage."],["3–4","Deal +2 damage."],["5–6","Deal +d6 damage."]],
   "At Rat Nest, choose 5–6; at Beetle Caravan, choose 6. Against Giant Rat, treat behaviour 6 as 1–2.",["u-nest","m-beetle","u-merchant"],"Too brave for its size.",2],
  ["raven","Tunnel Raven","eye","COMPANION",["BEAST","KNOWLEDGE"],
@@ -73,10 +73,10 @@ const companions=[
  ["moth","Coffin Moth","ghost","COMPANION",["BEAST","MAGIC"],
   "COMPANION: ONCE PER ROOM when POISONED, roll d6.",
   [["1–2","It sneezes: lose 1 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; heal d6 HP."]],
-  "At Fungal Garden, ignore POISONED once. Against Living Mold, its 6 becomes 1–2.",["m-fungus","d-choir"],"It eats little curses.",1],
+  "At Fungal Garden, ignore POISONED once. Against Living Mold, treat its behaviour 6 as 1–2.",["m-fungus","d-choir"],"It eats little curses.",1],
  ["goblin-pet","Pocket Goblin","goblin","COMPANION",["BEAST","BARGAIN"],
   "COMPANION: At an ENCOUNTER Room, ONCE PER ROOM roll d6.",
-  [["1–2","It steals from you: discard 1 Item, if any."],["3–4","Trade 1 Item to draw 2 Items."],["5–6","Draw 1 Item."]],
+  [["1–2","It steals from you: discard 1 Item if you have one."],["3–4","Trade 1 Item to draw 2 Items."],["5–6","Draw 1 Item."]],
   "At Ghostly Auction, roll this before the Room's choice.",["u-merchant","m-auction","d-bazaar"],"Unionised trouble.",1]
 ];
 const relics=[
@@ -93,7 +93,7 @@ const relics=[
   "DISCARD: Skip the Monster's next response or recharge 1 Wand.",["u-lamp","m-fungus","d-shadow","d-choir"],"A flame with a pulse.",1],
  ["crown-relic","Crown of Rehearsals","amulet","RELIC",["CURSED","MAGIC"],
   "ONCE PER EXPEDITION: Discard to turn a failed d20 roll into a natural 20.",null,
-  "The wearer loses d6 HP after using it. This counts as a CURSED Item until then.",["d-crown","d-mirror","d-reliquary"],"Practice makes royalty.",1]
+  "After using this Item, its wearer loses d6 HP. This counts as a CURSED Item until then.",["d-crown","d-mirror","d-reliquary"],"Practice makes royalty.",1]
 ];
 const scrolls=[
  ["scroll-flame","Scroll of Cinder","spiral","SCROLL",["MAGIC","FIRE"],
@@ -131,7 +131,7 @@ const scrolls=[
 ];
 const rings=[
  ["ring-luck","Ring of Crooked Luck","amulet","RING",["MAGIC","LUCK"],
-  "RING: ONCE PER ROOM after d20 roll, roll d6. After 5–6, REROLL again for 1 then 2 HP; use newest result.",
+  "RING: ONCE PER ROOM after a Hero's d20 roll, roll d6. After 5–6, REROLL again for 1 then 2 HP; use newest result.",
   [["1–2","Subtract 2 from that roll."],["3–4","Add 2 to that roll."],["5–6","Roll the d20 again; keep the higher result."]],
   "At a SHRINE, cleanse and discard a CURSED Item to heal d6 HP.",["m-clock","d-oracle"],"It rolls off your finger.",1],
  ["ring-bargain","Ring of Small Deals","shop","RING",["MAGIC","BARGAIN"],
@@ -150,12 +150,12 @@ const rings=[
   "CURSED RING: +2 ATK. ONCE PER ROOM after using a MAGIC Item, roll d6.",[["1–2","Lose d6 HP; your next d20 has DIS."],["3–4","Lose 1 HP; +2 damage on next hit."],["5–6","Your next hit deals +d6 damage."]],
   "Cannot remove until cleansed at a SHRINE. At Crown of the Unking, choose its 5 result.",["u-shrine","m-altar","d-crown","d-mirror"],"It keeps getting tighter.",1],
  ["ring-ashes","Ring of Embers","wind","RING",["FIRE","MAGIC"],
-  "RING: ONCE PER ROOM when attacking, roll d6.",
+  "RING: ONCE PER ROOM before your attack, roll d6.",
   [["1–2","Scorch your hand: lose 2 HP; Monster's next behaviour is 6."],["3–4","Your next hit deals +2 damage."],["5–6","Your next hit deals +d6 damage."]],
   "At Lamp-Eater, choose 5–6. Against Living Mold, treat behaviour 6 as 1–2.",["u-lamp","m-fungus","d-choir"],"Warm even in water.",1],
  ["ring-echo","Ring of Echoes","spiral","RING",["MAGIC","CHAOS"],
-  "RING: ONCE PER ROOM after a Room d6 roll, roll d6.",
-  [["1–2","Keep the first result; lose 1 HP."],["3–4","Reroll the Room d6; use the new result."],["5–6","Reroll the Room d6; choose either result."]],
+  "RING: ONCE PER ROOM after a Room d6 result, roll d6.",
+  [["1–2","Keep the first result; lose 1 HP."],["3–4","Reroll the Room d6; the new result stands."],["5–6","Reroll the Room d6; choose either result."]],
   "With a CURSED Item equipped, 1–2 becomes 5–6; suffer d6 HP. Room dice only.",["m-well","d-last-chest","u-fountain"],"It rings in the bones.",1]
 ];
 const wands=[
@@ -164,7 +164,7 @@ const wands=[
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
-  "AFTER a Hero d20: If upright, roll d6 and turn sideways until recharged. After rerolling, pay 1, then 2 HP to REROLL again.",
+  "AFTER a Hero's d20 roll: If upright, roll d6 and turn sideways until recharged. After rerolling, pay 1, then 2 HP to REROLL again.",
   [["1–2","Misfire: lose 1 HP; nothing changes."],["3–4","Roll the d20 again; use the new result."],["5–6","Roll the d20 again; keep the higher result."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
@@ -177,7 +177,7 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-crypt","d-gate"],"Point away from yourself.",1],
  ["wand-market","Wand of Bad Trades","shop","WAND",["MAGIC","BARGAIN"],
   "AT AN ENCOUNTER: If upright, roll d6; turn sideways until recharged.",
-  [["1–2","Misfire: discard 1 Item, if any."],["3–4","Discard 1 Item to draw 2."],["5","Draw 1 Item."],["6","Draw 2 Items."]],
+  [["1–2","Misfire: discard 1 Item if you have one."],["3–4","Discard 1 Item to draw 2."],["5","Draw 1 Item."],["6","Draw 2 Items."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 6.",["u-merchant","m-auction","d-bazaar"],"Unfair exchange rate.",1],
  ["wand-frost","Wand of Cold Shoulders","wind","WAND",["MAGIC","ICE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
