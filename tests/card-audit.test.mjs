@@ -5,7 +5,7 @@ import {ROOMS,VAULT,OBJECTS,WARDEN_FURY} from "../src/tabletop-data.js";
 const text=card=>card.v2.choices?.map(c=>c.effect).join(" ")||"";
 test("Phase 5 card audit covers all physical card families without inventing mechanics",()=>{
  const a=auditCards();
- assert.equal(a.cards,111);assert.equal(a.heroes,8);assert.equal(a.rooms,36);
+ assert.equal(a.cards,129);assert.equal(a.heroes,8);assert.equal(a.rooms,54);
  assert.equal(a.monsters,12);assert.equal(a.objects,52);assert.equal(a.wardenPhases,2);
  assert.equal(a.d6Monsters,14);
  assert.deepEqual(a.malformedRolls,[]);
@@ -28,7 +28,7 @@ test("Phase 5 corrected actual ambiguous card text rather than changing general 
  const altar=ROOMS.find(r=>r.id==="m-altar");
  const well=ROOMS.find(r=>r.id==="u-fountain");
  const singing=ROOMS.find(r=>r.id==="m-treasure");
- assert.match(text(garden),/discard 1 FIRE Item to heal d6 HP/);
+ assert.match(text(garden),/discard it to heal 3 HP/);
  assert.match(text(altar),/1 other Item.*equipped CURSED Item/);
  assert.match(text(well),/roll twice and choose either result/);
  assert.match(text(singing),/roll twice and choose either result/);
