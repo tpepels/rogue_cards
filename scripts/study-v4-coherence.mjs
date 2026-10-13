@@ -26,7 +26,9 @@ const ARMS=[
  {id:"risky",heroAbilityMode:"risk"},
  {id:"smuggle",vaultChoice:"smuggle-if-available"},
  {id:"bargain",vaultChoice:"bargain-if-available"},
- {id:"unthrone",vaultChoice:"unthrone-if-available"}
+ {id:"unthrone",vaultChoice:"unthrone-if-available"},
+ {id:"smuggle-route",roomPolicy:"second-when-legal",
+  vaultChoice:"smuggle-if-available"}
 ];
 const FATES=ROOMS.filter(r=>r.v2.fate);
 const strategies=["survival","treasure","magic","seal","negotiation"];
@@ -295,6 +297,14 @@ function render(result){
   out.push("| "+name+" | "+(broad.arms.scripted.vaultGateSeen[name]||0)+
    " | "+(broad.arms[name].endings[kind]||0)+" |");
  }
+ out.push("","### SMUGGLE prerequisite-seeking policy","",
+  "A separate arm chooses the second printed Room option whenever it is "+
+  "affordable and requests SMUGGLE at the Vault. This tests route-seeking "+
+  "rather than the default policy's decision at the ending alone.",
+  "SMUGGLE gate unlocked: "+
+  (broad.arms["smuggle-route"].vaultGateSeen.smuggle||0)+
+  "; ending achieved: "+
+  (broad.arms["smuggle-route"].endings.smuggled_amulet||0)+".");
  out.push("","## Diagnostics",
   "- Counterfactual estimates include affordability and identical pre-choice-state checks.",
   "- A zero count for a rare ending can mean lack of prerequisite encounters or resources, not a broken ending.",
