@@ -6,8 +6,8 @@
 import {performance} from "node:perf_hooks";
 import {ExpeditionState} from "../src/engine/index.js";
 import {randomSource} from "../src/engine/random.js";
-import {forkExpeditionState,cloneRolloutState,prepareRolloutDecks}
- from "../src/rollout-state.js";
+import {forkExpeditionState,cloneRolloutState,prepareRolloutDecks,
+ sampleRolloutDecks} from "../src/rollout-state.js";
 const args=process.argv.slice(2),read=(name,fallback)=>{
  const at=args.indexOf(name);
  return at<0?fallback:Number(args[at+1]);
@@ -43,17 +43,32 @@ function shared(seeds){
  }
  return checksum;
 }
-for(const seed of scenarios.slice(0,Math.min(25,scenarios.length))){
- if(old(seed)!==shared(seed))
-  throw Error("Shared-deck optimization changed the sampled dice/decks");
+function sampled(seeds){
+ const piles=sampleRolloutDecks(s,{knowledge,deckSeed:seeds.deckSeed,blueprint});
+ let checksum=0;
+ for(let k=0;k<choices;k++){
+  const f=forkExpeditionState(s,{...seeds,knowledge,blueprint,
+   sampledDecks:piles});
+  checksum+=f.deck.length+f.die()+f.rooms.UPPER.length;
+ }
+ return checksum;
 }
-const variants=[{name:"before: sample hidden deck for every action",fn:old},
- {name:"after: sample once, clone branch state",fn:shared}];
+for(const seed of scenarios.slice(0,Math.min(25,scenarios.length))){
+ const reference=old(seed);
+ if(reference!==shared(seed)||reference!==sampled(seed))
+  throw Error("Matched scenario alternatives changed the sampled outcome");
+}
+const variants=[
+ {name:"baseline: regenerate hidden decks per action",fn:old},
+ {name:"regression: clone already-sampled scenario state",fn:shared},
+ {name:"optimized: sample hidden decks once, fork original state",fn:sampled}
+];
 for(let w=0;w<2;w++)for(const v of variants)
  for(const seed of scenarios.slice(0,20))v.fn(seed);
 const measured=variants.map(v=>({name:v.name,rounds:[]}));
 for(let run=0;run<5;run++){
- for(const k of [run%2,(run+1)%2]){
+ for(let step=0;step<variants.length;step++){
+  const k=(run+step)%variants.length;
   const start=performance.now();let checksum=0;
   for(const seed of scenarios)checksum+=variants[k].fn(seed);
   measured[k].rounds.push((performance.now()-start)/samples);
@@ -61,7 +76,7 @@ for(let run=0;run<5;run++){
  }
 }
 const median=a=>[...a].sort((x,y)=>x-y)[Math.floor(a.length/2)];
-if(measured[0].checksum!==measured[1].checksum)
+if(measured.some(x=>x.checksum!==measured[0].checksum))
  throw Error("Simulation checksums diverged");
 process.stdout.write(JSON.stringify({
  node:process.version,samples,choices,units:"milliseconds per scenario",
@@ -69,7 +84,10 @@ process.stdout.write(JSON.stringify({
  measurements:measured.map(x=>({
   name:x.name,medianMs:median(x.rounds),runs:x.rounds
  })),
- speedup:median(measured[0].rounds)/median(measured[1].rounds),
+ speedup:median(measured[0].rounds)/
+  median(measured[measured.length-1].rounds),
+ previousRegressionSpeedup:median(measured[0].rounds)/
+  median(measured[1].rounds),
  warning:"Microbenchmark for deck sampling + state cloning only; "+
  "real-run speed also depends on resolving full Room/Monster decisions."
 },null,2)+"\n");
