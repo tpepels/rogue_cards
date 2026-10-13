@@ -81,7 +81,7 @@ function parse(args){
  const steps=parties.length*strategies.length;
  const plannedExpeditions=steps*(2*candidates*rounds*trainRuns*trainSeeds.length+
   2*Math.min(finalists,candidates)*validationRuns*validationSeeds.length+
-  3*testRuns*testSeeds.length);
+  4*testRuns*testSeeds.length);
  if(plannedExpeditions>50000000)throw Error("Too many expeditions in one run");
  return {preset,trainRuns,validationRuns,testRuns,candidates,rounds,
   finalists,budget,workers,strategies,trainSeeds,validationSeeds,
@@ -105,7 +105,8 @@ function execute(job){
  const options=job.arm==="current"?
   {researchPolicy:"planner",plannerRisk:"cautious"}:
   {researchPolicy:"agent",agentConfig:validateAgentConfig({
-   knowledge:job.arm,weights:job.weights,budget:job.budget,
+   knowledge:job.arm==="oracle-fixed"?"oracle":job.arm,
+   weights:job.weights,budget:job.budget,
    samplingSeed:job.lookaheadSeed})};
  const rows=[],totals={n:0,wins:0,otherN:0,otherWins:0,
   unresolved:0,stalls:0};
@@ -215,7 +216,7 @@ function report(result){
   "## Held-out results (parameters frozen BEFORE these runs)","",
   "| Agent | Win rate | Expeditions |",
   "|---|---:|---:|"];
- for(const arm of ["current","fair","oracle"]){
+ for(const arm of ["current","fair","oracle-fixed","oracle"]){
   const x=result.holdout[arm];
   out.push("| "+arm+" | "+pct(x.winRate)+" | "+x.n+" |");
  }
@@ -229,17 +230,17 @@ function report(result){
  out.push("","## Fitted heuristic parameters","",
   "~~~json",JSON.stringify(result.selected,null,2),"~~~","",
   "## Heroes and two-Hero combinations","",
-  "| Party | Current | Tuned fair | Oracle |",
-  "|---|---:|---:|---:|");
+  "| Party | Current | Tuned fair | Oracle same weights | Tuned Oracle |",
+  "|---|---:|---:|---:|---:|");
  for(const id of Object.keys(result.partyRates.current))
-  out.push("| "+id+" | "+["current","fair","oracle"].map(a=>
+  out.push("| "+id+" | "+["current","fair","oracle-fixed","oracle"].map(a=>
    pct(result.partyRates[a][id].winRate)).join(" | ")+" |");
  out.push("","## Interpretation","",
   "- Fair agent has ordinary information; Oracle knows the remaining ordered Item, Room and Monster decks.",
   "- The agents share actual printed actions and effects. Neither observes future dice or PRNG state.",
   "- Planning budget applies to bounded chance-sampled Room lookahead, not full cloned-expedition rollouts or exact optimal play.",
-  "- Fair and Oracle are tuned separately, so Oracle minus fair combines information gain with parameter differences.",
-  "- A fixed-weight comparison is required to isolate deck knowledge alone; see the separate information-control study.",
+  "- Oracle-fixed reuses the fair agent's frozen weights and planning budget. Oracle-fixed minus fair therefore isolates deck visibility, conditional on this approximate policy.",
+  "- Tuned Oracle versus Oracle-fixed estimates the additional effect of re-optimizing weights. It is not a proven optimal strategy.",
   "- The Knight is intentionally the stronger beginner Hero. His win rate is not constrained to equal the others.",
   "- More simulations reduce sampling noise, NOT heuristic-model error or human-play discrepancy.",
   "- Intervals are per-run paired normal approximations, unadjusted for multiplicity.","");
@@ -291,13 +292,16 @@ async function main(){
  const final=await parallel([
   withJob("heldout","current","A",null,c.testSeeds,c.testRuns,c,true),
   withJob("heldout","fair","B",selected.fair.weights,c.testSeeds,c.testRuns,c,true),
+  withJob("heldout","oracle-fixed","D",selected.fair.weights,c.testSeeds,c.testRuns,c,true),
   withJob("heldout","oracle","C",selected.oracle.weights,c.testSeeds,c.testRuns,c,true)
  ],c.workers);
  const holdout=Object.fromEntries(final.map(r=>[r.arm,r]));
  const pairedResults={
   "B fair minus A current":paired(final[0],final[1]),
-  "C oracle minus B fair":paired(final[1],final[2]),
-  "C oracle minus A current":paired(final[0],final[2])
+  "D oracle fixed weights minus B fair (knowledge only)":paired(final[1],final[2]),
+  "C tuned oracle minus D fixed oracle (tuning only)":paired(final[2],final[3]),
+  "C tuned oracle minus B fair (knowledge plus tuning)":paired(final[1],final[3]),
+  "C tuned oracle minus A current":paired(final[0],final[3])
  };
  const partyRates=Object.fromEntries(final.map(r=>[r.arm,perParty(r)]));
  const result={schema:"rogue-cards-agent-study-v1",commit,config:c,
