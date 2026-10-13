@@ -607,7 +607,7 @@
   radial-gradient(ellipse at 100% 0,#eee1ca 0 .9mm,transparent 3.1mm),
   radial-gradient(ellipse at 0 100%,#ede0c8 0 1.1mm,transparent 3.3mm),
   radial-gradient(ellipse at 100% 100%,#eddfc6 0 1.6mm,transparent 3.5mm),
-  linear-gradient(90deg,#e8dbc36e 0,.55mm transparent 1.5mm,transparent calc(100% - 1.5mm),#e9ddc269 100%),
+  linear-gradient(90deg,#e8dbc36e 0,transparent 1.5mm,transparent calc(100% - 1.5mm),#e9ddc269 100%),
   linear-gradient(0deg,#ebddc35a 0,transparent 1.8mm,transparent calc(100% - 1.8mm),#eee2cd52 100%);
 }
 .tt-card.tt-paper-collage .tt-collage{
