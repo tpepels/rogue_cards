@@ -26,6 +26,11 @@ function recordPlan(s,kind,detail){
   (detail.attempt?"attempt":"decline"):detail.action);
  const selected=kind+"_"+choice;
  d[selected]=(d[selected]||0)+1;
+ if(detail.reason?.startsWith("full_effect_")){
+  const metric=kind==="room"?"rolloutRoomDecisions":"rolloutCombatDecisions";
+  d[metric]=(d[metric]||0)+1;
+  d.rolloutSamples=(d.rolloutSamples||0)+(detail.samples||0);
+ }
  if(kind==="combat"){
   if(detail.forcedTarget){
    d.targetForced=(d.targetForced||0)+1;
