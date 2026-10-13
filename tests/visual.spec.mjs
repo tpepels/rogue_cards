@@ -228,9 +228,9 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
    border:parseFloat(getComputedStyle(c).borderTopWidth),
    wear:getComputedStyle(c,"::after").backgroundImage,
    titleShape:getComputedStyle(c.querySelector(".tt-title")).clipPath,
-   leadShape:getComputedStyle(lead,"::before").clipPath,
-   leadAngle:getComputedStyle(lead,"::before").transform,
-   resultsShape:results?getComputedStyle(results,"::before").clipPath:null
+   leadShape:getComputedStyle(lead).clipPath,
+   leadAngle:getComputedStyle(lead).transform,
+   resultsShape:results?getComputedStyle(results).clipPath:null
   };
  }));
  expect(metrics).toHaveLength(30);
@@ -245,7 +245,7 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
  await page.emulateMedia({media:"print"});
  const print=await page.locator(".tt-print-only .tt-card").first().evaluate(c=>({
   title:getComputedStyle(c.querySelector(".tt-title")).clipPath,
-  slip:getComputedStyle(c.querySelector(".tt-slip--lead"),"::before").clipPath
+  slip:getComputedStyle(c.querySelector(".tt-slip--lead")).clipPath
  }));
  expect(print.title).toContain("polygon");
  expect(print.slip).toContain("polygon");
