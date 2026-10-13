@@ -5,7 +5,7 @@ import {ROOMS,VAULT,OBJECTS,WARDEN_FURY} from "../src/tabletop-data.js";
 const text=card=>card.v2.choices?.map(c=>c.effect).join(" ")||"";
 test("Phase 5 card audit covers all physical card families without inventing mechanics",()=>{
  const a=auditCards();
- assert.equal(a.cards,129);assert.equal(a.heroes,8);assert.equal(a.rooms,54);
+ assert.equal(a.cards,139);assert.equal(a.heroes,8);assert.equal(a.rooms,64);
  assert.equal(a.monsters,12);assert.equal(a.objects,52);assert.equal(a.wardenPhases,2);
  assert.equal(a.d6Monsters,14);
  assert.deepEqual(a.malformedRolls,[]);
