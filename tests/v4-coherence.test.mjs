@@ -5,7 +5,7 @@ import {mkdtempSync,rmSync,readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
-import {ROOMS,OBJECTS,MONSTERS} from "../src/tabletop-data.js";
+import {ROOMS,OBJECTS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {fateChoiceLegal,resolveFateChoice} from "../src/room-fates.js";
 import {legalRoomChoices} from "../src/engine/index.js";
 import {engraveElbereth} from "../src/engine/combat.js";
@@ -68,6 +68,27 @@ test("Elbereth telemetry records success, failure and flee without double respon
   {face:20,mode:"flee"}).fled,true);
  assert.equal(fled.metrics.elberethFlees,1);
  assert.equal(fled.metrics.elberethSuccesses,1);
+});
+test("UNTHRONE gate requires the actual two Crown cards and the worn choice",()=>{
+ const build=(withFirstCrown,wear)=>{
+  const s=new ExpeditionState({seed:11898,heroes:["warrior","wizard"]});
+  if(withFirstCrown){
+   s.beginRoom(room("d-crown"));
+   s.roomRoll(6); // Printed final band: save the defensive Crown Room.
+   assert.ok(s.keptRooms.some(x=>x.card.id==="d-crown"));
+  }
+  s.beginRoom(room("d-sleeping-crown"));
+  s.apply("ROOM_FATE",[wear?"0":"1"],s.room);
+  assert.ok(s.keptRooms.some(x=>x.card.id==="d-sleeping-crown"));
+  s.beginRoom(VAULT);
+  return s;
+ };
+ assert.equal(build(true,true).vaultModifiers.unthroneAvailable,true,
+  "Both actually acquired Crowns should unlock the final alternative");
+ assert.equal(build(false,true).vaultModifiers.unthroneAvailable,false,
+  "A single sleeping Crown cannot unlock UNTHRONE");
+ assert.equal(build(true,false).vaultModifiers.unthroneAvailable,false,
+  "Breaking the sleeping Crown does not count as wearing both");
 });
 test("reliable and risky Hero-policy interventions remain deterministic",()=>{
  const base={seed:917283,heroes:["warrior","wizard"],strategy:"magic"};
