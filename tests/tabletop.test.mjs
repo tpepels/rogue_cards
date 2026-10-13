@@ -93,27 +93,24 @@ test("Monsters have distinctive four-band responses, weaknesses and defined nego
  assert.match(MONSTERS.find(m=>m.id==="bat").v2.parley,/Opposed d20/);
  assert.match(MONSTERS.find(m=>m.id==="goblin").v2.parley,/RECRUIT/);
 });
-test("one A4 rulebook describes entire adventure and alternate boss victory",()=>{
+test("two-page human-first rulebook teaches the full expedition without unexplained jargon",()=>{
  const html=readFileSync("rules.html","utf8");
  assert.match(html,/@page\{size:A4 portrait/);
- assert.match(html,/opposed d20|d20 \+ ATK/i);assert.match(html,/d20 \+ DEF/);
- assert.match(html,/WIT/);assert.match(html,/POISONED/);
- assert.match(html,/SEAL/);assert.match(html,/Phase II/);
- assert.match(html,/PARLEY/);assert.match(html,/OVERCHARGE/);
- assert.match(html,/Scrolls/);assert.match(html,/1 Ring/);
- assert.equal((html.match(/<main class="sheet">/g)||[]).length,1);
- assert.equal((html.match(/<section><h2>/g)||[]).length,8);
- assert.match(html,/3 UPPER, 3 MIDDLE and 3 DEEP Rooms/);
- assert.match(html,/Trapdoors may skip Rooms/);
- assert.match(html,/After each Hero turn/);
- assert.match(html,/healing still needs a printed effect/);
- assert.match(html,/keeping the same HP die/);
- assert.match(html,/Never roll HP dice/);
- assert.match(html,/At <strong>0 HP<\/strong>, remove the die/);
- assert.doesNotMatch(html,/heal freely/i);
- const page=html.match(/<main class="sheet">([\s\S]*?)<\/main>/)?.[1]||"";
- const wordCount=page.replace(/<[^>]+>/g," ").trim().split(/\s+/).length;
- assert.ok(wordCount<650,"Rulebook should remain brief: "+wordCount+" words");
+ assert.equal((html.match(/<main class="sheet">/g)||[]).length,2);
+ for(const phrase of ["What you need","Your quest","Set up the dungeon",
+  "Explore a Room","When a Monster appears","Making rolls","The Amulet Vault",
+  "ATK","DEF","WIT","ADV","DIS","PARLEY","POISONED","ELBERETH",
+  "OVERCHARGE","REROLL","TRAPDOOR","3 UPPER, 3 MIDDLE and 3 DEEP Rooms",
+  "After each Hero turn","Never roll HP dice","Phase II"]){
+  assert.ok(html.includes(phrase),"Rulebook is missing "+phrase);
+ }
+ assert.match(html,/advantage<\/strong>.*roll two d20s/s);
+ assert.match(html,/disadvantage<\/strong>.*roll two d20s/s);
+ assert.match(html,/0 HP<\/strong>/);
+ assert.match(html,/3 MAGIC Items/);
+ assert.match(html,/healing always requires an effect on a card/);
+ const visible=html.replace(/<[^>]+>/g," ").trim().split(/\s+/).length;
+ assert.ok(visible>850,"Rulebook still reads like a terse reference: "+visible);
 });
 test("every physical card prints deterministically with correct images and A4 quantities",()=>{
  for(const c of CATALOGUE){
