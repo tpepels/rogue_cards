@@ -147,6 +147,8 @@ export class ExpeditionState {
  chooseActor(){const a=this.living().sort((a,b)=>a.hp/a.card.hp-b.hp/b.card.hp);
   return a[0]||this.heroes[0];}
  setActor(h){this.actor=h;return h;}
+ heroMode(h){return this.heroAbilityModes[h.card.id]||
+  (this.strategy==="survival"||this.strategy==="seal"?"steady":"risk");}
  rerollIfKept(h,value){
   const i=h.kept.indexOf("reroll");
   if(i>=0&&value<=10){h.kept.splice(i,1);return this.die(20);}
@@ -386,13 +388,20 @@ export class ExpeditionState {
   return true;
  }
  thiefReward(){const thief=this.living().find(x=>x.card.id==="thief"&&!x.used.has("hero"));
-  if(!thief)return;thief.used.add("hero");const d=this.die();
+  if(!thief)return;thief.used.add("hero");
+  if(this.heroMode(thief)==="steady"){this.draw();this.discard();return;}
+  const d=this.die();
   if(d<=2)this.hurt(thief,2);
   else if(d<=4){this.draw();this.discard();}
   else{this.draw(2);this.discard();}
  }
  witchReaction(h){
-  h.used.add("witch-ability");const d=this.die();
+  h.used.add("witch-ability");
+  if(this.heroMode(h)==="steady"){
+   if(h.poison)h.poison=false;else this.heal(h,1);
+   return;
+  }
+  const d=this.die();
   if(d<=2)this.apply("POISON",[],null);
   else if(d<=4)this.apply("CURE",[],null);
   else this.forcedBehavior=1;
@@ -521,10 +530,14 @@ export class ExpeditionState {
   let adv=h.nextAdv>0,blessBonus=0;
   h.nextDis=0;h.nextAdv=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
-  if(priest){priest.used.add("hero");const d=this.die();
-   if(d<=2)this.hurt(priest,Math.ceil(this.die()/2));
-   else if(d<=4)blessBonus=2;
-   else{adv=true;h.poison=false;}
+  if(priest){priest.used.add("hero");
+   if(this.heroMode(priest)==="steady"&&priest.hp>1){
+    this.hurt(priest,1);blessBonus=2;
+   }else{const d=this.die();
+    if(d<=2)this.hurt(priest,Math.ceil(this.die()/2));
+    else if(d<=4)blessBonus=2;
+    else{adv=true;h.poison=false;}
+   }
   }
   const roll=()=>this.die(20),a=roll();
   let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
