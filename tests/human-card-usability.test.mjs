@@ -44,7 +44,7 @@ test("all 139 cards supply legible complete instructions without a second manual
 });
 test("the entire one-page rulebook defines shared printed vocabulary",()=>{
  const rules=readFileSync(new URL("../rules.html",import.meta.url),"utf8");
- for(const term of ["EAT its printed remains","WITH means carried","EQUIPPED means",
+ for(const term of ["EAT its printed remains","WITH an Item","EQUIPPED means",
   "marked TRAP","says KEEP it","PARLEY","POISONED","OVERCHARGE",
   "Opposed d20 combat","After each Hero turn"]){
   assert.ok(rules.includes(term),"Undefined shared term: "+term);
