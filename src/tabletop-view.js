@@ -25,7 +25,7 @@ export function ruleMarkup(value){
 }
 
 
-/** Exact canonical card-to-art assignment (129 cards using 111 original PNGs; new Rooms reuse related art provisionally).
+/** Exact canonical card-to-art assignment for the entire printed catalogue.
  * Artwork filenames are intentionally numbered, while card ids remain stable.
  * All entries must refer to a real file; tests enforce one-to-one coverage.
  */
