@@ -32,7 +32,7 @@ Check the workload without running it:
 
 ```bash
 npm run oracle:overnight -- \
-  --runs 1200 --budget 2 --replan-budget 1 \
+  --runs 1200 --knowledge oracle --budget 2 --replan-budget 1 \
   --workers 7 --chunk-size 10 --hours 10 \
   --seed 20261014 --out results/oracle-night-01 --dry-run
 ```
@@ -47,7 +47,7 @@ mkdir -p results
 nohup systemd-inhibit --what=idle:sleep --mode=block \
   --why="Rogue Cards overnight full-effect Oracle study" \
   npm run oracle:overnight -- \
-  --runs 1200 --budget 2 --replan-budget 1 \
+  --runs 1200 --knowledge oracle --budget 2 --replan-budget 1 \
   --workers 7 --chunk-size 10 --hours 10 \
   --seed 20261014 --out results/oracle-night-01 \
   > results/oracle-night-01.log 2>&1 < /dev/null &
@@ -66,7 +66,7 @@ adding `--resume` (you can change `--workers` and `--hours`):
 
 ```bash
 npm run oracle:overnight -- \
-  --runs 1200 --budget 2 --replan-budget 1 \
+  --runs 1200 --knowledge oracle --budget 2 --replan-budget 1 \
   --workers 7 --chunk-size 10 --hours 10 \
   --seed 20261014 --out results/oracle-night-01 --resume
 ```
@@ -85,7 +85,7 @@ pair uses the same initial seed, Hero party and play style.
 
 All eight solo Heroes and 28 possible two-Hero pairs are rotated through,
 as are survival, magic, treasure, seal and negotiation priorities.
-Each expedition uses a full-horizon, **two-ply** Fair-information agent.
+Each expedition uses a full-horizon, **two-ply** Oracle agent with exact knowledge of the remaining hidden deck order but no future dice. To evaluate fair-information play separately, rerun with `--knowledge fair`, a new output directory and disjoint seed batches.
 The root samples two hypothetical scenarios for every currently legal
 Room/combat action; later continuation decisions sample one extra
 level. The final search still relies on a nonrecursive continuation
