@@ -164,7 +164,7 @@ const wands=[
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
-  "AFTER HERO d20: If upright, roll d6 and turn sideways. After a reroll, REROLL again for 1 then 2 HP; use newest result.",
+  "AFTER HERO d20: If upright, roll d6; turn sideways until recharged. After a reroll, REROLL again for 1 then 2 HP; use newest result.",
   [["1–2","Misfire: lose 1 HP; nothing changes."],["3–4","Reroll the d20; use new result."],["5–6","Reroll the d20; keep higher."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
