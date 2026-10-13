@@ -30,6 +30,7 @@ jobs:
           node-version: "22"
       - name: Validate research source and canonical game
         run: |
+          node --input-type=module -e 'import {observedPrintedDataHashes} from "./src/playtest.js"; console.log("Current card signatures", observedPrintedDataHashes())'
           node --check scripts/study-v4-item-value.mjs
           node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/retained-paths.test.mjs
           npm run validate:deck
