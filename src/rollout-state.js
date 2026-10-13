@@ -193,7 +193,12 @@ export function forkExpeditionState(s,{diceSeed,deckSeed,knowledge,
  // Bounded rollout policy uses the same tuned weights but MUST NOT recurse
  // into a new rollout search. This is a policy continuation, not a new solver.
  if(fork.agentConfig){
-  fork.agentConfig={...fork.agentConfig,knowledge,budget:0};
+  // The outer decision branches every action. Optionally, each continuation
+  // replans future decisions with a smaller budget. Those child forks
+  // always use budget zero: finite two-ply search, never recursive explosion.
+  const nextBudget=s.rolloutActive?0:(fork.agentConfig.replanBudget||0);
+  fork.agentConfig={...fork.agentConfig,knowledge,budget:nextBudget,
+   replanBudget:0};
   fork.agentInformation=null;
  }
  fork.rolloutActive=true;
