@@ -44,6 +44,9 @@ const mark=(s,choice,item=null)=>{
 const burnItem=(s,tag=null)=>s.discard(1,{tag});
 const take=(s,n=1)=>s.draw(n);
 const dead=(s,n)=>s.hurt(s.chooseActor(),n);
+// Returned tucked objects were already counted when first drawn from the deck.
+const returnTucked=(s,item)=>{if(!item)return;const h=s.chooseActor();h.inventory.push(item);
+ s.consumed.delete(item);s.equip(h,item);};
 const restore=(s,n)=>s.heal(s.chooseActor(),n);
 // Called by ROOM_FATE on the printed choice. Item costs are checked here.
 export function resolveFateChoice(s,choice){
@@ -89,7 +92,7 @@ export function fateStageEntry(s,stage){
    if(entry.choice===0)s.peek(2,true);
    else dead(s,2);
   }else if(entry.choice===0){
-   if(entry.item)s.add(s.chooseActor(),entry.item);
+   returnTucked(s,entry.item);
    take(s,2);
   }else dead(s,2);
   if(!s.alive())return;
@@ -98,6 +101,8 @@ export function fateStageEntry(s,stage){
 // Return true when the Monster is dismissed before a fight.
 export function fateMonsterEntry(s,monster){
  if(monster.stage!=="DEEP")return false;
+ const spared=s.keptRooms.find(entry=>entry.card.id==="u-hollow-knight"&&entry.choice===0);
+ if(spared){complete(s,spared);return true;}
  let dismissed=false;
  for(const entry of [...s.keptRooms]){
   if(!["u-hollow-knight","m-choir-nails"].includes(entry.card.id))continue;
@@ -121,7 +126,7 @@ export function fateVaultEntry(s){
   switch(id){
   case "u-scribe-dust":v.sealCostDelta+=c===0?-1:1;break;
   case "m-ferryman-oath":
-   if(c===0){if(entry.item)s.add(s.chooseActor(),entry.item);restore(s,3);}
+   if(c===0){returnTucked(s,entry.item);restore(s,3);}
    else dead(s,3);
    break;
   case "m-hourglass":v.omen=c===0?"high":"low";break;
