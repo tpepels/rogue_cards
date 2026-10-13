@@ -39,7 +39,8 @@
     "agent:budgets": "node scripts/study-rollout-budgets.mjs",
     "art:missing": "python3 scripts/generate-illustrations.py",
     "art:check": "python3 scripts/generate-illustrations.py --list",
-    "art:test": "python3 -m unittest discover -s tests -p test_illustration_generator.py"
+    "art:test": "python3 -m unittest discover -s tests -p test_illustration_generator.py",
+    "bench:rollout-forks": "node scripts/benchmark-rollout-forks.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
