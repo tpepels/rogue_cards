@@ -25,8 +25,11 @@ test("all 139 cards supply legible complete instructions without a second manual
   if(words(f.join(" "))>70)failures.push(c.title+": more than 70 rule words");
   if(f.some(x=>x.length>135))failures.push(c.title+": single overlong instruction");
   const html=cardMarkup(c);
+  // Emphasis introduces safe <strong> elements inside a sentence; compare
+  // its exact flattened escaped text with the canonical printed source.
+  const flattened=html.replace(/<[^>]*>/g,"");
   for(const line of f){
-   if(!html.includes(line.replaceAll("&","&amp;").replaceAll("<","&lt;")
+   if(!flattened.includes(line.replaceAll("&","&amp;").replaceAll("<","&lt;")
      .replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;")))
     failures.push(c.title+": rule text absent from rendered card");
   }
