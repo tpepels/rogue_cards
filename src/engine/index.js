@@ -9,6 +9,7 @@
  */
 import {ExpeditionState} from "./expedition-state.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
+import {fateChoiceLegal} from "../room-fates.js";
 import {itemOptions} from "../item-access.js";
 import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
  from "./combat.js";
@@ -98,7 +99,8 @@ export function legalRoomChoices(s){
  if(!s.room||s.room.stage==="FINAL")return [];
  const choices=ROOM_EFFECTS[s.room.id]?.choices;
  if(!choices)throw Error("Room has no executable choices: "+s.room.id);
- const affordable=ops=>{
+ const affordable=(ops,index)=>{
+  if(s.room.v2.fate&&!fateChoiceLegal(s,s.room.id,index))return false;
   const cost=ops.reduce((sum,op)=>{
    const m=/^(COST|DISCARD):(\d+)$/.exec(op);
    return sum+(m?Number(m[2]):0);
@@ -111,7 +113,7 @@ export function legalRoomChoices(s){
     s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0||
      ops.includes("CHOIR_SILENCE")&&s.keptRooms.some(x=>x.card.id==="m-treasure"));
  };
- return choices.map((ops,i)=>affordable(ops)?i:null)
+ return choices.map((ops,i)=>affordable(ops,i)?i:null)
   .filter(i=>i!==null);
 }
 /** Resolve exactly one printed choice through the canonical effect engine. */
