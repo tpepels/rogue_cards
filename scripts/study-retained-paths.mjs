@@ -16,7 +16,7 @@ const OTHER_KEPT=[
  ["u-lantern-shrine",0],["m-second-name",0],["m-wax-bridge",0],
  ["d-apothecary",0],["d-last-bell",0],["u-rat-favor",0],
  ["u-leech-pool",0],["m-hungry-door",0],["m-beetle",0],
- ["m-treasure",1],["d-gilded",1],["u-puppet",null],["d-crown",null]
+ ["m-treasure",1],["d-gilded",1],["u-puppet",1],["d-crown",null]
 ];
 const RETAINED=[
  ...FATES.map(x=>({id:x.id,title:x.title,force:0})),
@@ -35,8 +35,16 @@ const RETURNS=[
  {id:"m-ferryman-oath",force:0,from:"return",to:"smuggle"},
  {id:"u-hollow-knight",force:0,from:"save",to:"escape"},
  {id:"m-wax-bridge",force:0,from:"use",to:"save"},
- {id:"u-puppet",force:null,from:"use",to:"save"}
+ {id:"u-puppet",force:1,from:"use",to:"save"}
 ];
+const TARGET_VAULT={
+ "u-scribe-dust":"seal-if-available",
+ "d-last-witness":"bargain-if-available",
+ "d-sleeping-crown":"unthrone-if-available",
+ "m-ferryman-oath":"smuggle-if-available",
+ "d-gilded":"smuggle-if-available"
+};
+const TARGET_RETURN={"m-ferryman-oath":{"m-ferryman-oath":"smuggle"}};
 const CHECK_PARTIES=[["wizard"],["warrior","wizard"]];
 const CHECK_STRATEGIES=["magic","treasure"];
 const PARTIES=[...HEROES.map(x=>[x.id]),
@@ -68,7 +76,7 @@ for(let i=0;i<process.argv.length;i++){
  if(!allowed.has(process.argv[i])||i+1===process.argv.length)throw Error("Unknown/missing flag "+process.argv[i]);
  i++;
 }
-const estimated=PARTIES.length*STYLES.length*coverageRuns+
+const estimated=2*PARTIES.length*STYLES.length*coverageRuns+
  (RETAINED.length+RETURNS.length)*CHECK_PARTIES.length*CHECK_STRATEGIES.length*runs*2;
 if(estimated>175000)throw Error("Split the experiment into smaller seed batches (estimate "+estimated+")");
 const seedAt=(base,i)=>((seed+Math.imul(base+1,0x85ebca6b)+
@@ -126,6 +134,8 @@ function studyRetained(){
   const s=pairStats();let seen=0,placementMismatch=0;
   for(const [ci,cohort] of subjects.entries())for(let i=0;i<runs;i++){
    const opts={...cohort,seed:seedAt(10000+ti*subjects.length+ci,i),
+    ...(TARGET_VAULT[t.id]?{vaultChoice:TARGET_VAULT[t.id]}:{}),
+    ...(TARGET_RETURN[t.id]?{returnChoices:TARGET_RETURN[t.id]}:{}),
     ...(t.force===null?{}:{forceRoomChoice:{id:t.id,choice:t.force}})};
    const a=play(opts);
    const b=play({...opts,retainedRoomAblation:t.id});
@@ -151,6 +161,7 @@ function studyReturns(){
   const s=pairStats();let placed=0,choiceMismatch=0;
   for(const [ci,cohort] of subjects.entries())for(let i=0;i<runs;i++){
    const opts={...cohort,seed:seedAt(20000+ti*subjects.length+ci,i),
+    ...(TARGET_VAULT[t.id]?{vaultChoice:TARGET_VAULT[t.id]}:{}),
     ...(t.force===null?{}:{forceRoomChoice:{id:t.id,choice:t.force}})};
    const a=play({...opts,returnChoices:{[t.id]:t.from}});
    const b=play({...opts,returnChoices:{[t.id]:t.to}});
@@ -167,7 +178,7 @@ function studyReturns(){
  }
  return records;
 }
-function studyCoverage(){
+function studyCoverage(roomPolicy="scripted"){
  const c={runs:0,wins:0,vault:0,endings:{},gates:{},
   rooms:{},roomChoices:{},roomOptions:{},
   roomRollBands:{},objectRollBands:{},
@@ -179,7 +190,7 @@ function studyCoverage(){
  for(const [pi,heroes] of PARTIES.entries()){
   for(const [si,strategy] of STYLES.entries()){
    for(let i=0;i<coverageRuns;i++){
-    const r=play({seed:seedAt(30000+pi*STYLES.length+si,i),heroes,strategy});
+    const r=play({seed:seedAt(30000+pi*STYLES.length+si,i),heroes,strategy,roomPolicy});
     c.runs++;c.wins+=Number(r.won);c.vault+=Number(reachedVault(r));
     count(c.endings,r.endingKind||"none");
     for(const key of ["smuggleAvailable","bargainAvailable","unthroneAvailable"])
@@ -230,7 +241,7 @@ function studyCoverage(){
   if(v.opportunities>0&&v.uses===0&&v.passiveTriggers===0)
    opportunityNeverUsed.push({id,opportunities:v.opportunities,acquisitions:v.acquisitions});
  }
- return {...c,winRate:c.wins/c.runs,vaultRate:c.vault/c.runs,
+ return {...c,roomPolicy,winRate:c.wins/c.runs,vaultRate:c.vault/c.runs,
   unencountered,choiceNeverLegal,choiceLegalNeverTaken,
   unobservedRoomBands,unobservedObjectBands,
   neverAcquired,opportunityNeverUsed,acquiredNoOpportunity,
@@ -259,7 +270,7 @@ function render(result){
   "|---|---|---:|---:|---:|");
  for(const r of result.returns)out.push("| "+r.id+" | "+r.from+" -> "+r.to+
   " | "+r.n+" | "+asPct(r.pairedWinDelta)+" | "+asPct(r.differentEndingRate)+" |");
- const c=result.coverage;
+ const c=result.coverage,ex=result.exploration;
  out.push("","## Natural policy path coverage","",
   "Runs: "+c.runs+" | Victory "+asPct(c.winRate)+
    " | Vault arrival "+asPct(c.vaultRate),
@@ -279,13 +290,29 @@ function render(result){
   "- Acquired Items without opportunity or passive application: "+
    (c.acquiredNoOpportunity.map(x=>x.id).join(", ")||"none"),
   "",
+  "## Deliberate random legal Room-choice exploration","",
+  "Runs: "+ex.runs+" | Victory "+asPct(ex.winRate)+
+   " | Vault arrival "+asPct(ex.vaultRate),
+  "Previously ignored Room choices that random-legal exploration selected: "+
+   c.choiceLegalNeverTaken.filter(x=>ex.roomChoices[x.id]>0).length+" / "+
+   c.choiceLegalNeverTaken.length,
+  "Room d6 bands previously unseen that random-legal exploration resolved: "+
+   c.unobservedRoomBands.filter(x=>ex.roomRollBands[x.id]>0).length+" / "+
+   c.unobservedRoomBands.length,
+  "SMUGGLE endings in exploration: "+(ex.endings.smuggled_amulet||0)+
+   "; unlocked SMUGGLE gates: "+(ex.gates.smuggleAvailable||0),
+  "UNTHRONE endings in exploration: "+(ex.endings.unthroned_warden||0),
+  "Choices still never legal across both samples: "+
+   c.choiceNeverLegal.filter(x=>!ex.roomOptions[x]).join(", "),
+  "",
   "**Interpretation:** An unobserved path is not proven unreachable. A used or frequently triggered Item is not necessarily worth its cost. Pairwise win differences are exploratory and are not adjusted for testing many Rooms.",
   "","See detail.json for per-card opportunity counts, matched confidence intervals, and example seeds where an ending changed.");
  return out.join("\n")+"\n";
 }
 const result={kind:"retained-room-path-outcome-study-v1",
  seed,runs,coverageRuns,estimated,simulated:0,commit:null,
- retained:studyRetained(),returns:studyReturns(),coverage:studyCoverage()};
+ retained:studyRetained(),returns:studyReturns(),
+ coverage:studyCoverage("scripted"),exploration:studyCoverage("uniform")};
 result.simulated=simulated;
 try{result.commit=execFileSync("git",["rev-parse","HEAD"],{
  encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();}catch{}
