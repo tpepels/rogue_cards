@@ -18,7 +18,7 @@ jobs:
           node-version: "22"
       - name: Run independent held-out comparison (all Hero combinations)
         run: |
-          npm run --silent study:planner -- 300 --all --seed 40269471 > planner-holdout.json
+          npm run --silent study:planner -- 300 --all --seed 78126014 > planner-holdout.json
           npm run --silent study:planner:report -- planner-holdout.json > planner-holdout.md
       - name: Validate sample integrity and summarize findings
         run: |
