@@ -193,8 +193,13 @@ def run(args: argparse.Namespace) -> int:
     # including after a partial run. Thereafter, chain ONLY generated images.
     completed = [c for c in cards if not c["missing"]]
     completed.sort(key=lambda c: int(c["filename"].split("_", 1)[0]))
+    # last_art = Path(args.reference) if args.reference else (
+    #    ART_DIR / completed[-1]["filename"] if completed else None)
+    default_reference = ROOT / "scripts" / "reference.jpg"
     last_art = Path(args.reference) if args.reference else (
-        ART_DIR / completed[-1]["filename"] if completed else None)
+        default_reference if default_reference.is_file() else
+            (ART_DIR / completed[-1]["filename"] if completed else None)
+            )    
     if last_art and not last_art.is_file():
         raise FileNotFoundError(last_art)
     generated = 0
