@@ -77,9 +77,9 @@ function parse(args){
  const planning=raw["--planning"]||"heuristic";
  if(!["heuristic","rollout"].includes(planning))
   throw Error("Unknown planning mode "+planning);
- const rolloutRooms=number("--rollout-rooms",2,1,3);
- const combatActions=number("--combat-actions",14,4,32);
- const combatRoomDepth=number("--combat-room-depth",0,0,2);
+ const rolloutRooms=number("--rollout-rooms",2,1,9);
+ const combatActions=number("--combat-actions",14,4,600);
+ const combatRoomDepth=number("--combat-room-depth",0,0,9);
  const workers=number("--workers",Math.min(6,Math.max(1,availableParallelism()-1)),1,16);
  const strategies=(raw["--strategies"]||"magic,treasure").split(",");
  if(new Set(strategies).size!==strategies.length||strategies.some(x=>
