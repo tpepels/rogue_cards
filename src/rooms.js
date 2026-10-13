@@ -1,6 +1,7 @@
 // Rogue Cards — canonical Room data.
 // 36 unique Rooms, 12 per region. Every Room's full outcome range is printed.
 // No new universal actions, conditions, timers or external lookup tables.
+import {ROOM_REVISIONS,EXTRA_ROOMS} from "./room-memory.js";
 const make=(stage,rows)=>rows.map(([id,title,art,kind,prompt,choices,rollLabel,outcomes,links,flavor])=>({
  id,title,art,stage,type:"room",copies:1,
  rule:prompt,flavor:flavor||"",v2:{
@@ -10,7 +11,7 @@ const make=(stage,rows)=>rows.map(([id,title,art,kind,prompt,choices,rollLabel,o
   links:links||[]
  }
 }));
-export const V2_ROOM_KINDS=Object.freeze(["HAZARD","SHRINE","MYSTERY","ENCOUNTER","LAIR","TREASURE"]);
+export const V2_ROOM_KINDS=Object.freeze(["HAZARD","SHRINE","MYSTERY","ENCOUNTER","LAIR","TREASURE","CORRIDOR"]);
 const upper=make("UPPER",[
  ["u-passage","Dripping Passage","corridor","MYSTERY","Water carries a whisper through a grate.",
   [["LISTEN","Roll d6."],["BREAK IT","Lose 2 HP; draw 1 Item."]],"LISTEN",
@@ -125,7 +126,8 @@ const deep=make("DEEP",[
   [["OPEN","Roll d6; you may reroll once after losing d6 HP. Discard Rusty Key to choose 5–6."],["SEAL","Discard 1 Item; heal d6 HP."]],"OPEN",
   [["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; each Hero heals 2 HP."]],["Rusty Key"],"It was built for you."]
 ]);
-export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map((c,i)=>({
+const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
+export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map(c=>revisions.get(c.id)||c).concat(EXTRA_ROOMS).map((c,i)=>({
  ...c,v2:{...c.v2,number:i+1}
 })));
 export const V2_REGIONS=Object.freeze(["UPPER","MIDDLE","DEEP"]);
