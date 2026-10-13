@@ -358,6 +358,37 @@ test("combat forks honor the new smuggled-Amulet ending after Warden Phase I",()
  assert.equal(s.metrics.won,true);
  assert.equal(s.metrics.monsterVisits["warden-fury"]||0,0);
 });
+test("rare BARGAIN and UNTHRONE endings are reachable with exact printed costs",()=>{
+ for(const variant of [
+  {name:"bargain",gate:"bargainAvailable",kind:"bargained_amulet",
+   tag:null,cost:2},
+  {name:"unthrone",gate:"unthroneAvailable",kind:"unthroned_warden",
+   tag:"MAGIC",cost:1}
+ ]){
+  const s=roomState("oracle",0);
+  s.beginRoom(VAULT);
+  s.monster=WARDEN;s.monsterHP=10;
+  s.vaultChoice=variant.name+"-if-available";
+  s.vaultModifiers[variant.gate]=true;
+  if(!s.discardable(variant.cost,variant.tag)){
+   const extra=OBJECTS.find(o=>!variant.tag||
+    o.v2.tags?.includes(variant.tag));
+   s.add(s.heroes[0],extra);
+  }
+  assert.ok(s.discardable(variant.cost,variant.tag));
+  const spent=s.metrics.spent;
+  const original=s.die;
+  s.die=()=>20; // Successful opposed test is deterministic, not a lucky seed.
+  const result=rolloutCombatContinuation(s,0,{action:"attack"},{
+   maxHeroActions:14,roomDepth:0});
+  s.die=original;
+  assert.equal(result.complete,true,variant.name);
+  assert.equal(result.won,true,variant.name);
+  assert.equal(s.endingKind,variant.kind,variant.name);
+  assert.equal(s.metrics.spent-spent,variant.cost,variant.name);
+  assert.equal(s.metrics.monsterVisits["warden-fury"]||0,0,variant.name);
+ }
+});
 test("combat forks can exit empty-handed without incorrectly counting victory",()=>{
  const s=roomState("oracle",0);
  s.beginRoom(VAULT);
