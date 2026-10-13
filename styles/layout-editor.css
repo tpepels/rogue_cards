@@ -1,6 +1,6 @@
 /* Browser-only editing chrome. All paper/card rendering uses the print CSS. */
 .le-page{margin:0;min-height:100vh;background:#d5c9b6;color:#1b160e;font:13px/1.45 "Courier New",monospace}
-.le-page *{box-sizing:border-box}
+.le-page .le-head *,.le-page .le-navigator *,.le-page .le-inspector *,.le-page .le-bottom *{box-sizing:border-box}
 .le-head{display:flex;gap:24px;align-items:center;justify-content:space-between;padding:18px 24px;background:#18140f;color:#f4ecdf;flex-wrap:wrap}
 .le-head h1{font:900 27px/.98 "Courier New",monospace;margin:5px 0 7px}
 .le-head p{margin:0;max-width:610px;font-size:12px}
