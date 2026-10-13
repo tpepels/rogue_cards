@@ -108,7 +108,8 @@ export function legalRoomChoices(s){
    (!ops.some(op=>["FUNGUS_BURN","CHOIR_SILENCE",
      "BOOKCASE_FIRE_OR_SCROLL"].includes(op))||
     s.has("torch")||s.has("lantern-heart")||
-    s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
+    s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0||
+     ops.includes("CHOIR_SILENCE")&&s.keptRooms.some(x=>x.card.id==="m-treasure"));
  };
  return choices.map((ops,i)=>affordable(ops)?i:null)
   .filter(i=>i!==null);
