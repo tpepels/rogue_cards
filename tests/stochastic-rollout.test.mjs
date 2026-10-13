@@ -4,7 +4,7 @@ import {ExpeditionState} from "../src/expedition-runtime.js";
 import {HEROES,MONSTERS,ROOMS,WARDEN,VAULT,OBJECTS} from "../src/tabletop-data.js";
 import {forkExpeditionState,prepareRolloutDecks,cloneRolloutState,
  sampleRolloutDecks} from "../src/rollout-state.js";
-import {rolloutRoomContinuation,rolloutCombatContinuation}
+import {rolloutRoomContinuation,rolloutCombatContinuation,simulateFullExpedition}
  from "../src/expedition-campaign.js";
 import {pairedRoomRollouts,pairedCombatRollouts}
  from "../src/rollout-evaluator.js";
