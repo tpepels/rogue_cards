@@ -176,8 +176,9 @@ function makePartyResults(rows){
 }
 function validate(plan,rows,parties,items){
  const errors=[],warnings=[];
- const expected=plan.seeds.length*plan.strategies.length*plan.policies.length*
-  plan.partyCount*(1+(plan.seatRuns>0?28/36:0));
+ const expected=plan.seeds.length*plan.strategies.length*(
+  plan.policies.length*plan.partyCount+
+  (plan.seatRuns>0?plan.seatPolicies.length*28:0));
  if(rows.length!==expected)errors.push("Cohort count mismatch: "+rows.length+" vs "+expected);
  const counted=rows.reduce((n,r)=>n+r.n,0);
  if(counted!==plan.plannedExpeditions)
@@ -321,6 +322,7 @@ export function renderSummary(r){
  "Batch seeds: "+r.plan.seeds.join(", "),
  "Strategies: "+r.plan.strategies.join(", "),
  "Policies: "+r.plan.policies.join(", "),
+ "Pair orientation checks (policies): "+r.plan.seatPolicies.join(", "),
  "Trials per canonical cohort / seed: "+r.plan.runs,
  "Seat reversal trials / cohort / seed: "+r.plan.seatRuns,
  "Total simulated expeditions: "+r.totalExpeditions.toLocaleString("en-US"),
