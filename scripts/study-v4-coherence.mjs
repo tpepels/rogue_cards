@@ -28,7 +28,9 @@ const ARMS=[
  {id:"bargain",vaultChoice:"bargain-if-available"},
  {id:"unthrone",vaultChoice:"unthrone-if-available"},
  {id:"smuggle-route",roomPolicy:"second-when-legal",
-  vaultChoice:"smuggle-if-available"}
+  vaultChoice:"smuggle-if-available"},
+ {id:"smuggle-targeted",vaultChoice:"smuggle-if-available",
+  forceRoomChoice:{id:"d-gilded",choice:1}}
 ];
 const FATES=ROOMS.filter(r=>r.v2.fate);
 const strategies=["survival","treasure","magic","seal","negotiation"];
@@ -107,6 +109,7 @@ function empty(){
  return {n:0,wins:0,vault:0,deep:0,rolls:0,rerollDamage:0,
   trapdoors:0,skippedRoomVictories:0,elberethAttempts:0,
   elberethSuccesses:0,elberethFailures:0,elberethFlees:0,
+  interventionSeen:0,interventionBothLegal:0,
   endings:{},failures:{},roomChoices:{},roomOpportunities:{},
   fateChoices:{},vaultGateSeen:{},vaultGateWins:{},
   objectAcquisitions:{},objectActivations:{},monstersSeen:{}};
@@ -123,6 +126,8 @@ function record(out,r){
  out.elberethSuccesses+=r.elberethSuccesses;
  out.elberethFailures+=r.elberethFailures;
  out.elberethFlees+=r.elberethFlees;
+ out.interventionSeen+=Number(!!r.choiceComparison?.seen);
+ out.interventionBothLegal+=Number(!!r.choiceComparison?.bothLegal);
  add(out.endings,r.endingKind||"none");
  if(!r.won)add(out.failures,r.failureCause||"unspecified");
  for(const [key,n] of Object.entries(r.roomChoices))add(out.roomChoices,key,n);
@@ -167,7 +172,8 @@ function collectBroad(c){
     const r=simulateFullExpedition({seed,heroes,strategy,
      roomPolicy:arm.roomPolicy??"scripted",
      heroAbilityMode:arm.heroAbilityMode??"policy",
-     vaultChoice:arm.vaultChoice??"policy"});
+     vaultChoice:arm.vaultChoice??"policy",
+     forceRoomChoice:arm.forceRoomChoice??null});
     assertValid(r,arm.id+" / "+heroes.join("+")+"/"+strategy+"/seed"+seed);
     record(out,r);record(cohort,r);
     winSequence.push(Number(r.won));
@@ -304,7 +310,19 @@ function render(result){
   "SMUGGLE gate unlocked: "+
   (broad.arms["smuggle-route"].vaultGateSeen.smuggle||0)+
   "; ending achieved: "+
-  (broad.arms["smuggle-route"].endings.smuggled_amulet||0)+".");
+  (broad.arms["smuggle-route"].endings.smuggled_amulet||0)+".",
+  "",
+  "The targeted policy changes only the Gilded Hallway option, "+
+  "and takes SMUGGLE if later affordable. It leaves all other "+
+  "Room choices scripted.",
+  "Gilded Hallway encountered: "+
+  broad.arms["smuggle-targeted"].interventionSeen+
+  "; both options legal: "+
+  broad.arms["smuggle-targeted"].interventionBothLegal+
+  "; gate unlocked: "+
+  (broad.arms["smuggle-targeted"].vaultGateSeen.smuggle||0)+
+  "; ending achieved: "+
+  (broad.arms["smuggle-targeted"].endings.smuggled_amulet||0)+".");
  out.push("","## Diagnostics",
   "- Counterfactual estimates include affordability and identical pre-choice-state checks.",
   "- A zero count for a rare ending can mean lack of prerequisite encounters or resources, not a broken ending.",
