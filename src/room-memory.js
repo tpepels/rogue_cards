@@ -8,7 +8,7 @@ const rows=[
   "mushroom",
   "Mushrooms mimic familiar faces.",
   "PRESERVE",
-  "Keep this Room. Before entering a later Room, discard it to heal 3 HP; or discard a FIRE Item with it to draw 2 Items and cure POISONED.",
+  "Keep this Room. Before a later Room, discard it: heal 3 HP; or discard FIRE too: draw 2 Items, cure POISONED.",
   "PICK",
   "Roll d6 to harvest now.",
   "HARVEST",
@@ -150,7 +150,7 @@ const rows=[
   "CLIMB",
   "Reveal 2 Rooms; enter 1. If LAIR, gain ADV on your first attack; otherwise draw 1 Item.",
   "TAKE THE SHAFT",
-  "Roll d6. 1: Vault, lose 2d6 HP; 2–3: DEEP, lose 2 HP and face a Monster; 4–5: DEEP safely; 6: DEEP with 2 Items. Skip remaining Rooms.",
+  "Roll d6 for the shaft. Skip remaining Rooms; resolve the destination below.",
   "SHAFT",
   "shaft"
  ],
@@ -178,7 +178,7 @@ const rows=[
   "PROMISE",
   "Reveal 2 Rooms. Enter 1. After your next Monster, enter the other.",
   "CURSED PASSAGE",
-  "Roll d6. 1–2: DEEP Monster; 3–4: visit a MIDDLE Room's d6 result, then return; 5–6: find a cache with 2 Items. Continue DEEP.",
+  "Roll d6 for a cursed detour, then continue DEEP.",
   "CURSED",
   "cursed"
  ],
@@ -192,7 +192,7 @@ const rows=[
   "GAMBLE",
   "Reveal 2 Rooms; enter 1. If the discarded Room is TREASURE, draw 1 Item.",
   "MAP EXIT",
-  "Reveal 2 Rooms; enter 1. Keep this Room. After Warden Phase I, you may discard this Room and 2 Items (one MAGIC) to SMUGGLE the Amulet.",
+  "Reveal 2 Rooms; enter 1. Keep this Room. After Warden Phase I, discard it and 2 Items (one MAGIC) to SMUGGLE.",
   "MAP EXIT",
   "path"
  ],
