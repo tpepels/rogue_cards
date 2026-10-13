@@ -39,7 +39,7 @@ const gitSha=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{encoding:"
 const hashConfig=x=>createHash("sha256").update(JSON.stringify(x)).digest("hex");
 function parse(args){
  const allowed=new Set(["--runs","--workers","--hours","--out",
-  "--seed","--chunk-size","--budget","--replan-budget"]);
+  "--seed","--chunk-size","--budget","--replan-budget","--knowledge"]);
  const values={},flags=new Set();
  for(let i=0;i<args.length;i++){
   const k=args[i];
@@ -56,7 +56,10 @@ function parse(args){
    throw Error("Invalid "+key+" (requires integer "+min+".."+max+")");
   return n;
  };
- const c={runs:integer("--runs",800,1,10000),
+ const knowledge=values["--knowledge"]??"oracle";
+ if(!["fair","oracle"].includes(knowledge))
+  throw Error("--knowledge must be fair or oracle");
+ const c={knowledge,runs:integer("--runs",800,1,10000),
   workers:integer("--workers",Math.min(7,availableParallelism()),1,16),
   hours:integer("--hours",10,1,72),
   seed:integer("--seed",20261014,1,0xffffffff),
@@ -70,8 +73,8 @@ function parse(args){
  c.plannedExpeditions=2*c.plannedPairs;
  if(c.plannedPairs>1160000)throw Error("Split the workload into separately seeded studies");
  c.study={schema:1,runs:c.runs,seed:c.seed,chunkSize:c.chunkSize,
-  budget:c.budget,replanBudget:c.replanBudget,strictTerminal:true,
-  printedCards:[...CARDS.map(uid)]};
+  budget:c.budget,replanBudget:c.replanBudget,knowledge:c.knowledge,
+  strictTerminal:true,printedCards:[...CARDS.map(uid)]};
  c.signature=hashConfig(c.study);
  return c;
 }
@@ -84,7 +87,7 @@ function jobs(c){
  return result;
 }
 function config(c){
- return validateAgentConfig({knowledge:"fair",planning:"rollout",
+ return validateAgentConfig({knowledge:c.knowledge,planning:"rollout",
   budget:c.budget,replanBudget:c.replanBudget,strictTerminal:true,
   rolloutRooms:9,combatActions:600,combatRoomDepth:9,
   weights:{...AGENT_WEIGHTS},samplingSeed:0x4a6f792d});
@@ -288,7 +291,7 @@ function summary(c,finished){
    "equipment and postcombat Item decisions"
   ]};
  const completed=allCards.every(x=>x.complete),enough=allCards.every(x=>x.eligible>=500);
- return {schema:"oracle-card-audit-v1",seed:c.seed,
+ return {schema:"oracle-card-audit-v1",seed:c.seed,knowledge:c.knowledge,
   plannedPairedTrials:c.plannedPairs,
   actualPairedTrials:allCards.reduce((n,x)=>n+x.tried,0),
   eligiblePairedTrials:allCards.reduce((n,x)=>n+x.eligible,0),
@@ -358,7 +361,7 @@ async function main(){
  const tasks=jobs(c),s=JSON.stringify({pairs:c.plannedPairs,
   games:c.plannedExpeditions,cards:CARDS.length,
   chunks:tasks.length,workers:c.workers,hours:c.hours,
-  budget:c.budget,replanBudget:c.replanBudget,
+  budget:c.budget,replanBudget:c.replanBudget,knowledge:c.knowledge,
   estimatedSampledBranches:"unbounded in advance; monitor actual telemetry",
   warning:"Existing search does not branch all printed timings; explicit coverage gaps remain."},null,2);
  process.stderr.write(s+"\n");
