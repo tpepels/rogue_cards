@@ -7,7 +7,7 @@
  * Deep:     node scripts/validate-local.mjs --preset deep
  * Options: --seeds 11,22,33 --runs 1000 --workers 8 --out results/my-study
  *          --strategies magic,treasure --policies scripted,cautious,bold
- *          --seat-runs 50 --skip-tests --dry-run
+ *          --seat-runs 50 --seat-policies scripted,cautious --skip-tests --dry-run
  */
 import {Worker,isMainThread,parentPort,workerData} from "node:worker_threads";
 import {availableParallelism} from "node:os";
@@ -43,7 +43,7 @@ export const PARTIES=Object.freeze([
 const PROFILES=Object.freeze({
  smoke:{runs:10,seedCount:2,strategies:["magic","treasure"],policies:["scripted","cautious"],seatRuns:4},
  standard:{runs:250,seedCount:6,strategies:["magic","treasure"],policies:["scripted","cautious","balanced","bold"],seatRuns:40},
- deep:{runs:500,seedCount:10,strategies:["survival","treasure","magic","seal","negotiation"],
+ deep:{runs:300,seedCount:10,strategies:["survival","treasure","magic","seal","negotiation"],
   policies:Object.keys(RESEARCH_POLICIES),seatRuns:80}
 });
 export const stableSeed=(batchSeed,strategyIndex,partyIndex,iteration)=>(
@@ -138,6 +138,7 @@ async function workerMain(){
     row.seatSubsetWins+=Number(result.won);
    }
   }
+  if(task.reversed)row.item={}; // Seat-order diagnostic needs outcomes, not per-card telemetry.
   parentPort.postMessage({type:"result",row:{winBits:outcomes.toString("base64"),
    batchSeed:task.seed,
    strategy:task.strategy,policy:task.policy,party:task.party.join("+"),
@@ -149,11 +150,12 @@ function usage(){
  return "Usage: npm run validate:local -- [--preset smoke|standard|deep] "+
   "[--runs N] [--seeds N,N,... | --seed-count N --seed-base UINT32] "+
   "[--workers 1..16] [--out PATH] [--strategies LIST] [--policies LIST] "+
-  "[--seat-runs N] [--skip-tests] [--progress] [--dry-run]";
+  "[--seat-runs N] [--seat-policies LIST] [--skip-tests] [--progress] [--dry-run]";
 }
 function argvOptions(args){
  const known=["--preset","--runs","--seeds","--seed-count","--seed-base",
-  "--workers","--out","--strategies","--policies","--seat-runs"];
+  "--workers","--out","--strategies","--policies","--seat-runs",
+  "--seat-policies"];
  const switches=["--skip-tests","--progress","--dry-run"];
  const opts={},flags=new Set();
  for(let i=0;i<args.length;i++){
@@ -194,16 +196,19 @@ function argvOptions(args){
  const strategies=selections("--strategies",
   ["survival","treasure","magic","seal","negotiation"],defaults.strategies);
  const policies=selections("--policies",Object.keys(RESEARCH_POLICIES),defaults.policies);
+ const seatPolicies=selections("--seat-policies",policies,
+  policies.filter(p=>["scripted","cautious"].includes(p)).length?
+   policies.filter(p=>["scripted","cautious"].includes(p)):[policies[0]]);
  const workers=positive(opts["--workers"]??Math.min(4,Math.max(1,availableParallelism()-1)),
   "workers",1,16);
  const out=resolve(opts["--out"]||"results/validation-"+preset);
  const total=seeds.length*strategies.length*policies.length*
   PARTIES.length*runs;
- const seatN=seeds.length*strategies.length*policies.length*28*
+ const seatN=seeds.length*strategies.length*seatPolicies.length*28*
   Math.min(seatRuns,runs);
  if(total+seatN>50000000)throw Error("Refusing more than 50 million simulations in one run");
  return {preset,runs,seatRuns:Math.min(seatRuns,runs),seeds,strategies,
-  policies,workers,out,skipTests:flags.has("--skip-tests"),
+  policies,seatPolicies,workers,out,skipTests:flags.has("--skip-tests"),
   progress:flags.has("--progress"),dryRun:flags.has("--dry-run"),
   plannedExpeditions:total+seatN,primaryExpeditions:total,
   reversedSeatExpeditions:seatN};
@@ -243,7 +248,7 @@ async function main(){
  for(const policy of options.policies){
   tasks.push({seed,bi,strategy,strategyIndex:si,party,partyIndex:pi,
    policy,runs:options.runs,seatRuns:options.seatRuns,reversed:false});
-  if(party.length===2&&options.seatRuns>0)
+  if(party.length===2&&options.seatRuns>0&&options.seatPolicies.includes(policy))
    tasks.push({seed,bi,strategy,strategyIndex:si,party,partyIndex:pi,
     policy,runs:options.seatRuns,seatRuns:options.seatRuns,reversed:true});
  }
