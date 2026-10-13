@@ -191,9 +191,9 @@ const rows=[
   "Gilt conceals an old door.",
   "GAMBLE",
   "Reveal 2 Rooms; enter 1. If the discarded Room is TREASURE, draw 1 Item.",
-  "PLAY SAFE",
-  "Roll d6. Reveal 2 Rooms; enter 1.",
-  "PLAY SAFE",
+  "MAP EXIT",
+  "Reveal 2 Rooms; enter 1. Keep this Room. After Warden Phase I, you may discard this Room and 2 Items (one MAGIC) to SMUGGLE the Amulet.",
+  "MAP EXIT",
   "path"
  ],
  [
@@ -260,7 +260,7 @@ const rows=[
   "stairs",
   "The bridge is slowly melting.",
   "SAVE",
-  "Keep this Room. When a Monster appears, discard it and lose 1 HP to escape.",
+  "Keep this Room. Discard it to escape a Monster for 1 HP; or at Broken Bridge to avoid falling and draw 1 Item.",
   "CROSS",
   "Roll d6 now.",
   "CROSS",
