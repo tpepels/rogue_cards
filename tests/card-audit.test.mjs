@@ -28,7 +28,7 @@ test("Phase 5 corrected actual ambiguous card text rather than changing general 
  const altar=ROOMS.find(r=>r.id==="m-altar");
  const well=ROOMS.find(r=>r.id==="u-fountain");
  const singing=ROOMS.find(r=>r.id==="m-treasure");
- assert.match(text(garden),/discard it to heal 3 HP/);
+ assert.match(text(garden),/discard it: heal 3 HP/);
  assert.match(text(altar),/1 other Item.*equipped CURSED Item/);
  assert.match(text(well),/REROLL.*new result/);
  assert.match(text(singing),/roll twice and choose either result/);
