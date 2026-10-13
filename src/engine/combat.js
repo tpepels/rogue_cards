@@ -13,7 +13,11 @@ const rollD20=(s,{adv=false,dis=false}={})=>{
 export function blessBeforeD20(s,target){
  const priest=s.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
  if(!priest)return {bonus:0,adv:false};
- priest.used.add("hero");const d=s.die();
+ priest.used.add("hero");
+ if(s.heroMode(priest)==="steady"&&priest.hp>1){
+  s.hurt(priest,1);return {bonus:2,adv:false};
+ }
+ const d=s.die();
  if(d<=2){s.hurt(priest,Math.ceil(s.die()/2));return {bonus:0,adv:false};}
  if(d<=4)return {bonus:2,adv:false};
  target.poison=false;return {bonus:0,adv:true};
@@ -25,11 +29,15 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const blessing=blessBeforeD20(s,h);extraAtk+=blessing.bonus;
  let rogueAdv=false,rogueDis=false;
  if(h.card.id==="rogue"&&!h.used.has("hero")){
-  h.used.add("hero");const d=s.die();
-  if(d<=2)rogueDis=true;else rogueAdv=true;
-  if(d>=5){
-   const r=rollD20(s,{adv:true}),op=s.die(20);
-   if(r===20||r!==1&&r+h.card.wit>op+def)s.draw();
+  h.used.add("hero");
+  if(s.heroMode(h)==="steady"&&s.discardable()){
+   s.discard();rogueAdv=true;
+  }else{const d=s.die();
+   if(d<=2)rogueDis=true;else rogueAdv=true;
+   if(d>=5){
+    const r=rollD20(s,{adv:true}),op=s.die(20);
+    if(r===20||r!==1&&r+h.card.wit>op+def)s.draw();
+   }
   }
  }
  const adv=attackAdv||rogueAdv||h.nextAdv>0||blessing.adv;
@@ -62,7 +70,9 @@ export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
   (s.strategy==="magic"||s.monsterHP>=8)){
-  h.used.add("hero");const d=s.die();
+  h.used.add("hero");
+  if(s.heroMode(h)==="steady"){s.monsterHP-=2;return;}
+  const d=s.die();
   if(d<=2)s.hurt(h,Math.ceil(s.die()/2));else if(d<=4)s.monsterHP-=s.die()+2;
   else{s.monsterHP-=s.die()+s.die();s.monsterSkip++;}
   return;
@@ -83,8 +93,11 @@ export function playerAttack(s,h){
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
  if(h.card.id==="warrior"&&!h.used.has("hero")){
-  h.used.add("hero");const d=s.die();
-  if(d<=2)s.hurt(h,2);else if(d<=4)dmg+=2;else dmg+=s.die();
+  h.used.add("hero");
+  if(s.heroMode(h)==="steady"&&h.hp>1){s.hurt(h,1);dmg+=2;}
+  else{const d=s.die();
+   if(d<=2)s.hurt(h,2);else if(d<=4)dmg+=2;else dmg+=s.die();
+  }
  }
  for(const card of [h.slots.weapon,h.slots.companion]){
   if(card&&["sword","dog"].includes(card.id)&&!h.used.has(card)){
@@ -190,13 +203,17 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
   s.activate(h,h.slots.armour);
  const knight=s.pendingDamage>0?s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero")):null;
  if(knight){
-  knight.used.add("hero");const d=s.die();
+  knight.used.add("hero");
+  if(s.heroMode(knight)==="steady"&&knight.hp>1){
+   s.hurt(knight,1);s.pendingDamage=Math.max(0,s.pendingDamage-3);
+  }else{const d=s.die();
   if(d<=2){
    if(knight===h)s.pendingDamage=2;
    else{s.hurt(knight,2);s.pendingDamage=0;}
   } else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
   else if(d===5)s.pendingDamage=0;
   else{s.pendingDamage=0;s.forcedBehavior=1;}
+  }
  }
  const done=s.hurt(h,s.pendingDamage);
  if(poison&&done>0&&!h.immune)h.poison=true;
@@ -223,11 +240,15 @@ export function monsterRespond(s,h){
  // STILLNESS on the first harmless result. Preserve the gamble: 1-2 hurts.
  const dangerous=face>=3||m.id==="warden-fury";
  if(monk&&dangerous){
-  monk.used.add("hero");const d=s.die();
+  monk.used.add("hero");
+  if(s.heroMode(monk)==="steady"&&face>=5&&monk.hp>2){
+   s.hurt(monk,2);face=4;
+  }else{const d=s.die();
   if(d<=2)s.hurt(monk,2);
   else if(d<=4&&face>=5)face=4;
   else if(d===5){face=1;s.heal(monk,2);}
   else if(d===6){s.heal(monk,2);return;}
+  }
  }
  const band=face<=2?0:face<=4?1:face===5?2:3;
  const hit=(o={})=>monsterAttack(s,a,o);
