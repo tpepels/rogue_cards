@@ -309,6 +309,9 @@ export class ExpeditionState {
  activate(h,card,{face=null,consume=true,mode="printed",record=true}={}){
   if(!h.inventory.includes(card))throw Error("Object not owned "+card.id);
   if(!card.v2.roll)throw Error("Non-dice card "+card.id+" needs its printed direct trigger");
+  // Keys and door magic cannot force a d6 result on a Room without a printed table.
+  // Reject before using, exhausting, or consuming the Object.
+  if(!this.room?.v2.roll&&["scroll-unlock","wand-door"].includes(card.id))return false;
   if(card.v2.kind==="WAND"&&this.exhausted.has(card))return false;
   if(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card))return false;
   const before=this.itemSnapshot(h);
@@ -543,6 +546,9 @@ export class ExpeditionState {
   }
   roomRoll(forced=null){
   if(!this.room)throw Error("Room roll without Room");
+  // Persistent choice Rooms intentionally have no d6 results. An incidental
+  // item effect or engine probe must not roll dice or change their choices.
+  if(!this.room.v2.roll)return false;
   let face=typeof forced==="number"?forced:this.die();
    if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
     const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
