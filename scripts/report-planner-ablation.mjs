@@ -69,7 +69,7 @@ for(const [name,x] of Object.entries(r.groups.all.effects.pairwise)){
   pp(x.ci95[0])+", "+pp(x.ci95[1])+"] |");
 }
 lines.push("","## 4. All sixteen configurations","",
- "| Bits (R,C,P,S) | Enabled | Overall wins | Magic solo | Magic duo | Treasure solo | Treasure duo |",
+ "| Binary mask (SEAL, PARLEY, Combat, Room) | Enabled | Overall wins | Magic solo | Magic duo | Treasure solo | Treasure duo |",
  "|---|---|---:|---:|---:|---:|---:|");
 for(const conf of r.configs){
  const i=conf.mask, label=conf.enabled.length?conf.enabled.map(nice).join(", "):"none";
