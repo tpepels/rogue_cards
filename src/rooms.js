@@ -27,7 +27,7 @@ const upper=make("UPPER",[
   [["SOOTHE","Roll d6 before combat. With Loyal Hound, choose 5–6."],["FIGHT","If you win, draw 1 Item."]],"SOOTHE",
   [["1–2","It attacks! Fight the Monster."],["3–4","It leaves. Discard the Monster."],["5–6","Discard the Monster; draw 1 Item."]],["Loyal Hound"],"They consider you enormous."],
  ["u-shrine","Abandoned Shrine","altar","SHRINE","An empty bowl waits for an offering.",
-  [["PRAY","Roll d6."],["OFFER","Discard 1 Item; heal d6 HP. If it was CURSED, straighten a Wand too."]],"PRAY",
+  [["PRAY","Roll d6."],["OFFER","Discard 1 Item; heal d6 HP. If it was CURSED, recharge a Wand too."]],"PRAY",
   [["1–2","The god bites. Lose d6 HP."],["3–4","It forgives. Heal d6 HP."],["5–6","Cleanse 1 CURSED Item; heal 2 HP."]],["cursed Items","Antidote"],"Even silence expects a gift."],
  ["u-fall","Collapsing Stairs","stairs","HAZARD","A tempting shaft descends into the dark.",
   [["JUMP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose 1 HP; peek at the next Room."]],"JUMP",
