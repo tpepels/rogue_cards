@@ -65,6 +65,21 @@ test("checkpoint/resume skips finished chunks and reproduces paired outcomes",()
   assert.match(different.stderr,/Resume parameters differ/);
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
+test("large rollout plans are explicitly gated before creating any output",()=>{
+ const root=mkdtempSync(join(tmpdir(),"rogue-expensive-gate-"));
+ try{
+  const out=join(root,"should-not-exist");
+  const args=["--runs","100","--seeds","71001,72001,73001",
+   "--budgets","0,8,32,128","--workers","4","--out",out];
+  const result=cli(args);
+  assert.notEqual(result.status,0);
+  assert.match(result.stderr,/hypothetical samples PER applicable decision/);
+  assert.ok(!existsSync(out),"Oversized study should not create partial results");
+  const dry=cli([...args,"--dry-run"]);
+  assert.equal(dry.status,0,dry.stderr);
+  assert.match(dry.stderr,/"chanceSamplesPerDecision": 7257600/);
+ }finally{rmSync(root,{recursive:true,force:true})}
+});
 test("local fixed-weight budget smoke compares fair and Oracle on identical seeds",()=>{
  const dir=mkdtempSync(join(tmpdir(),"rogue-rollout-budgets-"));
  try{
