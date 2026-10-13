@@ -51,6 +51,7 @@ export function itemOptions(s,h,phase){
    if(s.room?.stage!=="FINAL"&&scouts.has(id)&&id!=="scroll-reveal"&&
     (id!=="ring-eye"||equipped(h,card))&&(id!=="raven"||equipped(h,card)))push(card,"scout");
    if(s.room?.stage!=="FINAL"&&id==="scroll-reveal")push(card,"scout");
+   if(s.room?.stage!=="FINAL"&&id==="scroll-mischief")push(card,"exploration-action");
    if(s.room?.v2.kind==="ENCOUNTER"&&encounter.has(id)&&
     (id!=="ring-bargain"||equipped(h,card))&&
     (id!=="goblin-pet"||equipped(h,card)))push(card,"encounter");
@@ -79,13 +80,17 @@ export function itemOptions(s,h,phase){
   }else if(phase==="on-poison"){
    if(recover.has(id)&&(id==="needle"||equipped(h,card))&&h.poison)
     push(card,"poison-reaction");
+  }else if(phase==="after-magic"){
+   if(id==="ring-hunger"&&equipped(h,card))push(card,"magic-reaction");
   }else if(phase==="room-roll"){
    if(id==="ring-echo"&&equipped(h,card))push(card,"room-reroll");
   }else if(phase==="between-rooms"){
    if(kind==="POTION")push(card,"drink");
    if(id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
   }else if(phase==="passive"){
-   if(passive.has(id)&&(!["staff","cursed-blade","mail","cursed-mail"].includes(id)||equipped(h,card)))
+   if(passive.has(id)&&(["staff","cursed-blade","mail","cursed-mail"].includes(id)?
+      equipped(h,card):
+      card.v2.links.includes(s.room?.id)))
     push(card,"passive");
   }
  }
@@ -96,7 +101,8 @@ export const ITEM_TIMING=Object.freeze(Object.fromEntries(OBJECTS.map(card=>{
  let phases=[];
  if(actions.has(id)||id==="spore-jar"||id==="torch"||id==="lantern-heart"||
   id==="needle"||card.v2.kind==="WAND"||card.v2.kind==="POTION")phases.push("combat");
- if(scouts.has(id)||encounter.has(id)||id==="staff"||id==="lantern-heart")phases.push("explore");
+ if(scouts.has(id)||encounter.has(id)||id==="staff"||id==="lantern-heart"||
+   id==="scroll-mischief")phases.push("explore");
  if(["key","rope","torch","lantern-heart","crowbar","scroll-unlock","wand-door",
    "scroll-flame","scroll-frost","scroll-lightning","spore-jar"].includes(id))
   phases.push("room-choice");
@@ -108,6 +114,7 @@ export const ITEM_TIMING=Object.freeze(Object.fromEntries(OBJECTS.map(card=>{
  if(id==="ring-ashes")phases.push("on-attack");
  if(recover.has(id))phases.push("on-poison");
  if(id==="ring-echo")phases.push("room-roll");
+ if(id==="ring-hunger")phases.push("after-magic");
  if(["needle"].includes(id)||card.v2.kind==="POTION")phases.push("between-rooms");
  if(passive.has(id))phases.push("passive");
  // Passive attack/defence buffs can also be used without an explicit activation.
