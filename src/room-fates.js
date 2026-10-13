@@ -36,6 +36,18 @@ export const FATE_ROOMS=Object.freeze(rows.map(([id,stage,title,art,kind,prompt,
  v2:{kind,prompt,choices:choices.map(([label,effect])=>({label,effect})),
   roll:null,links:[],fate:true}
 })));
+/** Whether a retained-Room choice can actually pay its printed Item cost.
+ * Shared by the physical-effect runner and the future computer-game API.
+ * This is a pure legality query: it never discards or rolls anything.
+ */
+export function fateChoiceLegal(s,roomId,choice){
+ if(![0,1].includes(choice))return false;
+ if(choice===0&&["u-scribe-dust","u-bone-seed","m-ferryman-oath"].includes(roomId))
+  return s.discardable(1);
+ if(choice===1&&roomId==="d-sleeping-crown")
+  return s.discardable(1,"MAGIC");
+ return true;
+}
 const mark=(s,choice,item=null)=>{
  const entry={card:s.room,choice,item};
  s.keptRooms.push(entry);
@@ -52,13 +64,12 @@ const restore=(s,n)=>s.heal(s.chooseActor(),n);
 export function resolveFateChoice(s,choice){
  const id=s.room.id;
  if(![0,1].includes(choice))throw Error("Invalid fate choice on "+id);
- const itemCost=(choice===0&&["u-scribe-dust","u-bone-seed","m-ferryman-oath"].includes(id))||
-  (choice===1&&id==="d-sleeping-crown");
- const itemTag=id==="d-sleeping-crown"?"MAGIC":null;
- if(itemCost&&!s.discardable(1,itemTag)){
-  // If an Item is required, choose the affordable printed alternative.
+ if(!fateChoiceLegal(s,id,choice)){
+  // Keep backward compatibility for direct printed-effect calls: use the
+  // affordable other choice. UI / agent legality checks prevent selecting
+  // an unaffordable option in the first place.
   choice=1-choice;
-  if(choice===1&&id==="d-sleeping-crown")choice=0;
+  if(!fateChoiceLegal(s,id,choice))return;
  }
  let tucked=null;
  switch(id){
