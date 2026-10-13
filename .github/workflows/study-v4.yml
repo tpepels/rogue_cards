@@ -6,12 +6,12 @@ on:
       runs:
         description: "Full expeditions per party / strategy / policy (1-200)"
         type: number
-        default: 15
+        default: 80
         required: true
       choice_runs:
         description: "Matched initial seeds per retained fate Room (1-1000)"
         type: number
-        default: 250
+        default: 1000
         required: true
       seed:
         description: "Starting seed"
@@ -43,8 +43,8 @@ jobs:
         run: node --test tests/v4-coherence.test.mjs
       - name: Study V4 policy coherence and matched choices
         env:
-          RUNS: ${{ inputs.runs || '15' }}
-          CHOICE_RUNS: ${{ inputs.choice_runs || '250' }}
+          RUNS: ${{ inputs.runs || '80' }}
+          CHOICE_RUNS: ${{ inputs.choice_runs || '1000' }}
           STUDY_SEED: ${{ inputs.seed || '20261013' }}
           PARTY_SET: ${{ inputs.party_set || 'compact' }}
         run: |
