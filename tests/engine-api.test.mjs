@@ -57,10 +57,12 @@ test("Every canonical printed die face resolves exactly one indexed outcome",()=
  assert.throws(()=>d6Band(first,1),/No d6/);
 });
 test("Public snapshot contains no RNG or future hidden Room / Item identities",()=>{
- const s=createGame({seed:47112,heroes:["warrior","wizard"],strategy:"magic"});
+ const s=createGame({seed:47112,heroes:["warrior","wizard"]});
  const p=observeGame(s);
  assert.equal(p.phase,"between-rooms");
  assert.equal(p.heroes.length,2);
+ assert.throws(()=>createGame({seed:1,researchPolicy:"agent"}),/Unknown public game option/);
+ assert.throws(()=>createGame({seed:1,extraObjectId:"sword"}),/Unknown public game option/);
  assert.equal(p.inventoryDeckRemaining,s.deck.length);
  assert.ok(!("rng" in p));
  assert.ok(!("deck" in p));
