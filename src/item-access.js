@@ -43,7 +43,7 @@ export function itemOptions(s,h,phase){
    if(s.monster&&id==="lantern-heart")push(card,"lantern-skip");
    if(s.monster&&id==="lantern-heart"&&s.exhaustedWand())push(card,"lantern-recharge");
    // OVERCHARGE is printed on every Wand: only when upright; not a normal roll.
-   if(s.monster&&kind==="WAND"&&h.hp>1)push(card,"overcharge");
+   if(s.monster&&kind==="WAND"&&actions.has(id)&&h.hp>1)push(card,"overcharge");
    // Potions and printed non-combat tools may consume a combat action.
    if(s.monster&&kind==="POTION")push(card,"drink");
    if(s.monster&&id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
