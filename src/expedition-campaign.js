@@ -157,6 +157,12 @@ function setupPrepared(s){
   const sight=itemIn(s,x,"scroll-reveal");
   if(sight&&(s.strategy==="treasure"||s.strategy==="seal")&&s.room.stage!=="FINAL")
    rollItem(s,x,sight);
+  // Misprint can be read outside combat; the old simulator had no branch.
+  if(plannerUses(s,"combat")&&s.room.stage!=="FINAL"&&!s.monster&&
+      x.hp<=x.card.hp*.6&&x.inventory.length<=3){
+   const chaos=itemIn(s,x,"scroll-mischief");
+   if(chaos)s.activate(x,chaos,{mode:"exploration-action"});
+  }
   if(x.poison){
    for(const id of ["moth","ring-spores","needle"]){
     const o=itemIn(s,x,id);if(o&&(!["ring-spores"].includes(id)||x.slots.ring===o))
@@ -348,7 +354,9 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
   s.noteOptions(itemOptions(s,h,"failed-d20"));
   const crown=itemIn(s,h,"crown-relic");
   if(crown&&s.monster&&(s.monster.stage==="FINAL"||h.hp<h.card.hp*.3)){
-   s.consume(h,crown);s.hurt(h,s.die());hit=true;return {hit,critical:true};
+   s.directItem(h,crown,"rescue-failed-roll",()=>{
+     s.consume(h,crown);s.hurt(h,s.die());return true;});
+    hit=true;return {hit,critical:true};
   }
  }
  return {hit,critical:natural===20};
@@ -493,6 +501,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  const atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
  const blessing=blessBeforeD20(s,h);
  let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv}));
+ s.noteOptions(itemOptions(s,h,"after-roll"));
  let defenceBonus=blessing.bonus;
  const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
  const undo=itemIn(s,h,"wand-undo");
@@ -655,7 +664,9 @@ export function seal(s){
   // Crown of Rehearsals can rescue even a failed final magical test.
   const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
-   s.consume(owner,crown);s.hurt(owner,s.die());good=true;}
+   s.directItem(owner,crown,"rescue-failed-roll",()=>{
+    s.consume(owner,crown);s.hurt(owner,s.die());return true;});
+   good=true;}
  }
  s.metrics.sealWin=good;return good;
 }
