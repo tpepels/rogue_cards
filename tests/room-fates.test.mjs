@@ -39,6 +39,7 @@ test("cartographer's promise comes due when Deep is first entered",()=>{
 });
 test("a spared Deep Monster does not consume another delayed Monster effect",()=>{
  const s=expedition();choose(s,"u-hollow-knight",0);choose(s,"m-choir-nails",0);
+ s.returnChoices["u-hollow-knight"]="escape";
  s.beginRoom(room("d-shadow"));s.drawMonster();
  assert.equal(s.monster,null);
  assert.ok(s.keptRooms.some(x=>x.card.id==="m-choir-nails"));
