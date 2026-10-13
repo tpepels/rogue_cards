@@ -72,3 +72,16 @@ test("rotation-only edits do not disturb ordinary stacking or imported legacy fi
  assert.match(cssWithZ,/\.tt-slip--results\{z-index:21\}/);
  assert.match(cssWithZ,/\.tt-slip--lead\{\n z-index:35;\n\}/);
 });
+
+test("older angle and z drafts import as one canonical rotation/layer format",()=>{
+ const legacy={version:1,units:"mm",cards:{
+  "room:m-well":{rules:{x:40,angle:-12.5,z:45}}
+ }};
+ const result=normalizePlacements(legacy);
+ assert.deepEqual(result.cards["room:m-well"].rules,
+  {x:40,rotation:-12.5,zIndex:45});
+ const css=placementCSS(result);
+ assert.match(css,/transform:rotate\(-12.5deg\)/);
+ assert.match(css,/z-index:45/);
+ assert.doesNotMatch(JSON.stringify(result),/"angle"|"z":/);
+});
