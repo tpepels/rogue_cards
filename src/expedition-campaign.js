@@ -18,6 +18,11 @@ function recordPlan(s,kind,detail){
   (detail.attempt?"attempt":"decline"):detail.action);
  const selected=kind+"_"+choice;
  d[selected]=(d[selected]||0)+1;
+ if(kind==="combat"){
+  d.combatEligibleActions=(d.combatEligibleActions||0)+(detail.options||0);
+  const label=detail.options>0?"combat_with_legal_item":"combat_no_legal_item";
+  d[label]=(d[label]||0)+1;
+ }
  if(s.plannerTrace.length<12)s.plannerTrace.push({
   room:s.room?.id||null,kind,choice,
   scores:detail.scores||null,
@@ -380,8 +385,11 @@ function useItemsInCombat(s,h){
   const decision=planCombat(s,h);
   recordPlan(s,"combat",decision);
   if(decision.action==="item"){
-   // All actions use the exact same dispatcher as the canonical simulator.
-   return s.activate(h,decision.card);
+   // Use the canonical dispatcher and consume printed discard-on-use tools.
+   // Ordinary SCROLL/POTION consumption and WAND exhaustion happen in activate.
+   const acted=s.activate(h,decision.card);
+   if(acted&&decision.card.id==="spore-jar")s.consume(h,decision.card);
+   return acted;
   }
   return false;
  }
