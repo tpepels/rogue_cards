@@ -61,6 +61,7 @@ export class ExpeditionState {
   this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
+   objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
    activated:0,magicActions:0,potionsUsed:0,scouted:0,negotiations:0,negotiationsWon:0,
    corpses:0,banishments:0,recharged:0,overcharges:0,sealAvailable:false,
    sealAttempt:false,sealWin:false,won:false,roundLimit:false,unresolved:0,
@@ -71,7 +72,8 @@ export class ExpeditionState {
   for(const h of this.heroes){
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);
    if(index<0)throw Error("Missing starter "+h.card.v2.starter);
-   this.add(h,this.deck.splice(index,1)[0]);this.add(h,this.deck.pop());
+   this.add(h,this.deck.splice(index,1)[0]);const random=this.deck.pop();
+   this.add(h,random);this.metrics.objectDraws[random.id]=(this.metrics.objectDraws[random.id]||0)+1;
   }
   // Experimental *extra resource* intervention: move an existing deck copy
   // into the first Hero's inventory without generating a duplicate.
@@ -151,6 +153,7 @@ export class ExpeditionState {
  draw(n=1){for(let i=0;i<n;i++){
   if(!this.deck.length)return;
   const h=this.chooseActor();const item=this.deck.pop();this.add(h,item);this.metrics.drawn++;
+  this.metrics.objectDraws[item.id]=(this.metrics.objectDraws[item.id]||0)+1;
  }}
  peek(n=1,swap=false){
   if(!this.room||this.room.stage==="FINAL")return;
@@ -169,6 +172,49 @@ export class ExpeditionState {
   this.exhausted.delete(wand);this.metrics.recharged++;return true;}
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
   this.metrics.spent++;}
+ // A legal opportunity is a trigger actually available at the current timing,
+ // not merely ownership. Record phase/mode separately to avoid calling a
+ // reactive ability an unchosen combat action.
+ noteOptions(options){
+  for(const {card,mode,phase} of options){
+   const key=card.id,cell=this.metrics.itemOpportunities[key]??={
+    total:0,byPhase:{},byMode:{}};
+   cell.total++;cell.byPhase[phase]=(cell.byPhase[phase]||0)+1;
+   cell.byMode[mode]=(cell.byMode[mode]||0)+1;
+  }
+ }
+ itemSnapshot(h){
+  return {hp:h.hp,monsterHP:this.monsterHP,drawn:this.metrics.drawn,
+   spent:this.metrics.spent,skip:this.monsterSkip,poison:h.poison,
+   exhausted:this.exhausted.size,scouted:this.metrics.scouted};
+ }
+ noteItemResult(h,card,mode,before){
+  const id=card.id;
+  const cell=this.metrics.itemUses[id]??={total:0,byMode:{}};
+  cell.total++;cell.byMode[mode]=(cell.byMode[mode]||0)+1;
+  const after=this.itemSnapshot(h);
+  const r=this.metrics.itemResults[id]??={
+   uses:0,damage:0,healing:0,selfDamage:0,draws:0,
+   resourcesSpent:0,responsesSkipped:0,poisonCured:0,recharges:0,scouts:0};
+  r.uses++;
+  r.damage+=Math.max(0,before.monsterHP-after.monsterHP);
+  r.healing+=Math.max(0,after.hp-before.hp);
+  r.selfDamage+=Math.max(0,before.hp-after.hp);
+  r.draws+=Math.max(0,after.drawn-before.drawn);
+  r.resourcesSpent+=Math.max(0,after.spent-before.spent);
+  r.responsesSkipped+=Math.max(0,after.skip-before.skip);
+  r.poisonCured+=Number(before.poison&&!after.poison);
+  r.recharges+=Math.max(0,before.exhausted-after.exhausted);
+  r.scouts+=Math.max(0,after.scouted-before.scouted);
+ }
+ // Covers direct printed actions as well as die rolls, with exactly one
+ // result record for the action. Costs are still settled by actual dispatch.
+ directItem(h,card,mode,perform){
+  const before=this.itemSnapshot(h);
+  const result=perform();
+  if(result!==false)this.noteItemResult(h,card,mode,before);
+  return result;
+ }
  beginRoom(room){
   this.room=room;
   // Exposure means present at entry; it is NOT proof of a legal activation.
@@ -210,6 +256,7 @@ export class ExpeditionState {
   if(!card.v2.roll)throw Error("Non-dice card "+card.id+" needs its printed direct trigger");
   if(card.v2.kind==="WAND"&&this.exhausted.has(card))return false;
   if(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card))return false;
+  const before=this.itemSnapshot(h),mode=this.itemMode||"printed";
   this.actor=h;this.metrics.activated++;
   this.metrics.cardCounts[card.id]=(this.metrics.cardCounts[card.id]||0)+1;
   this.metrics.objectActivations[card.id]=(this.metrics.objectActivations[card.id]||0)+1;
@@ -234,6 +281,7 @@ export class ExpeditionState {
   if(h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
    this.activate(h,h.slots.ring);
   }
+  this.noteItemResult(h,card,mode,before);
   return true;
  }
  thiefReward(){const thief=this.living().find(x=>x.card.id==="thief"&&!x.used.has("hero"));
