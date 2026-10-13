@@ -54,10 +54,28 @@ jobs:
           for(const h of ['warrior','knight','wizard','witch','rogue','thief','priest','monk'])
             if(!s.coverage.heroes[h])throw Error('Hero unvisited: '+h);
           NODE
+      - name: Test each card with nontrivial nested full-terminal Oracle branches
+        run: |
+          npm run oracle:overnight -- \
+            --runs 1 --budget 2 --replan-budget 1 \
+            --workers 4 --chunk-size 1 --hours 1 --seed 20261015 \
+            --out results/oracle-all-card-two-ply-smoke
+      - name: Verify every target was attempted with a second branching level
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const s=JSON.parse(readFileSync('results/oracle-all-card-two-ply-smoke/summary.json','utf8'));
+          if(s.actualPairedTrials!==116||!s.everyCardFullySampled)
+            throw Error('Missing one or more two-ply card comparisons');
+          if(s.coverage.nestedSamples<1||s.coverage.branchSamples<1)
+            throw Error('No future decisions were actually branched');
+          NODE
       - name: Save audit, incomplete coverage evidence and checkpoints
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: oracle-all-card-smoke
-          path: results/oracle-all-card-smoke/
+          path: |
+            results/oracle-all-card-smoke/
+            results/oracle-all-card-two-ply-smoke/
           if-no-files-found: ignore
