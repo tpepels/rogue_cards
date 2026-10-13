@@ -33,7 +33,8 @@ test("end-to-end performance benchmark produces deterministic matched-seed arms"
   const m=new Map(p.measurements.map(x=>[x.arm,x]));
   assert.equal(m.get("fair-0").rolloutSamples,0);
   assert.equal(m.get("oracle-0").rolloutSamples,0);
-  assert.equal(m.get("fair-2").wins+m.get("fair-2").expeditionsPerSecond>=0,true);
+  assert.equal(m.get("fair-2").expeditionsPerSecond>0,true);
+  assert.equal(m.get("oracle-2").expeditionsPerSecond>0,true);
  }finally{rmSync(dir,{recursive:true,force:true})}
 });
 test("benchmark rejects malformed or unsafe configurations",()=>{
