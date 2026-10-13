@@ -1,0 +1,59 @@
+name: Item opportunity and value study
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/item-opportunity-study.yml
+
+jobs:
+  item-trials:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate Item contracts and research decisions
+        run: node --test tests/item-opportunities.test.mjs tests/item-contracts.test.mjs tests/planner.test.mjs
+      - name: Independent-seed Item trials for every Hero party
+        run: |
+          npm run --silent study:items -- 250 --all --seed 58123017 > item-trials.json
+          npm run --silent study:items:report -- item-trials.json > item-trials.md
+      - name: Check coverage and display policy impact
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from "node:fs";
+          import {OBJECTS} from "./src/tabletop-data.js";
+          const r=JSON.parse(readFileSync("item-trials.json","utf8"));
+          if(r.experiment!=="rogue-cards-item-trials-v1"||
+             r.simulated!==72000||r.unresolved||r.stalls||
+             Object.keys(r.groups.all.policies.normal.items).length!==OBJECTS.length)
+            throw Error("Incomplete or invalid Item study");
+          const pct=x=>(100*x).toFixed(1)+"%";
+          const out=["## Item use study (72,000 expeditions)",
+           "Seed: "+r.seed+" | Commit: "+r.commit,
+           "Same printed rules and costs; only optional Item selection policies differ.",
+           "",
+           "| Policy | Win rate |",
+           "|---|---:|"];
+          for(const policy of r.policies)
+            out.push("| "+policy+" | "+pct(r.groups.all.policies[policy].winRate)+" |");
+          const held=Object.values(r.groups.all.policies.normal.items);
+          out.push("","Objects with recorded use: "+held.filter(v=>v.uses>0).length+
+           " / "+held.length,
+           "Items with opportunities but zero uses: "+held.filter(v=>v.opportunities>0&&v.uses===0).length,
+           "Full per-Item metrics and report are attached as workflow artifacts.");
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,out.join("\n")+"\n");
+          NODE
+      - name: Upload full per-Object metrics and readable report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-opportunity-trials
+          path: |
+            item-trials.json
+            item-trials.md
+          if-no-files-found: ignore
