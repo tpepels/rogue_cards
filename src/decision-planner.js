@@ -313,8 +313,8 @@ export function expectedAttack(s,h,m=s.monster){
    kill+=Number(medium>=remaining)/18;
    for(let other=1;other<=6;other++){
     const high=roll+other;
-    total+=Math.min(remaining,high)/36;
-    kill+=Number(high>=remaining)/36;
+    total+=Math.min(remaining,high)/108;
+    kill+=Number(high>=remaining)/108;
    }
   }
   return {damage:total,killChance:kill,hitChance:2/3,
