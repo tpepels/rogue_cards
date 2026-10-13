@@ -229,13 +229,13 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
    wear:getComputedStyle(c,"::after").backgroundImage,
    titleShape:getComputedStyle(c.querySelector(".tt-title")).clipPath,
    leadShape:getComputedStyle(lead,"::before").clipPath,
-   leadAngle:getComputedStyle(lead).transform,
+   leadAngle:getComputedStyle(lead,"::before").transform,
    resultsShape:results?getComputedStyle(results,"::before").clipPath:null
   };
  }));
  expect(metrics).toHaveLength(30);
  for(const x of metrics){
-  expect(x.border,x.id+" lost its frame").toBeGreaterThanOrEqual(2.5);
+  expect(x.border,x.id+" lost its frame").toBeGreaterThanOrEqual(3);
   expect(x.wear,x.id+" lost edge distress").toContain("radial-gradient");
   expect(x.titleShape,x.id+" lost hand-cut title").toContain("polygon");
   expect(x.leadShape,x.id+" lost paper scrap").toContain("polygon");
