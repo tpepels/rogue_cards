@@ -23,7 +23,7 @@ test("all printed Object results and Room choices have exactly one executable ha
  const o=verifyObjectCoverage(),r=verifyRoomCoverage();
  assert.equal(o.objects,52);
  assert.equal(o.rollCards+o.nonRollCards,o.objects);
- assert.equal(r.rooms,55);assert.equal(r.choices,110);
+ assert.equal(r.rooms,65);assert.equal(r.choices,130);
  assert.ok(o.outcomeBands>=110);assert.ok(r.rollBands>=110);
 });
 test("every printed Object die face executes through a strict dispatcher",()=>{
@@ -49,7 +49,7 @@ test("every Room choice and outcome can execute without fallback parsing",()=>{
     const [name,...args]=op.split(":");s.apply(name,args,room);
    }),room.id+" choice "+choice);
   }
-  for(let band=0;band<room.v2.roll.outcomes.length;band++){
+  for(let band=0;band<(room.v2.roll?.outcomes.length||0);band++){
    const s=new ExpeditionState({seed:band+room.id.length*61,heroes:["monk","priest"],strategy:"survival"});
    s.beginRoom(room);
    assert.doesNotThrow(()=>ROOM_EFFECTS[room.id].outcomes[band].forEach(op=>{
