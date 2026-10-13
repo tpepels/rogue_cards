@@ -581,6 +581,7 @@ export const vaultChoices=Object.freeze(["policy","fight","seal-if-available",
 export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="survival",
  roomPolicy="scripted",vaultChoice="policy",extraObjectId=null,forceRoomChoice=null,
  heroAbilityMode="policy",returnChoices=null,retainedRoomAblation=null,
+ researchTargetRoomId=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
  plannerFeatures=null,itemTrial="normal",itemFocus=null,agentConfig=null}={}){
  verifyPrintedData();
@@ -615,9 +616,23 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
   (!forceRoomChoice||typeof forceRoomChoice.id!=="string"||
    ![0,1].includes(forceRoomChoice.choice)))
   throw Error("Invalid forced Room choice");
+ if(researchTargetRoomId!==null&&
+  !ROOMS.some(c=>c.id===researchTargetRoomId))
+  throw Error("Unknown research Room target");
+ if(researchTargetRoomId!==null&&forceRoomChoice?.id!==researchTargetRoomId)
+  throw Error("Targeted Room setup requires a matching forced-choice comparison");
  const appliedRoomPolicy=(researchPolicy==="rooms"||researchPolicy==="adaptive")&&
   roomPolicy==="scripted"?"contextual":roomPolicy;
  const s=new ExpeditionState({seed,heroes,strategy,roomPolicy:appliedRoomPolicy,extraObjectId});
+ // Research-only conditional placement: move the real existing Room to the
+ // start of its own stage, without inventing copies or skipping its effects.
+ // Both paired arms use exactly the same reordered deck before first choice.
+ if(researchTargetRoomId!==null){
+  const card=ROOMS.find(c=>c.id===researchTargetRoomId);
+  const pile=s.rooms[card.stage],i=pile.findIndex(c=>c.id===card.id);
+  if(i<0)throw Error("Research target Room missing from physical stage deck");
+  pile.unshift(...pile.splice(i,1));
+ }
  s.vaultChoice=vaultChoice;
  if(heroAbilityMode!=="policy")
   s.heroAbilityModes=Object.fromEntries(heroes.map(id=>[id,heroAbilityMode]));
