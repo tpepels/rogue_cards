@@ -9,7 +9,7 @@
  * actions, then optional next Room. Truncated states receive a transparent
  * nonterminal heuristic; this is not exact full-expedition expectimax.
  */
-import {forkExpeditionState} from "./rollout-state.js";
+import {forkExpeditionState,prepareRolloutDecks} from "./rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "./expedition-campaign.js";
 import {planRoom,planCombat} from "./decision-planner.js";
@@ -74,12 +74,13 @@ export function pairedRoomRollouts(s,legal){
  const n=s.agentConfig.budget;
  const values=choices.map(()=>[]);
  const origin=snapshot(s);
+ const blueprint=prepareRolloutDecks(s,s.agentConfig.knowledge);
  s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"room",k);
   for(const [j,choice] of choices.entries()){
    const fork=forkExpeditionState(s,{...seeds,
-    knowledge:s.agentConfig.knowledge});
+    knowledge:s.agentConfig.knowledge,blueprint});
    const result=rolloutRoomContinuation(fork,choice,{
     depth:s.agentConfig.rolloutRooms});
    values[j].push(value(fork,result,origin));
@@ -104,12 +105,13 @@ export function pairedCombatRollouts(s,h){
  const index=s.heroes.indexOf(h);
  if(index<0)throw Error("Unknown acting Hero");
  const origin=snapshot(s),values=actions.map(()=>[]);
+ const blueprint=prepareRolloutDecks(s,s.agentConfig.knowledge);
  s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
  for(let k=0;k<n;k++){
   const seeds=scenarioSeed(s,"combat",k);
   for(let i=0;i<actions.length;i++){
    const fork=forkExpeditionState(s,{...seeds,
-    knowledge:s.agentConfig.knowledge});
+    knowledge:s.agentConfig.knowledge,blueprint});
    const result=rolloutCombatContinuation(fork,index,actions[i],{
     maxHeroActions:s.agentConfig.combatActions,
     roomDepth:s.agentConfig.combatRoomDepth});
