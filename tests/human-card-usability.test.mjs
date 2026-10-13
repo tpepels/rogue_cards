@@ -45,13 +45,15 @@ test("all 139 cards supply legible complete instructions without a second manual
  }
  assert.deepEqual(failures,[]);
 });
-test("the entire one-page rulebook defines shared printed vocabulary",()=>{
+test("human-first rulebook explains the shared terms before advanced encounters",()=>{
  const rules=readFileSync(new URL("../rules.html",import.meta.url),"utf8");
- for(const term of ["EAT its printed remains","WITH an Item","EQUIPPED means",
-  "marked TRAP","says KEEP it","PARLEY","POISONED","OVERCHARGE",
-  "Opposed d20 combat","After each Hero turn"]){
+ for(const term of ["Health Points","Attack:","Defence:","Wits:","advantage",
+  "disadvantage","six-sided die","twenty-sided dice","PARLEY","POISONED",
+  "OVERCHARGE","REROLL","TRAPDOOR","Elbereth","Amulet Vault"]){
   assert.ok(rules.includes(term),"Undefined shared term: "+term);
  }
+ assert.ok(rules.indexOf("Meet your Hero")<rules.indexOf("Making rolls"));
+ assert.ok(rules.indexOf("Explore a Room")<rules.indexOf("When a Monster appears"));
 });
 test("TRAP effects have exact printed labels for the Reliquary",()=>{
  const expected={
