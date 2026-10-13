@@ -215,3 +215,38 @@ test("north-east notes and footer depth marks are consistent across all 139 card
   }else expect(x.depth,x.id+" unwanted dungeon depth").toBe(null);
  }
 });
+
+
+test("distressed borders and distinct paper cutouts survive screen and print",async({page})=>{
+ await page.goto("/");
+ const card=page.locator(".tt-grid .tt-card");
+ const metrics=await card.evaluateAll(cards=>cards.slice(0,30).map(c=>{
+  const lead=c.querySelector(".tt-slip--lead");
+  const results=c.querySelector(".tt-slip--results");
+  return {
+   id:c.dataset.id,
+   border:parseFloat(getComputedStyle(c).borderTopWidth),
+   wear:getComputedStyle(c,"::after").backgroundImage,
+   titleShape:getComputedStyle(c.querySelector(".tt-title")).clipPath,
+   leadShape:getComputedStyle(lead,"::before").clipPath,
+   leadAngle:getComputedStyle(lead).transform,
+   resultsShape:results?getComputedStyle(results,"::before").clipPath:null
+  };
+ }));
+ expect(metrics).toHaveLength(30);
+ for(const x of metrics){
+  expect(x.border,x.id+" lost its frame").toBeGreaterThanOrEqual(2.5);
+  expect(x.wear,x.id+" lost edge distress").toContain("radial-gradient");
+  expect(x.titleShape,x.id+" lost hand-cut title").toContain("polygon");
+  expect(x.leadShape,x.id+" lost paper scrap").toContain("polygon");
+  if(x.resultsShape!==null)expect(x.resultsShape).toContain("polygon");
+ }
+ expect(new Set(metrics.map(x=>x.leadAngle)).size).toBeGreaterThanOrEqual(3);
+ await page.emulateMedia({media:"print"});
+ const print=await page.locator(".tt-print-only .tt-card").first().evaluate(c=>({
+  title:getComputedStyle(c.querySelector(".tt-title")).clipPath,
+  slip:getComputedStyle(c.querySelector(".tt-slip--lead"),"::before").clipPath
+ }));
+ expect(print.title).toContain("polygon");
+ expect(print.slip).toContain("polygon");
+});
