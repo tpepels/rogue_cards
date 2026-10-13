@@ -9,8 +9,7 @@
  * actions, then optional next Room. Truncated states receive a transparent
  * nonterminal heuristic; this is not exact full-expedition expectimax.
  */
-import {forkExpeditionState,cloneRolloutState,prepareRolloutDecks} from "./rollout-state.js";
-import {randomSource} from "./engine/random.js";
+import {forkExpeditionState,sampleRolloutDecks,prepareRolloutDecks} from "./rollout-state.js";
 import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "./expedition-campaign.js";
 import {planRoom,planCombat} from "./decision-planner.js";
@@ -62,17 +61,20 @@ function snapshot(s){
  return {cleared:s.metrics.cleared,
   inventory:s.heroes.reduce((n,h)=>n+h.inventory.length,0)};
 }
-/** Share the SAME sampled decks across all legal alternatives. The base
- * snapshot stays untouched until the final evaluation: each other action
- * gets an isolated card-aware clone with the same *hypothetical* dice seed.
- * This removes repeated deck sampling per action without peeking at real RNG.
+/** Sample hidden decks ONCE, but clone the ORIGINAL (smaller) expedition
+ * state per alternative. Copy sampled pile arrays into each fork: mutations
+ * never leak between actions, and dice start at the identical scenario seed.
+ *
+ * Compared with cloning an already-forked state, this avoids copying the
+ * additional sampled-deck structures into each action branch.
  */
 function evaluateSampledAlternatives(s,choices,seeds,blueprint,assess){
- const base=forkExpeditionState(s,{...seeds,
-  knowledge:s.agentConfig.knowledge,blueprint});
- for(let i=choices.length-1;i>=0;i--){
-  const fork=i===0?base:cloneRolloutState(base);
-  if(i!==0)fork.rng=randomSource(seeds.diceSeed);
+ const knowledge=s.agentConfig.knowledge;
+ const sampledDecks=sampleRolloutDecks(s,{
+  knowledge,deckSeed:seeds.deckSeed,blueprint});
+ for(let i=0;i<choices.length;i++){
+  const fork=forkExpeditionState(s,{...seeds,
+   knowledge,blueprint,sampledDecks});
   assess(fork,choices[i],i);
  }
 }
