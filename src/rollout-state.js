@@ -99,7 +99,9 @@ export function prepareRolloutDecks(s,knowledge){
  if(!["fair","oracle"].includes(knowledge))
   throw Error("Bad rollout knowledge");
  if(knowledge==="oracle")return {source:s,knowledge};
- const items=reduceSeen(ITEM_COPIES,s.metrics.objectAcquisitions);
+ // Count actual removals from the hidden deck. Returned/saved Items may
+ // be reacquired without removing another physical card from the pile.
+ const items=reduceSeen(ITEM_COPIES,s.deckRemovedCounts);
  if(items.length!==s.deck.length)throw Error(
   "Public Item accounting differs from deck: "+
   items.length+" vs "+s.deck.length);
