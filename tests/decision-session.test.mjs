@@ -195,3 +195,29 @@ test("first DEEP Monster exposes retained Hollow Knight escape/save in the middl
  assert.ok(!s.keptRooms.some(x=>x.card.id==="u-hollow-knight"));
  assert.notEqual(session.phase,"parley");
 });
+
+
+test("revealed corridor branches stop at a real player decision instead of scripted sorting",()=>{
+ const session=createDecisionSession({seed:1846,heroes:["warrior"]});
+ const s=session.state;
+ s.beginRoom(room("u-fork"));session.phase="room";
+ const r=submitDecision(session,sessionActions(session).find(a=>a.index===0));
+ assert.equal(r.phase,"reaction");
+ assert.equal(r.trigger.phase,"corridor");
+ assert.equal(r.actions.length,2);
+ assert.ok(r.actions.every(a=>a.kind==="enter-shown-room"));
+ assert.deepEqual(r.actions.map(a=>a.roomId),r.trigger.offeredIds);
+ const next=r.actions[1],discarded=r.actions[0].roomId;
+ submitDecision(session,next);
+ assert.equal(s.rooms.UPPER[0].id,next.roomId);
+ assert.ok(s.discardedRoomIds.has(discarded));
+ assert.equal(session.pendingNested,null);
+});
+test("forking remaining RNG states yields the same results without consuming source dice",()=>{
+ const session=createDecisionSession({seed:1847,heroes:["warrior"]});
+ const game=session.state,initial=game.rng.snapshot();
+ const next=game.rng.clone();
+ assert.equal(game.rng.snapshot(),initial);
+ assert.equal(next.die(20),game.rng.die(20));
+ assert.notEqual(next.snapshot(),initial);
+});
