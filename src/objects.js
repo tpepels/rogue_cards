@@ -65,7 +65,7 @@ const companions=[
  ["dog","Loyal Hound","dog","COMPANION",["BEAST"],
   "COMPANION: ONCE PER ROOM after your attack hits, roll d6.",
   [["1–2","It barks: no damage."],["3–4","Deal +2 damage."],["5–6","Deal +d6 damage."]],
-  "At Rat Nest, use SOOTHE's 5–6 result. At Beetle Caravan, peek next Room instead of better bargain. Giant Rat behaviour 6 becomes 1–2.",["u-nest","m-beetle","u-merchant"],"Too brave for its size.",2],
+  "At Rat Nest, use SOOTHE's 5–6 result. At Beetle Caravan, peek at the next Room after BARGAIN. Giant Rat behaviour 6 becomes 1–2.",["u-nest","m-beetle","u-merchant"],"Too brave for its size.",2],
  ["raven","Tunnel Raven","eye","COMPANION",["BEAST","KNOWLEDGE"],
   "COMPANION: ONCE PER ROOM, roll d6.",
   [["1–2","It lies: lose 1 HP."],["3–4","Peek at the next Room."],["5–6","Peek at the next 2 Rooms; swap if both exist."]],
