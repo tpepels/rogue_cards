@@ -1,4 +1,5 @@
 import {CATALOGUE,CARD_WIDTH_MM,CARD_HEIGHT_MM,printDeck} from "./tabletop-data.js";
+import {PRINT_ONLY_ART} from "./print-expansion.js";
 export {CARD_WIDTH_MM,CARD_HEIGHT_MM};
 export const CARDS_PER_SHEET=4;
 export const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -180,7 +181,7 @@ export function printPlate(card){
  return ["a","b","c","d"][hash%4];
 }
 export const assetPath=card=>{
- const file=CARD_ART[card.type+":"+card.id];
+ const file=CARD_ART[card.type+":"+card.id]||PRINT_ONLY_ART[card.type+":"+card.id];
  return file?"./assets/illustrations/"+file:null;
 };
 
@@ -270,7 +271,7 @@ export function cardMarkup(card){
    content(card)+'</div>';
  return '<article class="tt-card tt-paper-collage tt-'+type+' tt-layout-'+layout+
   ' tt-plate-'+plate+(asset?' tt-has-art':' tt-needs-art')+
-  '" data-title-band="'+titleBand+'" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-paste="'+plate+'" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
+  '" data-print-expansion="'+(card.printOnly?"true":"false")+'" data-title-band="'+titleBand+'" data-v2-kind="'+esc(card.v2?.kind||"")+'" data-assembly="collage" data-paste="'+plate+'" data-plate="'+plate+'" data-type="'+type+'" data-id="'+esc(card.id)+'" data-layout="'+layout+
   '" data-art-file="'+esc(asset||"")+'" data-art-status="'+(asset?'generated':'placeholder')+
   '" aria-label="'+esc(card.title)+' card">'+
   label+typeStamp+middle+
