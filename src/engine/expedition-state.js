@@ -116,7 +116,10 @@ export class ExpeditionState {
  pushLuck(face,{sides=6,accept=null,max=3,onOne=false}={}){
   for(let count=1;count<=max;count++){
    const h=this.chooseActor();
-   const take=accept?accept(face,count,h):
+   const take=this._decisionHook&&!accept?
+    this._decisionHook({phase:"reroll",heroIndex:this.heroes.indexOf(h),
+     cost:count,face,sides,roomId:this.room?.id}).kind==="reroll":
+    accept?accept(face,count,h):
     ["treasure","magic"].includes(this.strategy)&&
     face<=(sides===20?8:2)&&h.hp>count+4;
    if(!take||h.hp<=count)break;
@@ -366,6 +369,14 @@ export class ExpeditionState {
     this.skipNextMonster=false;return;
    }
    const m=this.nextMonster();if(!m)return;
+   // The Knight's first DEEP Monster choice happens AFTER seeing that
+   // encounter, but BEFORE its printed escape/save trigger resolves.
+   if(this._decisionHook&&m.stage==="DEEP"&&this.keptRooms.some(x=>
+      x.card.id==="u-hollow-knight"&&x.choice===0)){
+    const choice=this._decisionHook({
+     phase:"retained",roomId:"u-hollow-knight",monsterId:m.id});
+    this.returnChoices["u-hollow-knight"]=choice.mode;
+   }
    if(monsterEntry(this,m))return;
   if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;
    this.elberethAttempts=0;this.elberethSkipResponse=false;}
@@ -408,7 +419,10 @@ export class ExpeditionState {
   if(h.hp>0&&h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&
    can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
    this.noteOptions(itemOptions(this,h,"after-magic"));
-   this.activate(h,h.slots.ring,{mode:"magic-reaction"});
+   const choice=this._decisionHook?.({phase:"after-magic",
+    heroIndex:this.heroes.indexOf(h),cardId:h.slots.ring.id});
+   if(!choice||choice.kind==="item-trigger")
+    this.activate(h,h.slots.ring,{mode:"magic-reaction"});
   }
   if(record)this.noteItemResult(h,card,mode,before);
   return true;
@@ -708,8 +722,13 @@ export class ExpeditionState {
   this.pendingRoomFace=face;
   if(owner){
    this.noteOptions(itemOptions(this,owner,"room-roll"));
-   this.activate(owner,owner.slots.ring,{mode:"room-reroll"});
-   face=this.pendingRoomFace;
+   const action=this._decisionHook?.({
+    phase:"room-roll",heroIndex:this.heroes.indexOf(owner),
+    cardId:owner.slots.ring.id,face,roomId:this.room.id});
+   if(!action||action.kind==="item-trigger"){
+    this.activate(owner,owner.slots.ring,{mode:"room-reroll"});
+    face=this.pendingRoomFace;
+   }
   }
   this.pendingRoomFace=null;
   // Spend saved links only when their linked encounters occur.
