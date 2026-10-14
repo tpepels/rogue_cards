@@ -111,7 +111,8 @@ export function prepareRolloutDecks(s,knowledge){
   const removed=s.discardedRoomIds||new Set();
   const revealed=(s.peekedRoomIds?.[stage]||[])
    .filter(id=>!seen.has(id)&&!removed.has(id));
-  const heldPaths=[s.savedPath,s.whisperRoom].filter(
+  const heldPaths=[s.savedPath,s.whisperRoom,
+   ...(s._offeredRoomChoices||[])].filter(
    card=>card?.stage===stage).map(card=>card.id);
   const excluded=new Set([...seen,...removed,...revealed,...heldPaths]);
   const available=STAGE_ROOMS[stage].filter(r=>!excluded.has(r.id));
