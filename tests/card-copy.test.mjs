@@ -78,7 +78,7 @@ test("gameplay cards consistently identify triggers and what a roll changes",()=
    assert.match(m.v2.remains,/No corpse/,m.id);
   }else{
    assert.match(m.v2.parley,/^[A-Z][A-Z ]+: /,m.id+" missing PARLEY decision");
-   assert.match(m.v2.remains,/^(EAT: Roll d6\.|Cannot EAT|No EAT|SEARCH POCKETS|KEEP EYE|On defeat)/,m.id);
+   assert.match(m.v2.remains,/^(EAT: Roll d6\.|Cannot EAT|No EAT|SEARCH POCKETS|KEEP EYE|On defeat|DEATH THROES)/,m.id);
   }
   assert.doesNotMatch(m.behavior.join(" "),/ATTACK \+\d+\b/,m.id+" ambiguous attack bonus");
   assert.doesNotMatch(m.behavior.join(" "),/Hero attack DIS|Hero POISONED/,m.id);

@@ -1,6 +1,6 @@
 // Optional corridors and returning Rooms. Each effect is printed on its card.
 const rows=[
- ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep Room. When a Monster acts, discard to set its behaviour to 1–2; next WIT has DIS. Also discard FIRE to cancel its response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
+ ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep Room. On Monster behaviour, discard to set 1–2; next WIT has DIS. Discard FIRE too to cancel response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
  ["m-bridge","MIDDLE","Bridge of Whispering Rope","HAZARD","stairs","The ropes are whispering names.","CUT A STRAND","Keep this Room as rope. At a non-Warden Monster, discard it and 1 Item to escape without reward.","CROSS","Roll d6. Knotted Rope may raise or lower the result by 1 (between 1 and 6).","CROSS","bridge"],
  [
   "m-well",
@@ -100,9 +100,9 @@ const rows=[
   "Rat King's Favor",
   "ENCOUNTER",
   "rat",
-  "A rat offers a favor. PACT: one per expedition. Keep sideways after use.",
+  "PACT: one per expedition. ACCEPT later: Rat Nest uses SOOTHE 5–6; TREASURE costs 1 Item or loses first draw.",
   "ACCEPT · PACT",
-  "Draw 2 Items, discard 1; keep Room. At next Rat Nest, use SOOTHE 5–6; at next TREASURE instead, discard 1 Item or lose first draw. Whichever comes first; turn sideways.",
+  "Draw 2 Items, discard 1; keep Room. Resolve the first Rat Nest or TREASURE encountered, then turn sideways.",
   "DECLINE",
   "Roll this Room's d6 for a gift.",
   "GIFT",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, you may pay 2 HP to see the Warden's first behaviour before acting. Reroll once if desired; use new result.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, pay 2 HP to see first Warden behaviour before acting (optional). Reroll once if desired; use new result.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -464,7 +464,7 @@ const printedTables={
   "u-candle": [
     [
       "1–2",
-      "Pitch dark: enter next Room unseen; next ATK there has DIS."
+      "Pitch dark: enter next Room unseen; next ATK has DIS."
     ],
     [
       "3–4",
@@ -472,7 +472,7 @@ const printedTables={
     ],
     [
       "5–6",
-      "Keep Room as candle; reveal 2 Rooms, enter one, leave other on top. Discard candle at Lightless Hall to cancel attack DIS."
+      "Keep as candle; reveal 2 Rooms, enter one, leave other on top. At Lightless Hall discard candle to cancel attack DIS."
     ]
   ],
   "m-maps": [

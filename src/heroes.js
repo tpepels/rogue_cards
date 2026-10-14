@@ -24,7 +24,7 @@ const reliable=Object.freeze({
  wizard:"deal 2 damage to the Monster without rolling",
  witch:"remove your POISONED (otherwise heal 1 HP)",
  rogue:"discard 1 Item to gain ADV on this d20",
- thief:"draw 1, discard 1; at Corridor, peek next Room instead",
+ thief:"draw 1, discard 1; at Corridor peek instead",
  priest:"lose 1 HP to add +2 to that Hero's d20",
  monk:"lose 2 HP to change behaviour 5 or 6 to 3–4"
 });
@@ -34,7 +34,7 @@ const timing=Object.freeze({
  wizard:"as your combat action",
  witch:"after you use a Potion or Scroll",
  rogue:"before your attack or a PARLEY d20 roll",
- thief:"on Item finds or Corridor reveals",
+ thief:"on an Item find or Corridor reveal",
  priest:"before a Hero d20 roll",
  monk:"after a Monster rolls behaviour"
 });
