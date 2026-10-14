@@ -1,0 +1,253 @@
+/**
+ * Player-controlled expedition phase machine.
+ *
+ * Every call to submitDecision resolves ONE chosen legal action and stops
+ * at the next printed decision boundary. It shares the same mutable
+ * ExpeditionState, dice, Room ops, Item executor and combat primitives as
+ * the full-effect expedition runner - no cards are simulated separately.
+ *
+ * LIMIT: in-roll reactions/abilities (e.g. Ring of Echoes, Knight shield,
+ * Priest pre-roll blessing) still execute inside synchronous rule methods.
+ * They require continuation-friendly rules primitives before they become
+ * explicit decisions. This controller does NOT claim otherwise.
+ */
+import {VAULT} from "../tabletop-data.js";
+import {createGame,observeGame,legalActions,applyAction,
+ takeMonsterResponse,finishCurrentRoom} from "./index.js";
+import {resolveParley} from "./parley.js";
+import {consumeCorpse,settleMonsterVictory} from "./combat-outcomes.js";
+import {seal} from "./vault.js";
+import {beginWarden,wardenOptions,applyWardenChoice} from "./vault-encounter.js";
+
+const STAGES=["UPPER","MIDDLE","DEEP"];
+const stageReady=s=>STAGES.find(k=>s.stageProgress[k]<3&&s.rooms[k].length);
+const opposite=()=>[];
+const ended=s=>!s.alive()||s.metrics.won||s.metrics.escaped;
+const nextHero=(s,from)=>s.heroes.findIndex((h,i)=>i>=from&&h.hp>0);
+const pendingReturnIds=s=>{
+ const stage=s.room?.stage,ids=[];
+ if(!stage)return ids;
+ if(stage==="DEEP"&&!s.enteredDeep&&s.keptRooms.some(x=>x.card.id==="m-well"))
+  ids.push("m-well");
+ if(stage==="FINAL"){
+  for(const id of ["m-clock","m-hungry-door","m-ferryman-oath"]){
+   if(s.keptRooms.some(x=>x.card.id===id))ids.push(id);
+  }
+ }
+ if(stage!=="FINAL"&&!s.room?.v2.special?.corridor){
+  const h=s.chooseActor();
+  if(s.keptRooms.some(x=>x.card.id==="m-fungus")&&
+    h.card.hp-h.hp>=3)ids.push("m-fungus");
+ }
+ return ids.filter(id=>legalActions(s,{phase:"retained",roomId:id}).length>1);
+};
+const canonical=session=>{
+ const {state:s,phase,heroIndex,returnRoomId}=session;
+ if(phase==="between-rooms"||phase==="explore"){
+  const src=phase==="explore"?"explore":"between-rooms";
+  const opts=legalActions(s,{phase:src,heroIndex})
+   .filter(x=>x.kind!=="continue");
+  // Equipment can be changed at a safe action boundary, not mid-roll.
+  const equipment=legalActions(s,{phase:"equipment",heroIndex});
+  return [...opts,...equipment,
+   {phase:src,kind:"continue",heroIndex}];
+ }
+ if(phase==="retained-entry")return legalActions(s,{
+  phase:"retained",roomId:returnRoomId});
+ if(phase==="room")return legalActions(s,{phase:"room"});
+ if(phase==="parley")return legalActions(s,{phase:"parley"});
+ if(phase==="combat")return legalActions(s,{phase:"combat",heroIndex});
+ if(phase==="monster-response")return legalActions(s,{
+  phase:"monster-response",heroIndex});
+ if(phase==="corpse")return legalActions(s,{phase:"corpse"});
+ if(phase==="vault")return legalActions(s,{phase:"vault"});
+ if(phase==="post-warden")return legalActions(s,{phase:"post-warden"});
+ if(phase==="terminal")return [];
+ throw Error("Unknown session phase "+phase);
+};
+export const sessionActions=session=>canonical(session);
+export function observeSession(session){
+ return {phase:session.phase,heroIndex:session.heroIndex,
+  pendingReturnRoom:session.returnRoomId,
+  game:observeGame(session.state),
+  actions:canonical(session),
+  actionCount:session.actionCount,
+  // True only when literally all pending player decisions are represented.
+  completeDecisionCoverage:false,
+  unresolvedTriggerPhases:[
+   "reactive Item timing inside dice resolution",
+   "Hero ability trigger timing and reroll acceptance",
+   "first DEEP Monster Hollow Knight return decision",
+   "corridor revealed-Room selection"
+  ]};
+}
+function done(session){
+ if(ended(session.state)){
+  session.phase="terminal";session.returnRoomId=null;return true;
+ }
+ return false;
+}
+function awaitingMonster(session){
+ const s=session.state;
+ if(!s.monster&&s.monsterQueue.length){
+  s.monster=s.monsterQueue.shift();s.monsterHP=s.monster.hp;
+  s.banished=false;s.elberethAttempts=0;s.elberethSkipResponse=false;
+ }
+ if(!s.monster)return false;
+ session.heroIndex=nextHero(s,0);
+ if(session.heroIndex<0)return !!done(session);
+ session.phase=s.monster.stage==="FINAL"?"combat":"parley";
+ session.monsterRound=0;
+ s.metrics.battles++;
+ return true;
+}
+function roomSettled(session){
+ if(done(session))return;
+ if(awaitingMonster(session))return;
+ const s=session.state;
+ if(s.room?.stage==="FINAL")throw Error("Vault must end in a terminal result");
+ finishCurrentRoom(s);
+ session.phase="between-rooms";session.heroIndex=0;
+}
+function finishEntry(session){
+ const s=session.state;
+ session.returnRoomId=null;session.remainingReturns=[];
+ s.completeRoomEntry();
+ if(done(session))return;
+ if(s.room.stage==="FINAL"){
+  // The printed Vault OMEN is resolved after entry modifiers.
+  s.roomRoll();if(!done(session))session.phase="vault";
+  return;
+ }
+ // The printed entry Monster draw happens before the Room's choice.
+ const prompt=/Draw an? (UPPER|MIDDLE|DEEP) Monster/.exec(s.room.v2.prompt);
+ if(prompt)s.drawMonster();
+ if(done(session))return;
+ session.phase="explore";session.heroIndex=nextHero(s,0);
+ if(session.heroIndex<0)done(session);
+}
+function queuedReturn(session){
+ while(session.remainingReturns.length){
+  const id=session.remainingReturns.shift();
+  if(legalActions(session.state,{phase:"retained",roomId:id}).length>1){
+   session.returnRoomId=id;session.phase="retained-entry";return;
+  }
+ }
+ finishEntry(session);
+}
+function drawNext(session){
+ const s=session.state,stage=stageReady(s);
+ const room=stage?s.rooms[stage].shift():VAULT;
+ s.beginRoom(room,{deferEntry:true});
+ session.remainingReturns=pendingReturnIds(s);
+ queuedReturn(session);
+}
+function endMonster(session){
+ const s=session.state,m=s.monster;
+ if(!m)throw Error("No Monster to end");
+ // The Warden has a printed midpoint, not the normal kill/Corpse window.
+ if(m.id==="warden"&&s.monsterHP<=10){
+  session.phase="post-warden";session.heroIndex=0;return;
+ }
+ if(s.monsterHP>0)return;
+ if(m.id==="warden-fury"){
+  settleMonsterVictory(s,m,{warden:true});
+  s.metrics.won=true;s.endingKind="amulet_taken";done(session);return;
+ }
+ if(m.stage!=="FINAL"&&!s.banished&&m.id!=="sentinel"&&s.alive()){
+  session.phase="corpse";return;
+ }
+ settleMonsterVictory(s,m);
+ if(!done(session)&&!awaitingMonster(session))roomSettled(session);
+}
+function afterAttack(session){
+ const s=session.state;
+ if(done(session))return;
+ if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
+  endMonster(session);return;
+ }
+ session.phase="monster-response";
+}
+function afterMonsterResponse(session){
+ const s=session.state;
+ if(done(session))return;
+ if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
+  endMonster(session);return;
+ }
+ let next=nextHero(s,session.heroIndex+1);
+ if(next<0){next=nextHero(s,0);session.monsterRound++;s.metrics.rounds++;
+  if(session.monsterRound>=300){
+   s.metrics.roundLimit=true;session.phase="terminal";return;
+  }
+ }
+ if(next<0){done(session);return;}
+ session.heroIndex=next;session.phase="combat";
+}
+export function createDecisionSession(options={}){
+ const state=createGame(options);
+ return {state,phase:"between-rooms",heroIndex:0,
+  remainingReturns:[],returnRoomId:null,
+  monsterRound:0,actionCount:0,history:[]};
+}
+/** The controller is the ONLY place that accepts a player's choice in the
+ * new pausable API. Unexpected actions are rejected BEFORE mutating state.
+ */
+export function submitDecision(session,action){
+ if(session.phase==="terminal")throw Error("Expedition already ended");
+ const actions=canonical(session);
+ const selected=actions.find(x=>
+  Object.keys(x).every(k=>x[k]===action?.[k])&&
+  Object.keys(action||{}).every(k=>x[k]===action[k]));
+ if(!selected)throw Error("Illegal pending decision "+JSON.stringify(action));
+ const {state:s,phase}=session;
+ const before=phase;
+ if(phase==="between-rooms"||phase==="explore"){
+  if(selected.kind==="continue"){
+   if(phase==="between-rooms")drawNext(session);
+   else{
+    const next=nextHero(s,session.heroIndex+1);
+    if(next<0)session.phase="room";
+    else session.heroIndex=next;
+   }
+  }else applyAction(s,selected);
+ }else if(phase==="retained-entry"){
+  applyAction(s,selected);queuedReturn(session);
+ }else if(phase==="room"){
+  applyAction(s,selected);
+  if(!done(session)&&!awaitingMonster(session))roomSettled(session);
+ }else if(phase==="parley"){
+  if(selected.kind==="parley"&&resolveParley(s)){
+   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
+  }else if(!done(session)){
+   session.phase="combat";session.heroIndex=nextHero(s,0);
+  }
+ }else if(phase==="combat"){
+  applyAction(s,selected);afterAttack(session);
+ }else if(phase==="monster-response"){
+  takeMonsterResponse(s,selected.heroIndex);afterMonsterResponse(session);
+ }else if(phase==="corpse"){
+  const m=s.monster;
+  if(selected.kind==="eat")consumeCorpse(s,m);
+  settleMonsterVictory(s,m);
+  if(!done(session)&&!awaitingMonster(session))roomSettled(session);
+ }else if(phase==="vault"){
+  if(selected.kind==="seal"&&seal(s)){
+   s.metrics.won=true;s.endingKind="amulet_sealed";done(session);
+  }else{
+   if(selected.kind==="seal")s.monsterAdv=true;
+   beginWarden(s);s.metrics.battles++;
+   session.phase="combat";session.heroIndex=nextHero(s,0);
+   session.monsterRound=0;
+  }
+ }else if(phase==="post-warden"){
+  const result=applyWardenChoice(s,selected.kind);
+  if(result.complete)done(session);
+  else{
+   s.metrics.battles++;session.monsterRound=0;
+   session.heroIndex=nextHero(s,0);session.phase="combat";
+  }
+ }else throw Error("Unreachable phase "+phase);
+ session.actionCount++;
+ session.history.push({from:before,choice:{...selected},to:session.phase});
+ return observeSession(session);
+}
