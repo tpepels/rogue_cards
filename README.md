@@ -84,6 +84,8 @@ The shared rules are explained in a [two-page printable guide](rules.html). Indi
 Open [**the drag-and-resize layout editor**](https://tpepels.github.io/rogue_cards/layout-editor.html) to position each card's **title**, **upper rules**, and **dice/results** cutouts on the real printed card.
 
 - Choose any of the 139 cards, drag a paper piece, and use its bottom-right handle to resize it.
+- All 139 cards have individual initial placements based on the three hand-tuned reference cards (Veteran Warrior, Laughing Water, and Antidote). The reference placements remain unchanged; longer Room and Monster copy receives wider or earlier slips. Use **Restore Starting Layout** to undo adjustments on one card without removing its preset.
+- When new cards are added, run `npm run layouts:init` to generate starting positions **only for cards not yet in the JSON**; it will never overwrite hand-positioned layouts.
 - Use the numeric inspector for **millimetre position and size**, **rotation in degrees**, and **z-index layering**. A rotation slider and **Bring to Front / Send to Back** controls adjust the overlap visually. Arrow keys nudge a selected piece; Shift + arrows move it 2 mm.
 - Work is automatically saved **in that browser only**. Choose **Export JSON** to download a portable `rogue-cards-layouts.json` backup, and **Import JSON** to resume it anywhere.
 - To make the layout permanent, replace `data/card-placements.json` with the exported file, then run:
