@@ -1123,28 +1123,33 @@ export class ExpeditionState {
    const h=this.own("rope"),card=byId(h.inventory,"rope");
    this.directItem(h,card,"room-override",()=>{face=6;return true;});
   }
-  if(this.has("dog")&&["u-nest","m-beetle"].includes(this.room.id))face=6;
+  if(this.room.id==="u-nest"&&
+     this.heroes.some(h=>h.hp>0&&this.equipped(h,"dog")))face=6;
   if(this.room.id==="u-nest"&&this.ratFavor){face=6;this.ratFavor=false;}
   if(this.room.id==="m-beetle"&&this.discardable(1,"METAL")&&
    this.chooseEffect("beetle-metal",["save","pay"],
     this.strategy==="treasure"?"pay":"save")==="pay"){
    this.discard(1,{tag:"METAL"});face=6;
   }
-  if(this.has("raven")&&this.room.id==="d-oracle")face=6;
-  if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
-    &&this.chooseEffect("rusty-key:"+this.room.id,["save","spend"],
-    this.strategy!=="seal"?"spend":"save")==="spend"){
-   const h=this.own("key");
-   this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
-    this.consume(h,byId(h.inventory,"key"));return true;
-   });face=6;
+  // Rusty Key has two distinct printed lock effects. It cannot turn
+  // every lock into a 5-6, and Talking Door is an opposed WIT check.
+  const keyEligible=this.room.id==="m-vault"||
+   ["u-gate","u-mimic","d-last-chest"].includes(this.room.id)&&face<=2;
+  const keyOwner=this.heroes.find(h=>h.hp>0&&h.inventory.some(
+   c=>c.id==="key"));
+  if(keyEligible&&keyOwner&&this.chooseEffect(
+   "rusty-key:"+this.room.id,["save","spend"],"spend")==="spend"){
+   const key=byId(keyOwner.inventory,"key");
+   this.directItem(keyOwner,key,"room-option",()=>{
+    this.consume(keyOwner,key);return true;
+   });
+   face=this.room.id==="m-vault"?6:3;
   }
   // A Lamp-Eater consumes exposed FIRE; carrying light never guarantees treasure.
   // Opened Crypt no longer treats fire as automatic treasure.
 
   // FIRE removes Lightless Hall combat disadvantage; it does not guarantee treasure.
   if(this.anyEquippedTag("ICE")&&this.room.id==="d-shadow")face=4;
-  if(this.heroes.some(h=>this.equipped(h,"ring-eye"))&&this.room.id==="d-oracle")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-spores"))&&this.room.id==="m-fungus")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-ashes"))&&this.room.id==="u-lamp")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-hunger"))&&this.room.id==="d-crown")face=5;
