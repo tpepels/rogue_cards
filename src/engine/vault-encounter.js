@@ -4,6 +4,7 @@
 import {WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 export function beginWarden(s){
  s.monster=WARDEN;s.monsterHP=Math.max(11,WARDEN.hp-s.vaultModifiers.wardenDamage);
+ s.monsterFirstAttackPending=true;
  if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
  if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
  if(s.vaultModifiers.wardenOpeningSkip)s.monsterSkip++;
@@ -51,7 +52,7 @@ export function applyWardenChoice(s,kind){
   s.monsterAdv=true;
  }
  // Exact Warden Fury carry-over HP - not an invented fresh fight.
- s.monster=WARDEN_FURY;
+ s.monster=WARDEN_FURY;s.monsterFirstAttackPending=true;
  s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
  s.metrics.monsterVisits["warden-fury"]=
   (s.metrics.monsterVisits["warden-fury"]||0)+1;
