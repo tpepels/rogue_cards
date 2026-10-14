@@ -465,7 +465,8 @@ export class ExpeditionState {
    roomEntry(this);
    if(this.pendingTrapLanding?.stage===this.room.stage){
     const landing=this.pendingTrapLanding;this.pendingTrapLanding=null;
-    if(landing.damage)this.hurt(this.chooseActor(),landing.damage);
+    if(landing.damage)
+     this.hurt(this.chooseRecipient("trapdoor-falling-damage"),landing.damage);
     if(this.alive()&&landing.monster&&this.room.stage!=="FINAL")this.drawMonster();
    }
   }
