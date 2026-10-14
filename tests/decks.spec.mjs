@@ -28,7 +28,7 @@ test("three recommended physical decks are selectable and print the right card c
  await expect.poll(()=>page.evaluate(()=>window.__deckPrinted===true)).toBe(true);
  expect(errors).toEqual([]);
 });
-test("the simple expansion has real visible art and clipped-print-safe notes",async({page})=>{
+test("the simple expansion has blank placeholders or genuine art and unclipped notes",async({page})=>{
  test.setTimeout(180000);
  await page.goto("/decks.html");
  await page.locator("[data-preset='classic']").click();
@@ -40,14 +40,20 @@ test("the simple expansion has real visible art and clipped-print-safe notes",as
    return {left:x.left-r.left,right:x.right-r.left,top:x.top-r.top,bottom:x.bottom-r.top,clip:Math.max(p.scrollHeight-p.clientHeight,p.scrollWidth-p.clientWidth)};
   });
   const img=c.querySelector(".tt-art-image");
-  return {id:c.dataset.id,width:r.width,height:r.height,parts,src:img?.getAttribute("src"),loaded:img?.complete&&img?.naturalWidth>0};
+  return {id:c.dataset.id,width:r.width,height:r.height,parts,src:img?.getAttribute("src"),loaded:img?.complete&&img?.naturalWidth>0,status:c.dataset.artStatus,background:getComputedStyle(c.querySelector(".tt-illustration")).backgroundColor};
  }));
  expect(measurements.length).toBeGreaterThan(20);
  for(const c of measurements){
   expect(c.width,c.id).toBeGreaterThan(339);
   expect(c.height,c.id).toBeGreaterThan(489);
-  expect(c.src,c.id).toMatch(/assets\/illustrations\/.+\.png/);
-  expect(c.loaded,c.id).toBe(true);
+  if(c.status==="placeholder"){
+   expect(c.src,c.id).toBe(undefined);
+   expect(c.background,c.id).toBe("rgb(240, 233, 220)");
+  }else{
+   expect(c.status,c.id).toBe("generated");
+   expect(c.src,c.id).toMatch(/assets\/illustrations\/.+\.png/);
+   expect(c.loaded,c.id).toBe(true);
+  }
   for(const p of c.parts){
    expect(p.clip,c.id+" clipped note").toBeLessThanOrEqual(2);
    expect(p.left,c.id+" note left").toBeGreaterThan(-3);

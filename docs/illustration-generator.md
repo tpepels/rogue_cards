@@ -5,7 +5,7 @@ The generator reads **every printable card design** from the JavaScript sources:
 - The original 139 engine cards from `src/tabletop-data.js`, with artwork in `CARD_ART` in `src/tabletop-view.js`.
 - The 24 print-only expansion cards from `src/print-expansion.js`, with their current temporary assignments in `PRINT_ONLY_ART` in the same file.
 
-The generator now includes **163 designs**. The original 139 PNGs are not regenerated; the 24 expansion cards currently borrow artwork, and are therefore correctly treated as **missing unique illustrations**, even when their temporary PNGs exist. New files begin at `140_...` if the original 139 files are present.
+The generator now includes **163 designs**. The original 139 PNGs are not regenerated. The 24 expansion cards still have provisional artwork-map entries for planning, but these aliases are **never displayed**: their illustration areas stay blank until they have their own PNGs. All 24 are therefore correctly treated as **missing unique illustrations**. New files begin at `140_...` if the original 139 files are present.
 
 ## Setup (once)
 
@@ -38,7 +38,7 @@ python3 scripts/generate-illustrations.py
 
 `npm run art:check`, `npm run art:missing`, and `npm run art:missing -- --limit 3` are equivalent shortcuts.
 
-Each generated PNG is placed into `assets/illustrations/`, and the corresponding assignment is updated in **the right source file**. For print-only cards, the script replaces their individual entry in `PRINT_ONLY_ART`. The rendering already looks there, so `cards.html` and `decks.html` will pick up the new images without changes to engine data or the canonical `CARD_ART` map.
+Each generated PNG is placed into `assets/illustrations/`, and the corresponding assignment is updated in **the right source file**. For print-only cards, the script replaces their individual entry in `PRINT_ONLY_ART`. The renderer only accepts filenames matching the card title, so `cards.html` and `decks.html` automatically show the new images without engine changes or modifications to the canonical `CARD_ART` map.
 
 **Prompt:** just the card title plus the literal contents of `scripts/illustration-style.txt`. No card mechanics, extra description or image-selection instructions are inserted.
 

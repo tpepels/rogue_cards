@@ -72,8 +72,9 @@ export const PRINT_ONLY_ROOMS=Object.freeze(R.map((row,i)=>Object.freeze({...roo
 export const PRINT_ONLY_ITEMS=Object.freeze(O.map((row,i)=>Object.freeze({...item(...row),v2:{...item(...row).v2,number:155+i}})));
 export const PRINT_ONLY_CARDS=Object.freeze([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS]);
 
-// Artwork aliases are intentionally explicit and separate from the 139 canonical image assignments.
-// New art has not yet been commissioned; each printed expansion face reuses an existing dungeon illustration.
+// Temporary borrowed filenames are kept ONLY for the illustration generator,
+// which replaces each with its own 140+ image when complete. The renderer leaves
+// a blank paper illustration area while a card's own artwork is still missing.
 export const PRINT_ONLY_ART=Object.freeze({
  "room:ex-u-guard-cell":"131_the_hollow_knight.png",
  "room:ex-u-slick-passage":"009_dripping_passage.png",

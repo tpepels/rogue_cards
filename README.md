@@ -35,7 +35,7 @@ The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rul
 
 **New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. They add **24 designs** to the 139 originals, for **163 selectable physical card designs**. They do not introduce new Pacts, delayed debts or universal rules. These extra cards deliberately live in `src/print-expansion.js` rather than the engine's `CATALOGUE`: the Oracle/engine and existing 139 canonical designs remain untouched until the print playtest is accepted.
 
-**Artwork status:** the 24 extra cards currently reuse thematically related original illustrations to keep the new print kit usable; their names and rules are different. Those reused images are temporary and are not presented as 24 newly commissioned illustrations.
+**Artwork status:** the 24 extra cards deliberately have blank illustration areas until their own artwork is generated. Their old borrowed-art names remain in `PRINT_ONLY_ART` only so the generator can identify missing art; those placeholders are not displayed on the website or printed.
 
 
 ## Generated card illustrations

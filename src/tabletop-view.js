@@ -180,9 +180,18 @@ export function printPlate(card){
  for(const char of key)hash=Math.imul(hash^char.charCodeAt(0),16777619)>>>0;
  return ["a","b","c","d"][hash%4];
 }
+// Print-only aliases are planning metadata, not permission to display reused art.
+// Only an illustration whose filename matches THIS card's title can be shown.
+// The generator writes that named PNG and changes PRINT_ONLY_ART when finished.
+const artSlug=title=>String(title).normalize("NFKD").toLowerCase()
+ .replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
 export const assetPath=card=>{
- const file=CARD_ART[card.type+":"+card.id]||PRINT_ONLY_ART[card.type+":"+card.id];
- return file?"./assets/illustrations/"+file:null;
+ const key=card.type+":"+card.id;
+ const file=card.printOnly?PRINT_ONLY_ART[key]:CARD_ART[key];
+ if(!file)return null;
+ if(card.printOnly&&!new RegExp("^\\d+_"+artSlug(card.title)+"\\.png$").test(file))
+  return null; // The borrowed picture is not this card's illustration.
+ return "./assets/illustrations/"+file;
 };
 
 /** The one physical edition uses one renderer per card family. */
@@ -194,9 +203,12 @@ export function composition(card){
 }
 function visual(card){
  const asset=assetPath(card);
- if(!asset)throw new Error("Missing card illustration: "+card.type+":"+card.id);
- // The illustrations themselves already carry the intentionally rough
- // spot-color print texture. Never substitute the legacy ink SVGs.
+ if(!asset){
+  // Expansion cards deliberately show bare paper, not borrowed PNGs or
+  // generated SVG stand-ins. Their rules and layout remain fully printable.
+  if(card.printOnly)return '<div class="tt-illustration" aria-label="Illustration pending"></div>';
+  throw new Error("Missing card illustration: "+card.type+":"+card.id);
+ }
  return '<div class="tt-illustration"><img class="tt-art-image" src="'+esc(asset)+
   '" alt="" loading="eager" decoding="async"></div>';
 }

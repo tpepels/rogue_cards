@@ -672,3 +672,16 @@
  .tt-card.tt-paper-collage::after,
  .tt-card.tt-paper-collage::before{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* Unillustrated expansion cards show blank paper, never duplicated art.
+   This applies in the browser, deck builder and physical print output.
+   The title and pasted rules remain unchanged and readable. */
+.tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art,
+.tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art .tt-collage,
+.tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art .tt-collage > .tt-visual,
+.tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art .tt-illustration {
+ background:#f0e9dc;
+}
+.tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art .tt-collage > .tt-visual::after {
+ content:none;
+}

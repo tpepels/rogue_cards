@@ -30,8 +30,18 @@ test("15 plain Rooms resolve immediately, never create persistent state or Pacts
   assert.deepEqual(faces,[1,2,3,4,5,6],c.id);
   const printed=[c.v2.prompt,...c.v2.choices.flatMap(c=>[c.label,c.effect]),...c.v2.roll.outcomes.map(o=>o.effect)].join(" ");
   assert.doesNotMatch(printed,/\bPACT\b|\bKEEP\b|at (?:the )?Vault|on entering DEEP|after Phase I|next (?:MONSTER|WIT|DEF)/i,c.id);
-  assert.ok(assetPath(c)&&existsSync(assetPath(c).replace("./","")),c.id+" needs a physical illustration");
-  assert.match(cardMarkup(c),/data-print-expansion="true"/);
+  const art=assetPath(c);
+  const printed=cardMarkup(c);
+  if(art){
+   assert.ok(existsSync(art.replace("./","")),c.id+" own illustration is missing");
+   assert.match(printed,/data-art-status="generated"/);
+   assert.match(printed,/class="tt-art-image"/);
+  }else{
+   assert.match(printed,/data-art-status="placeholder"/);
+   assert.match(printed,/class="tt-illustration" aria-label="Illustration pending"/);
+   assert.doesNotMatch(printed,/class="tt-art-image"/);
+  }
+  assert.match(printed,/data-print-expansion="true"/);
  }
 });
 test("ordinary equipment uses established slots and simple immediate or equipment effects",()=>{
@@ -42,7 +52,9 @@ test("ordinary equipment uses established slots and simple immediate or equipmen
   assert.equal(c.v2.roll,null,c.id);
   assert.equal(c.v2.alternative,"",c.id);
   assert.ok(c.copies>=2,c.id);
-  assert.ok(assetPath(c)&&existsSync(assetPath(c).replace("./","")),c.id);
+  const art=assetPath(c);
+  if(art)assert.ok(existsSync(art.replace("./","")),c.id+" own illustration missing");
+  else assert.doesNotMatch(cardMarkup(c),/class="tt-art-image"/);
  }
 });
 test("recommended decks are usable, curated and follow the advertised normal-to-weird progression",()=>{
