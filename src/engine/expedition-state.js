@@ -257,7 +257,8 @@ export class ExpeditionState {
     .map(o=>({hero:h,item:o})))
     .sort((a,b)=>scoreItem(a.item,this.strategy)-scoreItem(b.item,this.strategy));
    if(!options.length)return last;
-   const sel=preferred?options.find(x=>x.item.id===preferred)||options[0]:
+   const sel=preferred&&!this._decisionHook?
+    options.find(x=>x.item.id===preferred)||options[0]:
     this.chooseSpentItem(options);
    this.remove(sel.hero,sel.item);this.discardPile.push(sel.item);this.metrics.spent++;last=sel.item;
   }
@@ -291,7 +292,10 @@ export class ExpeditionState {
   this.metrics.scouted++;this.actor.scouting++;
   if(swap&&n>1&&deck.length>=2){
    const danger=r=>(r.v2.roll?.outcomes||[]).some(o=>/draw an? .* monster/i.test(o.effect));
-   if(danger(deck[0])&&!danger(deck[1]))[deck[0],deck[1]]=[deck[1],deck[0]];
+   const legacy=danger(deck[0])&&!danger(deck[1])?"swap":"keep";
+   const mode=this.chooseEffect("revealed-room-order:"+this.room.id,
+    ["keep","swap"],legacy);
+   if(mode==="swap")[deck[0],deck[1]]=[deck[1],deck[0]];
   }
   // Scouted card identities are public knowledge to a fair-information
   // player, not merely a metric. Preserve their next-to-play order.
