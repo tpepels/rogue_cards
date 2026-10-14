@@ -41,11 +41,11 @@ export function seal(s){
  if(!good){
   for(const hero of s.living())s.noteOptions(itemOptions(s,hero,"failed-d20"));
   // Crown of Rehearsals can rescue even a failed final magical test.
-  const owner=s.heroes.find(x=>x.hp>0&&x.inventory.some(o=>o.id==="crown-relic"));
+  const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
    s.directItem(owner,crown,"rescue-failed-roll",()=>{
     s.consume(owner,crown);s.hurt(owner,s.die());return true;});
-   good=owner.hp>0;}
+   good=true;}
  }
  s.metrics.sealWin=good;return good;
 }
