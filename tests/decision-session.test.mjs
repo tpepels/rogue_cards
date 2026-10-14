@@ -185,10 +185,20 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
  s.monster=monster("wraith");s.monsterHP=50;
  session.phase="combat";session.heroIndex=0;
  const owner=s.heroes[0];
- const pos=s.deck.findIndex(x=>x.id==="wand-sparks");
- assert.ok(pos>=0);
- const [wand]=s.deck.splice(pos,1);
- s.noteDeckRemoval(wand);s.add(owner,wand);
+ let wand=owner.inventory.find(x=>x.id==="wand-sparks");
+ if(!wand){
+  const other=s.heroes[1],
+   held=other.inventory.findIndex(x=>x.id==="wand-sparks");
+  if(held>=0){
+   [wand]=other.inventory.splice(held,1);
+   s.add(owner,wand);
+  }else{
+   const pos=s.deck.findIndex(x=>x.id==="wand-sparks");
+   assert.ok(pos>=0,"Physical Wand Sparks must exist");
+   [wand]=s.deck.splice(pos,1);
+   s.noteDeckRemoval(wand);s.add(owner,wand);
+  }
+ }
  owner.hp=2;
  const beforeWandDie=s.rng.clone().die();
  // Guarantee overcharge's printed HP loss kills the acting Hero.
