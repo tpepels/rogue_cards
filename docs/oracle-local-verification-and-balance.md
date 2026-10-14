@@ -106,6 +106,28 @@ worker jobs, terminates in-flight pilot work at the cutoff, and writes:
 
     results/session-balance-01-benchmark.json
 
+To replay one specific failed source index with the real agent and
+the same Hero party, chance seed and search settings, first rerun the
+36-seed mechanical audit against the current Git revision, then:
+
+~~~bash
+npm run oracle:balance -- \
+  --repro-index 3573 \
+  --focus room --runs 7200 --workers 7 --hours 10 \
+  --seed 20261014 \
+  --navigate-budget 2 --future-budget 2 \
+  --min-eligible 60 \
+  --audit results/canonical-audit-06/summary.json \
+  --out results/session-balance-rooms-03
+~~~
+
+This runs ONLY independent source 3573 through the real canonical
+study. Its trace is written to
+results/session-balance-rooms-03-repro-003573.json.
+Neither a successful replay nor the benchmark contributes study samples.
+A success means only that this one reproduction no longer fails, not
+that the complete engine has been proved correct.
+
 The pilot never creates actual balance checkpoints, never changes
 any game rules, and never counts benchmark comparisons as scientific
 evidence. It measures wall-clock completed independent sources on
