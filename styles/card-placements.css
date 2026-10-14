@@ -3130,7 +3130,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-bell"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:43.7mm;
+ top:35mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3656,7 +3656,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-clock"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:44.7mm;
+ top:37mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3889,7 +3889,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-hungry-door"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:42.8mm;
+ top:36mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4958,7 +4958,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-rat-favor"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:44mm;
+ top:34mm;
  bottom:auto;
  width:43mm;
  max-width:none;
