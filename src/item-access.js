@@ -55,8 +55,11 @@ export function itemOptions(s,h,phase){
    if(s.room?.v2.kind==="ENCOUNTER"&&encounter.has(id)&&
     (id!=="ring-bargain"||equipped(h,card))&&
     (id!=="goblin-pet"||equipped(h,card)))push(card,"encounter");
+   // Lantern Heart is a discard-to-recharge Item action. Staff and
+   // encounter Wand SHRINE alternatives REPLACE the Room's choice; they
+   // must never be combined with the ordinary printed Room reward.
    if(s.room?.v2.kind==="SHRINE"&&s.exhaustedWand()&&
-    (id==="staff"&&equipped(h,card)||id==="lantern-heart"))push(card,"recharge");
+    id==="lantern-heart")push(card,"recharge");
   }else if(phase==="room-choice"){
    if(locks.has(s.room?.id)&&["crowbar","scroll-unlock","wand-door"].includes(id))
     push(card,"lock");
