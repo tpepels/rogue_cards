@@ -158,7 +158,12 @@ export class ExpeditionState {
   (this.strategy==="survival"||this.strategy==="seal"?"steady":"risk");}
  rerollIfKept(h,value){
   const i=h.kept.indexOf("reroll");
-  if(i>=0&&value<=10){h.kept.splice(i,1);return this.die(20);}
+  if(i>=0&&value<=10){
+   const decision=this._decisionHook?.({phase:"saved-reroll",
+    heroIndex:this.heroes.indexOf(h),face:value});
+   if(decision?.kind==="keep")return value;
+   h.kept.splice(i,1);return this.die(20);
+  }
   return value;
  }
  own(id){return this.heroes.find(h=>h.inventory.some(o=>o.id===id))||null;}
@@ -428,16 +433,25 @@ export class ExpeditionState {
   return true;
  }
  thiefReward(){const thief=this.living().find(x=>x.card.id==="thief"&&!x.used.has("hero"));
-  if(!thief)return;thief.used.add("hero");
-  if(this.heroMode(thief)==="steady"){this.draw();this.discard();return;}
+  if(!thief)return;
+  const decision=this._decisionHook?.({phase:"hero-trigger",
+   heroIndex:this.heroes.indexOf(thief),context:"after-discovery"});
+  if(decision?.kind==="skip")return;
+  const mode=decision?.mode||this.heroMode(thief);
+  thief.used.add("hero");
+  if(mode==="steady"){this.draw();this.discard();return;}
   const d=this.die();
   if(d<=2)this.hurt(thief,2);
   else if(d<=4){this.draw();this.discard();}
   else{this.draw(2);this.discard();}
  }
  witchReaction(h){
+  const decision=this._decisionHook?.({phase:"hero-trigger",
+   heroIndex:this.heroes.indexOf(h),context:"after-scroll-or-potion"});
+  if(decision?.kind==="skip")return;
+  const mode=decision?.mode||this.heroMode(h);
   h.used.add("witch-ability");
-  if(this.heroMode(h)==="steady"){
+  if(mode==="steady"){
    if(h.poison)h.poison=false;else this.heal(h,1);
    return;
   }
@@ -585,25 +599,35 @@ export class ExpeditionState {
   let adv=h.nextAdv>0,blessBonus=0;
   h.nextDis=0;h.nextAdv=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
-  if(priest){priest.used.add("hero");
-   if(this.heroMode(priest)==="steady"&&priest.hp>1){
+  if(priest){
+   const decision=this._decisionHook?.({phase:"hero-trigger",
+    heroIndex:this.heroes.indexOf(priest),context:"before-room-d20"});
+   const mode=decision?.mode||this.heroMode(priest);
+   if(decision?.kind!=="skip"){
+   priest.used.add("hero");
+   if(mode==="steady"&&priest.hp>1){
     this.hurt(priest,1);blessBonus=2;
    }else{const d=this.die();
     if(d<=2)this.hurt(priest,Math.ceil(this.die()/2));
     else if(d<=4)blessBonus=2;
     else{adv=true;h.poison=false;}
    }
+   }
   }
   const roll=()=>this.die(20),a=roll();
   let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
   this.noteOptions(itemOptions(this,h,"after-roll"));
   const ring=h.slots.ring;
-  if(ring?.id==="ring-luck"&&!h.used.has(ring)){
+  if(ring?.id==="ring-luck"&&!h.used.has(ring)&&
+     (!this._decisionHook||this._decisionHook({phase:"after-roll",
+      heroIndex:this.heroes.indexOf(h),cardId:ring.id}).kind==="item-trigger")){
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,ring);
    d=this.pendingD20+this.pendingD20Modifier;
   }
   const wand=h.inventory.find(x=>x.id==="wand-undo"&&!this.exhausted.has(x));
-  if(wand&&d+stat+blessBonus<dc+11){
+  if(wand&&d+stat+blessBonus<dc+11&&
+     (!this._decisionHook||this._decisionHook({phase:"after-roll",
+      heroIndex:this.heroes.indexOf(h),cardId:wand.id}).kind==="item-trigger")){
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,wand);
    d=this.pendingD20+this.pendingD20Modifier;
   }
