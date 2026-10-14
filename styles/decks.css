@@ -1,0 +1,54 @@
+/* Dungeon-first deck editor. Keeps the monochrome tabletop print idiom. */
+.db-shell{max-width:1150px}
+.db-intro{border-bottom:4px solid #171510;padding:16px 0 22px}
+.db-intro h1{font:900 clamp(36px,5.5vw,64px)/1.02 Georgia,serif;letter-spacing:-1.5px;margin:12px 0}
+.db-intro p{font:15px/1.55 Georgia,serif;max-width:780px}
+.db-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0 28px}
+.db-preset{border:3px solid #2c241a;background:#f7f3e8;text-align:left;display:flex;flex-direction:column;gap:8px;padding:16px;cursor:pointer;min-height:162px}
+.db-preset.is-active{background:#211a12;color:#faf4e4}
+.db-preset span{font:bold 24px Georgia,serif}
+.db-preset small{font:700 11px/1.3 "Courier New",monospace;text-transform:uppercase}
+.db-preset em{font:13px/1.5 Georgia,serif;font-style:normal}
+.db-workbench{border:2px solid #201a13;background:#f7f3e8;padding:18px;margin-top:16px}
+.db-workbench-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.db-workbench-heading h2,.db-preview h2{font:900 26px Georgia,serif;margin:0}
+.db-workbench-heading p,.db-preview p{font:13px/1.55 Georgia,serif;margin:6px 0 13px}
+.db-which{font-weight:bold;display:flex;align-items:center;gap:10px}
+.db-which select{font:12px "Courier New",monospace;max-width:100%;padding:10px;border:2px solid #171510;background:white}
+.db-numbers{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:18px 0}
+.db-numbers>div{background:#e4daca;padding:12px 10px;display:flex;flex-direction:column;gap:3px}
+.db-numbers b{font:bold 22px Georgia,serif}
+.db-numbers span{font:10px/1.4 "Courier New",monospace}
+.db-note{font:13px/1.55 Georgia,serif;margin:12px 0;max-width:850px}
+.db-valid{font:700 12px/1.4 "Courier New",monospace}
+.db-warnings{border-left:4px solid #372719;background:#ede2d1;padding:10px 14px}
+.db-warnings strong{font:700 13px "Courier New",monospace}
+.db-warnings ul{padding-left:20px;font:12px/1.5 Georgia,serif}
+.db-warnings p{font:12px Georgia,serif}
+.db-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:22px 0}
+.db-actions button,.db-group-actions button{border:2px solid #171510;background:#faf7ef;color:#171510;cursor:pointer;padding:11px 15px;font:bold 12px "Courier New",monospace}
+.db-actions button.db-primary{background:#171510;color:#fff9e9}
+.db-actions button:hover,.db-group-actions button:hover{outline:2px solid #958677;outline-offset:2px}
+#db-copy-status{font:12px "Courier New",monospace}
+.db-groups{display:grid;grid-template-columns:1fr;gap:7px}
+.db-group{border:1px solid #827866;background:#fffdf7}
+.db-group summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;padding:12px 15px;font:bold 13px "Courier New",monospace}
+.db-group summary small{font:11px/1.4 "Courier New",monospace;color:#675844}
+.db-group[open] summary{border-bottom:1px solid #c7b9a5}
+.db-group-actions{display:flex;gap:6px;margin:12px 15px}
+.db-group-actions button{padding:6px 10px;font-size:10px}
+.db-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#d5cbbb;border-top:1px solid #d5cbbb}
+.db-card-option{display:flex;align-items:center;gap:9px;padding:10px 12px;background:#f6f1e8;cursor:pointer;min-width:0}
+.db-card-option:hover{background:#ede3d2}
+.db-card-option input{width:17px;height:17px;flex:none;accent-color:#171510}
+.db-card-option span{min-width:0}
+.db-card-option strong{font:700 12px/1.35 "Courier New",monospace;display:block}
+.db-card-option small{display:block;color:#6c5b43;font:10px/1.4 "Courier New",monospace}
+.db-preview{margin:36px 0 0;padding-top:15px;border-top:4px solid}
+.db-preview .tt-grid{margin-top:20px}
+.tt-card[data-print-expansion="true"] .tt-collage>.tt-content>.tt-slip--lead{left:43mm;right:auto;top:45mm;bottom:auto;width:44mm;max-width:none;transform:rotate(-1deg);z-index:20}
+.tt-card[data-print-expansion="true"] .tt-collage>.tt-content>.tt-slip--results{left:3mm;right:auto;top:92mm;bottom:auto;width:83mm;max-width:none;transform:rotate(.6deg);z-index:21}
+.tt-card[data-print-expansion="true"][data-type="item"] .tt-collage>.tt-content>.tt-slip--lead{left:12mm;top:75mm;width:67mm;transform:rotate(-1deg)}
+@media(max-width:760px){.db-presets{grid-template-columns:1fr}.db-preset{min-height:auto}.db-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.db-numbers{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.db-workbench{padding:10px}.db-choices{grid-template-columns:1fr}.db-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{.db-presets,.db-workbench,.db-intro,.db-preview{display:none!important}}
