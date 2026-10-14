@@ -1,0 +1,34 @@
+name: Player decision session checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/phase-decision-session.yml
+      - src/engine/decision-session.js
+      - src/engine/index.js
+      - src/engine/expedition-state.js
+      - src/engine/parley.js
+      - src/engine/combat-outcomes.js
+      - src/engine/vault-encounter.js
+      - src/expedition-campaign.js
+      - tests/decision-session.test.mjs
+
+jobs:
+  session:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate pausable game and printed mechanics
+        run: |
+          npm run validate:deck
+          npm run test:session
+          npm run test:rollout
+      - name: Record verified revision
+        if: success()
+        run: echo "Verified $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
