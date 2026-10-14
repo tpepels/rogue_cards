@@ -11,7 +11,7 @@ const data=[
  ["rogue","Cutpurse","rogue",19,4,4,5,"key","DIRTY TRICK · before you attack or negotiate",
   [["1–2","Caught: this d20 has DIS."],["3–4","This d20 has ADV."],["5–6","Opposed d20+WIT vs Monster d20+DEF with ADV; win: draw 1 Item."]],"A lock is a conversation."],
  ["thief","Tunnel Thief","rogue",19,4,4,4,"rope","POCKET CHANGE · on Item discovery or a Corridor reveal",
-  [["1–2","Caught: lose 2 HP."],["3–4","Draw 1 Item, then discard 1; peek next Room. At a Corridor, +2 WIT on your next WIT roll there instead of drawing."],["5–6","Draw 2 Items, discard 1; peek next 2 Rooms and order them. At a Corridor, +2 WIT instead of drawing."]],"Some pockets are doors."],
+  [["1–2","Caught: lose 2 HP."],["3–4","Draw 1, discard 1; peek next Room. Corridor: instead +2 WIT on next WIT there."],["5–6","Draw 2, discard 1; peek next 2 and order them. Corridor: +2 WIT instead of Items."]],"Some pockets are doors."],
  ["priest","Ash Priest","wizard",20,4,4,5,"antidote","BLESS OR CURSE · before any Hero d20 roll",
   [["1–2","Omen: roll d6; lose half as much HP (round up)."],["3–4","Add +2 to that Hero's roll."],["5–6","That Hero rolls with ADV; remove POISONED."]],"The gods decline to comment."],
  ["monk","Roadless Monk","delver",19,4,4,4,"needle","STILLNESS · after a Monster rolls behaviour",
@@ -24,7 +24,7 @@ const reliable=Object.freeze({
  wizard:"deal 2 damage to the Monster without rolling",
  witch:"remove your POISONED (otherwise heal 1 HP)",
  rogue:"discard 1 Item to gain ADV on this d20",
- thief:"draw 1 Item, then discard 1 Item",
+ thief:"draw 1, discard 1; at Corridor, peek next Room instead",
  priest:"lose 1 HP to add +2 to that Hero's d20",
  monk:"lose 2 HP to change behaviour 5 or 6 to 3–4"
 });
@@ -34,7 +34,7 @@ const timing=Object.freeze({
  wizard:"as your combat action",
  witch:"after you use a Potion or Scroll",
  rogue:"before your attack or a PARLEY d20 roll",
- thief:"when a Room offers Items or a Corridor reveals Rooms",
+ thief:"on Item finds or Corridor reveals",
  priest:"before a Hero d20 roll",
  monk:"after a Monster rolls behaviour"
 });
