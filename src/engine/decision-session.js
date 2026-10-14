@@ -103,7 +103,14 @@ function awaitingMonster(session){
  const s=session.state;
  if(!s.monster&&s.monsterQueue.length){
   s.monster=s.monsterQueue.shift();s.monsterHP=s.monster.hp;
+  s.monsterFirstAttackPending=true;
+  if(s.queuedForcedWisp===s.monster){
+   s.mustFightFollowingWisp=true;s.queuedForcedWisp=null;
+  }
   s.banished=false;s.elberethAttempts=0;s.elberethSkipResponse=false;
+  if(s.monster.stage!=="FINAL"&&s.useRetainedPotion(
+   "laughter","queued-monster:"+s.monster.id))
+   s.forcedBehavior=1;
  }
  if(!s.monster)return false;
  session.heroIndex=nextHero(s,0);
