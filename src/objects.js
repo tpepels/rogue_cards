@@ -160,7 +160,7 @@ const rings=[
 ];
 const wands=[
  ["wand-sparks","Wand of Impolite Sparks","spiral","WAND",["MAGIC","FIRE"],
-  "ACTION: If upright, roll d6 against a Monster; turn sideways until recharged.",
+  "ACTION: If upright, roll d6 against a Monster; turn sideways.",
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
@@ -169,7 +169,7 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","The Wand grows teeth: lose 2 HP. The Monster's next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster: discard it, draw 1 Item; no corpse or reward. Against Warden, cancel response."]],
+  [["1–2","The Wand grows teeth: lose 2 HP. The Monster's next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster: discard it; draw 1 Item, no corpse or reward. Against Warden, cancel response."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-fungus","d-choir"],"Are you sure it's a wand?",1],
  ["wand-turn","Wand of Turning","ghost","WAND",["MAGIC","BONE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
