@@ -12,7 +12,8 @@
 import {forkGameState} from "./engine/fork-state.js";
 import {sessionActions,observeSession,submitDecision}
  from "./engine/decision-session.js";
-import {searchDecision} from "./session-mcts.js";
+import {createSessionPolicy,selectSessionPolicyAction,
+ MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "./session-policy.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
 
@@ -96,38 +97,46 @@ function playMatched(session,action,{
  // For nested root transactions, keep the chance switch fixed at the
  // first newly chosen reaction across all later replay attempts.
  let decisions=1,searches=0;
+ const policy=createSessionPolicy();
+ const actionKinds={},recentActions=[];
  if(!initial?.actions)throw Error("Canonical initial decision failed");
  while(sim.phase!=="terminal"&&decisions<maxGameSteps){
   const legal=sessionActions(sim);
   if(!legal.length)throw Error("No legal action at "+sim.phase);
-  let chosen;
-  if(legal.length===1)chosen=legal[0];
-  else{
-   // The policy never silently ignores alternatives because its requested
-   // budget was below the number of legal actions at this later state.
-   const result=searchDecision(sim,{
-    budget:Math.max(futureBudget,legal.length),
-    knowledge,maxSteps:maxSearchSteps,strictTerminal:true,
-    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
-    observedReplay:wasPending&&sim.pendingNested?
-     {replayAt:switchIndex,diceSeed,deckSeed}:null
-   });
-   if(!result.complete||!result.rootEveryActionTried||!result.recommended)
-    throw Error("Incomplete continuation search at "+sim.phase);
-   chosen=result.recommended;searches++;
-  }
+  const chosen=selectSessionPolicyAction(sim,policy,{
+   budget:futureBudget,knowledge,maxSearchSteps,
+   seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
+   observedReplay:wasPending&&sim.pendingNested?
+    {replayAt:switchIndex,diceSeed,deckSeed}:null
+  });
+  if(legal.length>1)searches++;
+  actionKinds[chosen.kind]=(actionKinds[chosen.kind]||0)+1;
+  recentActions.push({step:decisions,phase:sim.phase,
+   roomId:sim.state.room?.id??null,action:chosen,
+   heroHP:sim.state.heroes.map(h=>h.hp)});
+  if(recentActions.length>40)recentActions.shift();
   submitDecision(sim,chosen,{
    afterReactionReplay:wasPending&&sim.pendingNested?afterReplay:null,
    replayAt:wasPending&&sim.pendingNested?switchIndex:null
   });
   decisions++;
  }
- if(sim.phase!=="terminal")throw Error("Nonterminal matched continuation");
+ if(sim.phase!=="terminal"){
+  const problem=Error("Nonterminal matched continuation: "+JSON.stringify({
+   decisions,maxGameSteps,phase:sim.phase,
+   roomId:sim.state.room?.id??null,monsterId:sim.state.monster?.id??null,
+   heroHP:sim.state.heroes.map(h=>h.hp),actionKinds,policy,
+   recentActions
+  }));
+  problem.repro={phase:sim.phase,decisions,actionKinds,policy,recentActions};
+  throw problem;
+ }
  if(sim.state.metrics.roundLimit||sim.state.metrics.unresolved)
   throw Error("Unresolved game/combat round limit in matched continuation");
  if(!sim.state.metrics.won&&sim.state.alive()&&!sim.state.metrics.escaped)
   throw Error("Terminal state without a printed ending");
  return {won:Number(!!sim.state.metrics.won),decisions,searches,
+  policyCycleBreaks:policy.cycleBreaks,
   ending:sim.state.endingKind};
 }
 export function compareSessionActions(session,{
@@ -165,7 +174,8 @@ export function compareSessionActions(session,{
  const blueprint=knowledge==="fair"&&!session.pendingNested?
   prepareRolloutDecks(session.state,"fair"):null;
  const results=actions.map(action=>({
-  action,wins:0,observations:0,totalDecisions:0,totalSearches:0
+  action,wins:0,observations:0,totalDecisions:0,totalSearches:0,
+  totalCycleBreaks:0
  }));
  const pairs=actions.map(()=>({positive:0,negative:0,ties:0}));
  for(let trial=0;trial<trials;trial++){
@@ -184,8 +194,12 @@ export function compareSessionActions(session,{
       futureBudget,maxSearchSteps,maxGameSteps,blueprint
      });
     }catch(error){
-     throw Error("Matched trial "+trial+", action "+i+" ("+
+     const failure=Error("Matched trial "+trial+", action "+i+" ("+
       JSON.stringify(actions[i])+"): "+(error.stack||error));
+     failure.repro={trial,actionIndex:i,action:actions[i],
+      matchedDiceSeed:chance,matchedDeckSeed:deck,
+      matchedPolicySeed:policy,continuation:error.repro??null};
+     throw failure;
     }
     samples.push(result);
    }
@@ -202,6 +216,7 @@ export function compareSessionActions(session,{
    row.wins+=result.won;row.observations++;
    row.totalDecisions+=result.decisions;
    row.totalSearches+=result.searches;
+   row.totalCycleBreaks+=result.policyCycleBreaks||0;
   }
   const ref=samples[referenceIndex].won;
   for(let i=0;i<actions.length;i++){
@@ -244,10 +259,14 @@ export function compareSessionActions(session,{
   maxGameSteps,actionIndices,actions:table,
   exactPairedSeeds:true,canonicalTerminalContinuations:true,
   allFutureChoicesViaMCTS:true,
+  reversibleEquipmentPolicy:{maxConsecutiveEquipmentActions:
+   MAX_CONSECUTIVE_EQUIPMENT_ACTIONS,mode:"search-all-then-progress"},
   validity:"Conditional on this one reachable state; not an average card effect.",
   limitations:[
    "A single reachable state cannot establish average card balance",
    "MCTS is approximate; its learned continuation policy affects contrasts",
+   "After 12 consecutive free equipment changes, the continuation policy "+
+    "takes the canonical continue action; all legal alternatives are still searched",
    "Different actions can consume a shared random stream differently",
    "Do not treat the paired normal interval as reliable with very small trials",
    "Across multiple source states/cards, adjust significance again"
