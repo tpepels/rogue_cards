@@ -243,6 +243,12 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
    phase,kind:"discard-card",heroIndex:x.heroIndex,
    index:x.index,cardId:x.cardId}));
  }
+ if(phase==="remains"){
+  if(!s.room||s.room.stage==="FINAL"||s.monster)return [];
+  return (s.keptMonsterRewards||[]).flatMap((x,index)=>
+   x.monsterId==="eye"?[{
+    phase,kind:"use-eye",index,monsterId:"eye"}]:[]);
+ }
  if(phase==="corridor"){
   const offered=s._offeredRoomChoices||[];
   return offered.map((room,index)=>({phase,kind:"enter-shown-room",
@@ -468,6 +474,12 @@ export function applyAction(s,action){
     roomId:s.room?.id,monsterId:s.monster?.id,
     physicalCopy:o.card._physicalCopy}));
   return observeGame(s);
+ }
+ if(action.kind==="use-eye"){
+  const [reward]=s.keptMonsterRewards.splice(action.index,1);
+  if(!reward||reward.monsterId!=="eye")
+   throw Error("Selected Eye must be physically retained");
+  s.peek(2,true);return observeGame(s);
  }
  if(action.kind==="continue")return observeGame(s);
  throw Error("Multi-stage "+action.phase+" requires a campaign continuation; no substitute rules");
