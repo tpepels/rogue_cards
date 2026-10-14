@@ -188,6 +188,15 @@ export class ExpeditionState {
  }
  chooseActor(){const a=this.living().sort((a,b)=>a.hp/a.card.hp-b.hp/b.card.hp);
   return a[0]||this.heroes[0];}
+ chooseRecipient(context){
+  const alive=this.heroes.map((h,i)=>({h,i})).filter(x=>x.h.hp>0);
+  if(!alive.length)return this.heroes[0];
+  if(alive.length===1||!this._decisionHook)return this.chooseActor();
+  const legacy=String(this.heroes.indexOf(this.chooseActor()));
+  const selected=this.chooseEffect("select-hero:"+context,
+   alive.map(x=>String(x.i)),legacy);
+  return this.heroes[Number(selected)];
+ }
  setActor(h){this.actor=h;return h;}
  heroMode(h){return this.heroAbilityModes[h.card.id]||
   (this.strategy==="survival"||this.strategy==="seal"?"steady":"risk");}
@@ -257,7 +266,7 @@ export class ExpeditionState {
  salvage(){
   const item=this.discardPile.pop();
   if(!item){this.draw();return null;}
-  this.consumed.delete(item);this.add(this.chooseActor(),item);
+  this.consumed.delete(item);this.add(this.chooseRecipient("salvage"),item);
   return item;
  }
  hurt(h,amt){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
@@ -268,11 +277,11 @@ export class ExpeditionState {
   }
   return before-h.hp;}
  heal(h,amt){h.hp=clamp(h.hp+Math.max(0,amt),0,h.card.hp);}
- healParty(amt){const h=this.chooseActor();if(h.hp>0)this.heal(h,amt);}
+ healParty(amt){const h=this.chooseRecipient("heal");if(h.hp>0)this.heal(h,amt);}
  draw(n=1){for(let i=0;i<n;i++){
    if(!this.deck.length)return;
    if(this.forfeitNextItem){this.forfeitNextItem=false;this.deck.unshift(this.deck.pop());continue;}
-  const h=this.chooseActor();const item=this.deck.pop();
+  const h=this.chooseRecipient("receive-item");const item=this.deck.pop();
    this.noteDeckRemoval(item);this.add(h,item);this.metrics.drawn++;
   this.metrics.objectDraws[item.id]=(this.metrics.objectDraws[item.id]||0)+1;
  }}
