@@ -152,6 +152,40 @@ export class ExpeditionState {
  amount(x){return dice(this.rng,x);}
  living(){return this.heroes.filter(h=>h.hp>0);}
  alive(){return this.living().length>0;}
+ /** Resolve an actual player choice in the current printed effect.
+  * Old full-expedition policies retain their explicit legacy default.
+  * In a decision session the same effect execution pauses and the
+  * action is selected from the one canonical legal-action surface.
+  */
+ chooseEffect(context,modes,legacyMode){
+  if(!Array.isArray(modes)||!modes.length||
+     new Set(modes).size!==modes.length||
+     !modes.includes(legacyMode))throw Error("Invalid effect alternatives "+context);
+  if(!this._decisionHook)return legacyMode;
+  this._pendingEffectChoices={context,modes:[...modes]};
+  const action=this._decisionHook({phase:"effect-choice",context});
+  if(!modes.includes(action.mode))
+   throw Error("Illegal printed effect choice "+context);
+  delete this._pendingEffectChoices;
+  return action.mode;
+ }
+ /** Printed Item payments choose an actual physical card, not the
+  * lowest-valued card chosen by a hidden strategy heuristic.
+  */
+ chooseSpentItem(options){
+  if(!this._decisionHook||options.length<2)return options[0];
+  this._pendingSpendOptions=options.map(({hero,item})=>({
+   heroIndex:this.heroes.indexOf(hero),
+   index:hero.inventory.indexOf(item),cardId:item.id
+  }));
+  const action=this._decisionHook({phase:"spend-item"});
+  const selected=options.find(({hero,item})=>
+   this.heroes.indexOf(hero)===action.heroIndex&&
+   hero.inventory.indexOf(item)===action.index&&item.id===action.cardId);
+  if(!selected)throw Error("Invalid selected physical Item payment");
+  delete this._pendingSpendOptions;
+  return selected;
+ }
  chooseActor(){const a=this.living().sort((a,b)=>a.hp/a.card.hp-b.hp/b.card.hp);
   return a[0]||this.heroes[0];}
  setActor(h){this.actor=h;return h;}
@@ -209,7 +243,8 @@ export class ExpeditionState {
     .map(o=>({hero:h,item:o})))
     .sort((a,b)=>scoreItem(a.item,this.strategy)-scoreItem(b.item,this.strategy));
    if(!options.length)return last;
-   const sel=preferred?options.find(x=>x.item.id===preferred)||options[0]:options[0];
+   const sel=preferred?options.find(x=>x.item.id===preferred)||options[0]:
+    this.chooseSpentItem(options);
    this.remove(sel.hero,sel.item);this.discardPile.push(sel.item);this.metrics.spent++;last=sel.item;
   }
   this.lastSpent=last;return last;
