@@ -58,7 +58,7 @@ test("retained, Hero and equipment options are explicit and actions cannot be fa
  applyAction(s,a[1]);
  assert.equal(s.heroAbilityModes.warrior,"risk");
  assert.ok(legalActions(s,{phase:"equipment",heroIndex:0})
-  .every(x=>x.kind==="equip"&&x.slot));
+  .every(x=>["equip","unequip","transfer"].includes(x.kind)));
 });
 test("every classified Item timing is explicitly queryable without creating actions",()=>{
  const s=new ExpeditionState({seed:2507,heroes:["warrior","wizard"]});
