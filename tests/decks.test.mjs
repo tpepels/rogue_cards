@@ -94,3 +94,19 @@ test("new printed cards use the established draw/heal/monster terminology",()=>{
  const helmet=PRINT_ONLY_ITEMS.find(c=>c.id==="ex-helm");
  assert.match(helmet.v2.trigger,/equipped Helm/);
 });
+
+test("printed Rope and temporary penalties cannot grant free treasure or expire unused",()=>{
+ const fall=CATALOGUE.find(c=>c.id==="u-fall");
+ const bridge=CATALOGUE.find(c=>c.id==="d-bridge");
+ for(const room of [fall,bridge]){
+  const choice=room.v2.choices[0].effect;
+  assert.match(choice,/adjust this result by/);
+  assert.doesNotMatch(choice,/choose 5–6/);
+ }
+ for(const id of ["u-nest","m-statue","m-crypt","d-choir"]){
+  const room=CATALOGUE.find(c=>c.id===id);
+  const printed=[room.v2.prompt,...room.v2.choices.map(x=>x.effect),...(room.v2.roll?.outcomes||[]).map(x=>x.effect)].join(" ");
+  assert.doesNotMatch(printed,/next WIT (?:roll )?here has DIS/);
+  assert.match(printed,/next WIT roll has DIS/);
+ }
+});
