@@ -14,9 +14,7 @@ const make=(stage,rows)=>rows.map(([id,title,art,kind,prompt,choices,rollLabel,o
 }));
 export const V2_ROOM_KINDS=Object.freeze(["HAZARD","SHRINE","MYSTERY","ENCOUNTER","LAIR","TREASURE","CORRIDOR"]);
 const upper=make("UPPER",[
- ["u-passage","Dripping Passage","corridor","MYSTERY","Water carries a whisper through a grate.",
-  [["LISTEN","Roll d6."],["BREAK IT","Lose 2 HP; draw 1 Item."]],"LISTEN",
-  [["1–2","A rat answers. Draw an UPPER Monster."],["3–4","Peek at the next Room."],["5","Draw 1 Item."],["6","Draw 1 Item; peek at the next Room."]],[],"The pipes know everyone."],
+ ["u-passage","Dripping Passage","corridor","MYSTERY","Water whispers through a rusted grate.",[["LISTEN","Roll d6."],["PRY GRATE","Lose 2 HP; draw 1 Item. With Rusty Key, lose 1 HP instead."]],"LISTEN",[["1–2","Something growls through the drain. Draw an UPPER Monster."],["3–4","Follow the drip: peek at the next Room."],["5","Find a wet bundle: draw 1 Item."],["6","Draw 1 Item; peek at the next Room."]],["Rusty Key"],"The pipes know everyone."],
  ["u-gate","Rusty Gate","door","HAZARD","Something knocks from the other side.",
   [["UNLOCK","Roll d6. Discard Rusty Key to choose 5–6 instead."],["FORCE","Opposed d20+ATK vs d20+3: win, draw 1 Item; lose, lose 2 HP."]],"UNLOCK",
   [["1–2","TRAP: Lose d6 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"A lock with opinions."],
@@ -42,9 +40,7 @@ const upper=make("UPPER",[
   [["1–2","TRAP: Draw an UPPER Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"It has learned to wink."]
 ]);
 const middle=make("MIDDLE",[
- ["m-flood","Flooded Chamber","water","HAZARD","Something stirs below the waterline.",
-  [["WADE","Roll d6. With Knotted Rope, choose 6."],["SWIM","Lose 2 HP; peek at the next Room."]],"WADE",
-  [["1–2","Draw a MIDDLE Monster; your first attack has DIS."],["3–4","Cross safely. Draw 1 Item."],["5","Draw 1 Item and heal 2 HP."],["6","Draw 2 Items."]],["Knotted Rope"],"The surface never stills."],
+ ["m-flood","Flooded Chamber","water","HAZARD","Something stirs below the waterline.",[["WADE","Roll d6. METAL armour gives DIS on your first DEF here; Knotted Rope prevents it."],["SWIM","Lose 2 HP; peek at the next Room."]],"WADE",[["1–2","Something pulls you under: draw a MIDDLE Monster; first Hero attack has DIS."],["3–4","Find a submerged pack: draw 1 Item."],["5–6","Find dry shelves: draw 2 Items."]],["Knotted Rope"],"The surface never stills."],
  ["m-statue","Stone Watcher","altar","SHRINE","A stone figure moves when no one looks.",[["OFFER","Discard 1 Item; roll d6. A MAGIC offering chooses 5–6."],["FOLLOW ITS GAZE","Peek at the next 2 Rooms without changing their order."]],"OFFER",[["1–2","Stone fingers grip you. Lose 2 HP."],["3–4","A hidden alcove restores d6 HP."],["5–6","Its palm opens: draw 2 Items, then discard 1."]],["cursed Items"],"It has moved since yesterday."],
  ["m-vault","Buried Lockbox","door","TREASURE","A keyhole watches you approach.",
   [["PICK","Roll d6. Discard Rusty Key to choose 5–6."],["SMASH","Lose d6 HP; draw 1 Item."]],"PICK",
@@ -79,9 +75,7 @@ const deep=make("DEEP",[
  ["d-reliquary","Lost Reliquary","amulet","TREASURE","A shining reliquary needs one more sacrifice.",
   [["TAKE","Roll d6."],["GIVE","Discard 2 Items; draw 3. If either Item was MAGIC, heal 2 HP."]],"TAKE",
   [["1–2","Lose d6 HP; draw 1 Item."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; keep this Room to ignore the next TRAP result, then discard it."]],["Rusty Key"],"It feels strangely warm."],
- ["d-bones","Hall of Teeth","bones","LAIR","Piles of teeth are arranged by size.",
-  [["SEARCH","Roll d6."],["RATTLE","Draw a DEEP Monster. After victory, draw 4 Items."]],"SEARCH",
-  [["1–2","Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items, then heal 2 HP."]],["Loyal Hound"],"Many mouths, no answers."],
+ ["d-bones","Hall of Teeth","bones","LAIR","The floor is paved with teeth.",[["SEARCH","Roll d6."],["RATTLE","Draw a DEEP Monster. Win: draw 3 Items. During this fight, natural 1 on a Hero attack means the teeth bite for 2 HP."]],"SEARCH",[["1–2","Teeth clamp shut: lose d6 HP; next ATK roll has DIS."],["3–4","Find a gold filling: draw 1 Item."],["5–6","Find 2 Items lodged between jaws."]],["Loyal Hound"],"Many mouths, no answers."],
  ["d-oracle","Broken Oracle","eye","MYSTERY","A cracked eye sees two possible futures.",
   [["ASK","Roll d6. With Tunnel Raven, choose 6."],["SILENCE","Heal 2 HP; do not look ahead."]],"ASK",
   [["1–2","Lose d6 HP."],["3–4","Peek at the next 2 Rooms; swap if both exist."],["5","Peek at the next Room; draw 1 Item."],["6","Peek at the next 2 Rooms; swap if both exist. Draw 2 Items."]],["Tunnel Raven"],"It can only tell the truth."],
@@ -91,9 +85,7 @@ const deep=make("DEEP",[
  ["d-mirror","Mirror of Regrets","eye","SHRINE","It reflects something you have not done.",
   [["LOOK","Roll d6. Discard a MAGIC Item to choose 5–6."],["SHATTER","Lose 2 HP; draw 1 Item."]],"LOOK",
   [["1–2","Become POISONED."],["3–4","Remove POISONED; heal d6 HP."],["5–6","Keep this Room. Discard it to give your next attack ADV."]],["Antidote"],"It is never quite your face."],
- ["d-mouth","The Talking Door","door","ENCOUNTER","The door asks you to tell it a secret.",
-  [["LIE","Roll d6. Rusty Key or a kept Puppet Judge lets you choose 6 (discard the Judge)."],["CONFESS","Opposed d20+WIT vs d20+6: win, draw 2 Items; lose, lose d6 HP."]],"LIE",
-  [["1–2","It screams. Draw a DEEP Monster."],["3–4","Heal d6 HP."],["5","Draw 1 Item and heal 1 HP."],["6","Draw 2 Items."]],["Rusty Key"],"It knows your childhood nickname."],
+ ["d-mouth","The Talking Door","door","ENCOUNTER","The door demands a secret.",[["LIE","Roll d6. Rusty Key or kept Puppet Judge lets you choose 6 (discard the Judge)."],["CONFESS","Opposed d20+WIT vs d20+6: win, draw 2 Items; lose, lose d6 HP."]],"LIE",[["1–2","It screams: draw a DEEP Monster."],["3–4","Pay 1 Item or lose 2 HP to open it."],["5","It whispers a secret: peek at the next 2 Rooms."],["6","A hidden niche opens: draw 2 Items."]],["Rusty Key","The Puppet Judge"],"It knows your childhood nickname."],
  ["d-choir","Choir of Mushrooms","mushroom","MYSTERY","A fungal choir sings one wrong note.",
   [["SING","Roll d6."],["SILENCE","With Pitch Torch, draw 2 Items; discard FIRE to draw 2; or discard kept Treasure That Sings to choose 5–6."]],"SING",
   [["1–2","Become POISONED and lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Draw 2 Items; remove POISONED."]],["Pitch Torch","Antidote"],"You recognise the tune."],

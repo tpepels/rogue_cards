@@ -555,6 +555,7 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "PASSAGE_PRY":this.hurt(h,this.has("key")?1:2);if(this.alive())this.draw();return;
   case "KEEP_ROOM":this.keptRooms.push({card:this.room});return;
   case "DOUBLE_BID":this.roomRoll();if(this.alive())this.roomRoll();return;
   case "LAMP_EAT":if(this.discardable(1,"FIRE"))this.discard(1,{tag:"FIRE"});
@@ -876,7 +877,7 @@ export class ExpeditionState {
     else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
    }
   }
-  if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id)&&
+  if(this.has("rope")&&["u-fall","m-bridge","d-bridge"].includes(this.room.id)&&
     this.chooseEffect("rope-room:"+this.room.id,["save","use"],"use")==="use"){
    const h=this.own("rope"),card=byId(h.inventory,"rope");
    this.directItem(h,card,"room-override",()=>{face=6;return true;});
@@ -900,7 +901,7 @@ export class ExpeditionState {
   // A Lamp-Eater consumes exposed FIRE; carrying light never guarantees treasure.
   // Opened Crypt no longer treats fire as automatic treasure.
 
-  if(this.anyEquippedTag("FIRE")&&this.room.id==="d-shadow")face=6;
+  // FIRE removes Lightless Hall combat disadvantage; it does not guarantee treasure.
   if(this.anyEquippedTag("ICE")&&this.room.id==="d-shadow")face=4;
   if(this.heroes.some(h=>this.equipped(h,"ring-eye"))&&this.room.id==="d-oracle")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-spores"))&&this.room.id==="m-fungus")face=6;

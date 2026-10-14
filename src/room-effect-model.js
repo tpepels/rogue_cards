@@ -4,8 +4,7 @@
 import {ROOMS,VAULT} from "./tabletop-data.js";
 const C=(first,second,outcomes)=>({choices:[first,second],outcomes});
 export const ROOM_EFFECTS=Object.freeze({
- "u-passage":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[
- ["MONSTER_DRAW"],["PEEK:1"],["DRAW:1"],["DRAW:1","PEEK:1"]]),
+ "u-passage":C(["ROLL_ROOM"],["PASSAGE_PRY"],[["MONSTER_DRAW"],["PEEK:1"],["DRAW:1"],["DRAW:1","PEEK:1"]]),
  "u-gate":C(["ROLL_ROOM"],["CHECK_ATK:3:DRAW1:HURT2"],[
  ["HURT:d6"],["DRAW:1"],["DRAW:2"]]),
  "u-supply":C(["ROLL_ROOM"],["SUPPLY_BARTER"],[
@@ -27,8 +26,7 @@ export const ROOM_EFFECTS=Object.freeze({
  "u-mimic":C(["ROLL_ROOM"],["HEAL:1"],[
  ["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
 
- "m-flood":C(["ROLL_ROOM"],["HURT:2","PEEK:1"],[
- ["MONSTER_DRAW","NEXT_DIS"],["DRAW:1"],["DRAW:1","HEAL:2"],["DRAW:2"]]),
+ "m-flood":C(["ROLL_ROOM"],["HURT:2","PEEK:1"],[["MONSTER_DRAW","NEXT_DIS"],["DRAW:1"],["DRAW:2"]]),
  "m-statue":C(["COST:1","ROLL_ROOM"],["PEEK:2"],[["HURT:2"],["HEAL:d6"],["DRAW:2","DISCARD:1"]]),
  "m-vault":C(["ROLL_ROOM"],["HURT:d6","DRAW:1"],[
  ["POISON"],["DRAW:1"],["DRAW:2"]]),
@@ -54,16 +52,14 @@ export const ROOM_EFFECTS=Object.freeze({
  ["TRAPDOOR:FINAL:2d6"],["HURT:d6"],["DRAW:1"]]),
  "d-reliquary":C(["ROLL_ROOM"],["COST:2","DRAW:3","MAGIC_HEAL:2"],[
  ["HURT:d6","DRAW:1"],["DRAW:2"],["DRAW:3","SAVE_TRAP"]]),
- "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:4"],[
- ["MONSTER_DRAW"],["DRAW:1"],["DRAW:2","HEAL:2"]]),
+ "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:3"],[["HURT:d6","NEXT_DIS"],["DRAW:1"],["DRAW:2"]]),
  "d-oracle":C(["ROLL_ROOM"],["HEAL:2"],[
  ["HURT:d6"],["PEEK_SWAP:2"],["PEEK:1","DRAW:1"],["PEEK_SWAP:2","DRAW:2"]]),
  "d-gate":C(["ROLL_ROOM"],["FIGHT_REWARD:2","FIGHT_HEAL:d6"],[
  ["FIGHT"],["BANISH"],["BANISH","DRAW:1","CURSED_EXTRA_DRAW"]]),
  "d-mirror":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[
  ["POISON"],["CURE","HEAL:d6"],["SAVE_ATTACK_ADV"]]),
- "d-mouth":C(["ROLL_ROOM"],["CHECK_WIT:6:DRAW2:HURTd6"],[
- ["MONSTER_DRAW"],["HEAL:d6"],["DRAW:1","HEAL:1"],["DRAW:2"]]),
+ "d-mouth":C(["ROLL_ROOM"],["CHECK_WIT:6:DRAW2:HURTd6"],[["MONSTER_DRAW"],["PAY_ITEM_OR_HP:1:2"],["PEEK:2"],["DRAW:2"]]),
  "d-choir":C(["ROLL_ROOM"],["CHOIR_SILENCE"],[
  ["POISON","HURT:2"],["HEAL:d6"],["DRAW:2","CURE"]]),
  "d-bazaar":C(["PAY_ITEM_OR_HP:1:2","ROLL_ROOM"],["COST:2","DRAW:2","RECHARGE"],[
@@ -81,7 +77,7 @@ export const ROOM_EFFECTS=Object.freeze({
 });
 export const ROOM_OPERATIONS=new Set([
  "NONE","ROLL_ROOM","ROLL_ROOM_RISK","ROLL_ROOM_RISK_D6","ROLL_ROOM_COST_REROLL",
- "HURT","HEAL","HEAL_ALL","DRAW","DISCARD","SALVAGE","LAMP_EAT","CRYPT_WHISPER","KEEP_ROOM","DOUBLE_BID","TRADE","COST","PAY_ITEM_OR_HP","PEEK","PEEK_SWAP","MONSTER_DRAW","MONSTER_ADV",
+ "HURT","HEAL","HEAL_ALL","DRAW","DISCARD","SALVAGE","LAMP_EAT","CRYPT_WHISPER","KEEP_ROOM","DOUBLE_BID","PASSAGE_PRY","TRADE","COST","PAY_ITEM_OR_HP","PEEK","PEEK_SWAP","MONSTER_DRAW","MONSTER_ADV",
  "FIGHT","BANISH","FIGHT_REWARD","FIGHT_HEAL","POISON","CURE","CLEANSE","RECHARGE",
  "CURSED_RECHARGE","SUPPLY_BARTER","PUPPET_BRIBE","BOOKCASE_FIRE_OR_SCROLL","FUNGUS_BURN",
  "CHOIR_SILENCE","ALCHEMY_HEAL_OR_TWO","MAGIC_HEAL","CURSED_EXTRA_DRAW","CLEANSE_COST",

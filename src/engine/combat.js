@@ -81,10 +81,10 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
     h.hp<h.card.hp*.3)&&wantsItem(s,h,crown,"failed-d20")){
    s.directItem(h,crown,"rescue-failed-roll",()=>{
      s.consume(h,crown);s.hurt(h,s.die());return true;});
-    hit=true;return {hit,critical:true};
+    hit=true;return {hit,critical:true,natural};
   }
  }
- return {hit,critical:natural===20};
+ return {hit,critical:natural===20,natural};
 }
 export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
@@ -111,6 +111,7 @@ export function playerAttack(s,h){
  }
  if(h.slots.ring?.id==="ring-hunger")s.notePassive(h.slots.ring,"attack",2);
  const r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
+ if(s.room?.id==="d-bones"&&r.natural===1)s.hurt(h,2);
  if(!r.hit||h.hp<=0)return;
  s.noteOptions(itemOptions(s,h,"on-hit"));
  let dmg=s.die()+(r.critical?s.die():0);
@@ -219,7 +220,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
   if(bonus)s.notePassive(h.slots.armour,"defence",bonus);
  }
  const blessing=blessBeforeD20(s,h);
- let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv}));
+ const floodDis=s.room?.id==="m-flood"&&
+  h.slots.armour?.v2.tags.includes("METAL")&&!s.has("rope")&&!h.used.has("flood-def");
+ if(floodDis)h.used.add("flood-def");
+ let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv,dis:floodDis}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
  let defenceBonus=blessing.bonus;
  const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
