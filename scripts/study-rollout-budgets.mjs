@@ -154,7 +154,7 @@ function execute(task,c){
  const row={arm:task.arm,batchSeed:task.batchSeed,strategy:task.strategy,
   party:task.party.join("+"),start:task.start,n:task.count,wins:0,
   unresolved:0,stalls:0,rolloutRoomDecisions:0,rolloutCombatDecisions:0,
-  winBits:null,rolloutAudit:{roomBranches:0,combatBranches:0,
+  winBits:null,rolloutAudit:{roomBranches:0,combatBranches:0,otherDecisionBranches:0,
    terminalBranches:0,nonterminalBranches:0,terminalWins:0,
    futureReplannedBranches:0}};
  const started=Date.now();
@@ -243,7 +243,7 @@ function aggregate(c,tasks,completed){
     party:row.party,n:c.runs,wins:0,unresolved:0,stalls:0,
     rolloutRoomDecisions:0,rolloutCombatDecisions:0,
     winBits:Buffer.alloc(Math.ceil(c.runs/8)),covered:0,
-    rolloutAudit:{roomBranches:0,combatBranches:0,terminalBranches:0,
+    rolloutAudit:{roomBranches:0,combatBranches:0,otherDecisionBranches:0,terminalBranches:0,
      nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0}};
    group.set(key,entry);
   }
@@ -270,7 +270,7 @@ function aggregate(c,tasks,completed){
   const rows=[...group.values()].filter(r=>r.arm===arm);
   const n=rows.reduce((a,r)=>a+r.n,0),
    wins=rows.reduce((a,r)=>a+r.wins,0);
-  const rolloutAudit={roomBranches:0,combatBranches:0,terminalBranches:0,
+  const rolloutAudit={roomBranches:0,combatBranches:0,otherDecisionBranches:0,terminalBranches:0,
    nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0};
   for(const row of rows)for(const key of Object.keys(rolloutAudit))
    rolloutAudit[key]+=row.rolloutAudit?.[key]||0;
@@ -292,12 +292,12 @@ function render(summary){
    (contrast?contrast.ci95.map(pp).join(" to "):"-")+" |");
  }
  out.push("","## Rollout coverage and terminal completeness","",
-  "| Arm | Room branches | Combat branches | Terminal sampled | Incomplete | Future search branches |",
-  "|---|---:|---:|---:|---:|---:|");
+  "| Arm | Room | Combat | PARLEY/Vault/endings | Terminal sampled | Incomplete | Future search branches |",
+  "|---|---:|---:|---:|---:|---:|---:|");
  for(const arm of summary.arms){
   const totals=summary.results[arm].rolloutAudit;
   out.push("| "+arm+" | "+totals.roomBranches+" | "+
-   totals.combatBranches+" | "+totals.terminalBranches+" | "+
+   totals.combatBranches+" | "+totals.otherDecisionBranches+" | "+totals.terminalBranches+" | "+
    totals.nonterminalBranches+" | "+totals.futureReplannedBranches+" |");
  }
  out.push("","## Oracle information advantage (identical weights/budget)","",
