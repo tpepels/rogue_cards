@@ -67,8 +67,9 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
     wantsItem(s,h,ring,"after-roll"))s.activate(h,ring);
  const wand=itemIn(s,h,"wand-undo");
  if(wand&&!s.exhausted.has(wand)&&s.pendingD20!==20&&
-  (s.pendingD20+bonus+extraAtk<10+def||s.strategy==="magic")&&
-  wantsItem(s,h,wand,"after-roll"))s.activate(h,wand);
+  (s._decisionHook||s.pendingD20+bonus+extraAtk<10+def||
+   s.strategy==="magic")&&wantsItem(s,h,wand,"after-roll"))
+  s.activate(h,wand);
  const natural=s.pendingD20;const modified=natural+s.pendingD20Modifier;
  const defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv});
  h.nextDefenseAdv=false;
@@ -76,8 +77,8 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  if(!hit){
   s.noteOptions(itemOptions(s,h,"failed-d20"));
   const crown=itemIn(s,h,"crown-relic");
-  if(crown&&s.monster&&(s.monster.stage==="FINAL"||h.hp<h.card.hp*.3)&&
-   wantsItem(s,h,crown,"failed-d20")){
+  if(crown&&s.monster&&(s._decisionHook||s.monster.stage==="FINAL"||
+    h.hp<h.card.hp*.3)&&wantsItem(s,h,crown,"failed-d20")){
    s.directItem(h,crown,"rescue-failed-roll",()=>{
      s.consume(h,crown);s.hurt(h,s.die());return true;});
     hit=true;return {hit,critical:true};
@@ -88,7 +89,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
 export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
-  (s.strategy==="magic"||s.monsterHP>=8)){
+  (s._decisionHook||s.strategy==="magic"||s.monsterHP>=8)){
   const mode=promptedHeroMode(s,h,"attack");
   if(mode!==null){
   h.used.add("hero");
@@ -149,8 +150,10 @@ export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
  const attempt=++s.elberethAttempts;
  s.metrics.elberethAttempts=(s.metrics.elberethAttempts||0)+1;
  const chalk=h.inventory.find(x=>x.id==="chalk"&&!h.used.has(x));
- if(chalk&&face===null)h.used.add(chalk);
- const roll=face??rollD20(s,{adv:!!chalk,dis:attempt===2});
+ const useChalk=!!chalk&&face===null&&
+  s.chooseEffect("elbereth-chalk",["save","use"],"use")==="use";
+ if(useChalk)h.used.add(chalk);
+ const roll=face??rollD20(s,{adv:useChalk,dis:attempt===2});
  const success=roll===20||roll!==1&&roll+h.card.wit>=15;
  if(success){
   s.metrics.elberethSuccesses=(s.metrics.elberethSuccesses||0)+1;
