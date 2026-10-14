@@ -39,9 +39,9 @@ const pendingReturnIds=s=>{
   }
  }
  if(stage!=="FINAL"&&!s.room?.v2.special?.corridor){
-  const h=s.chooseActor();
   if(s.keptRooms.some(x=>x.card.id==="m-fungus")&&
-    h.card.hp-h.hp>=3)ids.push("m-fungus");
+    s.heroes.some(h=>h.hp>0&&h.card.hp-h.hp>=3))
+    ids.push("m-fungus");
  }
  return ids.filter(id=>legalActions(s,{phase:"retained",roomId:id}).length>1);
 };
