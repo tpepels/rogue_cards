@@ -62,6 +62,7 @@ export function observeGame(s){
   telegraphedWardenBehavior:s.telegraphedWardenBehavior??null,
   observedRoomReroll:s._pendingRoomReroll?
    {...s._pendingRoomReroll}:null,
+  offeredSavedPath:s._pendingRoomSwap?{...s._pendingRoomSwap}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null})),
    returnChoices:{...s.returnChoices},
