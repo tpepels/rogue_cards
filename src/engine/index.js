@@ -60,6 +60,8 @@ export function observeGame(s){
   knownBottomRooms:Object.fromEntries(STAGES.map(stage=>
    [stage,[...(s.publicBottomRoomIds?.[stage]||[])]])),
   telegraphedWardenBehavior:s.telegraphedWardenBehavior??null,
+  observedRoomReroll:s._pendingRoomReroll?
+   {...s._pendingRoomReroll}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null})),
    returnChoices:{...s.returnChoices},
