@@ -21,6 +21,7 @@ import {HEROES,ROOMS,OBJECTS,MONSTERS}
 import {createDecisionSession,sessionActions,submitDecision}
  from "../src/engine/decision-session.js";
 import {searchDecision} from "../src/session-mcts.js";
+import {forkGameState} from "../src/engine/fork-state.js";
 import {compareSessionActions} from "../src/session-counterfactual.js";
 const parties=[...HEROES.map(h=>[h.id]),
  ...HEROES.flatMap((h,i)=>HEROES.slice(i+1).map(g=>[h.id,g.id]))];
@@ -51,7 +52,7 @@ const classify=(session,actions)=>{
  if(phase==="retained-entry"){
   const a=indexed(x=>x.kind==="return");
   for(let j=0;j<actions.length;j++)
-   if(j!==a)push("retained","retained:"+s.returnRoomId,a,j);
+   if(j!==a)push("retained","retained:"+session.returnRoomId,a,j);
  }
  if(phase==="parley")push("parley","parley:"+s.monster?.id,
   indexed(a=>a.kind==="fight"),indexed(a=>a.kind==="parley"));
@@ -128,32 +129,34 @@ const atom=(path,data)=>{const temporary=path+".tmp-"+process.pid;
  writeFileSync(temporary,JSON.stringify(data,null,2)+"\n");
  renameSync(temporary,path);
 };
+const copySession=s=>({
+ ...s,state:forkGameState(s.state),
+ history:s.history.map(x=>({...x})),
+ remainingReturns:[...s.remainingReturns],
+ pendingNested:s.pendingNested?{
+  ...s.pendingNested,root:{...s.pendingNested.root},
+  responses:s.pendingNested.responses.map(a=>({...a})),
+  actions:s.pendingNested.actions.map(a=>({...a}))
+ }:null
+});
 function oneJob(i,c){
  const heroes=parties[i%parties.length];
  const gameSeed=mix(c.seed^Math.imul(i+1,0x85ebca6b))||1;
  const targetFocus=c.focus==="all"?cardFocus[i%cardFocus.length]:c.focus;
  const session=createDecisionSession({seed:gameSeed,heroes});
- let step=0,last=null;
+ let step=0,last=null,eligible=0,reservoir=null;
  try{
   for(;step<c.maxGameSteps&&session.phase!=="terminal";step++){
    const actions=sessionActions(session);
    if(!actions.length)throw Error("No legal action at "+session.phase);
-   const candidates=classify(session,actions)
-    .filter(x=>x.focus===targetFocus);
-   if(candidates.length){
-    const selected=candidates[mix(gameSeed^step)%candidates.length];
-    const paired=compareSessionActions(session,{
-     trials:1,seed:mix(gameSeed^step^0x29ab),
-     actionIndices:selected.indices,futureBudget:c.futureBudget,
-     maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
-     knowledge:"fair"
-    });
-    const [before,after]=paired.actions;
-    return {i,heroes,gameSeed,step,focus:targetFocus,kind:"paired",
-     key:selected.key,phase:selected.phase,choice0:selected.before,
-     choice1:selected.after,win0:before.wins,win1:after.wins,
-     decisions:before.totalDecisions+after.totalDecisions,
-     sourceState:paired.sourceObservation.game};
+   // Reservoir sampling prevents a systematic bias toward the very
+   // first UPPER Room or the first Item in a party's starting inventory.
+   for(const candidate of classify(session,actions)
+    .filter(x=>x.focus===targetFocus)){
+    eligible++;
+    if(mix(gameSeed^Math.imul(eligible,0x9e3779b9)^
+      Math.imul(step+1,0xc2b2ae35))%eligible===0)
+     reservoir={decision:copySession(session),candidate,sourceStep:step};
    }
    const chosen=actions.length===1?actions[0]:
     searchDecision(session,{
@@ -171,7 +174,21 @@ function oneJob(i,c){
    throw Error("Actual source expedition exceeded step limit");
   if(session.state.metrics.roundLimit||session.state.metrics.unresolved)
    throw Error("Actual source expedition unresolved");
-  return {i,heroes,gameSeed,step,focus:targetFocus,kind:"unreached"};
+  if(!reservoir)
+   return {i,heroes,gameSeed,step,focus:targetFocus,kind:"unreached"};
+  const {decision,candidate:selected,sourceStep}=reservoir;
+  const paired=compareSessionActions(decision,{
+   trials:1,seed:mix(gameSeed^sourceStep^0x29ab),
+   actionIndices:selected.indices,futureBudget:c.futureBudget,
+   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
+   knowledge:"fair"
+  });
+  const [before,after]=paired.actions;
+  return {i,heroes,gameSeed,step:sourceStep,focus:targetFocus,kind:"paired",
+   key:selected.key,phase:selected.phase,choice0:selected.before,
+   choice1:selected.after,win0:before.wins,win1:after.wins,
+   decisions:before.totalDecisions+after.totalDecisions,
+   sourceState:paired.sourceObservation.game};
  }catch(e){
   const error=Error("Seed "+gameSeed+" index "+i+
    " step "+step+" / "+targetFocus+": "+(e.stack||e));
