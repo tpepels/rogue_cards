@@ -114,6 +114,12 @@ export function legalRoomChoices(s){
  if(!choices)throw Error("Room has no executable choices: "+s.room.id);
  const affordable=(ops,index)=>{
   if(s.room.v2.fate&&!fateChoiceLegal(s,s.room.id,index))return false;
+  // ROOM_SPECIAL delegates to retained/corridor handlers. Their real
+  // printed upfront costs must be checked here, not deferred until an
+  // action was already selected. This is a legality contract.
+  if(s.room.v2.special&&index===0&&
+    ["m-hungry-door","m-well"].includes(s.room.id)&&
+    !s.discardable(1))return false;
   const cost=ops.reduce((sum,op)=>{
    const m=/^(COST|DISCARD):(\d+)$/.exec(op);
    return sum+(m?Number(m[2]):0);
