@@ -305,8 +305,16 @@ export class ExpeditionState {
    total+h.inventory.filter(c=>(!tag||can(c,tag))&&!(can(c,"CURSED")&&this.equipped(h,c.id))).length,0)>=n;}
  exhaustedWand(){for(const h of this.heroes)for(const o of h.inventory)
   if(o.v2.kind==="WAND"&&this.exhausted.has(o))return o;return null;}
- recharge(){const wand=this.exhaustedWand();if(!wand)return false;
-  this.exhausted.delete(wand);this.metrics.recharged++;return true;}
+ recharge(){
+  const options=this.heroes.flatMap((h,heroIndex)=>h.inventory
+   .map((card,index)=>({card,heroIndex,index}))
+   .filter(x=>x.card.v2.kind==="WAND"&&this.exhausted.has(x.card)));
+  if(!options.length)return false;
+  const modes=options.map(x=>String(x.heroIndex)+":"+x.index);
+  const chosen=this.chooseEffect("recharge-wand",modes,modes[0]);
+  const wand=options.find(x=>String(x.heroIndex)+":"+x.index===chosen).card;
+  this.exhausted.delete(wand);this.metrics.recharged++;return true;
+ }
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
   this.metrics.spent++;}
  // Passive equipment is beneficial without a roll/activation. Count actual
@@ -618,11 +626,30 @@ export class ExpeditionState {
    else{this.discard();this.draw(2);}
    return;
   }
-  case "CLEANSE":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
-    if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);}return;}
-  case "CLEANSE_COST":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
-    if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);
-      this.consume(owner,target);}return;}
+  case "CLEANSE":{
+   const candidates=this.heroes.flatMap((hero,heroIndex)=>hero.inventory
+    .map((item,index)=>({item,heroIndex,index}))
+    .filter(x=>this.cursed(x.item)));
+   if(candidates.length){
+    const modes=candidates.map(x=>String(x.heroIndex)+":"+x.index);
+    const mode=this.chooseEffect("cleanse-curse",modes,modes[0]);
+    const chosen=candidates.find(x=>String(x.heroIndex)+":"+x.index===mode);
+    this.cleansed.add(chosen.item);
+   }
+   return;
+  }
+  case "CLEANSE_COST":{
+   const candidates=this.heroes.flatMap((hero,heroIndex)=>hero.inventory
+    .map((item,index)=>({item,hero,heroIndex,index}))
+    .filter(x=>this.cursed(x.item)));
+   if(candidates.length){
+    const modes=candidates.map(x=>String(x.heroIndex)+":"+x.index);
+    const mode=this.chooseEffect("sacrifice-curse",modes,modes[0]);
+    const chosen=candidates.find(x=>String(x.heroIndex)+":"+x.index===mode);
+    this.cleansed.add(chosen.item);this.consume(chosen.hero,chosen.item);
+   }
+   return;
+  }
   case "ALCHEMY_HEAL_OR_TWO":this.heal(h,can(this.lastSpent,"ALCHEMY")?this.die():2);return;
   case "MAGIC_HEAL":if(this.lastCostCards.some(x=>can(x,"MAGIC")))this.heal(h,n());return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
