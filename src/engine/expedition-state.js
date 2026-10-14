@@ -923,6 +923,18 @@ export class ExpeditionState {
    (wit&&(witModifiers.dis||h.slots.armour?.id==="mail"));
   if(wit&&h.slots.armour?.id==="mail")this.notePassive(h.slots.armour,"wit",1);
   let adv=h.nextAdv>0,blessBonus=0;
+  if(wit&&this.room?.id==="d-mouth"){
+   const owner=this.heroes.find(x=>x.hp>0&&
+    x.inventory.some(card=>card.id==="key"));
+   if(owner&&this.chooseEffect("rusty-key-talking-door",
+    ["save","discard-for-adv"],"save")==="discard-for-adv"){
+    const key=byId(owner.inventory,"key");
+    this.directItem(owner,key,"door-confess",()=>{
+     this.consume(owner,key);return true;
+    });
+    adv=true;
+   }
+  }
   h.nextDis=0;h.nextAdv=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
   if(priest){
