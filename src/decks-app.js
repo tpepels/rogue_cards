@@ -63,14 +63,14 @@ function render(){
  mount.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>selectPreset(b.dataset.preset)));
  mount.querySelector("#db-preset-select").addEventListener("change",e=>selectPreset(e.target.value));
  mount.querySelectorAll("[data-card]").forEach(input=>input.addEventListener("change",e=>{
-  updateOpen();const key=e.target.dataset.card;
+  updateOpen();const scrollY=window.scrollY;const key=e.target.dataset.card;
   if(e.target.checked)selection.add(key);else selection.delete(key);
-  customize();render();
+  customize();render();window.scrollTo(0,scrollY);
  }));
  mount.querySelectorAll("[data-fill]").forEach(button=>button.addEventListener("click",()=>{
-  updateOpen();const group=selectionGroups.find(g=>g.id===button.dataset.fill);
+  updateOpen();const scrollY=window.scrollY;const group=selectionGroups.find(g=>g.id===button.dataset.fill);
   for(const c of group.cards){const key=cardKey(c);if(button.dataset.mode==="all")selection.add(key);else selection.delete(key)}
-  customize();render();
+  customize();render();window.scrollTo(0,scrollY);
  }));
  mount.querySelectorAll("details.db-group").forEach(d=>d.addEventListener("toggle",()=>{if(d.open)openGroups.add(d.dataset.group);else openGroups.delete(d.dataset.group)}));
  mount.querySelector("#db-print").addEventListener("click",()=>window.print());
