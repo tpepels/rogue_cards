@@ -44,7 +44,11 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const attackAdv=h.nextAdv>0,attackDis=h.nextDis>0||h.poison;
  h.nextAdv=0;h.nextDis=0;
  let extraAtk=h.nextAtk||0;h.nextAtk=0;
- const blessing=blessBeforeD20(s,h);extraAtk+=blessing.bonus;
+ const blessing=blessBeforeD20(s,h);
+ // The Priest's risky blessing can kill the attacking Hero before the
+ // attack die is resolved. Dead Heroes cannot receive later Item prompts.
+ if(h.hp<=0)return {hit:false,critical:false,natural:null};
+ extraAtk+=blessing.bonus;
  let rogueAdv=false,rogueDis=false;
  if(h.card.id==="rogue"&&!h.used.has("hero")){
   const mode=promptedHeroMode(s,h,"before-attack-d20");
@@ -239,6 +243,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   if(bonus)s.notePassive(h.slots.armour,"defence",bonus);
  }
  const blessing=blessBeforeD20(s,h);
+ // A risky Priest blessing can itself kill the defending Hero. That is
+ // already a printed lethal consequence; do not continue to an after-hit
+ // Shield/Item decision for a dead Hero.
+ if(h.hp<=0)return false;
  const floodDis=s.room?.id==="m-flood"&&
   h.slots.armour?.v2.tags.includes("METAL")&&!s.has("rope")&&!h.used.has("flood-def");
  if(floodDis)h.used.add("flood-def");
