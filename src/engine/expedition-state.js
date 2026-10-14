@@ -718,8 +718,22 @@ export class ExpeditionState {
     this.pendingD20=this.pushLuck(this.pendingD20,{sides:20,max:2});
    return;
   case "ROOM_OUTCOME":this.roomRoll(Number(v));return;
-  case "REROLL_ROOM":if(this.pendingRoomFace!=null){const d=this.die();
-    this.pendingRoomFace=v==="BEST"?Math.max(d,this.pendingRoomFace):d;}return;
+  case "REROLL_ROOM":
+   if(this.pendingRoomFace!=null){
+    const initial=this.pendingRoomFace,newFace=this.die();
+    if(v==="BEST"){
+     // Ring of Echoes 5-6 prints CHOOSE either die, not automatically
+     // take the mathematical maximum. Both faces have now been revealed.
+     this._pendingRoomReroll={first:initial,new:newFace,
+      roomId:this.room?.id??null};
+     const legacy=newFace>initial?"new":"first";
+     const selected=this.chooseEffect("echoes-choose-room-die",
+      ["first","new"],legacy);
+     delete this._pendingRoomReroll;
+     this.pendingRoomFace=selected==="new"?newFace:initial;
+    }else this.pendingRoomFace=newFace;
+   }
+   return;
   case "GOBLIN_EXTRA":if(this.equipped(h,"goblin-pet"))this.draw();return;
   case "BREAK_WAND":if(card&&h.inventory.includes(card))this.consume(h,card);return;
   case "FIGHT_REWARD":this.pendingReward+=n();return;
