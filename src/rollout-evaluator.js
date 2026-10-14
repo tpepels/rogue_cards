@@ -10,8 +10,9 @@
  * nonterminal heuristic; this is not exact full-expedition expectimax.
  */
 import {forkExpeditionState,sampleRolloutDecks,prepareRolloutDecks} from "./rollout-state.js";
-import {rolloutRoomContinuation,rolloutCombatContinuation}
- from "./expedition-campaign.js";
+import {rolloutRoomContinuation,rolloutCombatContinuation,
+ rolloutParleyContinuation,rolloutVaultContinuation,
+ rolloutEndingContinuation} from "./expedition-campaign.js";
 import {planRoom,planCombat} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
 import {legalActions} from "./engine/index.js";
@@ -82,10 +83,12 @@ function evaluateSampledAlternatives(s,choices,seeds,blueprint,assess){
 }
 function noteScenario(source,fork,result,kind,nestedBefore){
  const audit=source.metrics.rolloutAudit??={
-  roomBranches:0,combatBranches:0,terminalBranches:0,
+  roomBranches:0,combatBranches:0,otherDecisionBranches:0,
+  terminalBranches:0,
   nonterminalBranches:0,terminalWins:0,futureReplannedBranches:0
  };
- audit[kind==="room"?"roomBranches":"combatBranches"]++;
+ audit[kind==="room"?"roomBranches":kind==="combat"?
+  "combatBranches":"otherDecisionBranches"]++;
  if(result.complete){
   audit.terminalBranches++;
   audit.terminalWins+=Number(!!result.won);
@@ -186,4 +189,40 @@ export function pairedCombatRollouts(s,h){
   score:means[best],attackScore:means[0],
   options:actions.length,legal:eligible,
   reason:"full_effect_combat_rollout",samples:n};
+}
+
+
+/**
+ * One canonical legal-action enumeration for PARLEY, Vault SEAL, or
+ * post-Warden outcomes. Each sibling takes the same sampled decks/dice.
+ * All continuations resolve real game mechanics to a terminal win/loss
+ * when strictTerminal is enabled. Never score a fabricated shortcut.
+ */
+export function pairedPhaseRollouts(s,phase){
+ if(!["parley","vault","post-warden"].includes(phase))
+  throw Error("Not a searchable expedition decision phase: "+phase);
+ const choices=legalActions(s,{phase});
+ if(!choices.length)throw Error("No legal actions for "+phase);
+ if(choices.length===1)return {action:choices[0],scores:[1],samples:0};
+ const n=s.agentConfig.budget;
+ if(!n)throw Error("Phase rollout needs a positive sampling budget");
+ const values=choices.map(()=>[]),origin=snapshot(s);
+ const blueprint=prepareRolloutDecks(s,s.agentConfig.knowledge);
+ s.agentDecisionSerial=(s.agentDecisionSerial||0)+1;
+ for(let k=0;k<n;k++){
+  const seeds=scenarioSeed(s,phase,k);
+  evaluateSampledAlternatives(s,choices,seeds,blueprint,(fork,action,i)=>{
+   const r=phase==="parley"?
+    rolloutParleyContinuation(fork,action.kind,{roomDepth:9}):
+    phase==="vault"?rolloutVaultContinuation(fork,action.kind):
+    rolloutEndingContinuation(fork,action.kind);
+   noteScenario(s,fork,r,phase,0);
+   values[i].push(value(fork,r,origin));
+  });
+ }
+ const scores=values.map(x=>summarize(x).mean);
+ let best=0;
+ for(let i=1;i<scores.length;i++)if(scores[i]>scores[best])best=i;
+ return {action:choices[best],actions:choices,scores,samples:n,
+  knowledge:s.agentConfig.knowledge,reason:"canonical_terminal_"+phase};
 }
