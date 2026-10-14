@@ -79,6 +79,30 @@ no human should override failed or missing mechanics.
 If this gate is red, repair the engine first.
 
 
+## Reversible equipment loops in the canonical study
+
+The printed rules permit free equip, unequip, and transfer actions at
+safe decision boundaries. Human players simply continue when satisfied,
+but a finite-budget MCTS continuation could choose equipment changes
+indefinitely, reaching the 7,000-step source limit without a game
+ending. The engine does **not** change this choice set.
+
+`src/session-policy.js` now lets MCTS inspect **all currently legal
+actions**, but if it recommends a thirteenth consecutive reversible
+equipment change, the *study policy* selects the existing legal
+`continue` action. This is a declared anti-cycle convention for
+computational evaluation, not an additional printed-card restriction.
+It is applied identically to source expeditions and both paired
+counterfactual continuations. Counts of these policy interventions
+are retained in the report. They must not be interpreted as
+strong evidence of optimal human play.
+
+Failed matched continuations are still errors, never automatic losses
+or excluded successful-looking samples. Failure reports include
+policy counts, action-kind frequencies, the last forty actions and
+matching dice/deck/policy seeds, so another cause of nontermination
+is actionable rather than silently hidden.
+
 ## 2b. Estimate overnight duration before starting it
 
 A successful 36-seed audit does NOT measure the speed of the Oracle.
