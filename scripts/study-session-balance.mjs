@@ -219,7 +219,8 @@ function oneJob(i,c){
   const error=Error("Seed "+gameSeed+" index "+i+
    " step "+step+" / "+targetFocus+": "+(e.stack||e));
   error.repro={i,gameSeed,heroes,step,focus:targetFocus,
-   last,roomId:session.state.room?.id,monsterId:session.state.monster?.id,
+   last,nestedSearch:e.repro??null,
+   roomId:session.state.room?.id,monsterId:session.state.monster?.id,
    phase:session.pendingNested?
     "reaction:"+session.pendingNested.trigger.phase:session.phase,
    actions:sessionActions(session)};
