@@ -91,7 +91,7 @@ const params=()=>{const vals={},flags=new Set();
  const allowed=new Set(["--runs","--seed","--workers","--hours",
   "--out","--future-budget","--navigate-budget","--max-search-steps",
   "--max-game-steps","--min-eligible","--focus","--audit",
-  "--benchmark-runs","--benchmark-minutes"]);
+  "--benchmark-runs","--benchmark-minutes","--job-minutes"]);
  for(let i=2;i<process.argv.length;i++){
   const key=process.argv[i];
   if(key==="--resume"||key==="--dry-run"||key==="--benchmark"){
@@ -122,6 +122,7 @@ const params=()=>{const vals={},flags=new Set();
   minEligible:number("--min-eligible",60,2,100000),
   benchmarkRuns:number("--benchmark-runs",18,1,200),
   benchmarkMinutes:number("--benchmark-minutes",15,1,120),
+  jobMinutes:number("--job-minutes",30,1,240),
   focus,auditFile:resolve(vals["--audit"]||
    "results/canonical-audit-01/summary.json"),
   out:resolve(vals["--out"]||"results/session-balance-01"),
@@ -438,6 +439,7 @@ async function runBenchmark(c,revision){
    schema:"rogue-cards-balanced-mcts-throughput-pilot-v1",
    gitRevision:revision,fullyMatchingRealWorkload:true,
    options:{runs:c.runs,seed:c.seed,workers:c.workers,hours:c.hours,
+    jobMinutes:c.jobMinutes,
     futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
     focus:c.focus},
@@ -550,6 +552,7 @@ if(!isMainThread){
   const workers=Array.from({length:Math.min(c.workers,queue.length)},()=>
    new Worker(new URL(import.meta.url),{workerData:{config:c}}));
   const assigned=new Map(),deadline=Date.now()+c.hours*3600000;
+  let watchdog=null;
   let next=0,stopped=false;
   const timer=setInterval(()=>{
    const s=saveReport(c,done,failed);
@@ -563,8 +566,26 @@ if(!isMainThread){
       if(assigned.size===0)complete();
       return;
      }
-     const i=queue[next++];assigned.set(w,i);w.postMessage({type:"job",i});
+     const i=queue[next++];assigned.set(w,{i,started:Date.now()});
+    w.postMessage({type:"job",i});
     };
+    watchdog=setInterval(()=>{
+     if(stopped)return;
+     const now=Date.now();
+     for(const [worker,job] of assigned){
+      if(now-job.started<=c.jobMinutes*60000)continue;
+      const record={index:job.i,type:"source-timeout",
+       message:"Canonical source "+job.i+" exceeded "+c.jobMinutes+
+        " minute individual safety cap",elapsedSeconds:(now-job.started)/1000,
+       seed:mix(c.seed^Math.imul(job.i+1,0x85ebca6b))||1,
+       heroes:parties[job.i%parties.length],
+       focus:c.focus==="all"?cardFocus[job.i%cardFocus.length]:c.focus};
+      failed.push(record);
+      atom(join(c.out,"failure-"+String(job.i).padStart(6,"0")+".json"),record);
+      stopped=true;
+      reject(Error(record.message));return;
+     }
+    },10000);
     if(!workers.length)complete();
     for(const w of workers){
      w.on("message",m=>{
@@ -577,7 +598,7 @@ if(!isMainThread){
        stopped=true;reject(Error("Canonical engine failure at seed index "+m.index+
         ": "+m.stack));return;
       }
-      if(assigned.get(w)!==m.value.i){
+      if(assigned.get(w)?.i!==m.value.i){
        stopped=true;reject(Error("Worker assignment mismatch"));return;
       }
       atom(join(c.out,"checkpoints",
@@ -596,6 +617,7 @@ if(!isMainThread){
    });
   }finally{
    clearInterval(timer);
+   if(watchdog!==null)clearInterval(watchdog);
    await Promise.all(workers.map(w=>w.terminate()));
    const s=saveReport(c,done,failed);
    console.error("Saved "+s.completedSourceSeeds+"/"+c.runs+
