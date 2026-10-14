@@ -129,7 +129,7 @@ export function chooseRoom(s,index){
   throw Error("Illegal Room choice "+index);
  s.metrics.roomChoices[s.room.id+":"+index]=
   (s.metrics.roomChoices[s.room.id+":"+index]||0)+1;
- s.setActor(s.chooseActor());
+ s.setActor(s.chooseRecipient("room-action"));
  for(const code of ROOM_EFFECTS[s.room.id].choices[index]){
   const [operation,...args]=code.split(":");
   s.apply(operation,args,s.room);
