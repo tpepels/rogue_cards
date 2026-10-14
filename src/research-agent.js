@@ -10,7 +10,8 @@
  * optimal-policy solver or a full-game tree search.
  */
 import {ROOMS,OBJECTS,MONSTERS} from "./tabletop-data.js";
-import {pairedRoomRollouts,pairedCombatRollouts} from "./rollout-evaluator.js";
+import {pairedRoomRollouts,pairedCombatRollouts,pairedPhaseRollouts}
+ from "./rollout-evaluator.js";
 import {ROOM_EFFECTS} from "./room-effect-model.js";
 import {ROLL_EFFECTS,bandFor} from "./effect-model.js";
 import {itemOptions} from "./item-access.js";
@@ -264,6 +265,12 @@ export function agentPlanRoom(s,legal){
   knowledge:s.agentConfig.knowledge};
 }
 export function agentPlanParley(s,m){
+ if(s.agentConfig.planning==="rollout"&&s.agentConfig.budget>0){
+  const r=pairedPhaseRollouts(s,"parley");
+  return {attempt:r.action.kind==="parley",score:r.scores[0],
+   scores:r.scores,reason:r.reason,samples:r.samples,
+   knowledge:r.knowledge};
+ }
  prepareAgentObservation(s);
  const result=planParley(s,m);
  if(result.reason==="unknown_monster"||result.reason==="cannot_pay")return result;
@@ -282,6 +289,12 @@ export function agentPlanCombat(s,h){
   knowledge:s.agentConfig.knowledge};
 }
 export function agentPlanSeal(s){
+ if(s.agentConfig.planning==="rollout"&&s.agentConfig.budget>0){
+  const r=pairedPhaseRollouts(s,"vault");
+  return {attempt:r.action.kind==="seal",score:r.scores[0],
+   scores:r.scores,reason:r.reason,samples:r.samples,
+   knowledge:r.knowledge};
+ }
  prepareAgentObservation(s);
  const result=planSeal(s);
  if(result.reason==="unaffordable")return result;
@@ -289,4 +302,12 @@ export function agentPlanSeal(s){
  const margin=result.margin-threshold;
  return {...result,attempt:margin>0,margin,
   reason:"agent_seal_threshold"};
+}
+
+export function agentPlanEnding(s){
+ if(s.agentConfig.planning!=="rollout"||!s.agentConfig.budget)
+  return {action:"fight",reason:"no_terminal_search"};
+ const r=pairedPhaseRollouts(s,"post-warden");
+ return {action:r.action.kind,scores:r.scores,samples:r.samples,
+  reason:r.reason,knowledge:r.knowledge};
 }
