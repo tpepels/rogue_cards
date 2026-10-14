@@ -17,6 +17,7 @@ import {createGame,observeGame,legalActions,applyAction,
 import {resolveParley} from "./parley.js";
 import {consumeCorpse,settleMonsterVictory} from "./combat-outcomes.js";
 import {seal} from "./vault.js";
+import {forkGameState} from "./fork-state.js";
 import {beginWarden,wardenOptions,applyWardenChoice} from "./vault-encounter.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
@@ -65,8 +66,16 @@ const canonical=session=>{
  if(phase==="terminal")return [];
  throw Error("Unknown session phase "+phase);
 };
-export const sessionActions=session=>canonical(session);
+export const sessionActions=session=>
+ session.pendingNested?session.pendingNested.actions:canonical(session);
 export function observeSession(session){
+ if(session.pendingNested)return {
+  phase:"reaction",parentPhase:session.phase,
+  trigger:session.pendingNested.trigger,
+  game:session.pendingNested.observation,
+  actions:session.pendingNested.actions,
+  actionCount:session.actionCount,completeDecisionCoverage:false
+ };
  return {phase:session.phase,heroIndex:session.heroIndex,
   pendingReturnRoom:session.returnRoomId,
   game:observeGame(session.state),
@@ -192,7 +201,7 @@ export function createDecisionSession(options={}){
 /** The controller is the ONLY place that accepts a player's choice in the
  * new pausable API. Unexpected actions are rejected BEFORE mutating state.
  */
-export function submitDecision(session,action){
+function submitDecisionDirect(session,action){
  if(session.phase==="terminal")throw Error("Expedition already ended");
  const actions=canonical(session);
  const selected=actions.find(x=>
@@ -250,4 +259,65 @@ export function submitDecision(session,action){
  session.actionCount++;
  session.history.push({from:before,choice:{...selected},to:session.phase});
  return observeSession(session);
+}
+
+class NeedReaction extends Error {
+ constructor(event,actions,observation){
+  super("Decision required at "+event.phase);
+  this.event=event;this.actions=actions;this.observation=observation;
+ }
+}
+const sameAction=(a,b)=>a&&b&&
+ Object.keys(a).length===Object.keys(b).length&&
+ Object.keys(a).every(k=>a[k]===b[k]);
+
+/** Re-execute one pending canonical rules call on an isolated exact-RNG
+ * fork. A nested trigger suspends the entire transaction. On selection,
+ * replay the SAME dice/printed effects and commit once, when complete.
+ * No used Item, HP, die or deck mutation escapes an interrupted call.
+ */
+export function submitDecision(session,action){
+ if(session.phase==="terminal")throw Error("Expedition already ended");
+ const waiting=session.pendingNested;
+ let root,responses;
+ if(waiting){
+  const selected=waiting.actions.find(a=>sameAction(a,action));
+  if(!selected)throw Error("Illegal pending reaction "+JSON.stringify(action));
+  root=waiting.root;responses=[...waiting.responses,selected];
+ }else{root=action;responses=[];}
+ const fork={
+  ...session,state:forkGameState(session.state),
+  remainingReturns:[...session.remainingReturns],
+  history:session.history.map(x=>({...x})),
+  pendingNested:null
+ };
+ let position=0;
+ fork.state._decisionHook=event=>{
+  const args={phase:event.phase,heroIndex:event.heroIndex??0,
+   roomId:event.roomId??null};
+  let actions=legalActions(fork.state,args);
+  if(event.cardId)actions=actions.filter(x=>x.kind==="continue"||
+   x.kind==="item-trigger"&&x.cardId===event.cardId);
+  if(event.allowedModes)actions=actions.filter(x=>
+   event.allowedModes.includes(x.mode||x.kind));
+  if(actions.length===0)throw Error("No legal printed reaction at "+event.phase);
+  if(position<responses.length){
+   const selected=actions.find(a=>sameAction(a,responses[position++]));
+   if(!selected)throw Error("Replayed reaction ceased to be legal");
+   return selected;
+  }
+  throw new NeedReaction(event,actions,observeGame(fork.state));
+ };
+ try{
+  submitDecisionDirect(fork,root);
+  if(position!==responses.length)throw Error("Pending decision replay diverged");
+  delete fork.state._decisionHook;
+  Object.assign(session,fork,{pendingNested:null});
+  return observeSession(session);
+ }catch(e){
+  if(!(e instanceof NeedReaction))throw e;
+  session.pendingNested={root,responses,
+   trigger:e.event,actions:e.actions,observation:e.observation};
+  return observeSession(session);
+ }
 }
