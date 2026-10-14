@@ -267,6 +267,9 @@ export function compareSessionActions(session,{
    "MCTS is approximate; its learned continuation policy affects contrasts",
    "After 12 consecutive free equipment changes, the continuation policy "+
     "takes the canonical continue action; all legal alternatives are still searched",
+   "Nested full-game MCTS rollouts advance via the real Continue action "+
+    "after six consecutive reversible equipment moves; the physical rules "+
+    "and full root legal-action set remain unchanged",
    "Different actions can consume a shared random stream differently",
    "Do not treat the paired normal interval as reliable with very small trials",
    "Across multiple source states/cards, adjust significance again"
