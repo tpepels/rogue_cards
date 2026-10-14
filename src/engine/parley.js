@@ -62,7 +62,11 @@ export function resolveParley(s){
   const opp=s.die(20);
   success=r===20||(r!==1&&r+h.card.wit+boon.bonus>opp+difficulty);
   if(success&&rogueReward)s.draw();
-  if(success&&m.id==="wisp")s.peek(1);
+  if(success&&m.id==="wisp"){
+   // A successful ESCAPE delays this same physical encounter: it returns
+   // at the next Corridor, or just before the Vault. No bonus peek.
+   s.followingWisp=m;
+  }
   break;
  }
  case "troll":success=pay(2);break;
