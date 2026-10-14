@@ -232,3 +232,16 @@ test("Push-your-luck never prompts the next unaffordable HP payment",()=>{
   delete s._decisionHook;
  }
 });
+
+test("Lethal first Room operation prevents later printed loot after a wipe",()=>{
+ const s=new ExpeditionState({seed:20261014,heroes:["warrior"]});
+ s.beginRoom(room("d-reliquary"));
+ s.heroes[0].hp=1;
+ const before=s.deck.length;
+ // Reliquary 1-2 says lose d6 HP followed by drawing 1 Item.
+ // Dead parties do not continue the action or receive that Item.
+ s.roomRoll(1);
+ assert.equal(s.heroes[0].hp,0);
+ assert.equal(s.deck.length,before);
+ assert.equal(s.metrics.roundLimit,false);
+});
