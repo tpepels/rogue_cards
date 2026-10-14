@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {mkdir,writeFile} from "node:fs/promises";
 test("one canonical gallery covers all families and prints real card sheets",async({page})=>{
  test.setTimeout(180000);
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
@@ -137,6 +138,21 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
   return cards;
  };
  const onScreen=await check();
+ // Save actual gallery pixels and measured bounds for review of every unique card.
+ const auditDir="test-results/card-visual-inspection";
+ await mkdir(auditDir,{recursive:true});
+ await writeFile(auditDir+"/card-measurements.json",JSON.stringify(onScreen,null,2));
+ const galleryGroups=[
+  ["hero",null],["room","UPPER"],["room","MIDDLE"],["room","DEEP"],["room","FINAL"],
+  ["monster",null],...["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"].map(v=>[v,null])
+ ];
+ for(const [category,depth] of galleryGroups){
+  await page.getByRole("combobox",{name:"Card category"}).selectOption(category);
+  if(depth)await page.getByRole("combobox",{name:"Dungeon region"}).selectOption(depth);
+  const label=(category+"-"+(depth||"all")).toLowerCase();
+  await page.locator(".tt-grid").screenshot({path:auditDir+"/"+label+".png",animations:"disabled",timeout:45000});
+ }
+ await page.getByRole("combobox",{name:"Card category"}).selectOption("all");
  const families=new Set(onScreen.map(card=>card.type));
  for(const family of ["HERO","MONSTER","WARDEN","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION","HAZARD","SHRINE","ENCOUNTER"])
   expect(families.has(family),"No artwork/layout for "+family).toBeTruthy();
