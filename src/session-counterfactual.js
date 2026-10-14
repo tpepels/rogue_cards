@@ -108,7 +108,9 @@ function playMatched(session,action,{
    const result=searchDecision(sim,{
     budget:Math.max(futureBudget,legal.length),
     knowledge,maxSteps:maxSearchSteps,strictTerminal:true,
-    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b))
+    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
+    observedReplay:wasPending&&sim.pendingNested?
+     {replayAt:switchIndex,diceSeed,deckSeed}:null
    });
    if(!result.complete||!result.rootEveryActionTried||!result.recommended)
     throw Error("Incomplete continuation search at "+sim.phase);
