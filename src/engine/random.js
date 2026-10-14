@@ -26,6 +26,19 @@ export function randomSource(seed=1){
     [out[i],out[j]]=[out[j],out[i]];
    }
    return out;
+  },
+  // Clone the *remaining* dice stream without drawing. Needed when a
+  // player pauses in the middle of a printed effect or defence roll.
+  snapshot:()=>state>>>0,
+  restore:value=>{
+   if(!Number.isInteger(value)||value<0||value>0xffffffff)
+    throw Error("Invalid RNG snapshot");
+   state=value|0;
+  },
+  clone:()=>{
+   const copy=randomSource(1);
+   copy.restore(state>>>0);
+   return copy;
   }
  };
 }
