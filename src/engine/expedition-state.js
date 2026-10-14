@@ -488,6 +488,8 @@ export class ExpeditionState {
   case "DISCARD":this.discard(n());return;
   case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");
    this.lastCostCards=[];for(let i=0;i<n();i++)this.lastCostCards.push(this.discard());return;
+  case "PAY_ITEM_OR_HP":if(this.discardable(Number(v))){this.discard(Number(v));}
+   else this.hurt(h,Number(args[1]));return;
   case "TRADE":if(this.discardable(Number(v))){this.discard(Number(v));this.draw(Number(args[1]));}return;
   case "PEEK":this.peek(n());return;
   case "PEEK_SWAP":this.peek(n(),true);return;
