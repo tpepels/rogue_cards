@@ -8,6 +8,7 @@
  <link rel="stylesheet" href="./styles/tabletop.css">
  <link rel="stylesheet" href="./styles/compositions.css">
  <link rel="stylesheet" href="./styles/pasted-notes.css">
+ <link rel="stylesheet" href="./styles/card-placements.css">
  <link rel="stylesheet" href="./styles/layout-editor.css">
 </head>
 <body class="le-page">
@@ -72,11 +73,11 @@
     </div>
     <p class="le-subtle">Higher layers sit in front of lower ones. Rotation and stacking are saved with each piece in the same JSON export.</p>
     <div class="le-row"><button id="reset-rotation" type="button">STRAIGHTEN</button></div>
-    <div class="le-row"><button id="reset-piece" type="button">RESET SELECTED</button><button id="reset-card" type="button">RESET THIS CARD</button></div>
+    <div class="le-row"><button id="reset-piece" type="button">RESTORE THIS PIECE</button><button id="reset-card" type="button">RESTORE STARTING LAYOUT</button></div>
    </div>
    <div id="layout-warning" class="le-warning" role="status"></div>
    <h2>How to save your work</h2>
-   <p>Changes autosave in this browser. Choose <strong>EXPORT JSON</strong> to make a portable backup. Upload that file in ChatGPT and I can commit it to the repository and generate the permanent CSS for every adjusted card at once.</p>
+   <p>The 139 starting layouts load from the repository; your changes autosave in this browser. Choose <strong>EXPORT JSON</strong> to make a portable backup. Upload that file in ChatGPT and I can commit it to the repository and generate the permanent CSS for every adjusted card at once.</p>
    <p><strong>Tip:</strong> Use arrow keys for fine positioning (Shift + arrow for 2 mm), or the measurements above. Position and size use physical millimetres; rotation uses degrees, and layer controls which cutout sits on top. All values work in print.</p>
    <p class="le-subtle">Rotation and overlap order are saved with each piece. Higher layer numbers sit in front. The image stays behind all paper pieces.</p>
    <p class="le-subtle">The exported file can be imported here later. It includes every adjusted card, not just the one currently visible.</p>
