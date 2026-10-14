@@ -93,7 +93,7 @@ test("Monsters have distinctive four-band responses, weaknesses and defined nego
  assert.match(MONSTERS.find(m=>m.id==="bat").v2.parley,/Opposed d20/);
  assert.match(MONSTERS.find(m=>m.id==="goblin").v2.parley,/RECRUIT/);
 });
-test("two-page human-first rulebook teaches the full expedition without unexplained jargon",()=>{
+test("human-first core rules and printed deck appendix teach the expedition",()=>{
  const html=readFileSync("rules.html","utf8");
  assert.match(html,/@page\{size:A4 portrait/);
  assert.equal((html.match(/<main class="sheet">/g)||[]).length,2);
@@ -108,7 +108,10 @@ test("two-page human-first rulebook teaches the full expedition without unexplai
  assert.match(html,/disadvantage<\/strong>.*roll two d20s/s);
  assert.match(html,/0 HP<\/strong>/);
  assert.match(html,/3 MAGIC Items/);
- assert.match(html,/healing always requires an effect on a card/);
+ assert.match(html,/healing always requires a card effect/);
+ assert.match(html,/rules-deck-appendix\.js/);
+ assert.match(html,/PACT<\/strong>/);
+ assert.match(html,/cannot choose a cost you cannot pay/);
  const visible=html.replace(/<[^>]+>/g," ").trim().split(/\s+/).length;
  assert.ok(visible>850,"Rulebook still reads like a terse reference: "+visible);
 });
