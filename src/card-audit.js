@@ -5,7 +5,7 @@
 import {HEROES,ROOMS,VAULT,MONSTERS,WARDEN_CARDS,OBJECTS,CATALOGUE} from "./tabletop-data.js";
 const allRooms=[...ROOMS,VAULT];
 const roomById=new Map(allRooms.map(r=>[r.id,r]));
-const roomText=r=>[r.v2.prompt,...r.v2.choices.map(x=>x.effect),...r.v2.roll.outcomes.map(x=>x.effect)].join(" ").toLowerCase();
+const roomText=r=>[r.v2.prompt,...r.v2.choices.map(x=>x.effect),...(r.v2.roll?.outcomes||[]).map(x=>x.effect)].join(" ").toLowerCase();
 const objectText=o=>[o.v2.trigger,o.v2.alternative||"",...(o.v2.roll?.outcomes||[]).map(x=>x.effect)].join(" ").toLowerCase();
 const normalized=s=>s.toLowerCase().replace(/[^a-z0-9]/g," ");
 export function auditCards(){
