@@ -93,11 +93,8 @@ function playMatched(session,action,{
   afterReactionReplay:wasPending?afterReplay:null,
   replayAt:switchIndex
  });
- // An interrupted pre-existing nested transaction must not silently
- // revert to the real (unrandomized) future on a later replay. That case
- // needs a multi-switch deterministic replay API; refuse it until present.
- if(wasPending&&sim.pendingNested)
-  throw Error("Nested counterfactual replay needs multiple chance switches");
+ // For nested root transactions, keep the chance switch fixed at the
+ // first newly chosen reaction across all later replay attempts.
  let decisions=1,searches=0;
  if(!initial?.actions)throw Error("Canonical initial decision failed");
  while(sim.phase!=="terminal"&&decisions<maxGameSteps){
@@ -117,7 +114,10 @@ function playMatched(session,action,{
     throw Error("Incomplete continuation search at "+sim.phase);
    chosen=result.recommended;searches++;
   }
-  submitDecision(sim,chosen);
+  submitDecision(sim,chosen,{
+   afterReactionReplay:wasPending&&sim.pendingNested?afterReplay:null,
+   replayAt:wasPending&&sim.pendingNested?switchIndex:null
+  });
   decisions++;
  }
  if(sim.phase!=="terminal")throw Error("Nonterminal matched continuation");
@@ -131,7 +131,7 @@ function playMatched(session,action,{
 export function compareSessionActions(session,{
  trials=30,seed=1,knowledge="fair",futureBudget=2,
  maxSearchSteps=4000,maxGameSteps=7000,referenceIndex=0,
- resumeTrials=[],onTrial=null
+ resumeTrials=[],onTrial=null,actionIndices=null
 }={}){
  if(!Number.isSafeInteger(seed)||seed<0||seed>0xffffffff)
   throw Error("Seed must be a uint32 integer");
@@ -149,7 +149,12 @@ export function compareSessionActions(session,{
   throw Error("Invalid resumed paired trial count");
  if(onTrial!==null&&typeof onTrial!=="function")
   throw Error("onTrial must be a callback");
- const actions=sessionActions(session);
+ const offered=sessionActions(session);
+ if(actionIndices!==null&&(!Array.isArray(actionIndices)||
+  actionIndices.length<2||new Set(actionIndices).size!==actionIndices.length||
+  actionIndices.some(i=>!Number.isInteger(i)||i<0||i>=offered.length)))
+  throw Error("actionIndices must identify distinct legal root actions");
+ const actions=actionIndices===null?offered:actionIndices.map(i=>offered[i]);
  if(actions.length<2)throw Error("At least two legal root choices are required");
  if(!Number.isInteger(referenceIndex)||referenceIndex<0||
     referenceIndex>=actions.length)throw Error("Invalid referenceIndex");
@@ -234,7 +239,7 @@ export function compareSessionActions(session,{
   monsterId:session.state.monster?.id??null,
   sourceObservation:observeSession(session),
   knowledge,seed,trials,referenceIndex,futureBudget,maxSearchSteps,
-  maxGameSteps,actions:table,
+  maxGameSteps,actionIndices,actions:table,
   exactPairedSeeds:true,canonicalTerminalContinuations:true,
   allFutureChoicesViaMCTS:true,
   validity:"Conditional on this one reachable state; not an average card effect.",
