@@ -11,10 +11,10 @@ const O=(...bands)=>bands;
 export const ROLL_EFFECTS=Object.freeze({
  "crowbar":O(["HURT:2"],["DRAW:1"],["DRAW:2"]),
  "chalk":O(["HURT:1"],["PEEK:1"],["PEEK_SWAP:2"]),
- "spore-jar":O(["POISON"],["SKIP:1"],["SKIP:2"]),
+ "spore-jar":O(["POISON","NEXT_WIT_DIS"],["FORCE_BEHAVIOR:1"],["SKIP:2"]),
  "coin":O(["NONE"],["DRAW:1"],["DRAW:2"]),
  "needle":O(["HURT:2"],["CURE"],["HEAL:d6","CURE"]),
- "sword":O(["HURT:1","SWORD_FIRE"],["NEXT_DAMAGE:2"],["NEXT_DAMAGE:d6"]),
+ "sword":O(["NEXT_DIS"],["NEXT_DAMAGE:2"],["NEXT_DAMAGE:d6"]),
  "shield":O(["NONE"],["BLOCK:2"],["BLOCK:ALL"]),
  "dog":O(["NONE"],["NEXT_DAMAGE:2"],["NEXT_DAMAGE:d6"]),
  "raven":O(["HURT:1"],["PEEK:1"],["PEEK_SWAP:2"]),
