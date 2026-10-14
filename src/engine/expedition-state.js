@@ -596,6 +596,25 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "ORACLE_PROPHECY":{
+   const prediction=this.chooseEffect("broken-oracle-guess",
+    ["TREASURE","CORRIDOR","OTHER"],"OTHER");
+   const stage=this.room?.stage;
+   const next=this.rooms[stage]?.[0];
+   if(!next)return;
+   // Reveal the next card AFTER guessing; the drawn identity never enters
+   // the legal guess observation. Leave the Room in its existing order.
+   this.peek(1);
+   const actual=next.v2.kind==="TREASURE"?"TREASURE":
+    next.v2.kind==="CORRIDOR"?"CORRIDOR":"OTHER";
+   if(prediction===actual){
+    this.peek(2);this.witBonus+=2;
+   }else{
+    this.hurt(this.actor||this.chooseActor(),2);
+    (this.actor||this.chooseActor()).nextWitDis++;
+   }
+   return;
+  }
   case "PASSAGE_PRY":this.hurt(h,this.has("key")?1:2);if(this.alive())this.draw();return;
   case "KEEP_ROOM":this.keptRooms.push({card:this.room});return;
   case "DOUBLE_BID":this.roomRoll();if(this.alive())this.roomRoll();return;
