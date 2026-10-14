@@ -952,6 +952,24 @@ export class ExpeditionState {
   * RANDOM draws chance only; other modes pause at a real legal choice.
   * Unchosen revealed Rooms go to the bottom, not out of the game.
   */
+ /** A printed TELEGRAPH reveals the Warden's first behavior before
+  * the fight. A Bell may then take one NEW result; it cannot inspect an
+  * otherwise hidden future roll.
+  */
+ telegraphWarden({mayReroll=false}={}){
+  const first=this.die();
+  this.forcedBehavior=first;
+  this.telegraphedWardenBehavior=first;
+  if(mayReroll){
+   const mode=this.chooseEffect("last-bell-telegraph",
+    ["keep","reroll"],"keep");
+   if(mode==="reroll"){
+    this.forcedBehavior=this.die();
+    this.telegraphedWardenBehavior=this.forcedBehavior;
+   }
+  }
+  return this.forcedBehavior;
+ }
  forkRevealed(count,{random=false,treasureOnly=false}={}){
   const stage=this.room.stage,pile=this.rooms[stage];
   const offered=pile.splice(0,Math.min(count,pile.length));
