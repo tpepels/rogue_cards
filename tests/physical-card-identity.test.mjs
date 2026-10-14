@@ -26,7 +26,7 @@ test("two physical copies never share exhaustion, once-per-room usage or equipme
   assert.ok(index>=0);s.deck.splice(index,1);
   s.noteDeckRemoval(card);s.add(h,card);
  }
- assert.strictEqual(h.slots.weapon,a===h.slots.weapon?a:b);
+ assert.ok(h.inventory.includes(a)&&h.inventory.includes(b));
  s.exhausted.add(a);h.used.add(a);
  assert.ok(!s.exhausted.has(b),"Second copy cannot inherit exhaustion");
  assert.ok(!h.used.has(b),"Second copy cannot inherit ONCE PER ROOM use");
