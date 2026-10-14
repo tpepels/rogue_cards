@@ -89,8 +89,15 @@ export function monsterEntry(s,monster){
  if(s.whisperRoom){s.rooms[s.whisperRoom.stage].unshift(s.whisperRoom);s.whisperRoom=null;}
  for(const id of ["m-bridge","m-wax-bridge"]){
   const i=s.keptRooms.findIndex(x=>x.card.id===id);if(i<0)continue;
-  if(id==="m-bridge"){if(!s.discardable())continue;s.discard();}
-  else{if(s.chooseActor().hp<=1)continue;s.hurt(s.chooseActor(),1);}
+  if(id==="m-bridge"&&!s.discardable()||
+     id==="m-wax-bridge"&&s.chooseActor().hp<=1)continue;
+  // The Monster has just been revealed; the player may spend or SAVE
+  // the actual retained Bridge before its one-use escape resolves.
+  const action=s._decisionHook?.({phase:"retained",roomId:id,
+   monsterId:monster.id,context:"monster-entry"});
+  if(action?.mode==="save")continue;
+  if(id==="m-bridge")s.discard();
+  else s.hurt(s.chooseActor(),1);
   s.keptRooms.splice(i,1);return true;
  }
  return false;
