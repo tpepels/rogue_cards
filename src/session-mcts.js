@@ -254,8 +254,25 @@ export function searchDecision(session,{budget=100,seed=1,
   if(error){
    incomplete++;
    incompleteReasons[error]=(incompleteReasons[error]||0)+1;
-   if(strictTerminal)throw Error("MCTS sampled nonterminal at trial "+i+
-    ", depth "+depth+": "+error);
+   if(strictTerminal){
+    const failure=Error("MCTS sampled nonterminal at trial "+i+
+     ", depth "+depth+": "+error);
+    // A missing legal action or step cap is not a loss. Capture the
+    // determinized chance seeds and last canonical actions, as we do
+    // for exceptions from printed rules.
+    failure.repro={searchSeed:seed,knowledge,budget,maxSteps,
+     trial:i,depth,chanceSeed,deckSeed,
+     rootPhase:session.pendingNested?"reaction:"+
+      session.pendingNested.trigger.phase:session.phase,
+     rootRoomId:session.state.room?.id??null,
+     failingPhase:sim.pendingNested?"reaction:"+
+      sim.pendingNested.trigger.phase:sim.phase,
+     failingRoomId:sim.state.room?.id??null,
+     failingMonsterId:sim.state.monster?.id??null,
+     heroHP:sim.state.heroes.map(h=>h.hp),
+     reason:error,observedReplay,recentActions:reproductionTrace.slice(-120)};
+    throw failure;
+   }
    continue;
   }
   const result=Number(!!sim.state.metrics.won);
