@@ -588,7 +588,11 @@ export class ExpeditionState {
   case "PEEK":this.peek(n());return;
   case "PEEK_SWAP":this.peek(n(),true);return;
   case "NEXT_ADV":h.nextAdv++;return;
-  case "NEXT_DIS":h.nextDis++;return;
+  case "NEXT_DIS":{
+   h.nextDis++;
+   if(["d-shadow","u-lamp"].includes(card?.id))h.nextDarknessDis++;
+   return;
+  }
   case "NEXT_ATK":h.nextAtk+=n();return;
   case "NEXT_DAMAGE":h.nextDamage+=n();return;
   case "DEF_ADV":h.nextDefenseAdv=true;return;
