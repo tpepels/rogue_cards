@@ -141,6 +141,9 @@ export function playerAttack(s,h){
  // No additional on-hit Item trigger is legal after that Hero reaches 0 HP.
  if(h.hp<=0)return;
  for(const card of [h.slots.weapon,h.slots.companion]){
+  // An earlier on-hit effect may kill its actor. Never ask a dead Hero
+  // to activate a second Item that has ceased to be a legal action.
+  if(h.hp<=0)break;
   if(card&&["sword","dog"].includes(card.id)&&!h.used.has(card)){
    // Their printed roll adds damage to the current hit (not a future hit).
    if(!wantsItem(s,h,card,"on-hit"))continue;
