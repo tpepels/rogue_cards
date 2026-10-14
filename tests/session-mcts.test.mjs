@@ -123,7 +123,9 @@ test("full-legal-action MCTS policy cannot cycle forever on free equipment chang
   a.kind==="unequip"&&a.cardId==="sword");
  assert.ok(unequip,"Sword can be unequipped");
  submitDecision(session,unequip);
- assert.equal(hero.slots.weapon,undefined);
+ // submitDecision commits a fork back into session.state. Earlier Hero
+ // object references belong to the pre-commit state.
+ assert.equal(s.heroes[0].slots.weapon,undefined);
  const legal=sessionActions(session);
  assert.ok(legal.some(a=>a.kind==="equip"&&a.cardId==="sword"));
  assert.ok(legal.some(a=>a.kind==="continue"));
