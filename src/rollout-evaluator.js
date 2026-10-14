@@ -100,7 +100,8 @@ function noteScenario(source,fork,result,kind,nestedBefore){
  }
  audit.futureReplannedBranches+=Math.max(0,
   (fork.metrics.rolloutAudit?.roomBranches||0)+
-  (fork.metrics.rolloutAudit?.combatBranches||0)-nestedBefore);
+  (fork.metrics.rolloutAudit?.combatBranches||0)+
+  (fork.metrics.rolloutAudit?.otherDecisionBranches||0)-nestedBefore);
 }
 function summarize(values){
  const n=values.length,mean=values.reduce((sum,v)=>sum+v,0)/n;
