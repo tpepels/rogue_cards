@@ -224,7 +224,12 @@ export class ExpeditionState {
   else if(card.v2.kind==="COMPANION")slot="companion";
   if(!slot)return;
   const old=h.slots[slot];if(old&&this.cursed(old))return;
-  if(!old||scoreItem(card,this.strategy)>scoreItem(old,this.strategy))h.slots[slot]=card;
+  if(!old||old===card){h.slots[slot]=card;return;}
+  const legacy=scoreItem(card,this.strategy)>scoreItem(old,this.strategy)?
+   "equip-new":"keep-old";
+  if(this.chooseEffect("equipment:"+slot+":"+old.id+":"+card.id,
+    ["keep-old","equip-new"],legacy)==="equip-new")
+   h.slots[slot]=card;
  }
  remove(h,card){
   const pos=h.inventory.indexOf(card);if(pos<0)return false;
@@ -585,9 +590,19 @@ export class ExpeditionState {
   case "BANISH":if(this.monster){this.monster=null;this.monsterHP=0;this.banished=true;this.metrics.banishments++;}return;
   case "RECHARGE":this.recharge();return;
   case "CURSED_RECHARGE":if(can(this.lastSpent,"CURSED"))this.recharge();return;
-  case "SUPPLY_BARTER":if(this.exhaustedWand()&&this.strategy==="magic"&&this.discardable(1,"MAGIC")){
-    this.discard(1,{tag:"MAGIC"});this.recharge();}
-    else if(this.discardable()){this.discard();this.draw(2);}return;
+  case "SUPPLY_BARTER":{
+   const modes=[
+    ...(this.exhaustedWand()&&this.discardable(1,"MAGIC")?["recharge"]:[]),
+    ...(this.discardable()?["trade"]:[])
+   ];
+   if(!modes.length)return;
+   const mode=this.chooseEffect("supply-barter",modes,
+    modes.includes("recharge")&&this.strategy==="magic"?"recharge":
+    modes.includes("trade")?"trade":modes[0]);
+   if(mode==="recharge"){this.discard(1,{tag:"MAGIC"});this.recharge();}
+   else{this.discard();this.draw(2);}
+   return;
+  }
   case "CLEANSE":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
     if(owner){const target=owner.inventory.find(y=>this.cursed(y));this.cleansed.add(target);}return;}
   case "CLEANSE_COST":{const owner=this.heroes.find(x=>x.inventory.some(y=>this.cursed(y)));
@@ -762,25 +777,36 @@ export class ExpeditionState {
   if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
     face=this.pushLuck(face,{onOne:true});
    }else if(risk){
-   const willing=this.strategy!=="survival"&&this.actor.hp>this.actor.card.hp*.4;
-   if(willing){
+   const canPay=risk==="item"?this.discardable():this.actor.hp>0;
+   const willing=canPay&&this.strategy!=="survival"&&
+    this.actor.hp>this.actor.card.hp*.4;
+   if(canPay&&this.chooseEffect("room-push-luck:"+this.room.id,
+    ["keep","push"],willing?"push":"keep")==="push"){
     if(risk==="item"){if(this.discardable()){this.discard();face=Math.max(face,this.die());}}
     else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
    }
   }
-  if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id)){
+  if(this.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(this.room.id)&&
+    this.chooseEffect("rope-room:"+this.room.id,["save","use"],"use")==="use"){
    const h=this.own("rope"),card=byId(h.inventory,"rope");
    this.directItem(h,card,"room-override",()=>{face=6;return true;});
   }
   if(this.has("dog")&&["u-nest","m-beetle"].includes(this.room.id))face=6;
   if(this.room.id==="u-nest"&&this.ratFavor){face=6;this.ratFavor=false;}
-  if(this.room.id==="m-beetle"&&this.strategy==="treasure"&&this.discardable(1,"METAL")){
+  if(this.room.id==="m-beetle"&&this.discardable(1,"METAL")&&
+   this.chooseEffect("beetle-metal",["save","pay"],
+    this.strategy==="treasure"?"pay":"save")==="pay"){
    this.discard(1,{tag:"METAL"});face=6;
   }
   if(this.has("raven")&&this.room.id==="d-oracle")face=6;
   if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
-    &&this.strategy!=="seal"){const h=this.own("key");this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
-     this.consume(h,byId(h.inventory,"key"));return true;});face=6;}
+    &&this.chooseEffect("rusty-key:"+this.room.id,["save","spend"],
+    this.strategy!=="seal"?"spend":"save")==="spend"){
+   const h=this.own("key");
+   this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
+    this.consume(h,byId(h.inventory,"key"));return true;
+   });face=6;
+  }
   // A Lamp-Eater consumes exposed FIRE; carrying light never guarantees treasure.
   // Opened Crypt no longer treats fire as automatic treasure.
 
@@ -791,7 +817,9 @@ export class ExpeditionState {
   if(this.heroes.some(h=>this.equipped(h,"ring-ashes"))&&this.room.id==="u-lamp")face=6;
   if(this.heroes.some(h=>this.equipped(h,"ring-hunger"))&&this.room.id==="d-crown")face=5;
   if(this.room.id==="m-statue"&&can(this.lastSpent,"MAGIC"))face=6;
-  if(this.room.id==="d-mirror"&&this.strategy==="treasure"&&this.discardable(1,"MAGIC")){
+  if(this.room.id==="d-mirror"&&this.discardable(1,"MAGIC")&&
+   this.chooseEffect("mirror-magic",["save","pay"],
+    this.strategy==="treasure"?"pay":"save")==="pay"){
    this.discard(1,{tag:"MAGIC"});face=6;
   }
   if(this.room.id==="m-auction"&&can(this.lastSpent,"MAGIC"))face=6;
@@ -801,7 +829,9 @@ export class ExpeditionState {
    "m-beetle":"scroll-lightning","u-gate":"scroll-unlock","m-vault":"scroll-unlock",
    "u-mimic":"scroll-unlock","d-last-chest":"scroll-unlock"
   };
-  if(this.strategy==="magic"&&scrollSub[this.room.id]&&this.has(scrollSub[this.room.id])){
+  if(scrollSub[this.room.id]&&this.has(scrollSub[this.room.id])&&
+   this.chooseEffect("scroll-room:"+this.room.id,["save","read"],
+    this.strategy==="magic"?"read":"save")==="read"){
    const h=this.own(scrollSub[this.room.id]),card=byId(h.inventory,scrollSub[this.room.id]);
    this.consume(h,card);face=6;
   }
