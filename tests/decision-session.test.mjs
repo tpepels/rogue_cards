@@ -59,8 +59,12 @@ test("combat has a separate player action and Monster response, then full reward
  advance(session,a=>a.kind==="fight");
  assert.equal(session.phase,"combat");
  let combatActs=0,responses=0;
- while(["combat","monster-response"].includes(session.phase)&&combatActs<80){
-  if(session.phase==="combat"){
+ while(["combat","monster-response","reaction"].includes(
+  observeSession(session).phase)&&combatActs<80){
+  if(observeSession(session).phase==="reaction"){
+   advance(session,a=>["continue","skip","keep"].includes(a.kind)||
+    a.kind==="hero-mode");
+  }else if(session.phase==="combat"){
    advance(session,a=>a.kind==="attack");combatActs++;
   }else{
    advance(session,a=>a.kind==="respond");responses++;
