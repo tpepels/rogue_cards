@@ -52,7 +52,8 @@ checks all canonical card mappings and the referenced PNG files.
 ### Generate only artwork for newly added cards
 
 The [Gemini illustration generator](docs/illustration-generator.md) reads the
-actual `CATALOGUE` and `CARD_ART` map; no CSV or visual hooks are involved.
+original `CATALOGUE` / `CARD_ART` plus the 24 print-only designs / `PRINT_ONLY_ART`
+from `src/print-expansion.js`; no CSV or visual hooks are involved.
 It uses the preceding illustration as the only style reference, sends only
 the card name and `scripts/illustration-style.txt`, and writes missing PNGs
 directly to `assets/illustrations/`. Existing artwork is not regenerated.
@@ -63,9 +64,11 @@ npm run art:missing -- --limit 3 # up to three paid requests
 npm run art:missing               # generate all remaining missing images
 ```
 
-After reviewing the results, commit the new PNGs and generated `CARD_ART`
-entries. The script uses Gemini 3.1 Flash Image at 1K; it is run locally, not
-by CI.
+For the 24 new print-only cards, `art:check` now reports them as missing
+unique artwork and generation updates `PRINT_ONLY_ART`, not the original
+`CARD_ART`. After reviewing the results, commit the new PNGs and the corresponding
+art map. The script uses Gemini 3.1 Flash Image at 1K; it is run locally,
+not by CI.
 
 ## Gameplay
 

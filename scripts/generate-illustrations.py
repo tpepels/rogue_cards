@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Generate only missing Rogue Cards artwork from the real JS catalogue.
+"""Generate missing artwork for all physical Rogue Cards, including print-only cards.
 
 Each Gemini prompt is the card title plus the verbatim illustration-style.txt.
-The first missing card inherits the most recent existing illustration, and each
-following generated card inherits the immediately preceding illustration.
-Nothing is generated or billed if all canonical artwork already exists.
+The first missing card uses scripts/reference.jpg when available; subsequent
+generated cards inherit the immediately preceding illustration.
+Never regenerate completed original artwork or bill for --dry-run/--list.
 """
 from __future__ import annotations
 
@@ -22,7 +22,14 @@ import unicodedata
 
 ROOT = Path(__file__).resolve().parents[1]
 ART_DIR = ROOT / "assets" / "illustrations"
-MAP_FILE = ROOT / "src" / "tabletop-view.js"
+MAP_FILES = {
+    "canonical": ROOT / "src" / "tabletop-view.js",
+    "print-only": ROOT / "src" / "print-expansion.js",
+}
+MAP_NAMES = {
+    "canonical": "CARD_ART",
+    "print-only": "PRINT_ONLY_ART",
+}
 STYLE_FILE = ROOT / "scripts" / "illustration-style.txt"
 MODEL = "gemini-3.1-flash-image"
 
@@ -83,11 +90,13 @@ def make_prompt(title: str, style: str) -> str:
 
 
 def add_mapping(source: str, key: str, filename: str,
-                previous_filename: str | None = None) -> str:
-    """Add a new mapping or replace a provisional shared-art mapping safely."""
-    begin = source.find("export const CARD_ART=Object.freeze({")
+                previous_filename: str | None = None,
+                declaration: str = "CARD_ART") -> str:
+    """Update either artwork map, retaining all unrelated assignments."""
+    marker = f"export const {declaration}=Object.freeze({{"
+    begin = source.find(marker)
     if begin < 0:
-        raise ValueError("Cannot find CARD_ART declaration in src/tabletop-view.js")
+        raise ValueError(f"Cannot find {declaration} declaration")
     end = source.find("\n});", begin)
     if end < 0:
         raise ValueError("Cannot find CARD_ART closing marker")
@@ -95,19 +104,27 @@ def add_mapping(source: str, key: str, filename: str,
     entry = re.compile(r'("' + re.escape(key) + r'"\s*:\s*)"([^"]+)"')
     matches = list(entry.finditer(body))
     if len(matches) > 1:
-        raise ValueError(f"Duplicate CARD_ART keys: {key}")
+        raise ValueError(f"Duplicate {declaration} keys: {key}")
     if matches:
         old_name = matches[0].group(2)
         if previous_filename is None or old_name != previous_filename:
-            raise ValueError(f"CARD_ART mapping changed for {key}: {old_name}")
+            raise ValueError(f"{declaration} mapping changed for {key}: {old_name}")
         replaced = entry.sub(lambda m: m.group(1) + json.dumps(filename), body, count=1)
         return source[:begin] + replaced + source[end:]
     if previous_filename is not None:
-        raise ValueError(f"Expected a previous CARD_ART entry for {key}")
+        raise ValueError(f"Expected a previous {declaration} entry for {key}")
     prefix = source[:end].rstrip()
     if prefix.endswith('"'):
         prefix += ","
     return prefix + f"\n {json.dumps(key)}:{json.dumps(filename)}" + source[end:]
+
+
+def mapping_target(card: dict) -> tuple[Path, str]:
+    """Route print-only artwork to its separate mapping; do not alter CARD_ART."""
+    source = card.get("mapping_source", "canonical")
+    if source not in MAP_FILES:
+        raise ValueError(f"Unknown illustration mapping source: {source}")
+    return MAP_FILES[source], MAP_NAMES[source]
 
 
 def mime(path: Path) -> str:
@@ -217,10 +234,11 @@ def run(args: argparse.Namespace) -> int:
             data = request_image(client, card["title"], style, last_art)
             write_artwork(data, path)
             if card["new_mapping"]:
-                text = MAP_FILE.read_text(encoding="utf-8")
-                MAP_FILE.write_text(add_mapping(text, card["key"], card["filename"],
-                                                   card["previous_filename"]),
-                                    encoding="utf-8")
+                map_file, declaration = mapping_target(card)
+                text = map_file.read_text(encoding="utf-8")
+                updated = add_mapping(text, card["key"], card["filename"],
+                                      card["previous_filename"], declaration)
+                map_file.write_text(updated, encoding="utf-8")
         except Exception:
             # Do not silently continue the chain with a missing predecessor.
             print(f"Stopped at {card['key']}; previous completed artwork is preserved.",
@@ -231,7 +249,7 @@ def run(args: argparse.Namespace) -> int:
         print(f"[{generated}/{len(missing)}] Saved {path.relative_to(ROOT)}", flush=True)
         if args.delay and generated < len(missing):
             time.sleep(args.delay)
-    print(f"Generated {generated} illustration(s). Review and commit PNGs and CARD_ART updates.")
+    print(f"Generated {generated} illustration(s). Review and commit PNGs and artwork-map updates.")
     return 0
 
 

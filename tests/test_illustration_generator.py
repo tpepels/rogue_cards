@@ -97,5 +97,48 @@ class IllustrationGeneratorTests(unittest.TestCase):
         self.assertEqual(module.slug("Will-o'-Wisp"), "will_o_wisp")
 
 
+    def test_print_only_art_updates_its_own_map(self):
+        source = (
+            'export const PRINT_ONLY_ART=Object.freeze({\\n'
+            ' "room:ex-u-guard-cell":"131_the_hollow_knight.png",\\n'
+            ' "item:ex-bandages":"110_antidote.png"\\n'
+            '});\\n'
+        )
+        updated = module.add_mapping(
+            source, "room:ex-u-guard-cell", "140_empty_guard_cell.png",
+            "131_the_hollow_knight.png", "PRINT_ONLY_ART"
+        )
+        self.assertIn('"room:ex-u-guard-cell":"140_empty_guard_cell.png"', updated)
+        self.assertIn('"item:ex-bandages":"110_antidote.png"', updated)
+        self.assertEqual(updated.count('"room:ex-u-guard-cell"'), 1)
+
+    def test_physical_catalogue_covers_print_only_cards(self):
+        cards = module.get_catalogue()
+        self.assertEqual(len(cards), 163)
+        self.assertEqual(len(set(card["key"] for card in cards)), 163)
+        canonical = [c for c in cards if c["mapping_source"] == "canonical"]
+        expansion = [c for c in cards if c["mapping_source"] == "print-only"]
+        self.assertEqual(len(canonical), 139)
+        self.assertEqual(len(expansion), 24)
+        self.assertEqual(len({c["key"] for c in expansion}), 24)
+        self.assertEqual([c["filename"] for c in expansion if not c["filename"]], [])
+        self.assertEqual(module.mapping_target(expansion[0])[1], "PRINT_ONLY_ART")
+
+    def test_print_only_borrowed_art_is_planned_above_original_139(self):
+        cards = module.get_catalogue()
+        with tempfile.TemporaryDirectory() as tmp:
+            art_dir = Path(tmp)
+            for card in cards:
+                if card["mapping_source"] == "canonical":
+                    Path(art_dir, card["filename"]).touch()
+            planned = module.plan_cards(cards, art_dir)
+            original = [x for x in planned if x["mapping_source"] == "canonical"]
+            expansion = [x for x in planned if x["mapping_source"] == "print-only"]
+            self.assertTrue(all(not x["missing"] for x in original))
+            self.assertEqual(sum(x["missing"] for x in expansion), 24)
+            self.assertEqual(expansion[0]["filename"], "140_empty_guard_cell.png")
+            self.assertEqual(expansion[-1]["filename"], "163_wooden_buckler.png")
+
+
 if __name__ == "__main__":
     unittest.main()
