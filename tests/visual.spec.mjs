@@ -120,6 +120,14 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    expect(card.imageW,card.id+" illustration too narrow").toBeGreaterThan(83*96/25.4);
    expect(card.notes.length,card.id+" has no note").toBeGreaterThanOrEqual(1);
    expect(card.notes.length,card.id+" too many pasted notes").toBeLessThanOrEqual(2);
+   // A pasted note may tilt or touch the other note's paper edge, but it may
+   // not cover a meaningful area of the other note's printed instructions.
+   if(card.notes.length===2){
+    const [a,b]=card.notes;
+    const overlapX=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
+    const overlapY=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+    expect(Math.min(overlapX,overlapY),card.id+" pasted notes obscure each other").toBeLessThanOrEqual(6);
+   }
    expect(card.stampOutside,card.id+" stamp outside frame").toBeLessThanOrEqual(2);
    expect(Math.min(card.stampOverlapX,card.stampOverlapY),card.id+" stamp/title overlap").toBeLessThanOrEqual(5);
    for(const note of card.notes){

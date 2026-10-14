@@ -19,7 +19,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="knight"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:73.1mm;
+ top:65.7mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -57,7 +57,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="monk"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:73.1mm;
+ top:60.9mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -95,7 +95,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="priest"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:74mm;
+ top:63.2mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -133,7 +133,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="rogue"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:75.7mm;
+ top:62.5mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -171,7 +171,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="thief"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:75.7mm;
+ top:55.9mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -210,7 +210,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="warrior"] .tt-collage > .tt-content .tt-slip--lead{
  left:54mm;
  right:auto;
- top:88mm;
+ top:68.7mm;
  bottom:auto;
  width:32.5mm;
  max-width:none;
@@ -251,7 +251,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="witch"] .tt-collage > .tt-content .tt-slip--lead{
  left:53.9mm;
  right:auto;
- top:75.7mm;
+ top:61.9mm;
  bottom:auto;
  width:33.5mm;
  max-width:none;
@@ -289,7 +289,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="wizard"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:74mm;
+ top:60.5mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -327,7 +327,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="chalk"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:75.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -365,7 +365,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="coin"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:84.2mm;
+ top:77.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -403,7 +403,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="crowbar"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:78.2mm;
+ top:73mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -441,7 +441,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="crown-relic"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:81.2mm;
+ top:67.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -479,7 +479,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="cursed-blade"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:81.2mm;
+ top:76.1mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -517,7 +517,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="cursed-mail"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:81.2mm;
+ top:73.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -555,7 +555,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="dog"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:73.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -593,7 +593,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="goblin-pet"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:71.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -631,7 +631,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="key"] .tt-collage > .tt-content .tt-slip--lead{
  left:49.4mm;
  right:auto;
- top:79.2mm;
+ top:73.5mm;
  bottom:auto;
  width:38mm;
  max-width:none;
@@ -669,7 +669,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="lantern-heart"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:84.2mm;
+ top:77mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -707,7 +707,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="mail"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:84.2mm;
+ top:73.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -745,7 +745,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="mirror"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:72.1mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -783,7 +783,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="moth"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:73.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -821,7 +821,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="needle"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:84.2mm;
+ top:80.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -859,7 +859,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="raven"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:76.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -897,7 +897,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-ashes"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:75.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -935,7 +935,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-bargain"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:78.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -973,7 +973,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-echo"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:75.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1011,7 +1011,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-eye"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:80mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1049,7 +1049,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-hunger"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:76.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1087,7 +1087,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-luck"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:74mm;
+ top:65.8mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1125,7 +1125,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-spores"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:73.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1163,7 +1163,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="rope"] .tt-collage > .tt-content .tt-slip--lead{
  left:49.4mm;
  right:auto;
- top:79.2mm;
+ top:71.4mm;
  bottom:auto;
  width:38mm;
  max-width:none;
@@ -1201,7 +1201,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-banish"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:76.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1239,7 +1239,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-flame"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:77mm;
+ top:75.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1277,7 +1277,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-frost"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:79.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1315,7 +1315,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-last"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:86mm;
+ top:74.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1353,7 +1353,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-lightning"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:82.4mm;
+ top:74.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1391,7 +1391,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-mischief"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.4mm;
+ top:73.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1467,7 +1467,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-unlock"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:79.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1505,7 +1505,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="shield"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:77.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1543,7 +1543,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="skull"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:83mm;
+ top:79mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1581,7 +1581,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="spore-jar"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:86mm;
+ top:78.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1619,7 +1619,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="staff"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:81.2mm;
+ top:74.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1657,7 +1657,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="sword"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:74mm;
+ top:70.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1695,7 +1695,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="torch"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:84.2mm;
+ top:71mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1733,7 +1733,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-door"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:74mm;
+ top:66.1mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1771,7 +1771,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-frost"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:66.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1809,7 +1809,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-market"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.4mm;
+ top:68.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1847,7 +1847,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-morph"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:74mm;
+ top:61.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1885,7 +1885,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-sparks"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:74.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1923,7 +1923,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-turn"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:68.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1961,7 +1961,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-undo"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:71mm;
+ top:64.9mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1999,7 +1999,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="bat"] .tt-collage > .tt-content .tt-slip--lead{
  left:45.4mm;
  right:auto;
- top:63.6mm;
+ top:59mm;
  bottom:auto;
  width:42mm;
  max-width:none;
@@ -2037,7 +2037,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="crawler"] .tt-collage > .tt-content .tt-slip--lead{
  left:45.4mm;
  right:auto;
- top:60.6mm;
+ top:53.4mm;
  bottom:auto;
  width:42mm;
  max-width:none;
@@ -2075,7 +2075,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="cultist"] .tt-collage > .tt-content .tt-slip--lead{
  left:43.4mm;
  right:auto;
- top:57.6mm;
+ top:55.2mm;
  bottom:auto;
  width:44mm;
  max-width:none;
@@ -2113,7 +2113,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="eye"] .tt-collage > .tt-content .tt-slip--lead{
  left:43.4mm;
  right:auto;
- top:57.6mm;
+ top:54.7mm;
  bottom:auto;
  width:44mm;
  max-width:none;
@@ -2151,7 +2151,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="goblin"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:66.5mm;
+ top:43.3mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -2189,7 +2189,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="mold"] .tt-collage > .tt-content .tt-slip--lead{
  left:45.4mm;
  right:auto;
- top:60.6mm;
+ top:56.9mm;
  bottom:auto;
  width:42mm;
  max-width:none;
@@ -2227,7 +2227,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="rat"] .tt-collage > .tt-content .tt-slip--lead{
  left:43.4mm;
  right:auto;
- top:60.6mm;
+ top:58.1mm;
  bottom:auto;
  width:44mm;
  max-width:none;
@@ -2265,7 +2265,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="rust"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:60.6mm;
+ top:56.8mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -2303,7 +2303,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="sentinel"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:63.5mm;
+ top:58mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -2417,7 +2417,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="warden-fury"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:54.6mm;
+ top:52.4mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -2455,7 +2455,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="wisp"] .tt-collage > .tt-content .tt-slip--lead{
  left:43.4mm;
  right:auto;
- top:60.6mm;
+ top:51.1mm;
  bottom:auto;
  width:44mm;
  max-width:none;
@@ -2531,7 +2531,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="amber"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:76.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -2570,7 +2570,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="antidote"] .tt-collage > .tt-content .tt-slip--lead{
  left:52mm;
  right:auto;
- top:93.5mm;
+ top:73.1mm;
  bottom:auto;
  width:36mm;
  max-width:none;
@@ -2609,7 +2609,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="fizzy"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:73.4mm;
+ top:70.4mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2646,7 +2646,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="laughing"] .tt-collage > .tt-content .tt-slip--lead{
  left:52mm;
  right:auto;
- top:90.5mm;
+ top:68.6mm;
  bottom:auto;
  width:33.07mm;
  max-width:none;
@@ -2685,7 +2685,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="midnight"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:80mm;
+ top:67.2mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2723,7 +2723,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="milky"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:80mm;
+ top:74.1mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2761,7 +2761,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="mushroom"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:75mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -2799,7 +2799,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="smoky"] .tt-collage > .tt-content .tt-slip--lead{
  left:54.4mm;
  right:auto;
- top:80mm;
+ top:70.6mm;
  bottom:auto;
  width:33mm;
  max-width:none;
@@ -2875,7 +2875,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bazaar"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:65.75mm;
+ top:55.85mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2913,7 +2913,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bones"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:58.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2951,7 +2951,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bridge"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:68.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3027,7 +3027,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-crown"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:62.7mm;
+ top:58.6mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3065,7 +3065,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-gate"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:64.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3130,7 +3130,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-bell"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:52.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3233,7 +3233,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-mirror"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:61.6mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3336,7 +3336,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:66.2mm;
+ top:55.6mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3553,7 +3553,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-beetle"] .tt-collage > .tt-content .tt-slip--lead{
  left:33.4mm;
  right:auto;
- top:57.2mm;
+ top:52.9mm;
  bottom:auto;
  width:54mm;
  max-width:none;
@@ -3591,7 +3591,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-bridge"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:51.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3656,7 +3656,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-clock"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:51mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3786,7 +3786,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-flood"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:65.75mm;
+ top:60.15mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3889,7 +3889,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-hungry-door"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:52.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3927,7 +3927,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-ladder"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:50.7mm;
+ top:46.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3965,7 +3965,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-maps"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:61.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4079,7 +4079,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-statue"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:66.2mm;
+ top:56.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4117,7 +4117,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-treasure"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.2mm;
+ top:43.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4399,7 +4399,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-echoes"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:57.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4475,7 +4475,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fork"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:59.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4551,7 +4551,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-gate"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:53.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4692,7 +4692,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-leech-pool"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:56.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4730,7 +4730,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-merchant"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:71.75mm;
+ top:62.15mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4768,7 +4768,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-mimic"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:75.2mm;
+ top:64.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4882,7 +4882,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-passage"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:75.2mm;
+ top:59.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -5023,7 +5023,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-shrine"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:62.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -5099,7 +5099,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-supply"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:62.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
