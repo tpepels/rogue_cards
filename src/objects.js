@@ -10,13 +10,13 @@ const make=([id,title,art,family,tags,trigger,effects,alternative,links,flavor,c
 export const V2_ITEM_FAMILIES=Object.freeze(["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND"]);
 const tools=[
  ["key","Rusty Key","key","TOOL",["METAL","TOOL"],
-  "LOCK: Discard when a Room names Rusty Key. Buried Lockbox: resolve 5–6. Rusty Gate, Chest with a Pulse, Last Chest: resolve 3–4 instead of 1–2.",null,
+  "Discard at named locks. Buried Lockbox: use 5–6. Rusty Gate, Chest with a Pulse, Last Chest: change 1–2 to 3–4.",null,
   "At Talking Door, discard for ADV on CONFESS. A key cannot guarantee the contents are safe.",["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"],"Old locks fear it.",3],
  ["rope","Knotted Rope","stairs","TOOL",["TOOL"],
-  "ONCE PER ROOM: Turn sideways to raise or lower a bridge/trapdoor d6 by 1 (within 1–6), or prevent up to 3 falling damage. Straighten next Room.",null,
+  "ONCE PER ROOM: Turn sideways to adjust a bridge/trapdoor d6 by ±1 (within 1–6) or prevent 3 falling damage. Straighten next Room.",null,
   "At Flooded Chamber, turn sideways instead to cancel first water-caused DEF DIS. Never generates treasure.",["u-fall","m-flood","m-bridge","d-bridge"],"The knots count the dead.",3],
  ["torch","Pitch Torch","wind","TOOL",["FIRE","TOOL"],
-  "While carried, this counts as FIRE. ONCE PER ROOM, turn sideways to cancel darkness-caused DIS or peek at the next Room while in darkness.",null,
+  "Carried: counts as FIRE. ONCE PER ROOM, turn sideways to cancel darkness DIS or peek at next Room while in darkness.",null,
   "DISCARD: cure POISONED, or skip a PLANT Monster's next response. At Lamp-Eater, feed it to peek next 2 Rooms.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
  ["crowbar","Dented Crowbar","key","TOOL",["METAL","TOOL"],
   "LOCK: At Rusty Gate, Chest with a Pulse, Buried Lockbox or The Last Chest, use this d6 instead of the Room d6.",
@@ -160,7 +160,7 @@ const rings=[
 ];
 const wands=[
  ["wand-sparks","Wand of Impolite Sparks","spiral","WAND",["MAGIC","FIRE"],
-  "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
+  "ACTION: Roll d6 against a Monster; turn this upright Wand sideways until recharged.",
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
@@ -182,7 +182,7 @@ const wands=[
  ["wand-frost","Wand of Cold Shoulders","wind","WAND",["MAGIC","ICE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
   [["1–2","Backfire: lose 2 HP."],["3–4","Monster skips its next response."],["5–6","Freeze solid: skip next 2 Monster responses."]],
-  "At Flooded Chamber, use this Wand and turn it sideways to resolve WADE's 3–4 result. SHRINE recharges. OVERCHARGE: discard, lose d6 HP, choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
+  "At Flooded Chamber, use and exhaust this Wand for WADE 3–4. SHRINE: recharge. OVERCHARGE: discard, lose d6 HP, use 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
@@ -190,7 +190,7 @@ const wands=[
 ];
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
-  "FIRST USE: Roll d6; all Smoky Potions share this result. Drink and discard.",
+  "FIRST USE: Roll d6; identical Smoky Potions share this result. Drink and discard.",
   [["1–2","Choke: lose 2 HP; your next attack roll this fight has DIS."],["3–4","Smoke hides you: skip next Monster response, or peek next Room outside combat."],["5–6","Your next attack roll here has ADV, or your next WIT roll here outside combat has ADV."]],
   "Keep one used Potion face up to remember its effect.",["u-fountain","m-well"],"It smells of burned herbs.",3],
  ["milky","Milky Potion","potion","POTION",["ALCHEMY"],
@@ -210,9 +210,9 @@ const potions=[
   [["1–2","Hallucinate: become POISONED; your next WIT roll has DIS."],["3–4","Remove POISONED; heal 2 HP."],["5–6","Vision: peek next 2 Rooms and order them; heal 2 HP."]],
   "Keep one used Potion face up to remember its effect.",["m-fungus","d-choir"],"It is still growing.",2],
  ["midnight","Midnight Ink","ghost","POTION",["ALCHEMY","MAGIC"],
-  "FIRST USE: Roll d6 to identify Midnight Ink; all copies share the result. Drink and discard unless the result says to keep it.",
-  [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","Mark the floor: next ELBERETH here gets ADV; in combat, skip next Monster response."],["5–6","Keep this used Potion face up as ink. Discard to make a later ELBERETH roll succeed automatically."]],
-  "Keep a used copy face up for identification. A 5–6 ink mark remains until spent.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
+  "FIRST USE: Roll d6; all Midnight Inks share the outcome. Drink and discard unless kept by the result.",
+  [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","In combat, skip next Monster response; otherwise your next ELBERETH roll has ADV."],["5–6","Keep this used Potion as ink. Discard at a later ELBERETH attempt to succeed automatically."]],
+  "One used copy records identity. A kept ink mark is separate.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
  ["antidote","Antidote","potion","POTION",["ALCHEMY","CURE"],
   "FIRST USE: Roll d6; all Antidotes share this result. Drink and discard.",
   [["1–2","It fails: lose 1 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; heal d6 HP."]],
