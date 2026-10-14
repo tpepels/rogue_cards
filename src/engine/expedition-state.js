@@ -333,13 +333,14 @@ export class ExpeditionState {
    // its delayed printed trigger. All legacy expedition calls use the same
    // full-effect path immediately (deferEntry defaults to false).
    this._entryDeferred=!!deferEntry;
+   this._entryCompleted=false;
    if(!deferEntry)this.completeRoomEntry();
   }
   completeRoomEntry(){
    if(!this.room)throw Error("Room entry requires a revealed Room");
-   if(this._entryCompleteFor===this.room)throw Error("Room entry already resolved");
+   if(this._entryCompleted)throw Error("Room entry already resolved");
    this._entryDeferred=false;
-   this._entryCompleteFor=this.room;
+   this._entryCompleted=true;
    roomEntry(this);
    if(this.pendingTrapLanding?.stage===this.room.stage){
     const landing=this.pendingTrapLanding;this.pendingTrapLanding=null;
