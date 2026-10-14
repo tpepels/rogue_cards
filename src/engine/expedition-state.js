@@ -295,7 +295,8 @@ export class ExpeditionState {
   if(result!==false)this.noteItemResult(h,card,mode,before);
   return result;
  }
- beginRoom(room){
+ beginRoom(room,{deferEntry=false}={}){
+   if(this._entryDeferred)throw Error("Previous Room entry still awaiting decisions");
    if(this.savedPath){if(this.savedPathGrace>0)this.savedPathGrace--;
     else if(room.stage===this.savedPath.stage){
      // The saved corridor exit is an option against the newly drawn Room.
@@ -328,11 +329,22 @@ export class ExpeditionState {
    // NEXT effects stay on the card/hero until consumed, even across Rooms.
    h.damageVulnerability=0;
    });
+   // The phase controller pauses HERE, before any retained Room executes
+   // its delayed printed trigger. All legacy expedition calls use the same
+   // full-effect path immediately (deferEntry defaults to false).
+   this._entryDeferred=!!deferEntry;
+   if(!deferEntry)this.completeRoomEntry();
+  }
+  completeRoomEntry(){
+   if(!this.room)throw Error("Room entry requires a revealed Room");
+   if(this._entryCompleteFor===this.room)throw Error("Room entry already resolved");
+   this._entryDeferred=false;
+   this._entryCompleteFor=this.room;
    roomEntry(this);
-   if(this.pendingTrapLanding?.stage===room.stage){
+   if(this.pendingTrapLanding?.stage===this.room.stage){
     const landing=this.pendingTrapLanding;this.pendingTrapLanding=null;
     if(landing.damage)this.hurt(this.chooseActor(),landing.damage);
-    if(this.alive()&&landing.monster&&room.stage!=="FINAL")this.drawMonster();
+    if(this.alive()&&landing.monster&&this.room.stage!=="FINAL")this.drawMonster();
    }
   }
   endRoom(){
