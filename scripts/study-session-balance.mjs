@@ -220,6 +220,7 @@ function oneJob(i,c){
    key:selected.key,phase:selected.phase,choice0:selected.before,
    choice1:selected.after,win0:before.wins,win1:after.wins,
    decisions:before.totalDecisions+after.totalDecisions,
+   pairedCycleBreaks:before.totalCycleBreaks+after.totalCycleBreaks,
    policy:{...policy},sourceState:paired.sourceObservation.game};
  }catch(e){
   const error=Error("Seed "+gameSeed+" index "+i+
@@ -308,6 +309,8 @@ function summarize(c,completed,failed=[]){
   completedSourceSeeds:rows.length,
   pairedSourceSeeds:pairs,
   naturallyUnreached:rows.length-pairs,
+  sourceEquipmentCycleBreaks:rows.reduce((n,r)=>n+(r.policy?.cycleBreaks||0),0),
+  pairedEquipmentCycleBreaks:rows.reduce((n,r)=>n+(r.pairedCycleBreaks||0),0),
   startedPartySamples:partySamples,
   all36PartyCombinationsRepresented:Object.values(partySamples)
    .every(count=>count>0),
@@ -319,6 +322,9 @@ function summarize(c,completed,failed=[]){
    "No manipulation or artificially early card access is used",
    "Each matched pair comes from a distinct independent initial seed",
    "Future decisions use finite-budget MCTS, not solved optimal play",
+   "After twelve consecutive free equipment changes the MCTS-evaluated "+
+    "study policy takes the real continue action to prevent an infinite "+
+    "reversible loop. Printed game actions remain unchanged.",
    "Conditional-on-reach state effects do not measure intrinsic whole-card strength",
    "Holm adjusts over all contrasts actually encountered in this report",
    "Underpowered/unreached contrasts are never labelled balanced",
@@ -339,6 +345,8 @@ const saveReport=(c,done,failed=[])=>{
   "Hero party setups visited: "+
    Object.values(s.startedPartySamples).filter(n=>n>0).length+"/36",
   "Unreached target focus: "+s.naturallyUnreached,
+  "Progression safeguards: source "+s.sourceEquipmentCycleBreaks+
+   ", paired "+s.pairedEquipmentCycleBreaks,
   "Failures: "+s.errors.length,
   "Status: "+(s.complete?"complete":"partial / requires resume"),"",
   "| Contrast (second minus first) | Eligible | Difference | Approx. paired 95% | Holm p | Result |",
