@@ -212,6 +212,7 @@ export function searchDecision(session,{budget=100,seed=1,
      roomId:sim.state.room?.id??null,
      monsterId:sim.state.monster?.id??null,
      heroHP:sim.state.heroes.map(h=>h.hp),action:choice});
+    if(reproductionTrace.length>120)reproductionTrace.shift();
     const replayObserved=originalRootWasPending&&!observedRootResolved&&
      Boolean(sim.pendingNested);
     const replaySwitches=replayObserved?[
