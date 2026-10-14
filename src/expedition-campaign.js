@@ -393,6 +393,8 @@ function useItemsInCombat(s,h){
   recordPlan(s,"combat",decision);
   if(decision.action==="item")
    return executeItemOption(s,h,decision);
+  if(decision.action==="elbereth")
+   return engraveElbereth(s,h,{mode:decision.mode}).legal;
   return false;
  }
  // The legacy policy is unchanged, including its preference ordering.
@@ -460,7 +462,10 @@ function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
      if(!option||!executeItemOption(s,hero,option))
       throw Error("Rollout tried illegal combat Item option");
     }else if(forced.action==="attack")playerAttack(s,hero);
-    else throw Error("Bad rollout combat choice "+forced.action);
+    else if(forced.action==="elbereth"){
+     if(!engraveElbereth(s,hero,{mode:forced.mode}).legal)
+      throw Error("Illegal rollout Elbereth");
+    }else throw Error("Bad rollout combat choice "+forced.action);
    }else if(s.strategy==="survival"&&s.monster?.stage!=="FINAL"&&
       s.monster?.id!=="sentinel"&&s.elberethAttempts<1&&
       hero.hp<=Math.floor(hero.card.hp*.22)&&s.monsterHP>6){
@@ -552,7 +557,7 @@ export function rolloutCombatContinuation(s,heroIndex,decision,
  if(!s.monster||!Number.isInteger(heroIndex)||
    heroIndex<0||heroIndex>=s.heroes.length)
   throw Error("Combat rollout needs an active Monster and Hero");
- if(!decision||!["attack","item"].includes(decision.action))
+ if(!decision||!["attack","item","elbereth"].includes(decision.action))
   throw Error("Invalid rollout action");
  const warden=s.monster.stage==="FINAL";
  const phaseOne=s.monster.id==="warden";
