@@ -100,7 +100,7 @@ const deep=make("DEEP",[
   [["TAKE","Roll d6."],["GIVE","Discard 2 Items; draw 3. If either Item was MAGIC, heal 2 HP."]],"TAKE",
   [["1–2","Lose d6 HP; draw 1 Item."],["3–4","Draw 2 Items."],["5–6","Draw 3 Items; keep this Room to ignore the next TRAP result, then discard it."]],["Rusty Key"],"It feels strangely warm."],
  ["d-bones","Hall of Teeth","bones","LAIR","Piles of teeth are arranged by size.",
-  [["SEARCH","Roll d6."],["RATTLE","Draw a DEEP Monster. After victory, draw 3 Items."]],"SEARCH",
+  [["SEARCH","Roll d6."],["RATTLE","Draw a DEEP Monster. After victory, draw 4 Items."]],"SEARCH",
   [["1–2","Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items, then heal 2 HP."]],["Loyal Hound"],"Many mouths, no answers."],
  ["d-oracle","Broken Oracle","eye","MYSTERY","A cracked eye sees two possible futures.",
   [["ASK","Roll d6. With Tunnel Raven, choose 6."],["SILENCE","Heal 2 HP; do not look ahead."]],"ASK",
