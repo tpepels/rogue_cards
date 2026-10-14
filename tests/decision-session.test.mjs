@@ -342,7 +342,9 @@ test("saved corridor path is an observed, searchable choice before the next Room
   const drawn=pile[0];
   s.savedPath=saved;s.savedPathGrace=0;
   const before=s.rng.snapshot();
-  const pending=submitDecision(session,sessionActions(session)[0]);
+  const continueAction=sessionActions(session).find(a=>a.kind==="continue");
+  assert.ok(continueAction,"Room entry requires the explicit continue action");
+  const pending=submitDecision(session,continueAction);
   assert.equal(pending.phase,"reaction");
   assert.equal(pending.trigger.phase,"effect-choice");
   assert.equal(pending.trigger.context,"saved-corridor-exit");
