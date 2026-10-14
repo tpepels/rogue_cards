@@ -1,0 +1,50 @@
+name: Verify card layouts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/layout-verification.yml"
+      - "data/card-placements.json"
+      - "src/card-layouts.js"
+      - "src/layout-presets.js"
+      - "src/layout-editor.js"
+      - "scripts/build-card-layouts.mjs"
+      - "scripts/initialize-card-placements.mjs"
+      - "styles/**"
+      - "index.html"
+      - "layout-editor.html"
+      - "rules.html"
+      - "tests/card-layouts.test.mjs"
+      - "tests/layout-editor.spec.mjs"
+      - "tests/visual.spec.mjs"
+  workflow_dispatch:
+
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser tooling
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Check every initialized layout and generated CSS
+        run: |
+          npm run layouts:check
+          node --test tests/card-layouts.test.mjs
+      - name: Test browser editor and 139-card print layouts
+        run: npx playwright test tests/layout-editor.spec.mjs tests/visual.spec.mjs
+      - name: Upload browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-layout-browser-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
