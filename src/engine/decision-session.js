@@ -279,6 +279,9 @@ function submitDecisionDirect(session,action){
  }else if(phase==="vault"){
   if(selected.kind==="seal"&&seal(s)){
    s.metrics.won=true;s.endingKind="amulet_sealed";done(session);
+  }else if(done(session)){
+   // A failed SEAL's printed HP payment can kill the last Hero.
+   // The game ends here without starting an impossible Warden turn.
   }else{
    if(selected.kind==="seal")s.monsterAdv=true;
    beginWarden(s);s.metrics.battles++;
@@ -288,7 +291,7 @@ function submitDecisionDirect(session,action){
   }
  }else if(phase==="post-warden"){
   const result=applyWardenChoice(s,selected.kind);
-  if(result.complete)done(session);
+  if(result.complete||done(session))done(session);
   else{
    s.metrics.battles++;session.monsterRound=0;
    s._actedCombatMask=0;
