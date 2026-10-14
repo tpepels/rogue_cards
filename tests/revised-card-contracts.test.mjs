@@ -121,3 +121,18 @@ test("Ring of Echoes exposes both already-seen faces and accepts either, even th
  assert.equal(observed,2);
  delete s._decisionHook;s.die=originalDie;
 });
+
+test("Witch after-Potion reaction uses witch-ability token, not the generic Hero token",()=>{
+ const s=new ExpeditionState({seed:897,heroes:["witch"]}),h=s.heroes[0];
+ h.used.add("hero");
+ assert.deepEqual(legalActions(s,{
+  phase:"hero-trigger",heroIndex:0,context:"after-scroll-or-potion"
+ }).map(x=>x.kind),["skip","hero-mode","hero-mode"]);
+ assert.deepEqual(legalActions(s,{
+  phase:"hero-trigger",heroIndex:0,context:"attack"
+ }),[]);
+ h.used.add("witch-ability");
+ assert.deepEqual(legalActions(s,{
+  phase:"hero-trigger",heroIndex:0,context:"after-scroll-or-potion"
+ }),[]);
+});
