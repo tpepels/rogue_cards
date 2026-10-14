@@ -169,7 +169,7 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","The Wand grows teeth: lose 2 HP. The Monster's next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster: discard it; draw 1 Item, no corpse or reward. Against Warden, cancel response."]],
+  [["1–2","The Wand grows teeth: lose 2 HP. The Monster's next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster: discard it; draw 1 Item, no corpse. Against Warden, cancel response."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-fungus","d-choir"],"Are you sure it's a wand?",1],
  ["wand-turn","Wand of Turning","ghost","WAND",["MAGIC","BONE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
@@ -184,7 +184,7 @@ const wands=[
   [["1–2","Backfire: lose 2 HP."],["3–4","Monster skips its next response."],["5–6","Freeze solid: skip next 2 Monster responses."]],
   "At Flooded Chamber, exhaust this Wand for WADE 3–4. SHRINE: recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
-  "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
+  "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, Last Chest. Roll d6 if upright; turn sideways.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
   "SHRINE: recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","u-mimic","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
@@ -219,7 +219,7 @@ const potions=[
   "Keep one used Potion face up to remember its effect.",["m-fungus","d-choir","m-vault"],"A cure in search of a disease.",2],
  ["laughing","Laughing Water","water","POTION",["ALCHEMY","CHAOS"],
   "FIRST USE: Roll d6; all Laughing Waters share this result. Drink and discard.",
-  [["1–2","Lose d6 HP laughing."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP; keep this used Potion as bottled laughter. Discard when a non-Warden Monster appears to set its first behaviour to 1–2."]],
+  [["1–2","Lose d6 HP laughing."],["3–4","Heal d6 HP."],["5–6","Heal d6 HP; keep Potion as laughter. On next non-Warden Monster, discard to set its first behaviour to 1–2."]],
   "Keep one used Potion face up to remember its effect.",["u-fountain","m-well"],"Bubbles say your name.",2]
 ];
 export const V2_ITEMS=Object.freeze([...tools,...equipment,...companions,...relics,...scrolls,...rings,...wands].map((row,i)=>{

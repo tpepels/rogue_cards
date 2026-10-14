@@ -19,7 +19,7 @@ const SPEC=Object.freeze({
  rat:{tags:["BEAST"],weakness:"With a BEAST Companion, treat behaviour 6 as 1–2.",
    parley:"FEED: Discard 1 Item to send it away. No corpse.",remains:"EAT: Roll d6. 1–2 become POISONED; 3–4 heal 2 HP; 5–6 heal d6 HP."},
  goblin:{tags:["BARGAIN"],weakness:"With Pocket Goblin, behaviour 6 becomes 1–2.",
-   parley:"RECRUIT: Discard 2 Items; keep as Companion (+1 ATK), no corpse.",remains:"SEARCH POCKETS, d6: 1–2 lose 1 HP; 3–4 draw 1 Item; 5–6 draw 1 and peek next Room. No EAT."},
+   parley:"RECRUIT: Discard 2 Items; keep as Companion (+1 ATK), no corpse.",remains:"SEARCH POCKETS, d6: 1–2 lose 1 HP; 3–4 draw 1 Item; 5–6 draw 1, peek next Room. No EAT."},
  crawler:{tags:["ACID"],weakness:"Discard ALCHEMY Item to change next behaviour 5 to 1–2.",
    parley:"DISTRACT: discard POTION to escape. In Flooded Chamber, Acid also gives next DEF DIS. No reward.",remains:"EAT: Roll d6.  1–2 become POISONED; 3–4 heal 2 HP; 5–6 remove POISONED."},
  bat:{tags:["BEAST","DARK"],weakness:"With equipped FIRE gear, treat behaviour 6 as 1–2.",

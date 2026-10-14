@@ -1,6 +1,6 @@
 // Optional corridors and returning Rooms. Each effect is printed on its card.
 const rows=[
- ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep this Room. On Monster behaviour, discard to set 1–2; next WIT roll has DIS. Discard a FIRE Item too to cancel the response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
+ ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep Room. When a Monster acts, discard to set its behaviour to 1–2; next WIT has DIS. Also discard FIRE to cancel its response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
  ["m-bridge","MIDDLE","Bridge of Whispering Rope","HAZARD","stairs","The ropes are whispering names.","CUT A STRAND","Keep this Room as rope. At a non-Warden Monster, discard it and 1 Item to escape without reward.","CROSS","Roll d6. Knotted Rope may raise or lower the result by 1 (between 1 and 6).","CROSS","bridge"],
  [
   "m-well",
@@ -10,13 +10,13 @@ const rows=[
   "water",
   "An offering is never truly lost.",
   "OFFER",
-  "Tuck 1 Item here; heal 3 HP and keep Room. On entering DEEP, leave the Item to heal 3 more HP, or roll this Room's d6 and recover it.",
+  "Tuck 1 Item, heal 3 HP; keep Room. Entering DEEP: leave Item to heal 3 HP, or roll this Room's d6 and recover Item.",
   "LISTEN",
   "Peek at the next Room.",
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession. PACT: one per party per expedition. Keep sideways after use.","BORROW · PACT","Draw 2 Items; keep Room. At Vault pay 1 Item to reveal first Warden behaviour before acting; resolve afterward. Otherwise use 6.","LIE","Roll d6.","LIE","debt"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession. PACT: one per expedition. Keep sideways after use.","BORROW · PACT","Draw 2 Items; keep Room. At Vault, discard 1 Item to see the Warden's first behaviour before acting; otherwise it is 6.","LIE","Roll d6.","LIE","debt"],
  ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one; put other at bottom of this region's deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
  ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face down; randomly put one unseen at bottom. Reveal two; enter one, put other at bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
@@ -34,8 +34,8 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave other face down on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
- ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; discard 1 Item to reveal a third. Enter one; put others at bottom of this region's deck.","TEAR","Roll d6.","TEAR","path"],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, return other face down on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
+ ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; pay 1 Item to reveal a third. Enter one; put others on bottom.","TEAR","Roll d6.","TEAR","path"],
  [
   "m-ladder",
   "MIDDLE",
@@ -71,11 +71,11 @@ const rows=[
   "Gilded Hallway",
   "CORRIDOR",
   "shop",
-  "Gilt conceals an old door. PACT: one per party per expedition. Keep sideways after use.",
+  "Gilt conceals an old door. PACT: one per expedition. Keep sideways after use.",
   "GAMBLE",
   "Reveal 2 Rooms; enter one, discard the other. If the discarded Room was TREASURE, draw 1 Item.",
   "MAP EXIT · PACT",
-  "Reveal 2 Rooms; enter one, put other at bottom. Keep Room. After Warden Phase I discard 2 Items (one MAGIC) to SMUGGLE; turn sideways.",
+  "Reveal 2 Rooms; enter one, bottom-deck other. Keep Room. After Warden Phase I, discard 2 Items (one MAGIC) to SMUGGLE.",
   "MAP EXIT",
   "path"
  ],
@@ -100,9 +100,9 @@ const rows=[
   "Rat King's Favor",
   "ENCOUNTER",
   "rat",
-  "A rat offers a favor. PACT: one per party per expedition. Keep sideways after use.",
+  "A rat offers a favor. PACT: one per expedition. Keep sideways after use.",
   "ACCEPT · PACT",
-  "Draw 2 Items, discard 1; keep Room. At next Rat Nest or TREASURE, whichever first: at Nest use SOOTHE 5–6; at TREASURE discard 1 Item or lose first Item draw. Turn sideways.",
+  "Draw 2 Items, discard 1; keep Room. At next Rat Nest, use SOOTHE 5–6; at next TREASURE instead, discard 1 Item or lose first draw. Whichever comes first; turn sideways.",
   "DECLINE",
   "Roll this Room's d6 for a gift.",
   "GIFT",
@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to resolve 3–4 instead of 1–2.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Hungry hinges. PACT: one per party per expedition. Keep sideways after use.","FEED · PACT","Discard 1 Item; draw 3; keep. At Vault pay 1 Item or first Warden behaviour is 6.","STARVE","Roll d6.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Hungry hinges. PACT: one per expedition. Keep sideways after use.","FEED · PACT","Discard 1 Item; draw 3; keep. At Vault pay 1 Item or first Warden behaviour is 6.","STARVE","Roll d6.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per party per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, you may pay 2 HP to see Warden's first behaviour before acting. May reroll once; take new result. Resolve after acting.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, you may pay 2 HP to see the Warden's first behaviour before acting. Reroll once if desired; use new result.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
