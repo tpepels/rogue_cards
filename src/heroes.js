@@ -10,8 +10,8 @@ const data=[
   [["1–2","It curdles: become POISONED."],["3–4","Remove POISONED from a Hero."],["5–6","Choose the Monster's next d6 behaviour, if present."]],"Every answer has ingredients."],
  ["rogue","Cutpurse","rogue",19,4,4,5,"key","DIRTY TRICK · before you attack or negotiate",
   [["1–2","Caught: this d20 has DIS."],["3–4","This d20 has ADV."],["5–6","Opposed d20+WIT vs Monster d20+DEF with ADV; win: draw 1 Item."]],"A lock is a conversation."],
- ["thief","Tunnel Thief","rogue",19,4,4,4,"rope","POCKET CHANGE · when a Room offers a reward",
-  [["1–2","Caught: lose 2 HP."],["3–4","Draw 1 Item, then discard 1 Item."],["5–6","Draw 2 Items, then discard 1 Item."]],"Some pockets are doors."],
+ ["thief","Tunnel Thief","rogue",19,4,4,4,"rope","POCKET CHANGE · on Item discovery or a Corridor reveal",
+  [["1–2","Caught: lose 2 HP."],["3–4","Draw 1 Item, then discard 1; peek next Room. At a Corridor, +2 WIT on your next WIT roll there instead of drawing."],["5–6","Draw 2 Items, discard 1; peek next 2 Rooms and order them. At a Corridor, +2 WIT instead of drawing."]],"Some pockets are doors."],
  ["priest","Ash Priest","wizard",20,4,4,5,"antidote","BLESS OR CURSE · before any Hero d20 roll",
   [["1–2","Omen: roll d6; lose half as much HP (round up)."],["3–4","Add +2 to that Hero's roll."],["5–6","That Hero rolls with ADV; remove POISONED."]],"The gods decline to comment."],
  ["monk","Roadless Monk","delver",19,4,4,4,"needle","STILLNESS · after a Monster rolls behaviour",
@@ -34,7 +34,7 @@ const timing=Object.freeze({
  wizard:"as your combat action",
  witch:"after you use a Potion or Scroll",
  rogue:"before your attack or a PARLEY d20 roll",
- thief:"when a Room lets you draw an Item",
+ thief:"when a Room offers Items or a Corridor reveals Rooms",
  priest:"before a Hero d20 roll",
  monk:"after a Monster rolls behaviour"
 });
