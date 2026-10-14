@@ -315,9 +315,15 @@ test("actual between-Room equipment can be unequipped and exchanged without crea
  const transfer=sessionActions(session).find(a=>a.kind==="transfer"&&
   a.heroIndex===0&&a.toHeroIndex===1&&a.cardId==="sword");
  assert.ok(transfer);
+ const fromBefore=s.heroes[0].inventory.filter(c=>c.id==="sword").length;
+ const toBefore=s.heroes[1].inventory.filter(c=>c.id==="sword").length;
  submitDecision(session,transfer);
- assert.ok(!s.heroes[0].inventory.includes(card));
- assert.ok(s.heroes[1].inventory.includes(card));
+ // Multiple physical copies of the same Item share an immutable definition
+ // object; assert *counts*, not reference-based inventory membership.
+ assert.equal(s.heroes[0].inventory.filter(c=>c.id==="sword").length,
+  fromBefore-1);
+ assert.equal(s.heroes[1].inventory.filter(c=>c.id==="sword").length,
+  toBefore+1);
  assert.equal(s.metrics.objectAcquisitions.sword,acquired);
  const equip=sessionActions(session).find(a=>a.kind==="equip"&&
   a.heroIndex===1&&a.cardId==="sword");
