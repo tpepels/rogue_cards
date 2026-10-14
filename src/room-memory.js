@@ -16,7 +16,7 @@ const rows=[
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","BORROW · PACT","Draw 2 Items; keep Room. At Vault discard 1 Item to reveal first Warden behaviour before acting; resolve afterward. If unpaid, use 6. Turn sideways.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession. PACT: one per party per expedition. Keep sideways after use.","BORROW · PACT","Draw 2 Items; keep Room. At Vault pay 1 Item to reveal first Warden behaviour before acting; resolve afterward. Otherwise use 6.","LIE","Roll d6.","LIE","debt"],
  ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one; put other at bottom of this region's deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
  ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face down; randomly put one unseen at bottom. Reveal two; enter one, put other at bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
@@ -71,7 +71,7 @@ const rows=[
   "Gilded Hallway",
   "CORRIDOR",
   "shop",
-  "Gilt conceals an old door. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.",
+  "Gilt conceals an old door. PACT: one per party per expedition. Keep sideways after use.",
   "GAMBLE",
   "Reveal 2 Rooms; enter one, discard the other. If the discarded Room was TREASURE, draw 1 Item.",
   "MAP EXIT · PACT",
@@ -100,7 +100,7 @@ const rows=[
   "Rat King's Favor",
   "ENCOUNTER",
   "rat",
-  "A rat offers a favor. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.",
+  "A rat offers a favor. PACT: one per party per expedition. Keep sideways after use.",
   "ACCEPT · PACT",
   "Draw 2 Items, discard 1; keep Room. At next Rat Nest or TREASURE, whichever first: at Nest use SOOTHE 5–6; at TREASURE discard 1 Item or lose first Item draw. Turn sideways.",
   "DECLINE",
@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to resolve 3–4 instead of 1–2.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinges chew. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","FEED · PACT","Discard 1 Item; draw 3 Items; keep Room. At Vault discard 1 more Item or Warden's first behaviour is 6. Turn sideways.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Hungry hinges. PACT: one per party per expedition. Keep sideways after use.","FEED · PACT","Discard 1 Item; draw 3; keep. At Vault pay 1 Item or first Warden behaviour is 6.","STARVE","Roll d6.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","RING","Roll d6 to ring now.","SAVE · PACT","Keep Room. At Vault you may pay 2 HP to reveal first Warden behaviour before acting; reroll once if desired, taking new result. Resolve after acting; turn sideways.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","A silent bell. PACT: one per party per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, pay 2 HP to see Warden's first behaviour before acting. May reroll once; take new result. Resolve after acting.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -548,15 +548,15 @@ const printedTables={
   "d-last-bell": [
     [
       "1–2",
-      "Bell attracts a DEEP Monster."
+      "Draw a DEEP Monster."
     ],
     [
       "3–4",
-      "Keep Room; discard at next Monster to set its first behaviour to 1–2."
+      "Keep Room; discard to set next Monster behaviour 1–2."
     ],
     [
       "5–6",
-      "Keep Room; discard to skip next Monster's first response."
+      "Keep Room; discard to skip next Monster response."
     ]
   ]
 };
