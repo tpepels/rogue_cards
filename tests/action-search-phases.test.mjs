@@ -1,11 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
-import {ROOMS,MONSTERS,VAULT,OBJECTS} from "../src/tabletop-data.js";
+import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {legalActions} from "../src/engine/index.js";
 import {AGENT_WEIGHTS,validateAgentConfig} from "../src/research-agent.js";
 import {pairedPhaseRollouts} from "../src/rollout-evaluator.js";
 
+const grant=(s,id)=>{
+ const index=s.deck.findIndex(c=>c.id===id);
+ assert.ok(index>=0,"Physical Item missing: "+id);
+ const [card]=s.deck.splice(index,1);
+ s.noteDeckRemoval(card);s.add(s.heroes[0],card);
+};
 const build=seed=>{
  const s=new ExpeditionState({seed,heroes:["warrior","wizard"],strategy:"magic"});
  s.researchPolicy="agent";s.plannerRisk="cautious";
@@ -37,7 +43,7 @@ test("Vault search branches actual SEAL versus the complete Warden fight",()=>{
  const s=build(713);
  for(const id of ["scroll-flame","scroll-frost","scroll-banish",
   "scroll-lightning","scroll-mischief","scroll-last"]){
-  const o=OBJECTS.find(c=>c.id===id);s.add(s.heroes[0],o);
+  grant(s,id);
  }
  s.beginRoom(VAULT);
  const a=legalActions(s,{phase:"vault"}).map(x=>x.kind);
@@ -50,10 +56,10 @@ test("Vault search branches actual SEAL versus the complete Warden fight",()=>{
 });
 test("post-Warden search branches SMUGGLE and FIGHT from legal state",()=>{
  const s=build(714);
+ s.keptRooms.push({card:ROOMS.find(r=>r.id==="d-gilded"),choice:1});
  s.beginRoom(VAULT);
- const magic=OBJECTS.find(c=>c.id==="scroll-flame");
- s.add(s.heroes[0],magic);
- s.vaultModifiers.smuggleAvailable=true;
+ grant(s,"scroll-flame");
+ assert.equal(s.vaultModifiers.smuggleAvailable,true);
  const actions=legalActions(s,{phase:"post-warden"}).map(x=>x.kind);
  assert.ok(actions.includes("fight")&&actions.includes("smuggle"));
  const r=pairedPhaseRollouts(s,"post-warden");
