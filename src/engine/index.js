@@ -327,9 +327,13 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
    .map(kind=>({phase,kind}))];
  }
  if(phase==="monster-response"){
-  const h=s.heroes[heroIndex];
-  return h?.hp>0&&s.monster&&s.monsterHP>0?
-   [{phase,kind:"respond",heroIndex}]:[];
+  // The attacking Hero can perish from an Item/ability before the
+  // Monster takes its printed response. With 1-2 Heroes, there is
+  // exactly one possible surviving target in that case.
+  const target=s.heroes[heroIndex]?.hp>0?heroIndex:
+   s.heroes.findIndex(h=>h.hp>0);
+  return target>=0&&s.monster&&s.monsterHP>0?
+   [{phase,kind:"respond",heroIndex:target}]:[];
  }
  if(phase==="room"){
   const printed=legalRoomChoices(s)
