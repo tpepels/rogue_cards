@@ -136,3 +136,16 @@ test("Witch after-Potion reaction uses witch-ability token, not the generic Hero
   phase:"hero-trigger",heroIndex:0,context:"after-scroll-or-potion"
  }),[]);
 });
+
+test("a lethal Potion cannot open an impossible Witch reaction after her HP becomes zero",()=>{
+ const s=new ExpeditionState({seed:898,heroes:["witch"]}),h=s.heroes[0];
+ const idx=s.deck.findIndex(c=>c.id==="smoky");
+ assert.ok(idx>=0);
+ const [potion]=s.deck.splice(idx,1);
+ s.noteDeckRemoval(potion);s.add(h,potion);
+ s.beginRoom(room("u-fountain"));h.hp=1;
+ s._decisionHook=event=>{throw Error("Dead Witch must not receive "+event.phase)};
+ assert.equal(s.activate(h,potion,{face:1}),true);
+ assert.equal(h.hp,0);
+ delete s._decisionHook;
+});
