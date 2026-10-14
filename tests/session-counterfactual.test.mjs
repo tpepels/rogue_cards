@@ -48,7 +48,11 @@ test("paired real-terminal action comparison is deterministic, covers both choic
 });
 test("paired evaluator refuses one-choice roots and invalid budgets",()=>{
  const session=createDecisionSession({seed:42,heroes:["warrior"]});
- assert.equal(sessionActions(session).length,1);
+ // Between Rooms now exposes legitimate Item/equipment choices.
+ // A party with no carried Items has only the continue action.
+ for(const h of session.state.heroes)
+  for(const card of [...h.inventory])session.state.remove(h,card);
+ assert.deepEqual(sessionActions(session).map(a=>a.kind),["continue"]);
  assert.throws(()=>compareSessionActions(session,{trials:1}),
   /At least two legal/);
  const vault=affordableVault();
