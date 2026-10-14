@@ -124,7 +124,11 @@ export class ExpeditionState {
  // Push-your-luck rerolls cost 1, then 2, then 3 HP. The new result stands.
  pushLuck(face,{sides=6,accept=null,max=3,onOne=false}={}){
   for(let count=1;count<=max;count++){
+   // No player can react after a party wipe, and an unaffordable
+   // reroll is not a player choice. Check BEFORE the decision hook.
+   if(!this.alive())break;
    const h=this.chooseActor();
+   if(h.hp<=count)break;
    const take=this._decisionHook&&!accept?
     this._decisionHook({phase:"reroll",heroIndex:this.heroes.indexOf(h),
      cost:count,face,sides,roomId:this.room?.id}).kind==="reroll":
@@ -1124,6 +1128,9 @@ export class ExpeditionState {
   }
   roomRoll(forced=null){
   if(!this.room)throw Error("Room roll without Room");
+  // A defeated party cannot resolve further Room rolls or revive from
+  // downstream healing effects in the same printed action.
+  if(!this.alive())return false;
   // Persistent choice Rooms intentionally have no d6 results. An incidental
   // item effect or engine probe must not roll dice or change their choices.
   if(!this.room.v2.roll)return false;
@@ -1262,7 +1269,10 @@ export class ExpeditionState {
    this.trapGuard=false;return;
   }
   this.metrics.cardCounts[this.room.id]=(this.metrics.cardCounts[this.room.id]||0)+1;
-  for(const op of ops){const [name,...args]=op.split(":");this.apply(name,args,this.room);}
+  for(const op of ops){
+   if(!this.alive())break;
+   const [name,...args]=op.split(":");this.apply(name,args,this.room);
+  }
  }
 }
 export function validateStateEffects(){
