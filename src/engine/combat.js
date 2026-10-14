@@ -342,26 +342,44 @@ export function monsterRespond(s,h){
  switch(m.id){
  case "rat":if(band===1)hit();else if(band===2)a.nextDis++;else if(band===3)hit({bonus:2});break;
  case "goblin":if(band===1)hit();else if(band===2){if(!s.discard())s.hurt(a,2);}else if(band===3)hit({adv:true});break;
- case "crawler":if(band===0)a.nextDis++;else if(band===1)hit();else if(band===2)hit({poison:true});else hit({bonus:2});break;
+ case "crawler":if(band===0)a.nextDis++;else if(band===1)hit();
+  else if(band===2)hit({acid:true});else hit({bonus:2});break;
  case "bat":if(band===1)hit();else if(band===2)a.nextDis++;else if(band===3)hit({adv:true});break;
  case "troll":if(band===1)hit();else if(band===2){
    if(!s.trollScorched)s.monsterHP=Math.min(m.hp,s.monsterHP+2);s.trollScorched=false;
   }else if(band===3)hit({damageBonus:2});break;
  case "wisp":if(band===0)a.nextDis++;else if(band===1)hit();
-  else if(band===2)s.hurt(a,2);else hit({adv:true});break;
- case "eye":if(band===1)hit({bonus:2-m.atk});
   else if(band===2){
-   const raven=s.living().find(x=>s.equipped(x,"raven")&&!x.used.has("raven-freeze"));
-   if(raven)raven.used.add("raven-freeze");else a.nextDis++;
-  }else if(band===3)hit({adv:true});break;
+   s.apply("PUSH_UNSEEN_ROOM",[],m);a.nextDis++;
+  }else if(hit({adv:true}))a.nextDis++;
+  break;
+ case "eye":
+  if(band===1){
+   const hero=s.chooseRecipient("eye-opposed-wit");
+   const face=s.rerollIfKept(hero,s.die(20)),opponent=s.die(20);
+   if(face!==20&&(face===1||face+hero.card.wit<=opponent+4))
+    hero.nextDis++;
+  }else if(band===2)a.nextDis++;
+  else if(band===3)hit({adv:true});
+  break;
  case "mold":if(band===0)a.nextDis++;else if(band===1)s.apply("POISON",[],m);
   else if(band===2)hit();else hit({adv:true});break;
  case "wraith":if(band===0)a.nextDis++;else if(band===1)hit();
-  else if(band===2)hit({drain:true});else hit({adv:true});break;
- case "rust":if(band===1)hit();else if(band===2){if(!s.discard(1,{tag:"METAL"}))s.hurt(a,3);}
-  else if(band===3)hit({adv:true});break;
+  else if(band===2)hit({damageBonus:2});else hit({adv:true});break;
+ case "rust":if(band===1)hit();
+  else if(band===2){
+   const pay=s.discardable(1,"METAL")&&s.chooseEffect(
+    "rust-monster-corrode",["lose-hp","discard-metal"],
+    "discard-metal")==="discard-metal";
+   if(pay)s.discard(1,{tag:"METAL"});else s.hurt(a,3);
+  }else if(band===3)hit({adv:true});
+  break;
  case "cultist":if(band===0)s.monsterAdv=true;else if(band===1)hit({bonus:6-m.atk});
-  else if(band===2)s.apply("POISON",[],m);else hit({adv:true});break;
+  else if(band===2){
+   a.nextDefenseDis=(a.nextDefenseDis||0)+1;
+   a.nextDefensePenalty=(a.nextDefensePenalty||0)+2;
+  }else hit({adv:true});
+  break;
  case "sentinel":if(band===0)a.nextDis++;else if(band===1)hit();
   else if(band===2)hit({damageBonus:2});else hit({adv:true});break;
  case "warden":if(band===1)s.living().forEach(x=>monsterAttack(s,x));else if(band===2)a.nextDis++;
