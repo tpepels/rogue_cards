@@ -96,6 +96,7 @@ npm run oracle:balance -- \
   --navigate-budget 2 --future-budget 2 \
   --min-eligible 60 \
   --benchmark-runs 18 --benchmark-minutes 15 \
+  --focus room \
   --audit results/canonical-audit-04/summary.json \
   --out results/session-balance-01
 ~~~
@@ -132,6 +133,9 @@ comparisons *on average*. This cannot reach \`--min-eligible 60\`
 for every card. Real reach rates are lower, and passive Objects
 currently have no causal contrast at all. The generic "all" run
 cannot provide an all-card statistically significant verdict.
+The runner now refuses an underpowered `--focus all` overnight
+configuration before scheduling expensive workers; the benchmark
+still runs so you can inspect realistic costs and coverage.
 
 A more useful focused overnight study is \`--focus room\`, followed
 separately by Item and other family studies. For all-card coverage,
