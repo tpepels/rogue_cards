@@ -193,6 +193,13 @@ function afterAttack(session){
  if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
   endMonster(session);return;
  }
+ // An action may kill its acting Hero without defeating the Monster.
+ // The Monster still responds against the living party member, as the
+ // canonical monsterRespond() resolver already does in this situation.
+ if(s.heroes[session.heroIndex]?.hp<=0){
+  session.heroIndex=nextHero(s,0);
+  if(session.heroIndex<0){done(session);return;}
+ }
  session.phase="monster-response";
 }
 function afterMonsterResponse(session){
