@@ -262,7 +262,7 @@ test("Lantern Heart and Ghost Coin pay exact Item costs when chosen",()=>{
  s.exhausted.add(wand);
  const use=sessionActions(session).find(x=>x.cardId==="lantern-heart"&&x.mode==="recharge");
  assert.ok(use);
- advance(session,x=>x===use);
+ advance(session,x=>x.cardId==="lantern-heart"&&x.mode==="recharge");
  assert.ok(!s.heroes[0].inventory.includes(lantern));
  assert.ok(!s.exhausted.has(wand));
  const second=createDecisionSession({seed:1962,heroes:["warrior"]});
