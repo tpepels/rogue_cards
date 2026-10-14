@@ -230,7 +230,7 @@ const rows=[
   "Rat King's Favor",
   "ENCOUNTER",
   "rat",
-  "At Rat Nest, discard this kept Room to avoid its Monster and draw 1 Item.",
+  "At Rat Nest, discard this kept Room to choose SOOTHE 5–6.",
   "ACCEPT",
   "Draw 1 Item. Keep this Room. Otherwise, at the next TREASURE Room discard 1 Item or lose its first Item draw.",
   "DECLINE",

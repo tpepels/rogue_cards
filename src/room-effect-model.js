@@ -9,9 +9,9 @@ export const ROOM_EFFECTS=Object.freeze({
  "u-gate":C(["ROLL_ROOM"],["CHECK_ATK:3:DRAW1:HURT2"],[
  ["HURT:d6"],["DRAW:1"],["DRAW:2"]]),
  "u-supply":C(["ROLL_ROOM"],["SUPPLY_BARTER"],[
- ["MONSTER_DRAW"],["DRAW:1"],["DRAW:2","DISCARD:1"]]),
- "u-nest":C(["ROLL_ROOM"],["FIGHT_REWARD:1"],[
- ["FIGHT"],["BANISH"],["BANISH","DRAW:1"]]),
+ ["HURT:2"],["SALVAGE"],["DRAW:2","DISCARD:1"]]),
+ "u-nest":C(["ROLL_ROOM"],["CHECK_ATK:3:DRAW1:HURTd6"],[
+ ["HURT:2"],["NONE"],["DRAW:1"]]),
  "u-shrine":C(["ROLL_ROOM"],["COST:1","HEAL:d6","CURSED_RECHARGE"],[
  ["HURT:d6"],["HEAL:d6"],["CLEANSE","HEAL:2"]]),
  "u-fall":C(["ROLL_ROOM"],["HURT:1","PEEK:1"],[
@@ -20,8 +20,8 @@ export const ROOM_EFFECTS=Object.freeze({
  ["HURT:2"],["HEAL:d6"],["HEAL:d6","DRAW:1"]]),
  "u-merchant":C(["ROLL_ROOM"],["COST:2","DRAW:3"],[
  ["DISCARD:1"],["TRADE:1:2"],["DRAW:1"],["DRAW:2"]]),
- "u-lamp":C(["ROLL_ROOM"],["HURT:1","BANISH"],[
- ["MONSTER_DRAW"],["HEAL:2"],["DRAW:1"]]),
+ "u-lamp":C(["ROLL_ROOM"],["HURT:1","PEEK:1"],[
+ ["LAMP_EAT"],["NONE"],["DRAW:1"]]),
  "u-puppet":C(["ROLL_ROOM"],["PUPPET_BRIBE"],[
  ["HURT:d6"],["HEAL:2"],["DRAW:1"],["DRAW:2"]]),
  "u-bookcase":C(["ROLL_ROOM"],["BOOKCASE_FIRE_OR_SCROLL"],[
@@ -35,8 +35,8 @@ export const ROOM_EFFECTS=Object.freeze({
  ["HURT:2"],["HEAL:d6"],["DRAW:2","DISCARD:1"]]),
  "m-vault":C(["ROLL_ROOM"],["HURT:d6","DRAW:1"],[
  ["POISON"],["DRAW:1"],["DRAW:2"]]),
- "m-crypt":C(["ROLL_ROOM"],["FIGHT_REWARD:2"],[
- ["FIGHT"],["BANISH"],["BANISH","DRAW:1"]]),
+ "m-crypt":C(["ROLL_ROOM"],["CHECK_ATK:4:DRAW2:HURTd6"],[
+ ["CRYPT_WHISPER"],["NONE"],["DRAW:1"]]),
  "m-fungus":C(["ROLL_ROOM"],["FUNGUS_BURN"],[
  ["POISON","MONSTER_DRAW"],["HEAL:d6"],["DRAW:1","CURE"]]),
  "m-altar":C(["ROLL_ROOM"],["COST:1","CLEANSE"],[
@@ -87,7 +87,7 @@ export const ROOM_EFFECTS=Object.freeze({
 });
 export const ROOM_OPERATIONS=new Set([
  "NONE","ROLL_ROOM","ROLL_ROOM_RISK","ROLL_ROOM_RISK_D6","ROLL_ROOM_COST_REROLL",
- "HURT","HEAL","HEAL_ALL","DRAW","DISCARD","TRADE","COST","PAY_ITEM_OR_HP","PEEK","PEEK_SWAP","MONSTER_DRAW","MONSTER_ADV",
+ "HURT","HEAL","HEAL_ALL","DRAW","DISCARD","SALVAGE","LAMP_EAT","CRYPT_WHISPER","TRADE","COST","PAY_ITEM_OR_HP","PEEK","PEEK_SWAP","MONSTER_DRAW","MONSTER_ADV",
  "FIGHT","BANISH","FIGHT_REWARD","FIGHT_HEAL","POISON","CURE","CLEANSE","RECHARGE",
  "CURSED_RECHARGE","SUPPLY_BARTER","PUPPET_BRIBE","BOOKCASE_FIRE_OR_SCROLL","FUNGUS_BURN",
  "CHOIR_SILENCE","ALCHEMY_HEAL_OR_TWO","MAGIC_HEAL","CURSED_EXTRA_DRAW","CLEANSE_COST",

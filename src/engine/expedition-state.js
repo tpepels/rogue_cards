@@ -79,6 +79,7 @@ export class ExpeditionState {
   this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
   this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
+  this.discardPile=[];this.ratFavor=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
@@ -209,9 +210,15 @@ export class ExpeditionState {
     .sort((a,b)=>scoreItem(a.item,this.strategy)-scoreItem(b.item,this.strategy));
    if(!options.length)return last;
    const sel=preferred?options.find(x=>x.item.id===preferred)||options[0]:options[0];
-   this.remove(sel.hero,sel.item);this.metrics.spent++;last=sel.item;
+   this.remove(sel.hero,sel.item);this.discardPile.push(sel.item);this.metrics.spent++;last=sel.item;
   }
   this.lastSpent=last;return last;
+ }
+ salvage(){
+  const item=this.discardPile.pop();
+  if(!item){this.draw();return null;}
+  this.consumed.delete(item);this.add(this.chooseActor(),item);
+  return item;
  }
  hurt(h,amt){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
   this.metrics.damage+=before-h.hp;
@@ -485,6 +492,11 @@ export class ExpeditionState {
   case "CURE":h.poison=false;return;
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
+  case "SALVAGE":this.salvage();return;
+  case "LAMP_EAT":if(this.discardable(1,"FIRE"))this.discard(1,{tag:"FIRE"});
+    else this.hurt(h,2);h.nextDis++;return;
+  case "CRYPT_WHISPER":this.hurt(h,2);
+    if(this.alive())this.roomCheck("CHECK_WIT",0,"NONE","HURT1");return;
   case "DISCARD":this.discard(n());return;
   case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");
    this.lastCostCards=[];for(let i=0;i<n();i++)this.lastCostCards.push(this.discard());return;
@@ -637,6 +649,8 @@ export class ExpeditionState {
   const ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
   this.witBonus=0;
   const code=ok?success:fail;
+  if(code==="NONE")return;
+  if(code==="HURT1"){this.hurt(h,1);return;}
   if(code==="DRAW1_RECHARGE"){this.draw();this.recharge();}
   else if(code==="DRAW1")this.draw();
   else if(code==="DRAW2")this.draw(2);
@@ -724,6 +738,7 @@ export class ExpeditionState {
    this.directItem(h,card,"room-override",()=>{face=6;return true;});
   }
   if(this.has("dog")&&["u-nest","m-beetle"].includes(this.room.id))face=6;
+  if(this.room.id==="u-nest"&&this.ratFavor){face=6;this.ratFavor=false;}
   if(this.room.id==="m-beetle"&&this.strategy==="treasure"&&this.discardable(1,"METAL")){
    this.discard(1,{tag:"METAL"});face=6;
   }
@@ -732,8 +747,9 @@ export class ExpeditionState {
     &&this.strategy!=="seal"){const h=this.own("key");this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
      this.consume(h,byId(h.inventory,"key"));return true;});face=6;}
   if((this.has("torch")||this.has("lantern-heart")||this.anyEquippedTag("FIRE"))&&
-    this.room.id==="u-lamp")face=6;
-  if((this.has("torch")||this.partyCount("FIRE")>0)&&this.room.id==="m-crypt")face=6;
+    this.room.id==="u-lamp"&&false)face=6;
+  // Opened Crypt no longer treats fire as automatic treasure.
+
   if(this.anyEquippedTag("FIRE")&&this.room.id==="d-shadow")face=6;
   if(this.anyEquippedTag("ICE")&&this.room.id==="d-shadow")face=4;
   if(this.heroes.some(h=>this.equipped(h,"ring-eye"))&&this.room.id==="d-oracle")face=6;
