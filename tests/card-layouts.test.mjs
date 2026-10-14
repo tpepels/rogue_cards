@@ -28,19 +28,19 @@ test("physical layout JSON matches checked-in generated CSS",async()=>{
  // Retain the three supplied layouts' sizes and rotations. Their rules slips
  // are intentionally moved upward to prevent hiding the expanded results.
  assert.deepEqual(data.cards["hero:warrior"],{
-  rules:{x:54,y:68.7,w:32.5,rotation:7.5,zIndex:31,h:27.5},
-  results:{x:2.5,y:100.5,w:77.5,h:15,rotation:2},
+  rules:{x:54,y:64.3,w:32.5,rotation:7.5,zIndex:31,h:27.5},
+  results:{x:2.5,y:96.1,w:77.5,h:15,rotation:2},
   title:{x:15.5,y:5,w:56,h:8,rotation:1.5}
  });
  assert.deepEqual(data.cards["potion:laughing"],{
-  rules:{x:52,y:68.6,w:33.07,rotation:2.5,zIndex:22},
-  results:{rotation:-3,x:2,y:94,w:86,h:27.5},
+  rules:{x:52,y:61.3,w:33.07,rotation:2.5,zIndex:22},
+  results:{rotation:-3,x:2,y:86.7,w:86,h:27.5},
   title:{x:1,y:8,w:47.89,rotation:-11}
  });
  assert.deepEqual(data.cards["potion:antidote"],{
   title:{rotation:-11,x:4,y:9,w:33,h:6},
-  results:{x:2.5,y:95.5,w:85.5,h:26,rotation:-3.5},
-  rules:{x:52,y:73.1,w:36,zIndex:31,h:18.5}
+  results:{x:2.5,y:90.9,w:85.5,h:26,rotation:-3.5},
+  rules:{x:52,y:68.5,w:36,zIndex:31,h:18.5}
  });
 });
 test("per-card CSS uses millimetres, independent title / rules / results overrides",()=>{

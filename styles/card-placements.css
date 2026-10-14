@@ -19,7 +19,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="knight"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:65.7mm;
+ top:56.2mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -30,7 +30,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="knight"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:97.9mm;
+ top:88.4mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -57,7 +57,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="monk"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:60.9mm;
+ top:52.1mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -68,7 +68,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="monk"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:97.9mm;
+ top:89.1mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -95,7 +95,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="priest"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:63.2mm;
+ top:59.8mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -106,7 +106,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="priest"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:98.8mm;
+ top:95.4mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -133,7 +133,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="rogue"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:62.5mm;
+ top:57.1mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -144,7 +144,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="rogue"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:100.5mm;
+ top:95.1mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -171,7 +171,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="thief"] .tt-collage > .tt-content .tt-slip--lead{
  left:51.9mm;
  right:auto;
- top:55.9mm;
+ top:47.5mm;
  bottom:auto;
  width:35.5mm;
  max-width:none;
@@ -182,7 +182,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="thief"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:95mm;
+ top:86.6mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -210,7 +210,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="warrior"] .tt-collage > .tt-content .tt-slip--lead{
  left:54mm;
  right:auto;
- top:68.7mm;
+ top:64.3mm;
  bottom:auto;
  width:32.5mm;
  max-width:none;
@@ -223,7 +223,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="warrior"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:100.5mm;
+ top:96.1mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -251,7 +251,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="witch"] .tt-collage > .tt-content .tt-slip--lead{
  left:53.9mm;
  right:auto;
- top:61.9mm;
+ top:56.1mm;
  bottom:auto;
  width:33.5mm;
  max-width:none;
@@ -262,7 +262,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="witch"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:100.5mm;
+ top:94.7mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -289,7 +289,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="wizard"] .tt-collage > .tt-content .tt-slip--lead{
  left:55.9mm;
  right:auto;
- top:60.5mm;
+ top:57.1mm;
  bottom:auto;
  width:31.5mm;
  max-width:none;
@@ -300,7 +300,7 @@
 .tt-card.tt-paper-collage[data-type="hero"][data-id="wizard"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:98.8mm;
+ top:95.4mm;
  bottom:auto;
  width:77.5mm;
  max-width:none;
@@ -327,7 +327,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="chalk"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:75.4mm;
+ top:66.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -338,7 +338,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="chalk"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:86.3mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -365,7 +365,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="coin"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:77.6mm;
+ top:68.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -376,7 +376,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="coin"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:89.6mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -403,7 +403,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="crowbar"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:73mm;
+ top:68.5mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -414,7 +414,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="crowbar"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.5mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -555,7 +555,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="dog"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:73.2mm;
+ top:65.1mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -566,7 +566,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="dog"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:86.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -593,7 +593,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="goblin-pet"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:71.8mm;
+ top:63.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -604,7 +604,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="goblin-pet"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:91.8mm;
+ top:83.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -745,7 +745,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="mirror"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:72.1mm;
+ top:63.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -756,7 +756,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="mirror"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:85.9mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -783,7 +783,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="moth"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:73.3mm;
+ top:65.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -794,7 +794,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="moth"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92.8mm;
+ top:84.8mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -821,7 +821,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="needle"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80.2mm;
+ top:72.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -832,7 +832,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="needle"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:91.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -859,7 +859,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="raven"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.4mm;
+ top:66.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -870,7 +870,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="raven"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:84.6mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -897,7 +897,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-ashes"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:75.6mm;
+ top:67.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -908,7 +908,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-ashes"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:86.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -935,7 +935,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-bargain"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:78.6mm;
+ top:68.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -946,7 +946,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-bargain"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.8mm;
+ top:88mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -973,7 +973,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-echo"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:75.3mm;
+ top:68.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -984,7 +984,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-echo"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:87.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1011,7 +1011,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-eye"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:69.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1022,7 +1022,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-eye"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:84.6mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1049,7 +1049,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-hunger"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.6mm;
+ top:68.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1060,7 +1060,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-hunger"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.8mm;
+ top:89.6mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1087,7 +1087,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-luck"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:65.8mm;
+ top:59.8mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1098,7 +1098,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-luck"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:88.8mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1125,7 +1125,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-spores"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:73.3mm;
+ top:64.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1136,7 +1136,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="ring-spores"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92.3mm;
+ top:83.9mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1201,7 +1201,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-banish"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.7mm;
+ top:71mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1212,7 +1212,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-banish"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:91.8mm;
+ top:86.1mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1239,7 +1239,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-flame"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:75.6mm;
+ top:68.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1250,7 +1250,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-flame"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:91.8mm;
+ top:84.5mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1277,7 +1277,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-frost"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:79.4mm;
+ top:71.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1288,7 +1288,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-frost"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:87.1mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1315,7 +1315,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-last"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:74.8mm;
+ top:66.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1326,7 +1326,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-last"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:93.8mm;
+ top:85.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1353,7 +1353,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-lightning"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:74.5mm;
+ top:66.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1364,7 +1364,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-lightning"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:90.7mm;
+ top:82.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1391,7 +1391,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-mischief"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:73.6mm;
+ top:68.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1402,7 +1402,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-mischief"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:88.2mm;
+ top:83.3mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1429,7 +1429,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-reveal"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:80mm;
+ top:73.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1440,7 +1440,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-reveal"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:88.6mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1467,7 +1467,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-unlock"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:79.2mm;
+ top:71.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1478,7 +1478,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-unlock"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:87.1mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1505,7 +1505,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="shield"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:77.8mm;
+ top:67.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1516,7 +1516,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="shield"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.8mm;
+ top:87.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1543,7 +1543,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="skull"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:79mm;
+ top:68.7mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1554,7 +1554,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="skull"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.8mm;
+ top:87.5mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1581,7 +1581,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="spore-jar"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:78.6mm;
+ top:70.5mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1592,7 +1592,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="spore-jar"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:86.7mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1657,7 +1657,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="sword"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:70.8mm;
+ top:66.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1668,7 +1668,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="sword"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:91.8mm;
+ top:87.9mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1733,7 +1733,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-door"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:66.1mm;
+ top:57.6mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1744,7 +1744,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-door"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.3mm;
+ top:85.8mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1771,7 +1771,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-frost"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:66.7mm;
+ top:58.4mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1782,7 +1782,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-frost"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92.8mm;
+ top:84.5mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1809,7 +1809,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-market"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:68.5mm;
+ top:60.3mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1820,7 +1820,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-market"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:90.7mm;
+ top:82.5mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1847,7 +1847,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-morph"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:61.9mm;
+ top:53.9mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1858,7 +1858,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-morph"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:87.8mm;
+ top:79.8mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1885,7 +1885,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-sparks"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:74.2mm;
+ top:63.8mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1896,7 +1896,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-sparks"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.8mm;
+ top:87.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1923,7 +1923,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-turn"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:68.5mm;
+ top:60.1mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -1934,7 +1934,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-turn"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92.8mm;
+ top:84.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -1961,7 +1961,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-undo"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:64.9mm;
+ top:57.5mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -1972,7 +1972,7 @@
 .tt-card.tt-paper-collage[data-type="item"][data-id="wand-undo"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.8mm;
+ top:87.4mm;
  bottom:auto;
  width:83mm;
  max-width:none;
@@ -2037,7 +2037,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="crawler"] .tt-collage > .tt-content .tt-slip--lead{
  left:45.4mm;
  right:auto;
- top:53.4mm;
+ top:53mm;
  bottom:auto;
  width:42mm;
  max-width:none;
@@ -2048,7 +2048,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="crawler"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:95mm;
+ top:94.6mm;
  bottom:auto;
  width:80mm;
  max-width:none;
@@ -2151,7 +2151,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="goblin"] .tt-collage > .tt-content .tt-slip--lead{
  left:47.4mm;
  right:auto;
- top:43.3mm;
+ top:42.7mm;
  bottom:auto;
  width:40mm;
  max-width:none;
@@ -2162,7 +2162,7 @@
 .tt-card.tt-paper-collage[data-type="monster"][data-id="goblin"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:97.9mm;
+ top:97.3mm;
  bottom:auto;
  width:80mm;
  max-width:none;
@@ -2531,7 +2531,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="amber"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:76.8mm;
+ top:67.6mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -2542,7 +2542,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="amber"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:97.8mm;
+ top:88.6mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2570,7 +2570,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="antidote"] .tt-collage > .tt-content .tt-slip--lead{
  left:52mm;
  right:auto;
- top:73.1mm;
+ top:68.5mm;
  bottom:auto;
  width:36mm;
  max-width:none;
@@ -2581,7 +2581,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="antidote"] .tt-collage > .tt-content .tt-slip--results{
  left:2.5mm;
  right:auto;
- top:95.5mm;
+ top:90.9mm;
  bottom:auto;
  width:85.5mm;
  max-width:none;
@@ -2609,7 +2609,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="fizzy"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:70.4mm;
+ top:65.4mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2620,7 +2620,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="fizzy"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:91.2mm;
+ top:86.2mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2646,7 +2646,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="laughing"] .tt-collage > .tt-content .tt-slip--lead{
  left:52mm;
  right:auto;
- top:68.6mm;
+ top:61.3mm;
  bottom:auto;
  width:33.07mm;
  max-width:none;
@@ -2657,7 +2657,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="laughing"] .tt-collage > .tt-content .tt-slip--results{
  left:2mm;
  right:auto;
- top:94mm;
+ top:86.7mm;
  bottom:auto;
  width:86mm;
  max-width:none;
@@ -2685,7 +2685,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="midnight"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:67.2mm;
+ top:58.8mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2696,7 +2696,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="midnight"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:92.3mm;
+ top:83.9mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2723,7 +2723,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="milky"] .tt-collage > .tt-content .tt-slip--lead{
  left:50.4mm;
  right:auto;
- top:74.1mm;
+ top:64.6mm;
  bottom:auto;
  width:37mm;
  max-width:none;
@@ -2734,7 +2734,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="milky"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:97.8mm;
+ top:88.3mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2761,7 +2761,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="mushroom"] .tt-collage > .tt-content .tt-slip--lead{
  left:52.4mm;
  right:auto;
- top:75mm;
+ top:64.2mm;
  bottom:auto;
  width:35mm;
  max-width:none;
@@ -2772,7 +2772,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="mushroom"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:97.8mm;
+ top:87mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2799,7 +2799,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="smoky"] .tt-collage > .tt-content .tt-slip--lead{
  left:54.4mm;
  right:auto;
- top:70.6mm;
+ top:62.6mm;
  bottom:auto;
  width:33mm;
  max-width:none;
@@ -2810,7 +2810,7 @@
 .tt-card.tt-paper-collage[data-type="potion"][data-id="smoky"] .tt-collage > .tt-content .tt-slip--results{
  left:2.2mm;
  right:auto;
- top:94.8mm;
+ top:86.8mm;
  bottom:auto;
  width:85mm;
  max-width:none;
@@ -2837,7 +2837,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-apothecary"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:56mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2848,7 +2848,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-apothecary"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -2875,7 +2875,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bazaar"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:55.85mm;
+ top:47.85mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2886,7 +2886,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bazaar"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92.05mm;
+ top:84.05mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -2913,7 +2913,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bones"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:58.5mm;
+ top:51.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2924,7 +2924,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bones"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -2951,7 +2951,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bridge"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:68.1mm;
+ top:61.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -2962,7 +2962,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-bridge"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -2989,7 +2989,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-choir"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:50.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3000,7 +3000,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-choir"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3027,7 +3027,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-crown"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:58.6mm;
+ top:50.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3038,7 +3038,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-crown"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:87.5mm;
+ top:79.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3065,7 +3065,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-gate"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:64.8mm;
+ top:56.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3076,7 +3076,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-gate"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:90.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3130,7 +3130,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-bell"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:52.9mm;
+ top:43.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3141,7 +3141,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-bell"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:89.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3168,7 +3168,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-chest"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.2mm;
+ top:44.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3179,7 +3179,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-last-chest"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3233,7 +3233,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-mirror"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:61.6mm;
+ top:53.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3244,7 +3244,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-mirror"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:95mm;
+ top:86.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3271,7 +3271,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-mouth"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.2mm;
+ top:43mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3282,7 +3282,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-mouth"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:95.5mm;
+ top:87.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3336,7 +3336,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:55.6mm;
+ top:47.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3347,7 +3347,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:96mm;
+ top:87.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3374,7 +3374,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-shadow"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:50.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3385,7 +3385,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-shadow"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3439,7 +3439,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-whisper-junction"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:54.2mm;
+ top:45.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3450,7 +3450,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-whisper-junction"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:90.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3477,7 +3477,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-altar"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:62.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3488,7 +3488,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-altar"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3515,7 +3515,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-auction"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:50.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3526,7 +3526,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-auction"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.7mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3553,7 +3553,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-beetle"] .tt-collage > .tt-content .tt-slip--lead{
  left:33.4mm;
  right:auto;
- top:52.9mm;
+ top:44.9mm;
  bottom:auto;
  width:54mm;
  max-width:none;
@@ -3564,7 +3564,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-beetle"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.5mm;
+ top:86.5mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3591,7 +3591,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-bridge"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.7mm;
+ top:43.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3602,7 +3602,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-bridge"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:90.7mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3656,7 +3656,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-clock"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51mm;
+ top:44.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3667,7 +3667,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-clock"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.7mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3694,7 +3694,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-crypt"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:49.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3705,7 +3705,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-crypt"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3786,7 +3786,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-flood"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.15mm;
+ top:52.95mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3797,7 +3797,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-flood"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:98.55mm;
+ top:91.35mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3824,7 +3824,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-fungus"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.2mm;
+ top:44.6mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3835,7 +3835,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-fungus"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3889,7 +3889,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-hungry-door"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:52.9mm;
+ top:42.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3900,7 +3900,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-hungry-door"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.9mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3927,7 +3927,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-ladder"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:46.7mm;
+ top:38.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3938,7 +3938,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-ladder"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:92mm;
+ top:83.5mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -3965,7 +3965,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-maps"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:61.4mm;
+ top:53mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -3976,7 +3976,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-maps"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:90.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4003,7 +4003,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-red-detour"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:55.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4014,7 +4014,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-red-detour"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:95.5mm;
+ top:87.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4041,7 +4041,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-second-name"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:54.2mm;
+ top:48.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4052,7 +4052,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-second-name"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:93.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4079,7 +4079,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-statue"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:56.1mm;
+ top:45.3mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4090,7 +4090,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-statue"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4117,7 +4117,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-treasure"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:43.7mm;
+ top:38.3mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4128,7 +4128,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-treasure"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:93.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4155,7 +4155,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-vault"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:69.2mm;
+ top:63.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4166,7 +4166,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-vault"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:93.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4193,7 +4193,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-wax-bridge"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:54.2mm;
+ top:50mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4204,7 +4204,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-wax-bridge"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4231,7 +4231,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-well"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:51.2mm;
+ top:45.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4242,7 +4242,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="m-well"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:93.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4296,7 +4296,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-bookcase"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:52.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4307,7 +4307,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-bookcase"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.5mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4334,7 +4334,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-candle"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:51.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4345,7 +4345,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-candle"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:95.5mm;
+ top:87.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4399,7 +4399,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-echoes"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.5mm;
+ top:51.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4410,7 +4410,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-echoes"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.7mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4437,7 +4437,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fall"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:66.2mm;
+ top:58.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4448,7 +4448,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fall"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:91.2mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4475,7 +4475,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fork"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:59.8mm;
+ top:49.4mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4486,7 +4486,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fork"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4513,7 +4513,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fountain"] .tt-collage > .tt-content .tt-slip--lead{
  left:33.4mm;
  right:auto;
- top:57.2mm;
+ top:50.6mm;
  bottom:auto;
  width:54mm;
  max-width:none;
@@ -4524,7 +4524,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-fountain"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4551,7 +4551,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-gate"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:53.4mm;
+ top:48.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4562,7 +4562,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-gate"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4616,7 +4616,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-lamp"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:49.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4627,7 +4627,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-lamp"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:88.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4654,7 +4654,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-lantern-shrine"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:57.8mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4665,7 +4665,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-lantern-shrine"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:93.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4692,7 +4692,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-leech-pool"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:56.9mm;
+ top:50.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4703,7 +4703,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-leech-pool"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4730,7 +4730,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-merchant"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:62.15mm;
+ top:54.05mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4741,7 +4741,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-merchant"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94.05mm;
+ top:85.95mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4768,7 +4768,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-mimic"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:64.9mm;
+ top:58.7mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4779,7 +4779,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-mimic"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4806,7 +4806,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-mossy"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:60.2mm;
+ top:51.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4817,7 +4817,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-mossy"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:90.7mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4844,7 +4844,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-nest"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:50.5mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4855,7 +4855,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-nest"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.3mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4882,7 +4882,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-passage"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:59.5mm;
+ top:51.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4893,7 +4893,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-passage"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:93mm;
+ top:84.6mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4920,7 +4920,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-puppet"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:57.2mm;
+ top:49.2mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4931,7 +4931,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-puppet"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:94mm;
+ top:86mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -4958,7 +4958,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-rat-favor"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:48.2mm;
+ top:44mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -4969,7 +4969,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-rat-favor"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -5023,7 +5023,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-shrine"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:62.1mm;
+ top:55.9mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -5034,7 +5034,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-shrine"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.8mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -5061,7 +5061,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-smuggler"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:63.2mm;
+ top:58.6mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -5072,7 +5072,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-smuggler"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:94.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -5099,7 +5099,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-supply"] .tt-collage > .tt-content .tt-slip--lead{
  left:44.4mm;
  right:auto;
- top:62.7mm;
+ top:53.1mm;
  bottom:auto;
  width:43mm;
  max-width:none;
@@ -5110,7 +5110,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="u-supply"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:89.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;
@@ -5137,7 +5137,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="vault"] .tt-collage > .tt-content .tt-slip--lead{
  left:33.4mm;
  right:auto;
- top:54.2mm;
+ top:47.6mm;
  bottom:auto;
  width:54mm;
  max-width:none;
@@ -5148,7 +5148,7 @@
 .tt-card.tt-paper-collage[data-type="room"][data-id="vault"] .tt-collage > .tt-content .tt-slip--results{
  left:3mm;
  right:auto;
- top:99mm;
+ top:92.4mm;
  bottom:auto;
  width:84mm;
  max-width:none;

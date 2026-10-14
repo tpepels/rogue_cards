@@ -119,7 +119,13 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    expect(card.imageH,card.id+" illustration too small").toBeGreaterThan(110*96/25.4);
    expect(card.imageW,card.id+" illustration too narrow").toBeGreaterThan(83*96/25.4);
    expect(card.notes.length,card.id+" has no note").toBeGreaterThanOrEqual(1);
-   expect(card.notes.length,card.id+" too many pasted notes").toBeLessThanOrEqual(2);
+   expect(card.notes.length,card.id+" too many pasted notes").toBeLessThanOrEqual(2); 
+   if(card.notes.length===2){
+    const resultsNote=card.notes[1];
+    const footerClearance=6*96/25.4; // protect the printed caption and card number
+    expect(resultsNote.bottom,card.id+" results text reaches footer")
+     .toBeLessThanOrEqual(card.cardBounds.bottom-footerClearance);
+   }
    // A pasted note may tilt or touch the other note's paper edge, but it may
    // not cover a meaningful area of the other note's printed instructions.
    if(card.notes.length===2){
