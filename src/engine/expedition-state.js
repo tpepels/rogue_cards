@@ -484,9 +484,12 @@ export class ExpeditionState {
     this.returnChoices["u-hollow-knight"]=choice.mode;
    }
    if(monsterEntry(this,m))return;
-  if(!this.monster){this.monster=m;this.monsterHP=m.hp;this.banished=false;
-   this.elberethAttempts=0;this.elberethSkipResponse=false;}
-  else this.monsterQueue.push(m);
+  if(!this.monster){
+   this.monster=m;this.monsterHP=m.hp;this.banished=false;
+   this.elberethAttempts=0;this.elberethSkipResponse=false;
+   if(m.stage!=="FINAL"&&this.useRetainedPotion("laughter",m.id))
+    this.forcedBehavior=1;
+  }else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
  }
  activate(h,card,{face=null,consume=true,mode="printed",record=true}={}){
