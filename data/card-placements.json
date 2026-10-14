@@ -1281,13 +1281,6 @@
         "w": 54,
         "rotation": 4.64,
         "zIndex": 31
-      },
-      "results": {
-        "x": 3,
-        "y": 99,
-        "w": 84,
-        "rotation": -4.65,
-        "zIndex": 21
       }
     },
     "room:u-lantern-shrine": {
