@@ -2,14 +2,14 @@
 // Difficulty climbs from UPPER to DEEP. Each behaviour uses 1–2, 3–4, 5, 6.
 const BASE=[
  ["rat","Giant Rat","rat","UPPER",6,2,1,["Sniff: no attack.","Bite: ATTACK.","Scatter: next Hero attack has DIS.","Pack Bite: ATTACK with +2 ATK."]],
- ["goblin","Goblin Raider","goblin","UPPER",8,3,2,["Mock: no attack.","Knife: ATTACK.","Swipe: tuck 1 held Item under this Monster; if none, lose 2 HP. Recover on defeat, otherwise discard.","Ambush: ATTACK with ADV."]],
- ["crawler","Sewer Crawler","rust","UPPER",8,3,2,["Hide: next Hero attack has DIS.","Claw: ATTACK.","Acid: ATTACK; on hit, discard 1 METAL Item or take +2 HP damage.","Lunge: ATTACK with +2 ATK."]],
+ ["goblin","Goblin Raider","goblin","UPPER",8,3,2,["Mock: no attack.","Knife: ATTACK.","Swipe: tuck 1 carried Item under this Monster; if none, lose 2 HP. Recover it on defeat; otherwise discard it.","Ambush: ATTACK with ADV."]],
+ ["crawler","Sewer Crawler","rust","UPPER",8,3,2,["Hide: next Hero attack has DIS.","Claw: ATTACK.","Acid: ATTACK; on hit, discard 1 METAL Item or take 2 extra damage.","Lunge: ATTACK with +2 ATK."]],
  ["bat","Cave Bat Swarm","eye","UPPER",7,3,3,["Circle: no attack.","Swoop: ATTACK.","Howl: next Hero d20 roll has DIS.","Swoop: ATTACK with ADV."]],
  ["troll","Bridge Troll","troll","MIDDLE",12,4,3,["Grumble: no attack.","Club: ATTACK.","Regenerate: heal 2 HP unless damaged by FIRE since last Regenerate.","Crush: ATTACK; deal +2 damage on hit."]],
  ["wisp","Will-o'-Wisp","spiral","MIDDLE",9,4,4,["Flicker: next Hero attack has DIS.","Spark: ATTACK.","Lure: move next Room unseen to deck bottom; next Hero attack has DIS.","Flash: ATTACK with ADV; on hit, next Hero attack has DIS."]],
  ["eye","Floating Eye","eye","MIDDLE",9,3,4,["Stare: no attack.","Gaze: opposed d20+WIT vs d20+4; on failure, next Hero attack has DIS.","Freeze: next Hero d20 roll has DIS.","Gaze: ATTACK with ADV."]],
  ["mold","Living Mold","mushroom","MIDDLE",11,4,2,["Spread: next Hero attack has DIS.","Spores: active Hero becomes POISONED.","Digest: ATTACK.","Bloom: ATTACK with ADV."]],
- ["wraith","Restless Shade","ghost","DEEP",13,5,4,["Fade: next Hero attack has DIS.","Cold Hand: ATTACK.","Drain: ATTACK; on hit deal +2 HP damage.","Haunt: ATTACK with ADV."]],
+ ["wraith","Restless Shade","ghost","DEEP",13,5,4,["Fade: next Hero attack has DIS.","Cold Hand: ATTACK.","Drain: ATTACK; on hit, deal 2 extra damage.","Haunt: ATTACK with ADV."]],
  ["rust","Rust Monster","rust","DEEP",14,5,3,["Sniff: no attack.","Gnaw: ATTACK.","Corrode: discard a METAL Item or lose 3 HP.","Gnaw: ATTACK with ADV."]],
  ["cultist","Forgotten Acolyte","wizard","DEEP",14,5,4,["Chant: its next attack gains ADV.","Hex: ATTACK using +6 ATK.","Curse: next Hero DEF in this fight has DIS and -2 DEF.","Hex: ATTACK with ADV."]],
  ["sentinel","Iron Sentinel","warden","DEEP",16,6,5,["Guard: next Hero attack has DIS.","Hammer: ATTACK.","Crush: ATTACK; on hit, deal +2 damage.","Hammer: ATTACK with ADV."]]
