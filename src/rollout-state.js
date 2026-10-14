@@ -115,13 +115,18 @@ export function prepareRolloutDecks(s,knowledge){
   const heldPaths=[s.savedPath,s.whisperRoom,
    ...(s._offeredRoomChoices||[])].filter(
    card=>card?.stage===stage).map(card=>card.id);
-  const excluded=new Set([...seen,...removed,...revealed,...heldPaths]);
+  const knownBottom=(s.publicBottomRoomIds?.[stage]||[])
+   .filter(id=>!seen.has(id)&&!removed.has(id)&&!revealed.includes(id));
+  const excluded=new Set([
+   ...seen,...removed,...revealed,...heldPaths,...knownBottom]);
   const available=STAGE_ROOMS[stage].filter(r=>!excluded.has(r.id));
   const remaining=s.rooms[stage]?.length||0;
   const known=revealed.slice(0,remaining).map(id=>ROOM_BY_ID.get(id));
-  if(remaining-known.length>available.length)
+  const bottom=knownBottom.filter(id=>ROOM_BY_ID.has(id))
+   .slice(-Math.max(0,remaining-known.length)).map(id=>ROOM_BY_ID.get(id));
+  if(remaining-known.length-bottom.length>available.length)
    throw Error("Insufficient public Room pool for "+stage);
-  rooms[stage]={known,available,remaining};
+  rooms[stage]={known,bottom,available,remaining};
   const count=s.monsters[stage]?.length||0;
   const all=MONSTER_COPIES[stage];
   const pool=reduceSeen(all,s.metrics.monsterVisits);
@@ -151,9 +156,10 @@ export function sampleRolloutDecks(s,{knowledge,deckSeed,blueprint=null}){
  const deck=drawWithoutReplacement(prepared.items,s.deck.length,deckRng);
  const rooms={},monsters={};
  for(const stage of STAGES){
-  const {known,available,remaining}=prepared.rooms[stage];
-  const unknown=drawWithoutReplacement(available,remaining-known.length,deckRng);
-  rooms[stage]=[...known,...unknown];
+  const {known,bottom,available,remaining}=prepared.rooms[stage];
+  const unknown=drawWithoutReplacement(available,
+   remaining-known.length-bottom.length,deckRng);
+  rooms[stage]=[...known,...unknown,...bottom];
  }
  for(const stage of STAGES){
   const {pool,count}=prepared.monsters[stage];
