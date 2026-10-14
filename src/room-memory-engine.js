@@ -4,6 +4,11 @@ export function resolveRoomChoice(s,choice){
  if(s.room.v2.fate)return resolveFateChoice(s,choice);
  const id=s.room.id,h=s.actor||s.chooseRecipient("retained-room-choice");
  const keep=(item=null)=>s.keptRooms.push({card:s.room,item});
+ if(id==="d-last-bell"){
+  if(choice===0)s.roomRoll();
+  else keep();
+  return;
+ }
  if(s.room.v2.special.corridor){
   if(id==="d-gilded"&&choice===1){
    s.keptRooms.push({card:s.room,choice:1});s.forkRooms("plain");return;
@@ -21,7 +26,10 @@ export function resolveRoomChoice(s,choice){
  switch(id){
  case "m-fungus":case "m-bridge":case "u-lantern-shrine":case "m-second-name":
  case "m-wax-bridge":case "d-apothecary":case "d-last-bell":keep();break;
- case "m-well":if(s.discardable()){const item=s.discard();s.heal(h,3);keep(item);}break;
+ case "m-well":if(s.discardable()){
+  const item=s.discard();s.heal(h,3);keep(item);
+ }else throw Error("Bottomless Well OFFER requires an Item");
+ break;
  case "m-clock":case "u-rat-favor":s.draw();keep();break;
  case "u-leech-pool":s.heal(h,3);keep();break;
  case "m-hungry-door":
