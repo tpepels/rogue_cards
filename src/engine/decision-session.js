@@ -302,8 +302,10 @@ export function submitDecision(session,action){
    event.allowedModes.includes(x.mode||x.kind));
   if(actions.length===0)throw Error("No legal printed reaction at "+event.phase);
   if(position<responses.length){
-   const selected=actions.find(a=>sameAction(a,responses[position++]));
-   if(!selected)throw Error("Replayed reaction ceased to be legal");
+   const requested=responses[position++];
+   const selected=actions.find(a=>sameAction(a,requested));
+   if(!selected)throw Error("Replayed reaction ceased to be legal: "+
+    JSON.stringify({requested,legal:actions}));
    return selected;
   }
   throw new NeedReaction(event,actions,observeGame(fork.state));
