@@ -11,6 +11,15 @@ on:
       - src/engine/expedition-state.js
       - src/rooms.js
       - src/room-effect-model.js
+      - src/effect-model.js
+      - src/room-memory.js
+      - src/room-memory-engine.js
+      - src/room-fates.js
+      - src/item-access.js
+      - src/card-audit.js
+      - scripts/validate-deck.mjs
+      - src/objects.js
+      - src/monsters.js
       - src/playtest.js
       - tests/decision-api.test.mjs
       - src/engine/combat.js
