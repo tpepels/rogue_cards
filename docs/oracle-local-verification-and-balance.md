@@ -93,7 +93,13 @@ npm run oracle:balance -- \
 ~~~
 
 After passing the correctness audit, use the same command without
---dry-run. The runner:
+--dry-run. Real runs now **refuse to start** unless the default
+results/canonical-audit-01/summary.json reports a complete passing
+audit of at least 36 seeded walks at precisely the same Git revision.
+Use --audit /path/to/summary.json if the audit has another location.
+A dry-run does not require the audit to have completed.
+
+The runner:
 - Rotates all eight solo Heroes and 28 two-Hero combinations
 - Navigates real expedition states with canonical session MCTS
 - Selects candidate decisions across the entire expedition, including
