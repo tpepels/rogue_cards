@@ -9,6 +9,10 @@ on:
       - src/engine/decision-session.js
       - src/engine/index.js
       - src/engine/expedition-state.js
+      - src/rooms.js
+      - src/room-effect-model.js
+      - src/playtest.js
+      - tests/decision-api.test.mjs
       - src/engine/combat.js
       - src/engine/random.js
       - src/engine/fork-state.js
