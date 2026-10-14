@@ -138,21 +138,6 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
   return cards;
  };
  const onScreen=await check();
- // Save actual gallery pixels and measured bounds for review of every unique card.
- const auditDir="test-results/card-visual-inspection";
- await mkdir(auditDir,{recursive:true});
- await writeFile(auditDir+"/card-measurements.json",JSON.stringify(onScreen,null,2));
- const galleryGroups=[
-  ["hero",null],["room","UPPER"],["room","MIDDLE"],["room","DEEP"],["room","FINAL"],
-  ["monster",null],...["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"].map(v=>[v,null])
- ];
- for(const [category,depth] of galleryGroups){
-  await page.getByRole("combobox",{name:"Card category"}).selectOption(category);
-  if(depth)await page.getByRole("combobox",{name:"Dungeon region"}).selectOption(depth);
-  const label=(category+"-"+(depth||"all")).toLowerCase();
-  await page.locator(".tt-grid").screenshot({path:auditDir+"/"+label+".png",animations:"disabled",timeout:45000});
- }
- await page.getByRole("combobox",{name:"Card category"}).selectOption("all");
  const families=new Set(onScreen.map(card=>card.type));
  for(const family of ["HERO","MONSTER","WARDEN","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION","HAZARD","SHRINE","ENCOUNTER"])
   expect(families.has(family),"No artwork/layout for "+family).toBeTruthy();
@@ -266,4 +251,33 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
  }));
  expect(print.title).toContain("polygon");
  expect(print.slip).toContain("polygon");
+});
+
+test("capture all 139 rendered cards for visual inspection",async({page})=>{
+ test.setTimeout(180000);
+ await page.goto("/");
+ const dir="test-results/card-visual-inspection";
+ await mkdir(dir,{recursive:true});
+ const measures=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const cardRect=card.getBoundingClientRect();
+  return {id:card.dataset.id,type:card.dataset.v2Kind,
+    card:{x:cardRect.x,y:cardRect.y,w:cardRect.width,h:cardRect.height},
+    slips:[...card.querySelectorAll(".tt-slip")].map(note=>{
+     const r=note.getBoundingClientRect();
+     return {text:note.innerText,x:r.left-cardRect.left,y:r.top-cardRect.top,
+      w:r.width,h:r.height,clipY:note.scrollHeight-note.clientHeight,
+      clipX:note.scrollWidth-note.clientWidth};
+    })
+  };
+ }));
+ expect(measures).toHaveLength(139);
+ await writeFile(dir+"/card-measurements.json",JSON.stringify(measures,null,2));
+ const groups=[["hero",null],["room","UPPER"],["room","MIDDLE"],["room","DEEP"],["room","FINAL"],
+  ["monster",null],...["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"].map(x=>[x,null])];
+ for(const [category,region] of groups){
+  await page.getByRole("combobox",{name:"Card category"}).selectOption(category);
+  if(region)await page.getByRole("combobox",{name:"Dungeon region"}).selectOption(region);
+  const name=(category+"-"+(region||"all")).toLowerCase();
+  await page.locator(".tt-grid").screenshot({path:dir+"/"+name+".png",animations:"disabled",timeout:45000});
+ }
 });
