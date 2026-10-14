@@ -58,12 +58,27 @@ jobs:
           if(audit.completeActionSearchImplemented)
             throw Error('Premature claims of all timing-window coverage');
           NODE
+      - name: Exercise all eight solo Heroes and every real reaction type
+        run: |
+          npm run oracle:play -- --runs 8 --workers 4 --hours 1 \
+            --budget 2 --knowledge fair --seed 551134 \
+            --out results/session-agent-eight-heroes
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const r=JSON.parse(readFileSync('results/session-agent-eight-heroes/summary.json','utf8'));
+          if(!r.complete||r.finishedIndependentSeeds!==8||r.UCTDecisions<=8)
+            throw Error('Full-fidelity MCTS was not exercised across eight solo Heroes');
+          for(const hero of ['warrior','knight','wizard','witch','rogue','thief','priest','monk'])
+            if(!r.byParty[hero])throw Error('Missing solo Hero '+hero);
+          NODE
       - name: Upload actual-session evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: session-agent-smoke
-          path: results/session-agent-ci/
+          path: |
+            results/session-agent-ci/
+            results/session-agent-eight-heroes/
           if-no-files-found: ignore
       - name: Record verified revision
         if: success()
