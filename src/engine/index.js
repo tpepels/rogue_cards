@@ -225,6 +225,11 @@ export function createGame(options={}){
 export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(!phase)phase=s.monster?"combat":s.room?.stage==="FINAL"?"vault":
   s.room?"room":"between-rooms";
+ if(phase==="corridor"){
+  const offered=s._offeredRoomChoices||[];
+  return offered.map((room,index)=>({phase,kind:"enter-shown-room",
+   roomId:room.id,index}));
+ }
  if(phase==="hero-trigger"){
   const h=s.heroes[heroIndex];
   if(!h||h.hp<=0||h.used.has("hero"))return [];
