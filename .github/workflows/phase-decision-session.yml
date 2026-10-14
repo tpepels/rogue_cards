@@ -14,6 +14,10 @@ on:
       - src/engine/fork-state.js
       - src/session-mcts.js
       - scripts/run-session-mcts.mjs
+      - scripts/study-session-agent.mjs
+      - src/session-agent.js
+      - tests/session-agent.test.mjs
+      - src/rollout-state.js
       - tests/session-mcts.test.mjs
       - src/engine/parley.js
       - src/engine/combat-outcomes.js
@@ -37,6 +41,30 @@ jobs:
           npm run test:rollout
           npm run oracle:mcts -- --heroes warrior --seed 555 \
             --budget 2 --knowledge fair --out results/session-mcts-smoke.json
+      - name: Smoke-test a complete actual game using only MCTS legal decisions
+        run: |
+          npm run oracle:play -- --runs 1 --workers 1 --hours 1 \
+            --budget 1 --knowledge fair --seed 551133 \
+            --out results/session-agent-ci
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const report=JSON.parse(readFileSync('results/session-agent-ci/summary.json','utf8'));
+          const audit=JSON.parse(readFileSync('results/session-agent-ci/validation.json','utf8'));
+          if(!report.complete||report.finishedIndependentSeeds!==1||
+             audit.nonterminalExpeditionsAccepted!==false)
+            throw Error('A seeded actual expedition was not completed');
+          if(report.totalActualDecisions===0||report.UCTDecisions===0)
+            throw Error('The agent never actually branched and played');
+          if(audit.completeActionSearchImplemented)
+            throw Error('Premature claims of all timing-window coverage');
+          NODE
+      - name: Upload actual-session evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: session-agent-smoke
+          path: results/session-agent-ci/
+          if-no-files-found: ignore
       - name: Record verified revision
         if: success()
         run: echo "Verified $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
