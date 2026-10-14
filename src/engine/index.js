@@ -223,6 +223,16 @@ export function createGame(options={}){
 export function legalActions(s,{phase=null,heroIndex=0,roomId=null}={}){
  if(!phase)phase=s.monster?"combat":s.room?.stage==="FINAL"?"vault":
   s.room?"room":"between-rooms";
+ if(phase==="corpse"){
+  if(!s.monster||s.monsterHP>0||s.monster.stage==="FINAL"||
+    s.monster.id==="sentinel"||!s.alive())return [];
+  return [{phase,kind:"leave"},{phase,kind:"eat"}];
+ }
+ if(phase==="monster-response"){
+  const h=s.heroes[heroIndex];
+  return h?.hp>0&&s.monster&&s.monsterHP>0?
+   [{phase,kind:"respond",heroIndex}]:[];
+ }
  if(phase==="room")return legalRoomChoices(s)
   .map(index=>({phase,kind:"room-choice",index,roomId:s.room.id}));
  if(phase==="combat")return legalCombatActions(s,heroIndex)
