@@ -40,6 +40,11 @@ export function resolveRoomChoice(s,choice){
 }
 export function protectHero(s,h,damage){
  if(damage<=0)return damage;
+ if(h.nextHitBlock>0){
+  damage=Math.max(0,damage-h.nextHitBlock);
+  h.nextHitBlock=0;
+  if(damage===0)return 0;
+ }
  const heal=s.keptRooms.findIndex(x=>x.card.id==="d-apothecary");
  if(heal!==-1&&s.chooseEffect("apothecary-protect",
   ["save","use"],"use")==="use"){
