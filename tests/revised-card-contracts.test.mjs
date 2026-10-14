@@ -83,3 +83,15 @@ test("Wax Bridge blocks up to three fall damage and never banishes a Monster",()
  assert.equal(s.pendingTrapLanding.damage,2);
  assert.ok(!s.keptRooms.some(x=>x.card===wax));
 });
+
+test("WIT-only Potion and Oracle modifiers survive ATK checks and expire on the next actual WIT check",()=>{
+ const s=game(895),h=s.heroes[0];
+ s.beginRoom(room("u-gate"));
+ s.witBonus=2;h.nextWitDis=1;
+ s.roomCheck("CHECK_ATK",3,"NONE","NONE");
+ assert.equal(s.witBonus,2,"An ATK check cannot spend a WIT bonus");
+ assert.equal(h.nextWitDis,1,"An ATK check cannot spend WIT disadvantage");
+ s.roomCheck("CHECK_WIT",3,"NONE","NONE");
+ assert.equal(s.witBonus,0);
+ assert.equal(h.nextWitDis,0);
+});
