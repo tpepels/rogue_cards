@@ -24,14 +24,14 @@ export function createSessionPolicy(){
 }
 
 export function selectSessionPolicyAction(session,policy,{
- budget=2,seed=1,maxSearchSteps=4000,knowledge="fair"
+ budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null
 }={}){
  const legal=sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
  // Evaluate every legal alternative, including all equipment actions.
  const recommended=legal.length===1?legal[0]:searchDecision(session,{
   budget:Math.max(budget,legal.length),seed,
-  maxSteps:maxSearchSteps,knowledge,strictTerminal:true
+  maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay
  }).recommended;
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  const progress=legal.find(a=>a.kind==="continue");
