@@ -5,13 +5,14 @@
  * retained Rooms. There is no AI, hidden-deck resampling or random replay.
  */
 import {ExpeditionState} from "./expedition-state.js";
+import {isPhysicalCard} from "./physical-cards.js";
 import {HEROES,ROOMS,OBJECTS,MONSTERS,WARDEN,WARDEN_FURY,VAULT}
  from "../tabletop-data.js";
 const cards=new WeakSet([...HEROES,...ROOMS,...OBJECTS,...MONSTERS,
  WARDEN,WARDEN_FURY,VAULT]);
 function clone(value,seen){
  if(value===null||typeof value!=="object")return value;
- if(cards.has(value))return value;
+ if(cards.has(value)||isPhysicalCard(value))return value;
  if(seen.has(value))return seen.get(value);
  let out;
  if(Array.isArray(value)){
