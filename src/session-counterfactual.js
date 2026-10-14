@@ -93,6 +93,11 @@ function playMatched(session,action,{
   afterReactionReplay:wasPending?afterReplay:null,
   replayAt:switchIndex
  });
+ // An interrupted pre-existing nested transaction must not silently
+ // revert to the real (unrandomized) future on a later replay. That case
+ // needs a multi-switch deterministic replay API; refuse it until present.
+ if(wasPending&&sim.pendingNested)
+  throw Error("Nested counterfactual replay needs multiple chance switches");
  let decisions=1,searches=0;
  if(!initial?.actions)throw Error("Canonical initial decision failed");
  while(sim.phase!=="terminal"&&decisions<maxGameSteps){
