@@ -93,6 +93,32 @@ test("combat has a separate player action and Monster response, then full reward
  }
  assert.ok(session.phase!=="combat");
 });
+test("the Warden attacking both Heroes ends combat immediately after the second death",()=>{
+ const session=createDecisionSession({seed:4223,heroes:["warrior","rogue"]});
+ const s=session.state;
+ s.beginRoom(VAULT);
+ for(const h of s.heroes){
+  for(const card of [...h.inventory])s.remove(h,card);
+  h.hp=1;
+ }
+ s.monster=WARDEN;s.monsterHP=WARDEN.hp;
+ // Printed Warden Blade (3-4): attack each Hero.
+ s.forcedBehavior=3;
+ // The real opposed d20 attack/defence dice hit both Heroes.
+ s.rng=randomSource(833);
+ s._actedCombatMask=1;
+ session.phase="monster-response";session.heroIndex=0;
+ assert.deepEqual(sessionActions(session),[
+  {phase:"monster-response",kind:"respond",heroIndex:0}
+ ]);
+ const reply=submitDecision(session,sessionActions(session)[0]);
+ assert.equal(reply.phase,"terminal");
+ assert.deepEqual(s.heroes.map(h=>h.hp),[0,0]);
+ assert.deepEqual(sessionActions(session),[]);
+ assert.equal(s.metrics.won,false);
+ assert.equal(s.metrics.roundLimit,false);
+});
+
 test("a lethal Priest Blessing during an affordable SEAL ends the decision at party defeat",()=>{
  const session=createDecisionSession({seed:4452,heroes:["priest"]});
  const s=session.state;
