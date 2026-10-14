@@ -422,9 +422,14 @@ async function runBenchmark(c,revision){
      const assigned=active.get(worker);
      if(!assigned){fail(Error("Benchmark unsolicited worker response"));return;}
      if(message.type==="failed"){
+      // Collect failures from independent sampled seeds in one pilot.
+      // A failed job is never counted as a completed source or throughput.
       collect("engine-failure",message,assigned.i);
-      fail(Error("Canonical decision failed during benchmark, source "+
-       assigned.i+": "+message.stack));return;
+      active.delete(worker);
+      console.error("Pilot source "+assigned.i+
+       " failed ("+errors.length+" engine failures recorded)");
+      dispatch(worker);
+      return;
      }
      if(message.type!=="done"||message.value.i!==assigned.i){
       fail(Error("Benchmark worker assignment mismatch"));return;
@@ -455,7 +460,8 @@ async function runBenchmark(c,revision){
   await Promise.all(workers.map(w=>w.terminate()));
   const elapsedSeconds=(Date.now()-begin)/1000;
   const rate=completed.length/Math.max(.001,elapsedSeconds);
-  const predictedHours=completed.length>0?
+  // A pilot with engine failures cannot support a runtime forecast.
+  const predictedHours=completed.length>0&&!errors.length?
    c.runs/rate/3600:null;
   const pairedCount=completed.filter(x=>x.kind==="paired").length;
   const focusCoverage=Object.fromEntries(cardFocus.map(f=>[
@@ -480,6 +486,7 @@ async function runBenchmark(c,revision){
     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
     focus:c.focus},
    pilot:{attempted:sampleCount,completed:completed.length,
+    failed:errors.length,
     paired:pairedCount,unreached:completed.length-pairedCount,
     elapsedSeconds,timeoutMinutes:minutesCap,timedOut,
     inFlightTerminatedAtTimeout:timedOut?active.size:0,
@@ -501,6 +508,8 @@ async function runBenchmark(c,revision){
     "This is actual canonical MCTS work; no simplified substitute.",
     "Benchmark results NEVER enter the balance study, even if complete.",
     "Only completing full real source seeds counts toward throughput.",
+    "Independent engine failures are collected across pilot seeds; "+
+     "any engine failure invalidates the runtime estimate.",
     "The 2x estimate is a planning sensitivity, NOT a statistical upper bound.",
     "If any workers remain busy at cutoff, throughput extrapolation is biased optimistic.",
     "A 10-hour scheduler cap does not imply all requested seeds will finish.",
