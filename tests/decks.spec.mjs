@@ -20,6 +20,9 @@ test("three recommended physical decks are selectable and print the right card c
  await entry.uncheck();
  await expect(page.locator("#db-preset-select")).toHaveValue("custom");
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(before-1);
+ await page.reload();
+ await expect(page.locator("#db-preset-select")).toHaveValue("custom");
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(before-1);
  await page.evaluate(()=>window.print=()=>{window.__deckPrinted=true});
  await page.getByRole("button",{name:"PRINT THIS DECK"}).click();
  await expect.poll(()=>page.evaluate(()=>window.__deckPrinted===true)).toBe(true);
