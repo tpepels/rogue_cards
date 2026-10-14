@@ -85,8 +85,8 @@ test("every Object can coexist with every regional Room and its choices",()=>{
    // coverage for all Rooms remains a separate dedicated exhaustive test.
    if(room.v2.roll)s.roomRoll(1+((j+option)%6));
    else{
-    assert.equal(room.v2.fate,true,
-     "Only persistent fate Rooms may intentionally omit a Room die");
+    assert.ok(room.v2.fate===true||room.id==="d-gilded",
+     "Only fate Rooms and non-rolling Gilded corridor may omit a Room die");
     assert.equal(ROOM_EFFECTS[room.id].outcomes.length,0);
    }
    finiteState(s,o.id+" / "+room.id+" / "+option);
