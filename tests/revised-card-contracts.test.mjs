@@ -5,7 +5,9 @@ import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ROLL_EFFECTS} from "../src/effect-model.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {legalActions,observeGame} from "../src/engine/index.js";
-import {monsterRespond} from "../src/engine/combat.js";
+import {monsterRespond,playerAttack} from "../src/engine/combat.js";
+import {randomSource} from "../src/engine/random.js";
+import {VAULT,WARDEN} from "../src/tabletop-data.js";
 import {settleMonsterVictory} from "../src/engine/combat-outcomes.js";
 import {monsterEntry} from "../src/room-memory-engine.js";
 
@@ -244,4 +246,58 @@ test("Lethal first Room operation prevents later printed loot after a wipe",()=>
  assert.equal(s.heroes[0].hp,0);
  assert.equal(s.deck.length,before);
  assert.equal(s.metrics.roundLimit,false);
+});
+
+
+test("a lethal risky Priest blessing during Warden defence cannot request an after-hit Shield reaction",()=>{
+ const s=new ExpeditionState({seed:891,heroes:["priest"]});
+ empty(s);
+ const pos=s.deck.findIndex(x=>x.id==="shield");
+ assert.ok(pos>=0,"Warded Shield must exist as a physical Item");
+ const [shield]=s.deck.splice(pos,1);
+ s.noteDeckRemoval(shield);s.add(s.heroes[0],shield);
+ const hero=s.heroes[0];
+ assert.equal(hero.slots.armour,shield);
+ hero.hp=1;
+ s.room=VAULT;s.monster=WARDEN;s.monsterHP=WARDEN.hp;
+ s.forcedBehavior=3; // Printed Warden Blade: attack each Hero
+ // Real deterministic dice: d20=15, Priest risky d6=2,
+ // self-damage d6=5, defender d20=2. Without the death guard,
+ // that hit would wrongly request the equipped Shield's after-hit choice.
+ s.rng=randomSource(11272);
+ let riskyBlessings=0;
+ s._decisionHook=event=>{
+  if(event.phase==="hero-trigger"&&event.context==="before-d20"){
+   riskyBlessings++;
+   return {kind:"hero-mode",mode:"risk"};
+  }
+  throw Error("Impossible post-death reaction: "+JSON.stringify(event));
+ };
+ assert.doesNotThrow(()=>monsterRespond(s,hero));
+ assert.equal(riskyBlessings,1);
+ assert.equal(hero.hp,0);
+ assert.equal(s.metrics.objectActivations.shield||0,0);
+ delete s._decisionHook;
+});
+
+test("a lethal risky Priest blessing ends the current attack without a post-death Item reaction",()=>{
+ const s=new ExpeditionState({seed:891,heroes:["priest"]});
+ empty(s);
+ const hero=s.heroes[0];hero.hp=1;
+ s.room=room("u-nest");s.monster=monster("rat");
+ s.monsterHP=s.monster.hp;
+ const monsterHP=s.monsterHP;
+ s.rng=randomSource(1); // First risky Priest d6 is 1.
+ let riskyBlessings=0;
+ s._decisionHook=event=>{
+  if(event.phase==="hero-trigger"&&event.context==="before-d20"){
+   riskyBlessings++;return {kind:"hero-mode",mode:"risk"};
+  }
+  throw Error("Impossible post-death attack reaction: "+JSON.stringify(event));
+ };
+ assert.doesNotThrow(()=>playerAttack(s,hero));
+ assert.equal(riskyBlessings,1);
+ assert.equal(hero.hp,0);
+ assert.equal(s.monsterHP,monsterHP);
+ delete s._decisionHook;
 });
