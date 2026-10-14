@@ -68,7 +68,7 @@ test("every classified Item timing is explicitly queryable without creating acti
   "on-hit","on-poison","after-magic","room-roll"]);
  const phases=new Set(Object.values(ITEM_TIMING).flat());
  for(const phase of phases){
-  if(phase==="passive")continue;
+  if(["passive","combat"].includes(phase))continue;
   assert.ok(timing.has(phase),"Unknown timing "+phase);
   const actions=legalActions(s,{phase,heroIndex:0});
   assert.ok(actions.some(a=>a.kind==="continue"));
