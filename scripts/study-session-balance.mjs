@@ -33,6 +33,25 @@ const mix=value=>{
 };
 const fingerprint=a=>JSON.stringify(Object.keys(a).sort().map(k=>[k,a[k]]));
 const cardFocus=["room","item","hero","retained","vault","parley","monster","equipment","effect"];
+const theoreticalCoverage=c=>{
+ const slots=Object.fromEntries(cardFocus.map((focus,i)=>[
+  focus,c.focus==="all"?
+   Math.floor(c.runs/cardFocus.length)+(i<c.runs%cardFocus.length?1:0):
+   c.focus===focus?c.runs:0
+ ]));
+ return {
+  maxPairedSourceSlotsByFocus:slots,
+  minimumForAllRoomCards:ROOMS.length*c.minEligible,
+  minimumForAllObjectCards:OBJECTS.length*c.minEligible,
+  enoughToCoverEveryRoomEvenInBestCase:
+   slots.room>=ROOMS.length*c.minEligible,
+  enoughToCoverEveryObjectEvenInBestCase:
+   slots.item>=OBJECTS.length*c.minEligible,
+  note:"At most one paired contrast per independent source seed. "+
+   "A count below the mathematical minimum guarantees at least "+
+   "one card cannot reach the per-card eligibility threshold."
+ };
+};
 const classify=(session,actions)=>{
  const phase=session.pendingNested?
   "reaction:"+session.pendingNested.trigger.phase:session.phase;
@@ -272,6 +291,7 @@ function summarize(c,completed,failed=[]){
  for(const row of rows)partySamples[row.heroes.join("+")]++;
  const analysis={
   schema:"rogue-cards-independent-state-matched-balance-v1",
+  theoreticalAllCardCoverage:theoreticalCoverage(c),
   commit:git(),design:{
    runs:c.runs,seed:c.seed,focus:c.focus,knowledge:"fair",
    futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
@@ -438,6 +458,7 @@ async function runBenchmark(c,revision){
   const report={
    schema:"rogue-cards-balanced-mcts-throughput-pilot-v1",
    gitRevision:revision,fullyMatchingRealWorkload:true,
+   theoreticalAllCardCoverage:theoreticalCoverage(c),
    options:{runs:c.runs,seed:c.seed,workers:c.workers,hours:c.hours,
     jobMinutes:c.jobMinutes,
     futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
@@ -526,7 +547,8 @@ if(!isMainThread){
     "benchmarkMinutes","workers","hours"].includes(k)))};
  console.error(JSON.stringify({revision,plannedIndependentSources:c.runs,
   parties:parties.length,workers:c.workers,focus:c.focus,
-  hourCap:c.hours,minimumEligible:c.minEligible,design},null,2));
+  hourCap:c.hours,minimumEligible:c.minEligible,
+  theoreticalAllCardCoverage:theoreticalCoverage(c),design},null,2));
  if(c.benchmark){
   await runBenchmark(c,revision);
  }else if(!c.dryRun){
