@@ -658,7 +658,19 @@ export class ExpeditionState {
    if(mode==="m-red-detour"){
     const treasure=offered.filter(x=>x.v2.kind==="TREASURE");if(treasure.length)candidates=treasure;
    }
-   const chosen=[...candidates].sort((a,b)=>rank(b)-rank(a))[0],other=offered.filter(x=>x!==chosen);
+   let chosen=[...candidates].sort((a,b)=>rank(b)-rank(a))[0];
+   if(this._decisionHook&&candidates.length>1){
+    // All these Rooms have been revealed by the printed corridor effect.
+    // Expose the actual possible next Rooms, not a scripted risk ranking.
+    this._offeredRoomChoices=[...candidates];
+    const decision=this._decisionHook({
+     phase:"corridor",roomId:this.room.id,
+     offeredIds:candidates.map(r=>r.id)});
+    chosen=candidates.find(r=>r.id===decision.roomId);
+    delete this._offeredRoomChoices;
+    if(!chosen)throw Error("Illegal chosen corridor Room");
+   }
+   const other=offered.filter(x=>x!==chosen);
    if(mode==="u-mossy")pile.unshift(...other);
    else if(mode==="u-candle"){this.savedPath=other[0]||null;this.savedPathGrace=1;}
    else if(mode==="d-whisper-junction")this.whisperRoom=other[0]||null;
