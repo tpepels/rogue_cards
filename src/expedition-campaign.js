@@ -283,20 +283,22 @@ function actRoom(s,{prepared=false,choiceOverride=null}={}){
  }
 }
 // Deliberately require the printed parley cost/roll, and never grant a corpse.
-function attemptParley(s,m){
+function attemptParley(s,m,forced=null){
+ if(forced===false)return false;
  const defaultParley=["negotiation","survival","seal"].includes(s.strategy);
  const heuristicParley=!defaultParley&&["magic","treasure"].includes(s.strategy)&&
   researchUses(s,"parley");
  const planner=plannerUses(s,"parley");
- if(m.stage==="FINAL"||(!defaultParley&&!s.researchAllowParley&&!heuristicParley&&!planner))
+ if(m.stage==="FINAL"||forced!==true&&
+  (!defaultParley&&!s.researchAllowParley&&!heuristicParley&&!planner))
   return false;
- if(planner){
+ if(forced!==true&&planner){
   const selection=s.researchPolicy==="agent"?agentPlanParley(s,m):
    planParley(s,m);
   recordPlan(s,"parley",selection);
   if(!selection.attempt)return false;
  }
- if(heuristicParley){
+ if(forced!==true&&heuristicParley){
   s.researchDecisions.parleyConsidered++;
   if(!shouldTryResearchParley(s,m))return false;
   s.researchDecisions.parleySelected++;
@@ -536,6 +538,21 @@ function advanceRolloutRooms(s,maxRooms){
  // The printed Vault/SEAL/Warden rules are executed rather than estimated.
  finishVault(s);
  return {complete:true,state:s,won:Boolean(s.metrics.won)};
+}
+/** Resolve an actual PARLEY/FIGHT branch at an active Monster using the
+ * canonical printed payment and combat handlers, then play the rest.
+ */
+export function rolloutParleyContinuation(s,action,{roomDepth=9}={}){
+ if(!s.monster||!["fight","parley"].includes(action))
+  throw Error("Invalid active PARLEY decision");
+ const passed=action==="parley"?attemptParley(s,s.monster,true):false;
+ if(!passed&&!fight(s))return {complete:true,state:s,won:false};
+ if(!finishMonsters(s))return {complete:true,state:s,won:false};
+ finishRoom(s);
+ if(!s.room.v2.special?.corridor){
+  s.metrics.cleared++;s.stageProgress[s.room.stage]++;
+ }
+ return advanceRolloutRooms(s,roomDepth);
 }
 export function rolloutRoomContinuation(s,choice,{depth=2}={}){
  if(s.room?.stage==="FINAL"||![0,1].includes(choice)||depth<1)
