@@ -360,3 +360,32 @@ test("saved corridor path is an observed, searchable choice before the next Room
   assert.equal(s._pendingRoomSwap,undefined);
  }
 });
+
+test("nested reroll replay preserves an earlier sampled result before switching unseen future",()=>{
+ const session=createDecisionSession({seed:1842,heroes:["warrior"]});
+ const s=session.state;
+ s.beginRoom(ROOMS.find(r=>r.id==="u-fountain"));
+ session.phase="room";
+ const initial=submitDecision(session,sessionActions(session)[0]);
+ assert.equal(initial.phase,"reaction");
+ assert.equal(initial.trigger.phase,"reroll");
+ const rootDice=s.rng.snapshot();
+ const reroll=initial.actions.find(a=>a.kind==="reroll");
+ assert.ok(reroll,"First push-your-luck reroll should be affordable");
+ const second=submitDecision(session,reroll,{
+  replayAt:1,afterReactionReplay:state=>state.rng.restore(123)
+ });
+ assert.equal(second.phase,"reaction");
+ assert.equal(second.trigger.phase,"reroll");
+ assert.equal(second.trigger.cost,2);
+ assert.equal(s.rng.snapshot(),rootDice,
+  "Original RNG stays untouched during both suspended reactions");
+ const selected=second.actions.find(a=>a.kind==="keep");
+ assert.ok(selected);
+ const seen=[];
+ submitDecision(session,selected,{replaySwitches:[
+  {at:1,callback:state=>{seen.push(1);state.rng.restore(123);}},
+  {at:2,callback:state=>{seen.push(2);state.rng.restore(567);}}
+ ]});
+ assert.deepEqual(seen,[1,2]);
+});
