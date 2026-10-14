@@ -4,7 +4,7 @@
  */
 import {HEROES,ROOMS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
-import {ROOM_EFFECTS} from "./room-effect-model.js";
+import {ROOM_EFFECTS,verifyRoomCoverage} from "./room-effect-model.js";
 import {fateChoiceLegal} from "./room-fates.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
@@ -15,7 +15,7 @@ import {beginWarden,wardenOptions,applyWardenChoice}
  from "./engine/vault-encounter.js";
 import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption,engraveElbereth}
  from "./engine/combat.js";
-import {verifyPrintedData} from "./playtest.js";
+import {auditItemTiming} from "./item-access.js";
 import {seal,sealCost} from "./engine/vault.js";
 export {seal,sealCost} from "./engine/vault.js";
 export {playerAttack,monsterRespond} from "./engine/combat.js";
@@ -549,7 +549,11 @@ export function simulateFullExpedition({seed=1,heroes=["warrior"],strategy="surv
  researchTargetRoomId=null,
  researchAllowParley=false,researchPolicy="none",plannerRisk="balanced",
  plannerFeatures=null,itemTrial="normal",itemFocus=null,agentConfig=null}={}){
- verifyPrintedData();
+ // This runner uses the canonical full-effect engine, not the obsolete
+ // limited Phase 5 baseline. Validate its real operation catalogue here.
+ // The restricted baseline retains its separate pinned-content guard and
+ // MUST NOT be relabelled 'reviewed' merely to make this runner pass.
+ verifyObjectCoverage();verifyRoomCoverage();auditItemTiming();
  if(!vaultChoices.includes(vaultChoice))throw Error("Unknown Vault decision "+vaultChoice);
  if(!["policy","steady","risk"].includes(heroAbilityMode))
   throw Error("Unknown Hero ability policy "+heroAbilityMode);
