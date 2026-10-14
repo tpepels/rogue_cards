@@ -1,0 +1,60 @@
+name: Targeted Room rebalance rollouts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/room-rebalance-rollouts.yml
+      - src/rooms.js
+      - src/room-memory.js
+      - src/room-effect-model.js
+      - src/research-agent.js
+      - src/rollout-evaluator.js
+      - src/expedition-campaign.js
+
+jobs:
+  causal-room-choices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check canonical printed game and action surface
+        run: |
+          npm run validate:deck
+          npm run test:rollout
+          node --test tests/decision-api.test.mjs
+      - name: Recompare both changed Room choices with genuine two-ply terminal Oracle branches
+        run: |
+          npm run oracle:overnight -- \
+            --only m-ladder,d-bones \
+            --runs 80 --seed 20261017 \
+            --knowledge oracle --budget 2 --replan-budget 1 \
+            --workers 4 --chunk-size 8 --hours 1 \
+            --out results/room-rebalance-smoke
+      - name: Assert both printed choices compared without scoring incomplete forks
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const s=JSON.parse(readFileSync('results/room-rebalance-smoke/summary.json','utf8'));
+          if(s.cards.length!==2||s.actualPairedTrials!==160||!s.everyCardFullySampled)
+            throw Error('Two Room comparisons did not finish');
+          for(const id of ['m-ladder','d-bones']){
+            const c=s.cards.find(x=>x.id===id);
+            if(!c||c.eligible<1||c.coverage.branchSamples<1)
+              throw Error('Missing searchable comparable actions for '+id);
+          }
+          // Full-decision completeness remains false until all printed
+          // trigger phases have a pausable state machine.
+          if(s.conclusionReady)throw Error('Premature complete-solver claim');
+          NODE
+      - name: Save reproducible statistics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: room-rebalance-oracle
+          path: results/room-rebalance-smoke/
+          if-no-files-found: ignore
