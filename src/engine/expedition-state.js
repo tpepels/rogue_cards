@@ -746,8 +746,7 @@ export class ExpeditionState {
   if(this.has("key")&&["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(this.room.id)
     &&this.strategy!=="seal"){const h=this.own("key");this.directItem(h,byId(h.inventory,"key"),"room-option",()=>{
      this.consume(h,byId(h.inventory,"key"));return true;});face=6;}
-  if((this.has("torch")||this.has("lantern-heart")||this.anyEquippedTag("FIRE"))&&
-    this.room.id==="u-lamp"&&false)face=6;
+  // A Lamp-Eater consumes exposed FIRE; carrying light never guarantees treasure.
   // Opened Crypt no longer treats fire as automatic treasure.
 
   if(this.anyEquippedTag("FIRE")&&this.room.id==="d-shadow")face=6;
