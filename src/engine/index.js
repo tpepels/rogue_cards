@@ -168,6 +168,9 @@ export function chooseRoom(s,index){
   (s.metrics.roomChoices[s.room.id+":"+index]||0)+1;
  s.setActor(s.chooseRecipient("room-action"));
  for(const code of ROOM_EFFECTS[s.room.id].choices[index]){
+  // A lethal cost or printed effect ends the expedition. Subsequent
+  // instructions must not create decisions or revive a wiped party.
+  if(!s.alive())break;
   const [operation,...args]=code.split(":");
   s.apply(operation,args,s.room);
  }
