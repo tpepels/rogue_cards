@@ -11,6 +11,7 @@ import {ExpeditionState} from "./expedition-state.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {fateChoiceLegal} from "../room-fates.js";
 import {itemOptions} from "../item-access.js";
+import {sealCost} from "./vault.js";
 import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
  from "./combat.js";
 
