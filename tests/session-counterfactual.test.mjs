@@ -24,8 +24,14 @@ test("paired real-terminal action comparison is deterministic, covers both choic
  const rng=session.state.rng.snapshot();
  const options={trials:2,seed:47210,knowledge:"oracle",
   futureBudget:1,maxSearchSteps:1200};
- const first=compareSessionActions(session,options);
- const second=compareSessionActions(session,options);
+ const checkpoints=[];
+ const first=compareSessionActions(session,{
+  ...options,onTrial:(index,samples)=>{checkpoints[index]=samples;}
+ });
+ assert.equal(checkpoints.length,2);
+ const second=compareSessionActions(session,{
+  ...options,resumeTrials:[checkpoints[0]]
+ });
  assert.deepEqual(first,second);
  assert.equal(first.actions.length,2);
  assert.equal(first.trials,2);
