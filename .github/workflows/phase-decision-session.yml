@@ -16,6 +16,10 @@ on:
       - src/engine/combat.js
       - src/engine/random.js
       - src/engine/fork-state.js
+      - src/engine/physical-cards.js
+      - tests/physical-card-identity.test.mjs
+      - tests/decision-completeness.test.mjs
+      - package.json
       - src/session-mcts.js
       - scripts/run-session-mcts.mjs
       - scripts/study-session-agent.mjs
