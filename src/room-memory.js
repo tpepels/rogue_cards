@@ -560,6 +560,30 @@ const printedTables={
     ]
   ]
 };
+// Explicit executable transcription of rewritten retained/corridor Room rolls.
+// Do not silently use the obsolete generic "path"/"debt" table after the
+// printed card changes. A strict parity test covers these exact identifiers.
+export const REVISED_ROOM_ROLL_OPS=Object.freeze({
+ "m-fungus":[["POISON","NEXT_WIT_DIS"],["HEAL:2"],["DRAW:1","CURE"]],
+ "m-bridge":[["HURT:d6"],["NONE"],["DRAW:1"]],
+ "m-clock":[["HURT:2","NEXT_WIT_DIS"],["NONE"],["DRAW:1"]],
+ "u-fork":[["FORK_REVEAL:2:RANDOM"],["FORK_REVEAL:2"],
+   ["FORK_REVEAL:3"]],
+ "u-echoes":[["NONE"],["FORK_REVEAL:2"],["FORK_REVEAL:3"]],
+ "u-mossy":[["HURT:2"],["FORK_REVEAL:2"],
+   ["FORK_ORDER:2","DRAW:1"]],
+ "u-candle":[["NEXT_DIS"],["FORK_REVEAL:2"],
+   ["KEEP_ROOM","FORK_REVEAL:2"]],
+ "m-maps":[["PUSH_UNSEEN_ROOM"],["FORK_ORDER:2"],
+   ["FORK_ORDER:2","KEEP_ROOM"]],
+ "m-red-detour":[["HURT:d6"],["FORK_REVEAL:2:TREASURE"],
+   ["FORK_REVEAL:3:TREASURE"]],
+ "u-leech-pool":[["HURT:2"],["NONE"],["CURE_OR_HEAL:1"]],
+ "m-wax-bridge":[["HURT:2"],["NONE"],["DRAW:1"]],
+ "m-hungry-door":[["HURT:d6","HUNGRY_SWALLOW"],["NONE"],["DRAW:1"]],
+ "d-last-bell":[["MONSTER_DRAW"],["BELL_SAVE:force"],
+   ["BELL_SAVE:skip"]]
+});
 const make=([id,stage,title,kind,art,prompt,a,ea,b,eb,label,mode])=>({
  id,stage,title,art,type:"room",copies:1,rule:prompt,flavor:"",v2:{kind,prompt,
  choices:[{label:a,effect:ea},{label:b,effect:eb}],
@@ -568,7 +592,8 @@ const make=([id,stage,title,kind,art,prompt,a,ea,b,eb,label,mode])=>({
  roll:id==="d-gilded"?null:
   {label,die:"d6",outcomes:(printedTables[id]||tables[mode]).map(([range,effect])=>({range,effect}))},
  links:[],special:{mode,corridor:kind==="CORRIDOR",
-  rollOps:id==="d-gilded"?[]:tables[mode].map(x=>[x[2]])}}
+  rollOps:id==="d-gilded"?[]:
+   REVISED_ROOM_ROLL_OPS[id]||tables[mode].map(x=>[x[2]])}}
 });
 export const SPECIAL_ROOM_CARDS=Object.freeze(rows.map(make));
 export const ROOM_REVISIONS=Object.freeze(SPECIAL_ROOM_CARDS.filter(c=>["m-fungus","m-bridge","m-well","m-clock"].includes(c.id)));
