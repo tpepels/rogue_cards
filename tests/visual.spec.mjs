@@ -129,7 +129,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
     // Only reject cutouts actually extending outside the printable card.
     const margin=6*96/25.4;
     expect(note.y-card.cardBounds.top,card.id+" note goes off top").toBeGreaterThanOrEqual(-margin);
-    expect(note.bottom-card.cardBounds.bottom,card.id+" note goes off bottom").toBeLessThanOrEqual(margin);
+    expect(note.bottom-card.cardBounds.bottom,card.id+" result text extends past printable bottom edge").toBeLessThanOrEqual(5);
     expect(note.x-card.cardBounds.left,card.id+" note goes off left").toBeGreaterThanOrEqual(-margin);
     expect(note.right-card.cardBounds.right,card.id+" note goes off right").toBeLessThanOrEqual(margin);
    }
