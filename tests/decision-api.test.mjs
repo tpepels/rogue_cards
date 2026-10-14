@@ -77,3 +77,15 @@ test("every classified Item timing is explicitly queryable without creating acti
  }
  assert.throws(()=>legalActions(s,{phase:"fabricated"}),/Unknown decision phase/);
 });
+
+test("Gilded Hallway's two printed actions have no unreachable d6 bands",()=>{
+ const c=room("d-gilded");
+ assert.equal(c.v2.roll,null);
+ assert.deepEqual(c.v2.special.rollOps,[]);
+ const s=new ExpeditionState({seed:2511,heroes:["warrior"]});
+ s.beginRoom(c);
+ assert.deepEqual(legalActions(s,{phase:"room"}).map(x=>x.index),[0,1]);
+ const before=JSON.stringify(s.metrics.roomRollBands);
+ assert.equal(s.roomRoll(),false);
+ assert.equal(JSON.stringify(s.metrics.roomRollBands),before);
+});
