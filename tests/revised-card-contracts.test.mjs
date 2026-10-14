@@ -7,6 +7,7 @@ import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {legalActions} from "../src/engine/index.js";
 import {monsterRespond} from "../src/engine/combat.js";
 import {settleMonsterVictory} from "../src/engine/combat-outcomes.js";
+import {monsterEntry} from "../src/room-memory-engine.js";
 
 const room=id=>ROOMS.find(c=>c.id===id);
 const monster=id=>MONSTERS.find(c=>c.id===id);
@@ -67,4 +68,18 @@ test("Goblin SWIPE keeps the real physical Item separate and returns it on defea
  settleMonsterVictory(s,m);
  assert.ok(h.inventory.includes(stolen));
  assert.equal(s.stashedMonsterItems.length,0);
+});
+
+test("Wax Bridge blocks up to three fall damage and never banishes a Monster",()=>{
+ const wax=room("m-wax-bridge"),m=monster("rat");
+ const s=game(894);
+ s.keptRooms.push({card:wax});
+ s.beginRoom(room("u-fall"));
+ const hp=s.heroes[0].hp;
+ assert.equal(monsterEntry(s,m),false,"Wax has no printed Monster escape");
+ assert.equal(s.heroes[0].hp,hp);
+ assert.ok(s.keptRooms.some(x=>x.card===wax));
+ s.fallThrough("MIDDLE",{damage:5,monster:false});
+ assert.equal(s.pendingTrapLanding.damage,2);
+ assert.ok(!s.keptRooms.some(x=>x.card===wax));
 });
