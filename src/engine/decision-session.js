@@ -312,6 +312,12 @@ export function submitDecision(session,action){
   submitDecisionDirect(fork,root);
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
+  // Preserve the canonical game-state object identity across accepted
+  // decisions. Forked Hero/Item aliases remain consistent *within* it.
+  const real=session.state;
+  for(const key of Object.keys(real))if(!(key in fork.state))delete real[key];
+  Object.assign(real,fork.state);
+  fork.state=real;
   Object.assign(session,fork,{pendingNested:null});
   return observeSession(session);
  }catch(e){
