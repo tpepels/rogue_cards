@@ -20,7 +20,8 @@ import {HEROES,ROOMS,OBJECTS,MONSTERS}
  from "../src/tabletop-data.js";
 import {createDecisionSession,sessionActions,submitDecision}
  from "../src/engine/decision-session.js";
-import {searchDecision} from "../src/session-mcts.js";
+import {createSessionPolicy,selectSessionPolicyAction}
+ from "../src/session-policy.js";
 import {forkGameState} from "../src/engine/fork-state.js";
 import {compareSessionActions} from "../src/session-counterfactual.js";
 const parties=[...HEROES.map(h=>[h.id]),
@@ -174,6 +175,7 @@ function oneJob(i,c){
  const targetFocus=c.focus==="all"?cardFocus[i%cardFocus.length]:c.focus;
  const session=createDecisionSession({seed:gameSeed,heroes});
  let step=0,last=null,eligible=0,reservoir=null;
+ const policy=createSessionPolicy();
  try{
   for(;step<c.maxGameSteps&&session.phase!=="terminal";step++){
    const actions=sessionActions(session);
@@ -187,11 +189,11 @@ function oneJob(i,c){
       Math.imul(step+1,0xc2b2ae35))%eligible===0)
      reservoir={decision:copySession(session),candidate,sourceStep:step};
    }
-   const chosen=actions.length===1?actions[0]:
-    searchDecision(session,{
-     knowledge:"fair",budget:Math.max(actions.length,c.navigateBudget),
-     maxSteps:c.maxSearchSteps,seed:mix(gameSeed^Math.imul(step+1,0xc2b2ae35))
-    }).recommended;
+   const chosen=selectSessionPolicyAction(session,policy,{
+    knowledge:"fair",budget:c.navigateBudget,
+    maxSearchSteps:c.maxSearchSteps,
+    seed:mix(gameSeed^Math.imul(step+1,0xc2b2ae35))
+   });
    if(!chosen)throw Error("MCTS produced no navigation action");
    last={step,phase:session.pendingNested?
     "reaction:"+session.pendingNested.trigger.phase:session.phase,
@@ -204,7 +206,8 @@ function oneJob(i,c){
   if(session.state.metrics.roundLimit||session.state.metrics.unresolved)
    throw Error("Actual source expedition unresolved");
   if(!reservoir)
-   return {i,heroes,gameSeed,step,focus:targetFocus,kind:"unreached"};
+   return {i,heroes,gameSeed,step,focus:targetFocus,kind:"unreached",
+    policy:{...policy}};
   const {decision,candidate:selected,sourceStep}=reservoir;
   const paired=compareSessionActions(decision,{
    trials:1,seed:mix(gameSeed^sourceStep^0x29ab),
@@ -217,12 +220,12 @@ function oneJob(i,c){
    key:selected.key,phase:selected.phase,choice0:selected.before,
    choice1:selected.after,win0:before.wins,win1:after.wins,
    decisions:before.totalDecisions+after.totalDecisions,
-   sourceState:paired.sourceObservation.game};
+   policy:{...policy},sourceState:paired.sourceObservation.game};
  }catch(e){
   const error=Error("Seed "+gameSeed+" index "+i+
    " step "+step+" / "+targetFocus+": "+(e.stack||e));
   error.repro={i,gameSeed,heroes,step,focus:targetFocus,
-   last,nestedSearch:e.repro??null,
+   last,nestedSearch:e.repro??null,policy:{...policy},
    roomId:session.state.room?.id,monsterId:session.state.monster?.id,
    phase:session.pendingNested?
     "reaction:"+session.pendingNested.trigger.phase:session.phase,
