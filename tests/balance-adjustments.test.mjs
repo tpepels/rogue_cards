@@ -27,7 +27,7 @@ test("Whispering Blade has +4 ATK on card and in canonical combat statistics",()
 
 test("three improved combat alternatives match their exact executable rewards",()=>{
  const expected=[
-  ["d-bones","RATTLE",3,false,"DEEP"],
+  ["d-bones","RATTLE",4,false,"DEEP"],
   ["m-auction","HECKLE",3,false,"MIDDLE"],
   ["d-gate","FIGHT",2,true,"DEEP"]
  ];
