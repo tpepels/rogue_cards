@@ -141,7 +141,7 @@ export function legalCombatActions(s,heroIndex){
  if(!s.monster||s.monsterHP<=0)return [];
  const hero=s.heroes[heroIndex];
  if(!hero||hero.hp<=0)return [];
- return [{kind:"attack",heroIndex},
+ return [{kind:"attack",heroIndex},{kind:"pass",heroIndex},
    ...(!["sentinel","warden","warden-fury"].includes(s.monster.id)&&s.elberethAttempts<2?
     [{kind:"elbereth",heroIndex,mode:"ward"},
      ...(s.discardable()?[{kind:"elbereth",heroIndex,mode:"flee"}]:[])]:[]),
@@ -157,12 +157,14 @@ export function takeCombatAction(s,action){
   throw Error("Combat action requires a Hero index");
  const legal=legalCombatActions(s,action.heroIndex);
  const candidate=legal.find(a=>a.kind===action.kind&&
-  (a.kind==="attack"||a.kind==="elbereth"&&a.mode===action.mode||
+  (a.kind==="attack"||a.kind==="pass"||
+      a.kind==="elbereth"&&a.mode===action.mode||
       a.kind==="item"&&a.optionIndex===action.optionIndex));
  if(!candidate)throw Error("Illegal combat action");
  const hero=s.heroes[action.heroIndex];
  s.setActor(hero);
  if(candidate.kind==="attack")playerAttack(s,hero);
+ else if(candidate.kind==="pass"){/* Printed pass consumes this Hero's turn. */}
  else if(candidate.kind==="elbereth"){
   // ELBERETH is a standalone printed combat action, not an Item.
   // On failure it immediately performs its Monster response; the
@@ -285,6 +287,11 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
      heroIndex,cardId:"wand-market",mode:"recharge"});
   }
   return [...printed,...substitutes];
+ }
+ if(phase==="combat-hero"){
+  return s.heroes.map((h,i)=>({h,i})).filter(x=>x.h.hp>0&&
+   !(s._actedCombatMask&(1<<x.i)))
+   .map(x=>({phase,kind:"choose-hero-turn",heroIndex:x.i}));
  }
  if(phase==="combat")return legalCombatActions(s,heroIndex)
   .map(a=>({...a,phase}));
