@@ -1,33 +1,7 @@
 // Optional corridors and returning Rooms. Each effect is printed on its card.
 const rows=[
- [
-  "m-fungus",
-  "MIDDLE",
-  "Fungal Garden",
-  "MYSTERY",
-  "mushroom",
-  "Mushrooms mimic familiar faces.",
-  "PRESERVE",
-  "Keep this Room. Before another Room, discard to skip it: heal 3 HP; or discard FIRE too to draw 2 Items and cure POISONED.",
-  "PICK",
-  "Roll d6 to harvest now.",
-  "HARVEST",
-  "garden"
- ],
- [
-  "m-bridge",
-  "MIDDLE",
-  "Bridge of Whispering Rope",
-  "HAZARD",
-  "stairs",
-  "The ropes remember a safe crossing.",
-  "REMEMBER",
-  "Keep this Room. When a Monster appears, discard this Room and 1 Item to escape it.",
-  "CROSS",
-  "Roll d6 to cross now.",
-  "CROSS",
-  "bridge"
- ],
+ ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep this Room as a spore culture. Discard during Monster behaviour to set it to 1–2; your next WIT in that fight has DIS. FIRE can cancel that response instead (discard 1 FIRE Item).","PICK","Roll d6 to harvest.","HARVEST","garden"],
+ ["m-bridge","MIDDLE","Bridge of Whispering Rope","HAZARD","stairs","The ropes are whispering names.","CUT A STRAND","Keep this Room as rope. At a non-Warden Monster, discard it and 1 Item to escape without reward.","CROSS","Roll d6. Knotted Rope may SHIFT this result once.","CROSS","bridge"],
  [
   "m-well",
   "MIDDLE",
@@ -42,62 +16,10 @@ const rows=[
   "DEEP RETURN",
   "well"
  ],
- [
-  "m-clock",
-  "MIDDLE",
-  "Clockwork Confessional",
-  "MYSTERY",
-  "warden",
-  "A brass mouth remembers every confession.",
-  "BORROW",
-  "Draw 1 Item. Keep this Room. At the Vault, discard 1 Item or roll d6 to pay your debt.",
-  "REFUSE",
-  "Roll this Room's d6 now.",
-  "PAYMENT",
-  "debt"
- ],
- [
-  "u-fork",
-  "UPPER",
-  "Forked Passage",
-  "CORRIDOR",
-  "corridor",
-  "Two suspicious drafts.",
-  "CHOOSE",
-  "Reveal 2 Rooms. Enter 1; discard the other.",
-  "SEARCH",
-  "Roll d6, then reveal 2 Rooms and enter 1.",
-  "SEARCH",
-  "path"
- ],
- [
-  "u-echoes",
-  "UPPER",
-  "Hall of Three Echoes",
-  "CORRIDOR",
-  "whisper",
-  "One passage lies.",
-  "LISTEN",
-  "Reveal 3 Rooms. Discard 1 randomly, enter 1 of the others; put the last on the bottom.",
-  "RUSH",
-  "Roll d6, then reveal 2 Rooms and enter 1.",
-  "RUSH",
-  "path"
- ],
- [
-  "u-mossy",
-  "UPPER",
-  "Mossy Switchback",
-  "CORRIDOR",
-  "mushroom",
-  "A gentle way doubles back.",
-  "REST",
-  "Heal 1 HP. Reveal 2 Rooms; enter 1 and leave the other on top.",
-  "HURRY",
-  "Roll d6. Reveal 2 Rooms; enter 1.",
-  "HURRY",
-  "path"
- ],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep this Room. At Vault, discard 1 Item to TELEGRAPH Warden's first behaviour; refuse and it becomes 6. Then discard Room.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one, return other to bottom.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
+ ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face-down; randomly return 1 unseen to bottom. Reveal the other 2; enter one, return other to bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
+ ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
  [
   "u-smuggler",
   "UPPER",
@@ -112,34 +34,8 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- [
-  "u-candle",
-  "UPPER",
-  "Candle Tunnel",
-  "CORRIDOR",
-  "wind",
-  "One candle burns backward.",
-  "SAVE A PATH",
-  "Reveal 2 Rooms. Enter 1; save the other for your next Room choice.",
-  "EXTINGUISH",
-  "Roll d6. Reveal 2 Rooms; enter 1.",
-  "EXTINGUISH",
-  "path"
- ],
- [
-  "m-maps",
-  "MIDDLE",
-  "Gallery of Cracked Maps",
-  "CORRIDOR",
-  "wizard",
-  "Three maps disagree.",
-  "STUDY",
-  "Reveal 2 Rooms; you may discard an Item to reveal a third. Enter 1.",
-  "TEAR",
-  "Roll d6. Reveal 2 Rooms and enter 1.",
-  "TEAR",
-  "path"
- ],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","EXTINGUISH","Roll d6. A kept candle later removes darkness penalties at Lightless Hall.","EXTINGUISH","path"],
+ ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms (3 if you discard 1 Item); choose one, return the rest to bottom.","TEAR","Roll d6 to follow a torn map.","TEAR","path"],
  [
   "m-ladder",
   "MIDDLE",
@@ -154,20 +50,7 @@ const rows=[
   "SHAFT",
   "shaft"
  ],
- [
-  "m-red-detour",
-  "MIDDLE",
-  "The Red Detour",
-  "CORRIDOR",
-  "trap",
-  "Red arrows point to treasure.",
-  "FOLLOW",
-  "Roll d6. Reveal 2 Rooms; enter TREASURE if shown, otherwise choose 1.",
-  "IGNORE",
-  "Reveal 2 Rooms; enter 1.",
-  "FOLLOW",
-  "path"
- ],
+ ["m-red-detour","MIDDLE","The Red Detour","CORRIDOR","trap","Red arrows promise buried treasure.","IGNORE","Reveal 2 Rooms; enter one.","FOLLOW ARROWS","Roll d6 to follow the painted arrows.","FOLLOW","path"],
  [
   "d-whisper-junction",
   "DEEP",
@@ -210,20 +93,7 @@ const rows=[
   "PRAYER",
   "lantern"
  ],
- [
-  "u-leech-pool",
-  "UPPER",
-  "Leech Pool",
-  "HAZARD",
-  "water",
-  "The leeches remember their debt.",
-  "BORROW",
-  "Heal 3 HP. Keep this Room. Entering DEEP, discard an Item or lose 2 HP.",
-  "WADE",
-  "Roll this Room's d6 now.",
-  "WADE",
-  "leech"
- ],
+ ["u-leech-pool","UPPER","Leech Pool","HAZARD","water","A jar of medicinal leeches needs blood.","JAR THE LEECHES","Heal 3 HP; keep this Room. On entering DEEP, discard an ALCHEMY Item or lose 2 HP; then discard Room.","WADE","Roll d6 to cross the pool.","WADE","leech"],
  [
   "u-rat-favor",
   "UPPER",
@@ -252,34 +122,8 @@ const rows=[
   "BLESSING",
   "name"
  ],
- [
-  "m-wax-bridge",
-  "MIDDLE",
-  "Wax Bridge",
-  "HAZARD",
-  "stairs",
-  "The bridge is slowly melting.",
-  "SAVE",
-  "Keep this Room. Discard it to flee a Monster (lose 1 HP), or at Broken Bridge to avoid falling and draw 1 Item.",
-  "CROSS",
-  "Roll this Room's d6 now.",
-  "CROSS",
-  "wax"
- ],
- [
-  "m-hungry-door",
-  "MIDDLE",
-  "The Hungry Door",
-  "MYSTERY",
-  "door",
-  "Its hinges chew quietly.",
-  "BORROW",
-  "Draw 2 Items, then discard 1 Item. Keep this Room. At the Vault, discard 1 Item or roll this Room's d6.",
-  "LEAVE",
-  "Roll this Room's d6 now.",
-  "PAYMENT",
-  "hungry"
- ],
+ ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to change 1–2 to 3–4.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2 Items; keep this Room. At Vault, discard it and pay 1 Item or Warden's first behaviour is 6.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -294,20 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- [
-  "d-last-bell",
-  "DEEP",
-  "Chapel of the Last Bell",
-  "SHRINE",
-  "altar",
-  "No one knows who rings the bell.",
-  "DEFER",
-  "Keep this Room. At the Vault, ring this Bell: roll this Room's d6.",
-  "RING",
-  "Roll this Room's d6 now.",
-  "THE BELL",
-  "bell"
- ]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep this Room. At Vault, lose 2 HP and discard it to TELEGRAPH Warden's first behaviour; may force a reroll and accept new result.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -543,13 +374,199 @@ const tables={
   ]
  ]
 };
+// Printed results are separate from the legacy executable rollOps tables.
+// The Oracle agent owns synchronising those handlers with this redesign.
+const printedTables={
+  "m-fungus": [
+    [
+      "1–2",
+      "Spores: become POISONED; next WIT has DIS."
+    ],
+    [
+      "3–4",
+      "Eat safe caps: heal 2 HP."
+    ],
+    [
+      "5–6",
+      "Harvest 1 Item; remove POISONED."
+    ]
+  ],
+  "m-bridge": [
+    [
+      "1–2",
+      "TRAP: Rope snaps; lose d6 HP."
+    ],
+    [
+      "3–4",
+      "Cross safely."
+    ],
+    [
+      "5–6",
+      "Retrieve a pouch from the knots: draw 1 Item."
+    ]
+  ],
+  "m-clock": [
+    [
+      "1–2",
+      "Gears accuse you: lose 2 HP; next WIT has DIS."
+    ],
+    [
+      "3–4",
+      "Machine jams; nothing happens."
+    ],
+    [
+      "5–6",
+      "Penance slot opens: draw 1 Item."
+    ]
+  ],
+  "u-fork": [
+    [
+      "1–2",
+      "Dead end: reveal 2 Rooms; randomly enter one."
+    ],
+    [
+      "3–4",
+      "Reveal 2 Rooms; choose one."
+    ],
+    [
+      "5–6",
+      "Hidden third route: reveal 3 Rooms; choose one; return others to bottom."
+    ]
+  ],
+  "u-echoes": [
+    [
+      "1–2",
+      "Enter next Room unseen."
+    ],
+    [
+      "3–4",
+      "Reveal 2 Rooms; choose one."
+    ],
+    [
+      "5–6",
+      "Reveal 3 Rooms; enter one; return others to bottom."
+    ]
+  ],
+  "u-mossy": [
+    [
+      "1–2",
+      "Slip: lose 2 HP; enter next Room unseen."
+    ],
+    [
+      "3–4",
+      "Reveal 2 Rooms; choose one."
+    ],
+    [
+      "5–6",
+      "Follow moss: reveal 2 Rooms and order them; draw 1 herb-satchel Item."
+    ]
+  ],
+  "u-candle": [
+    [
+      "1–2",
+      "Pitch dark: enter next Room unseen; next ATK there has DIS."
+    ],
+    [
+      "3–4",
+      "Eyes adapt: reveal 2 Rooms; choose one."
+    ],
+    [
+      "5–6",
+      "Keep this Room as a candle; reveal 2 Rooms and choose one."
+    ]
+  ],
+  "m-maps": [
+    [
+      "1–2",
+      "Wrong map: move next Room unseen to bottom; enter following Room."
+    ],
+    [
+      "3–4",
+      "Reveal 2 Rooms, order them; enter first."
+    ],
+    [
+      "5–6",
+      "As 3–4; keep this Room as a map. Discard to SHIFT a trapdoor d6."
+    ]
+  ],
+  "m-red-detour": [
+    [
+      "1–2",
+      "Painted TRAP: lose d6 HP; enter next Room unseen."
+    ],
+    [
+      "3–4",
+      "Reveal 2 Rooms; enter a TREASURE if present, or choose one."
+    ],
+    [
+      "5–6",
+      "Reveal 3 Rooms; choose a TREASURE if present, else any one."
+    ]
+  ],
+  "u-leech-pool": [
+    [
+      "1–2",
+      "Leeches bite: lose 2 HP."
+    ],
+    [
+      "3–4",
+      "Cross safely."
+    ],
+    [
+      "5–6",
+      "They drink poison: remove POISONED, or heal 1 HP if healthy."
+    ]
+  ],
+  "m-wax-bridge": [
+    [
+      "1–2",
+      "TRAP: Deck melts; lose 2 HP."
+    ],
+    [
+      "3–4",
+      "Cross safely."
+    ],
+    [
+      "5–6",
+      "Retrieve an Item stuck in wax: draw 1."
+    ]
+  ],
+  "m-hungry-door": [
+    [
+      "1–2",
+      "Door bites: lose d6 HP; it swallows 1 Item. Lose 2 more HP to recover, or discard it."
+    ],
+    [
+      "3–4",
+      "Slip past while it chews."
+    ],
+    [
+      "5–6",
+      "Door spits up 1 Item; draw it."
+    ]
+  ],
+  "d-last-bell": [
+    [
+      "1–2",
+      "Bell attracts a DEEP Monster."
+    ],
+    [
+      "3–4",
+      "Keep Room; discard at next Monster to set its first behaviour to 1–2."
+    ],
+    [
+      "5–6",
+      "Keep Room; discard to skip next Monster's first response."
+    ]
+  ]
+};
 const make=([id,stage,title,kind,art,prompt,a,ea,b,eb,label,mode])=>({
  id,stage,title,art,type:"room",copies:1,rule:prompt,flavor:"",v2:{kind,prompt,
  choices:[{label:a,effect:ea},{label:b,effect:eb}],
  // Gilded Hallway has two corridor routes, neither of which rolls d6.
  // Do not print an unreachable third mechanism or register dead handlers.
  roll:id==="d-gilded"?null:
-  {label,die:"d6",outcomes:tables[mode].map(([range,effect])=>({range,effect}))},
+  {label,die:"d6",outcomes:(printedTables[id]||tables[mode]).map(([range,effect])=>({range,effect}))},
  links:[],special:{mode,corridor:kind==="CORRIDOR",
   rollOps:id==="d-gilded"?[]:tables[mode].map(x=>[x[2]])}}
 });
