@@ -16,7 +16,7 @@ import {existsSync,mkdirSync,writeFileSync,readFileSync,readdirSync,renameSync} 
 import {resolve,join} from "node:path";
 import {execFileSync} from "node:child_process";
 import {HEROES} from "../src/tabletop-data.js";
-import {createDecisionSession,sessionActions,submitDecision}
+import {createDecisionSession,sessionActions,submitDecision,observeSession}
  from "../src/engine/decision-session.js";
 import {searchDecision} from "../src/session-mcts.js";
 import {compareSessionActions} from "../src/session-counterfactual.js";
