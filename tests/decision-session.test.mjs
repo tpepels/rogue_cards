@@ -119,6 +119,41 @@ test("the Warden attacking both Heroes ends combat immediately after the second 
  assert.equal(s.metrics.roundLimit,false);
 });
 
+test("a lethal Wand reroll cannot request a dead Hero's Crown in canonical combat",()=>{
+ const session=createDecisionSession({seed:120659042,heroes:["warrior"]});
+ const s=session.state,h=s.heroes[0];
+ // Keep the original physical copies, including a possible initial draw.
+ for(const card of [...h.inventory])
+  if(!["wand-undo","crown-relic"].includes(card.id))s.remove(h,card);
+ for(const id of ["wand-undo","crown-relic"]){
+  if(h.inventory.some(card=>card.id===id))continue;
+  const index=s.deck.findIndex(card=>card.id===id);
+  assert.ok(index>=0,"Missing physical copy of "+id);
+  const [card]=s.deck.splice(index,1);
+  s.noteDeckRemoval(card);s.add(h,card);
+ }
+ h.hp=1;s.beginRoom(VAULT);
+ s.monster=WARDEN;s.monsterHP=WARDEN.hp;
+ s.rng=randomSource(1);
+ session.phase="combat";session.heroIndex=0;
+ const attack=sessionActions(session).find(a=>a.kind==="attack");
+ assert.ok(attack);
+ const pending=submitDecision(session,attack);
+ assert.equal(pending.phase,"reaction");
+ const wandChoice=sessionActions(session).find(a=>
+  a.phase==="after-roll"&&a.cardId==="wand-undo"&&
+  a.kind==="item-trigger");
+ assert.ok(wandChoice,"The live Hero may choose a Wand after its failed d20");
+ assert.doesNotThrow(()=>submitDecision(session,wandChoice),
+  "The Wand misfire must not create an illegal dead-Hero Crown prompt");
+ assert.equal(s.heroes[0].hp,0);
+ assert.equal(session.phase,"terminal");
+ assert.equal(s.metrics.won,false);
+ assert.deepEqual(sessionActions(session),[]);
+ assert.ok(s.heroes[0].inventory.some(x=>x.id==="crown-relic"),
+  "The unspent Crown remains physical but cannot activate after death");
+});
+
 test("a lethal Priest Blessing during an affordable SEAL ends the decision at party defeat",()=>{
  const session=createDecisionSession({seed:4452,heroes:["priest"]});
  const s=session.state;
