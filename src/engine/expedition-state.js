@@ -50,7 +50,10 @@ export class ExpeditionState {
   this.objectsEverOwned=new Set();this.vaultState=null;this.heroes=heroes.map(id=>{
    const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
-    nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,nextDefenseAdv:false,nextDefenseBonus:0,
+    nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,
+    nextWitDis:0,nextHitBlock:0,ignoreDarknessOnce:false,
+    keptUsedPotions:[],
+    nextDefenseAdv:false,nextDefenseBonus:0,
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
   this.deck=copyDeck(this.rng,OBJECTS);
@@ -81,7 +84,9 @@ export class ExpeditionState {
   this.lastSpent=null;this.lastCostCards=[];this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
   this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
-  this.potionIdentities=new Map();this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
+  this.potionIdentities=new Map();this.pendingRetainedPotion=null;
+  this.elberethAdv=false;
+  this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
   this.discardPile=[];this.ratFavor=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
@@ -468,6 +473,8 @@ export class ExpeditionState {
   // Reject before using, exhausting, or consuming the Object.
   if(!this.room?.v2.roll&&["scroll-unlock","wand-door"].includes(card.id))return false;
   if(card.v2.kind==="WAND"&&this.exhausted.has(card))return false;
+  if(card.v2.kind==="POTION"&&h.keptUsedPotions.some(x=>x.card===card))
+   return false;
   if(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card))return false;
   const before=this.itemSnapshot(h);
   this.actor=h;this.metrics.activated++;
@@ -489,8 +496,12 @@ export class ExpeditionState {
   const objectBand=d6Band(card,face);
   const objectKey=card.id+":"+objectBand;
   this.metrics.objectRollBands[objectKey]=(this.metrics.objectRollBands[objectKey]||0)+1;
+  this.pendingRetainedPotion=null;
   applyCardRoll({apply:(kind,args,c)=>this.apply(kind,args,c)},card,face);
-  if(consume&&["SCROLL","POTION"].includes(card.v2.kind)&&h.inventory.includes(card))
+  const keepPotion=this.pendingRetainedPotion===card;
+  this.pendingRetainedPotion=null;
+  if(consume&&["SCROLL","POTION"].includes(card.v2.kind)&&
+     h.inventory.includes(card)&&!keepPotion)
    this.consume(h,card);
   if(h.card.id==="witch"&&!h.used.has("witch-ability")&&
    ["SCROLL","POTION"].includes(card.v2.kind))this.witchReaction(h);
@@ -601,7 +612,13 @@ export class ExpeditionState {
   case "DAMAGE":this.lastDamage=n();if(this.monster)this.monsterHP-=this.lastDamage;return;
   case "BANISH_OR_SKIP":if(this.monster?.stage==="FINAL")this.monsterSkip+=n();
    else{this.banished=true;this.monsterHP=0;this.metrics.banishments++;}return;
-  case "CHOOSE_BEHAVIOR":if(this.monster)this.forcedBehavior=1;else this.peek(1);return;
+  case "CHOOSE_BEHAVIOR":
+   if(this.monster){
+    const choices=["1","2","3","4","5","6"];
+    this.forcedBehavior=Number(this.chooseEffect("choose-monster-behavior",
+     choices,"1"));
+   }else this.peek(1);
+   return;
   case "D20_MOD":this.pendingD20Modifier+=Number(v);return;
   case "D20_REROLL":
    this.pendingD20=v==="HIGH"?Math.max(this.pendingD20,this.die(20)):this.die(20);
@@ -660,6 +677,58 @@ export class ExpeditionState {
   case "MAGIC_HEAL":if(this.lastCostCards.some(x=>can(x,"MAGIC")))this.heal(h,n());return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
   case "NEXT_WIT":this.witBonus+=n();return;
+  case "NEXT_WIT_DIS":h.nextWitDis++;return;
+  case "NEXT_HIT_BLOCK":h.nextHitBlock+=n();return;
+  case "IGNORE_DARKNESS":h.ignoreDarknessOnce=true;return;
+  case "SKIP_OR_PEEK":if(this.monster)this.monsterSkip++;else this.peek(1);return;
+  case "SKIP_IF_MONSTER":if(this.monster)this.monsterSkip+=n();return;
+  case "ELBERETH_ADV":this.elberethAdv=true;return;
+  case "FIZZY_FOAM":
+   if(this.monster)this.monsterSkip++;
+   else{
+    h.keptUsedPotions.push({card,kind:"foam"});
+    this.pendingRetainedPotion=card;
+   }
+   return;
+  case "MIDNIGHT_INK":
+   h.keptUsedPotions.push({card,kind:"ink"});
+   this.pendingRetainedPotion=card;return;
+  case "BOTTLED_LAUGHTER":
+   h.keptUsedPotions.push({card,kind:"laughter"});
+   this.pendingRetainedPotion=card;return;
+  case "MORPH_OR_SKIP":
+   if(this.monster?.stage==="FINAL")this.monsterSkip++;
+   else if(this.monster){
+    this.monster=null;this.monsterHP=0;this.banished=true;
+    this.pendingReward=0;this.pendingFightHeal=null;
+    this.metrics.banishments++;this.draw();
+   }
+   return;
+  case "BANISH_CURSED_OR_SKIP":
+   if(this.monster?.stage==="FINAL")this.monsterSkip++;
+   else if(this.monster&&
+    (this.monster.v2?.tags?.some(t=>["CURSED","MAGIC"].includes(t)))){
+    this.monster=null;this.monsterHP=0;this.banished=true;
+    this.pendingReward=0;this.pendingFightHeal=null;
+    this.metrics.banishments++;
+   }else this.monsterSkip+=2;
+   return;
+  case "PUSH_UNSEEN_ROOM":{
+   const pile=this.rooms[this.room?.stage];
+   if(pile?.length){
+    const known=new Set(this.peekedRoomIds[this.room.stage]||[]);
+    const index=pile.findIndex(x=>!known.has(x.id));
+    if(index>=0)pile.unshift(...pile.splice(index,1));
+   }
+   return;
+  }
+  case "ROOM_OR_PEEK":{
+   const mode=this.chooseEffect("wand-door-outcome",
+    ["printed-5-6","reveal-order"],"printed-5-6");
+   if(mode==="printed-5-6")this.roomRoll(5);
+   else this.peek(2,true);
+   return;
+  }
   case "SAVE_TRAP":this.trapGuard=true;return;
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
   case "SAVE_D20_REROLL":h.kept.push("reroll");return;
