@@ -60,6 +60,7 @@ const canonical=session=>{
   phase:"retained",roomId:returnRoomId});
  if(phase==="room")return legalActions(s,{phase:"room"});
  if(phase==="parley")return legalActions(s,{phase:"parley"});
+ if(phase==="combat-hero")return legalActions(s,{phase:"combat-hero"});
  if(phase==="combat")return legalActions(s,{phase:"combat",heroIndex});
  if(phase==="monster-response")return legalActions(s,{
   phase:"monster-response",heroIndex});
@@ -108,7 +109,8 @@ function awaitingMonster(session){
  if(!s.monster)return false;
  session.heroIndex=nextHero(s,0);
  if(session.heroIndex<0)return !!done(session);
- session.phase=s.monster.stage==="FINAL"?"combat":"parley";
+ s._actedCombatMask=0;
+ session.phase=s.monster.stage==="FINAL"?"combat-hero":"parley";
  session.monsterRound=0;
  s.metrics.battles++;
  return true;
@@ -186,14 +188,16 @@ function afterMonsterResponse(session){
  if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
   endMonster(session);return;
  }
- let next=nextHero(s,session.heroIndex+1);
- if(next<0){next=nextHero(s,0);session.monsterRound++;s.metrics.rounds++;
+ const available=s.heroes.some((h,i)=>h.hp>0&&
+  !(s._actedCombatMask&(1<<i)));
+ if(!available){
+  s._actedCombatMask=0;session.monsterRound++;s.metrics.rounds++;
   if(session.monsterRound>=300){
    s.metrics.roundLimit=true;session.phase="terminal";return;
   }
  }
- if(next<0){done(session);return;}
- session.heroIndex=next;session.phase="combat";
+ if(!s.alive()){done(session);return;}
+ session.heroIndex=-1;session.phase="combat-hero";
 }
 export function createDecisionSession(options={}){
  const state=createGame(options);
@@ -231,10 +235,14 @@ function submitDecisionDirect(session,action){
   if(selected.kind==="parley"&&resolveParley(s)){
    if(!done(session)&&!awaitingMonster(session))roomSettled(session);
   }else if(!done(session)){
-   session.phase="combat";session.heroIndex=nextHero(s,0);
+   s._actedCombatMask=0;session.phase="combat-hero";session.heroIndex=-1;
   }
+ }else if(phase==="combat-hero"){
+  session.heroIndex=selected.heroIndex;session.phase="combat";
  }else if(phase==="combat"){
-  applyAction(s,selected);afterAttack(session);
+  applyAction(s,selected);
+  s._actedCombatMask|=1<<selected.heroIndex;
+  afterAttack(session);
  }else if(phase==="monster-response"){
   takeMonsterResponse(s,selected.heroIndex);afterMonsterResponse(session);
  }else if(phase==="corpse"){
@@ -248,7 +256,8 @@ function submitDecisionDirect(session,action){
   }else{
    if(selected.kind==="seal")s.monsterAdv=true;
    beginWarden(s);s.metrics.battles++;
-   session.phase="combat";session.heroIndex=nextHero(s,0);
+   s._actedCombatMask=0;
+   session.phase="combat-hero";session.heroIndex=-1;
    session.monsterRound=0;
   }
  }else if(phase==="post-warden"){
@@ -256,7 +265,8 @@ function submitDecisionDirect(session,action){
   if(result.complete)done(session);
   else{
    s.metrics.battles++;session.monsterRound=0;
-   session.heroIndex=nextHero(s,0);session.phase="combat";
+   s._actedCombatMask=0;
+   session.heroIndex=-1;session.phase="combat-hero";
   }
  }else throw Error("Unreachable phase "+phase);
  session.actionCount++;
