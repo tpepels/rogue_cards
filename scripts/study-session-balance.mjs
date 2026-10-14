@@ -110,7 +110,8 @@ const params=()=>{const vals={},flags=new Set();
  const allowed=new Set(["--runs","--seed","--workers","--hours",
   "--out","--future-budget","--navigate-budget","--max-search-steps",
   "--max-game-steps","--min-eligible","--focus","--audit",
-  "--benchmark-runs","--benchmark-minutes","--job-minutes"]);
+  "--benchmark-runs","--benchmark-minutes","--job-minutes",
+  "--repro-index"]);
  for(let i=2;i<process.argv.length;i++){
   const key=process.argv[i];
   if(key==="--resume"||key==="--dry-run"||key==="--benchmark"){
@@ -142,6 +143,8 @@ const params=()=>{const vals={},flags=new Set();
   benchmarkRuns:number("--benchmark-runs",18,1,200),
   benchmarkMinutes:number("--benchmark-minutes",15,1,120),
   jobMinutes:number("--job-minutes",30,1,240),
+  reproIndex:vals["--repro-index"]===undefined?null:
+   number("--repro-index",0,0,100000),
   focus,auditFile:resolve(vals["--audit"]||
    "results/canonical-audit-01/summary.json"),
   out:resolve(vals["--out"]||"results/session-balance-01"),
@@ -519,8 +522,10 @@ if(!isMainThread){
 }else{
  const c=params(),revision=git();
  if(!revision)throw Error("Git revision is required for reproducible studies");
- if(c.benchmark&&(c.dryRun||c.resume))
-  throw Error("--benchmark cannot be combined with --dry-run/--resume");
+ if(c.benchmark&&(c.dryRun||c.resume||c.reproIndex!==null))
+  throw Error("--benchmark cannot be combined with --dry-run/--resume/--repro-index");
+ if(c.reproIndex!==null&&(c.reproIndex>=c.runs||c.dryRun||c.resume))
+  throw Error("--repro-index must refer to a planned independent source and cannot be combined with --dry-run/--resume");
  if(!c.dryRun){
   if(!existsSync(c.auditFile))
    throw Error("Missing canonical audit gate: "+c.auditFile+
@@ -545,12 +550,27 @@ if(!isMainThread){
  const design={schema:1,revision,
   ...Object.fromEntries(Object.entries(c).filter(([k])=>
    !["out","resume","dryRun","benchmark","benchmarkRuns",
-    "benchmarkMinutes","workers","hours"].includes(k)))};
+    "benchmarkMinutes","reproIndex","workers","hours"].includes(k)))};
  console.error(JSON.stringify({revision,plannedIndependentSources:c.runs,
   parties:parties.length,workers:c.workers,focus:c.focus,
   hourCap:c.hours,minimumEligible:c.minEligible,
   theoreticalAllCardCoverage:theoreticalCoverage(c),design},null,2));
- if(c.benchmark){
+ if(c.reproIndex!==null){
+  // Same oneJob, source seed, Hero party and search budgets as the
+  // overnight study; strictly a defect reproducer, not a study sample.
+  const path=c.out+"-repro-"+String(c.reproIndex).padStart(6,"0")+".json";
+  mkdirSync(dirname(path),{recursive:true});
+  try{
+   const result=oneJob(c.reproIndex,c);
+   atom(path,{revision,index:c.reproIndex,pass:true,result});
+   console.log("Canonical source replay succeeded: "+path);
+  }catch(error){
+   atom(path,{revision,index:c.reproIndex,pass:false,
+    message:error.stack||String(error),repro:error.repro||null});
+   console.error("Canonical source replay failed: "+path);
+   process.exitCode=1;
+  }
+ }else if(c.benchmark){
   await runBenchmark(c,revision);
  }else if(!c.dryRun){
   const capacity=theoreticalCoverage(c);
