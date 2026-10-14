@@ -111,7 +111,9 @@ function awaitingMonster(session){
  session.heroIndex=nextHero(s,0);
  if(session.heroIndex<0)return !!done(session);
  s._actedCombatMask=0;
- session.phase=s.monster.stage==="FINAL"?"combat-hero":"parley";
+ session.phase=s.monster.stage==="FINAL"||s.mustFightFollowingWisp?
+  "combat-hero":"parley";
+ s.mustFightFollowingWisp=false;
  session.monsterRound=0;
  s.metrics.battles++;
  return true;
