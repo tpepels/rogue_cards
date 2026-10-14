@@ -15,7 +15,8 @@ import {VAULT} from "../tabletop-data.js";
 import {createGame,observeGame,legalActions,applyAction,
  takeMonsterResponse,finishCurrentRoom} from "./index.js";
 import {resolveParley} from "./parley.js";
-import {consumeCorpse,settleMonsterVictory} from "./combat-outcomes.js";
+import {consumeCorpse,resolveSpecialRemains,settleMonsterVictory}
+ from "./combat-outcomes.js";
 import {seal} from "./vault.js";
 import {forkGameState} from "./fork-state.js";
 import {itemOptions} from "../item-access.js";
@@ -251,6 +252,8 @@ function submitDecisionDirect(session,action){
  }else if(phase==="corpse"){
   const m=s.monster;
   if(selected.kind==="eat")consumeCorpse(s,m);
+  else if(["search","keep-eye","release","keep-whisper"].includes(
+   selected.kind))resolveSpecialRemains(s,m,selected.kind);
   settleMonsterVictory(s,m);
   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
  }else if(phase==="vault"){
