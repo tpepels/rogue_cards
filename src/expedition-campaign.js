@@ -16,7 +16,7 @@ import {seal,sealCost} from "./engine/vault.js";
 export {seal,sealCost} from "./engine/vault.js";
 export {playerAttack,monsterRespond} from "./engine/combat.js";
 import {validateAgentConfig,agentPlanRoom,agentPlanParley,
- agentPlanCombat,agentPlanSeal} from "./research-agent.js";
+ agentPlanCombat,agentPlanSeal,agentPlanEnding} from "./research-agent.js";
 const hasTag=(x,tag)=>!!x?.v2?.tags?.includes(tag);
 const isAlive=s=>s.alive();
 export const researchPolicies=Object.freeze(["none","parley","seal","conserve","rooms","adaptive","planner","agent"]);
@@ -774,6 +774,17 @@ export function rolloutEndingContinuation(s,action){
 }
 function finishWardenAfterPhaseOne(s,vaultChoice){
  // Canonical post-Warden-I resolution, shared with stochastic combat forks.
+ // The Oracle may compare ALL actually affordable printed endings before
+ // choosing. Hypothetical branches have a strictly smaller search budget.
+ if(s.researchPolicy==="agent"&&s.agentConfig?.planning==="rollout"&&
+    s.agentConfig.budget>0){
+  const picked=agentPlanEnding(s);
+  recordPlan(s,"ending",picked);
+  const labels={fight:"fight",smuggle:"smuggle-if-available",
+   bargain:"bargain-if-available",unthrone:"unthrone-if-available",
+   escape:"escape-if-available"};
+  vaultChoice=labels[picked.action];
+ }
  // Rare alternative endings require earlier saved Rooms and payment.
  const v=s.vaultModifiers;
  const canSmuggle=v.smuggleAvailable&&s.discardable(2)&&s.discardable(1,"MAGIC");
