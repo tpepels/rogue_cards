@@ -23,10 +23,11 @@ jobs:
         run: npm run validate:deck -- --out deck-validation.json
       - name: Validate tabletop cards and one-sheet rules
         run: npm test
-      - name: Check printed card audit and seeded balance report
-        run: |
-          npm run audit
-          npm run balance:baseline -- 120
+      # The historical Phase 5 approximation is deliberately excluded:
+      # its coverage/hash review is stale after the printed card redesign.
+      # Run npm run test:legacy-baseline only when explicitly reviewing it.
+      - name: Check printed card audit
+        run: npm run audit
       - name: Compare complete-effect strategies across solo and cooperative expeditions
         run: npm run balance -- 2000
       - name: Verify all Item behaviors and compare whole-game outcomes
