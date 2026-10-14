@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to change 1–2 to 3–4.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2; keep Room. At Vault, pay 1 Item or Warden's first behaviour is 6. Discard Room.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2; keep Room. At Vault, pay 1 Item or Warden's first behaviour is 6. Discard.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
