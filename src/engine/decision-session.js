@@ -18,6 +18,9 @@ import {resolveParley} from "./parley.js";
 import {consumeCorpse,settleMonsterVictory} from "./combat-outcomes.js";
 import {seal} from "./vault.js";
 import {forkGameState} from "./fork-state.js";
+import {itemOptions} from "../item-access.js";
+const itemOptionsAtTrigger=(state,args)=>itemOptions(state,
+ state.heroes[args.heroIndex],args.phase).map(x=>({id:x.card.id,mode:x.mode}));
 import {beginWarden,wardenOptions,applyWardenChoice} from "./vault-encounter.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
@@ -306,7 +309,13 @@ export function submitDecision(session,action,{
    x.kind==="item-trigger"&&x.cardId===event.cardId);
   if(event.allowedModes)actions=actions.filter(x=>
    event.allowedModes.includes(x.mode||x.kind));
-  if(actions.length===0)throw Error("No legal printed reaction at "+event.phase);
+  if(actions.length===0)throw Error("No legal printed reaction: "+JSON.stringify({
+   event,roomId:fork.state.room?.id,monsterId:fork.state.monster?.id,
+   inventory:fork.state.heroes[args.heroIndex]?.inventory.map(c=>c.id),
+   slots:Object.fromEntries(Object.entries(
+    fork.state.heroes[args.heroIndex]?.slots||{}).map(([k,v])=>[k,v?.id])),
+   available:itemOptionsAtTrigger(fork.state,args)
+  }));
   if(position<responses.length){
    const requested=responses[position++];
    const selected=actions.find(a=>sameAction(a,requested));
