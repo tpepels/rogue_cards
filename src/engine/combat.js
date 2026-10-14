@@ -393,8 +393,11 @@ export function monsterRespond(s,h){
  case "eye":
   if(band===1){
    const hero=s.chooseRecipient("eye-opposed-wit");
-   const face=s.rerollIfKept(hero,s.die(20)),opponent=s.die(20);
-   if(face!==20&&(face===1||face+hero.card.wit<=opponent+4))
+   const wit=s.takeWitModifiers(hero),first=s.die(20);
+   const face=s.rerollIfKept(hero,wit.dis?
+    Math.min(first,s.die(20)):first),opponent=s.die(20);
+   if(face!==20&&(face===1||
+    face+hero.card.wit+wit.bonus<=opponent+4))
     hero.nextDis++;
   }else if(band===2)a.nextDis++;
   else if(band===3)hit({adv:true});
