@@ -397,7 +397,19 @@ export function applyAction(s,action){
  }
  if(action.kind==="item-trigger"){
   const h=s.heroes[action.heroIndex],o=itemOptions(s,h,action.phase)[action.index];
-  if(!s.activate(h,o.card,{mode:o.mode}))throw Error("Item activation failed");
+  if(!o)throw Error("Selected Item opportunity no longer exists");
+  if(o.mode==="recharge"){
+   if(o.card.id!=="lantern-heart")throw Error("Unsupported free Item recharge");
+   s.directItem(h,o.card,o.mode,()=>{
+    s.consume(h,o.card);
+    if(!s.recharge())throw Error("No exhausted Wand to recharge");
+    return true;
+   });
+  }else if(s.activate(h,o.card,{mode:o.mode})){
+   // Ghost Coin explicitly says DISCARD on use; unlike a Potion it
+   // is a TOOL and is not automatically consumed by s.activate().
+   if(o.card.id==="coin"&&h.inventory.includes(o.card))s.consume(h,o.card);
+  }else throw Error("Item activation failed");
   return observeGame(s);
  }
  if(action.kind==="continue")return observeGame(s);
