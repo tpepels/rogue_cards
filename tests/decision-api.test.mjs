@@ -43,15 +43,18 @@ test("parley, Vault and post-Warden alternatives preserve printed affordability"
 });
 test("retained, Hero and equipment options are explicit and actions cannot be fabricated",()=>{
  const s=new ExpeditionState({seed:2505,heroes:["warrior","witch"]});
- s.beginRoom(room("m-fungus"));
- s.keptRooms.push({card:room("m-fungus")});
- const modes=legalActions(s,{phase:"retained",roomId:"m-fungus"}).map(a=>a.mode);
- assert.ok(modes.includes("heal")&&modes.includes("save"));
- assert.ok(!modes.includes("burn")||s.discardable(1,"FIRE"));
- const save=legalActions(s,{phase:"retained",roomId:"m-fungus"})
+ s.beginRoom(room("m-bridge"));
+ s.keptRooms.push({card:room("m-bridge")});
+ const modes=legalActions(s,{phase:"retained",roomId:"m-bridge"}).map(a=>a.mode);
+ assert.deepEqual(modes,["use","save"]);
+ const save=legalActions(s,{phase:"retained",roomId:"m-bridge"})
   .find(a=>a.mode==="save");
  applyAction(s,save);
- assert.equal(s.returnChoices["m-fungus"],"save");
+ assert.equal(s.returnChoices["m-bridge"],"save");
+ // Fungal Garden now triggers on a REVEALED Monster response, never as
+ // a scripted heal/burn choice when entering an unrelated Room.
+ s.keptRooms.push({card:room("m-fungus")});
+ assert.deepEqual(legalActions(s,{phase:"retained",roomId:"m-fungus"}),[]);
  assert.deepEqual(legalActions(s,{phase:"retained",roomId:"no-room"}),[]);
  const a=legalActions(s,{phase:"hero-ability",heroIndex:0});
  assert.deepEqual(a.map(x=>x.mode),["steady","risk"]);
