@@ -9,7 +9,7 @@
 :root{font-family:Georgia,"Times New Roman",serif;color:#201910;background:#d5cabc}
 *{box-sizing:border-box}
 body{margin:0}
-nav{width:192mm;max-width:100%;margin:12px auto;display:flex;gap:18px;justify-content:space-between;font:bold 12px "Courier New",monospace}
+nav{width:192mm;max-width:100%;margin:12px auto;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;font:bold 12px "Courier New",monospace}
 nav a{color:#201910}
 .sheet{width:192mm;max-width:100%;min-height:279mm;margin:12px auto;background:#f5efe2;padding:9mm 10mm;border:2px solid #261d14}
 .mast{border-bottom:3px double #231a12;padding-bottom:5mm;margin-bottom:5mm;display:flex;align-items:end;justify-content:space-between;gap:5mm}
@@ -47,17 +47,17 @@ strong{font-weight:900}
  .sheet .example{font-size:11px;padding:2mm 2.5mm;margin:2mm 0}
  .sheet .note{padding:2mm 2.5mm;margin:2mm 0}
  /* Preserve two A4 pages while keeping the added shared definitions readable. */
- .sheet:last-of-type section{margin-bottom:2.4mm}
- .sheet:last-of-type p,.sheet:last-of-type li{font-size:11.7px;line-height:1.28;margin-bottom:1.08mm}
- .sheet:last-of-type .example{font-size:10.9px;line-height:1.3;margin:1.5mm 0;padding:1.8mm 2.3mm}
- .sheet:last-of-type .end{margin-top:2mm;padding-top:1mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) section{margin-bottom:2.4mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) p,.sheet:nth-of-type(2):not(.deck-appendix) li{font-size:11.7px;line-height:1.28;margin-bottom:1.08mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .example{font-size:10.9px;line-height:1.3;margin:1.5mm 0;padding:1.8mm 2.3mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .end{margin-top:2mm;padding-top:1mm}
 }
 </style>
 </head>
 <body>
-<nav><a href="./index.html">← CARD CATALOGUE</a><a href="./tutorial.html">LEARN WITH EXAMPLES</a><a href="./decks.html">BUILD A DECK</a><a href="#" onclick="window.print();return false">PRINT THE GUIDE</a></nav>
+<nav><a href="./cards.html">← ALL PRINTABLE CARDS</a><a href="./tutorial.html">LEARN WITH EXAMPLES</a><a href="./decks.html">BUILD A DECK</a><a href="#" onclick="window.print();return false">PRINT THE GUIDE</a></nav>
 <main class="sheet">
-<div class="mast"><h1>ROGUE CARDS</h1><div class="edition">HOW TO PLAY<br>1 OR 2 HEROES · 2 PAGES</div></div>
+<div class="mast"><h1>ROGUE CARDS</h1><div class="edition">HOW TO PLAY<br>1 OR 2 HEROES · 2 CORE PAGES + DECK RECIPES</div></div>
 <p class="lede">You are adventurers exploring a strange dungeon. Every Room might contain a Monster, treasure, a trap or something much stranger. You cannot predict what comes next, but you can decide which risks to take and which Items to save.</p>
 <div class="cols"><div>
 <section><h2>1. Your quest</h2>
@@ -84,24 +84,24 @@ strong{font-weight:900}
 </div><div>
 <section><h2>4. Set up the dungeon</h2>
 <ol>
-<li>Choose one or two Heroes. Take each Hero's printed starting Item, then draw <strong>one additional Object</strong> per Hero.</li>
-<li>Set each Hero's health die to its starting HP.</li>
-<li>Use a recommended or custom deck from the <strong>Deck Builder</strong>, or play with the original cards. Keep your chosen Hero starting Items separate before shuffling the other Objects. <strong>Draw an Item</strong> means draw from this pile, including Potions. Discarded Items form one pile, newest on top.</li>
+<li>Choose a recommended or custom deck (see pages 3–4), then choose one or two Heroes. Set aside each Hero’s printed starting Item.</li>
+<li>Set each Hero’s health die to its starting HP.</li>
+<li>Shuffle the remaining Objects, then draw <strong>one additional Object per Hero</strong>. “Draw an Item” means draw from this pile, including Potions. Keep discarded Items in one pile, newest on top.</li>
 <li>Shuffle the Rooms into separate UPPER, MIDDLE and DEEP piles. Shuffle the Monsters into three matching piles.</li>
 <li>Set the <strong>Amulet Vault</strong> and the two Warden cards aside. Begin with the UPPER Rooms.</li>
 </ol></section>
 <section><h2>5. Explore a Room</h2>
-<p>Play through one Room at a time, working together if there are two Heroes.</p>
+<p>Play through one Room at a time, working together if there are two Heroes. Every entered Room counts toward the usual three per depth, including Corridor destinations. Finish mandatory detours before descending; do not add optional visits after the third Room.</p>
 <ol>
 <li><strong>Reveal the Room.</strong> Read its introductory instruction first. If it tells you to draw a Monster or do something on entry, do so now.</li>
 <li><strong>Make the Room's choice.</strong> Most Rooms offer two printed options. Choose one you can perform, pay any cost, and follow its instructions. If the option asks for a die roll, use the result printed on that card.</li>
 <li><strong>Resolve any Monster.</strong> Fight it or attempt the alternative on its card, such as <strong>PARLEY</strong> (talking or bargaining). Finish the encounter before leaving.</li>
 <li><strong>Leave the Room.</strong> Discard it unless it says <strong>KEEP</strong>. Reset abilities marked “once per Room.” Continue with the next Room.</li>
 </ol>
-<p><strong>PEEK</strong> means look at the next cards without moving them. <strong>REVEAL</strong> means show them face up to both players. A route choice tells you which Room to enter and where the others go; otherwise put revealed cards back in their original order. The Vault is never part of a route choice.</p><p><strong>KEEP</strong> a Room face up beside the party for its later effect. When you <strong>tuck</strong> an Item beneath a card, it is neither carried nor equipped until recovered. On leaving, discard the Room unless the card says to keep it.</p></section>
+<p><strong>PEEK</strong> means look at the next cards without moving them. <strong>REVEAL</strong> means show them face up to both players. A route choice tells you which Room to enter and where the others go; otherwise put revealed cards back in their original order. The Vault is never part of a route choice.</p><p><strong>KEEP</strong> a Room face up beside the party for its later effect. Tucked Items cannot be spent until recovered. <strong>PACT</strong> is a special KEEP choice: the party may make only one Pact per expedition. Even after use, keep that Room sideways as a reminder; non-Pact choices remain available.</p></section>
 <div class="note"><p><strong>Example.</strong> You draw <em>Flooded Chamber</em>. Read the Room, choose how to cross, and roll its d6 if that choice tells you to. You don't need to consult a separate list of Room effects: the outcomes are printed on the card.</p></div>
 </div></div>
-<div class="page-number">ROGUE CARDS · 1 / 2</div>
+<div class="page-number">ROGUE CARDS · CORE RULES · 1 / 4</div>
 </main>
 <main class="sheet">
 <div class="mast"><h1>HOW PLAY WORKS</h1><div class="edition">ROLLS · FIGHTS · ITEMS<br>THE VAULT</div></div>
@@ -114,31 +114,33 @@ strong{font-weight:900}
 <div class="example"><strong>AN EXAMPLE OF WIT</strong>A card requires WIT 15. Your Hero has WIT 4. You roll 12 on the d20: 12 + 4 = 16. You succeed.</div></section>
 <section><h2>7. When a Monster appears</h2>
 <p>Place the Monster in front of the party and mark its starting HP with a health die. If it offers <strong>PARLEY</strong>, you may try the printed alternative to fighting. A Monster that leaves peacefully normally gives no combat reward.</p>
-<p>During combat, living Heroes act in either order. Each Hero takes <strong>one action</strong> on their turn: attack, use an applicable Item or ability, try Elbereth, or pass. Abilities triggered by something already happening do not take a separate action unless stated.</p>
-<p><strong>After each Hero turn</strong>, if the Monster is still there, roll its <strong>d6 behaviour</strong> and resolve the printed result. Continue until the Monster is defeated, escapes or the party is defeated.</p></section>
+<p>Living Heroes act in either order. Each takes <strong>one action</strong> per turn: attack, use an Item or ability, try Elbereth, or pass. Triggered abilities need no extra action unless stated. A solo party fights at most one active Monster; two Heroes may fight two.</p>
+<p><strong>After each Hero turn</strong>, only one active Monster responds with its printed d6 behaviour. With two Monsters, alternate their responses in arrival order. Extra summoned Monsters wait until a slot opens. Finish all queued fights before leaving the Room.</p></section>
 <section><h2>8. Attacking and defending</h2>
 <p>The attacker rolls <strong>d20 + ATK</strong>. The defender rolls <strong>d20 + DEF</strong>. If the attack total is higher, the hit lands. A tie means the defender avoids it.</p>
 <p>A hit normally deals <strong>d6 damage</strong>. Lower the target's HP by that amount. An attacking natural 1 always misses; a natural 20 always hits and deals an extra d6 damage. The same procedure applies when a Monster attacks a Hero.</p>
-<p>Defeated Monsters may provide rewards or edible remains (<strong>EAT</strong>) as described on their cards.</p></section>
+<p>Resolve one listed reward, search or <strong>EAT</strong> from a defeated Monster, once; then discard it unless the card offers a kept trophy. A trophy cannot also be searched or eaten.</p></section>
 </div><div>
 <section><h2>9. Items, danger and surprises</h2>
-<p>Each Hero may equip one <strong>Weapon, Armour, Ring and Companion</strong> and carry other Objects. Outside combat, Heroes may exchange and equip them, but healing always requires an effect on a card. Choose the acting Hero for a Room choice: that Hero pays costs, takes damage and receives healing unless the card names another target or says <strong>each Hero</strong>.</p>
+<p>Each Hero may equip one <strong>Weapon, Armour, Ring and Companion</strong> and carry other Objects. Outside combat, Heroes may exchange and equip them, but healing always requires a card effect. Choose an acting Hero for each Room choice; that Hero pays costs, takes damage and receives healing unless stated otherwise. A living Hero may use healing on a downed ally before leaving.</p>
 <p><strong>Scrolls</strong> are discarded after use. A used <strong>Wand</strong> is turned sideways until recharged. To <strong>OVERCHARGE</strong>, discard an upright Wand and lose d6 HP to obtain the result described on it. <strong>Potions</strong> reveal their effect on first use; identical Potions share that discovery for the expedition.</p>
-<p><strong>WITH</strong> means carried; <strong>EQUIPPED</strong> means in its slot. To <strong>discard</strong>, put an Item on top of the discard pile or a Room in its discard pile. Discarding a kept Room ends its effect. An Item tucked under a card cannot be spent. Only a result labelled <strong>TRAP</strong> counts as a TRAP.</p>
+<p><strong>WITH</strong> means carried; <strong>EQUIPPED</strong> means in its slot. To <strong>discard</strong>, put an Item on its discard pile, newest on top. Discarding a kept Room ends its effect unless it is a spent PACT. You cannot choose a cost you cannot pay; voluntary HP costs cannot reduce you to 0. Only a result labelled <strong>TRAP</strong> counts as a TRAP.</p>
 <p>For a permitted <strong>REROLL</strong>, pay the printed cost (1, then 2, then 3 HP for escalating rerolls). Use the newest result unless the card says to choose. <strong>Use/resolve 5–6</strong> means apply that printed outcome without rolling. Results changed by ±1 stay within the die’s faces; a reversed d6 uses 1↔6, 2↔5, 3↔4.</p>
 <p>A <strong>TRAPDOOR</strong> can skip remaining Rooms or descend early. Resolve its landing immediately; skipped Rooms give no rewards. <strong>Next</strong> applies to the next matching roll or encounter; <strong>here/this Room</strong> effects end on leaving. Keep a card face up or turned sideways when it tracks an ongoing effect.</p>
 <p>If you become <strong>POISONED</strong>, your Hero's d20 rolls have disadvantage until the poison is removed or the Room ends.</p></section>
 <section><h2>10. ELBERETH: a last resort</h2>
 <p>Instead of attacking, a Hero may try to engrave <strong>Elbereth</strong> to stop a Monster. Roll d20 + WIT against 15. On success, cancel the Monster's next response, or discard an Item to escape it without a reward.</p>
-<p>On failure, the Monster immediately takes a behaviour with advantage where applicable. Trying Elbereth a second time against the same Monster is harder: roll with disadvantage. If that second attempt fails, another Monster appears. The Sentinel and Warden ignore Elbereth.</p></section>
+<p>On failure, that Monster immediately responds with ADV where applicable (instead of its normal response for this turn). A second attempt against it has DIS; failing summons another Monster, subject to the active-Monster limit. Sentinel and Warden ignore Elbereth.</p></section>
 <section><h2>11. The Amulet Vault</h2>
 <p>After DEEP, enter the Vault and roll its <strong>OMEN d6</strong>. Normally you must either <strong>FIGHT</strong> the Warden or attempt to <strong>SEAL</strong> it with magic.</p>
 <p>To SEAL, discard <strong>3 MAGIC Items</strong> (or 6 with two Heroes) and make the WIT test printed on the Vault. Success claims the Amulet. Failure forces a fight, and the Warden's first attack has advantage.</p>
-<p>In a fight, the Warden begins at 20 HP. At <strong>10 HP or fewer</strong>, replace Phase I with Phase II, keeping the same HP die. Reduce it to 0 to win. Rare earlier choices may unlock other ways to obtain the Amulet after Phase I.</p>
+<p>In a fight, the Warden begins at 20 HP. At <strong>10 HP or fewer</strong>, replace Phase I with Phase II, keeping remaining HP. Excess damage carries through the change; reducing it directly to 0 still wins. Rare earlier choices may unlock other endings after Phase I.</p>
 <p><strong>You win</strong> when at least one Hero survives and claims the Amulet. Escaping empty-handed is survival, not victory. If no Hero can continue, you lose.</p></section>
 </div></div>
 <div class="end">THE RULES EXPLAIN THE SHARED GAME. THE CARDS PROVIDE THE SPECIFIC CHOICES, COSTS AND CONSEQUENCES. WHEN A CARD SAYS OTHERWISE, FOLLOW THAT CARD.</div>
-<div class="page-number">ROGUE CARDS · 2 / 2</div>
+<div class="page-number">ROGUE CARDS · CORE RULES · 2 / 4</div>
 </main>
+<div id="deck-recipe-appendix" aria-label="Printable pages of recommended deck lists"></div>
+<script type="module" src="./src/rules-deck-appendix.js"></script>
 </body>
 </html>
