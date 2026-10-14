@@ -354,14 +354,23 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(phase==="equipment"){
   const h=s.heroes[heroIndex];
   if(!h||h.hp<=0||s.monster)return [];
-  return h.inventory.flatMap((card,index)=>{
+  const equips=h.inventory.flatMap((card,index)=>{
    const slot=card.v2.tags.includes("WEAPON")?"weapon":
     card.v2.tags.includes("ARMOUR")?"armour":
     card.v2.kind==="RING"?"ring":
     card.v2.kind==="COMPANION"?"companion":null;
-   if(!slot||h.slots[slot]===card||s.cursed(h.slots[slot]))return [];
-   return [{phase,kind:"equip",heroIndex,index,cardId:card.id,slot}];
+   return !slot||h.slots[slot]===card||s.cursed(h.slots[slot])?[]:
+    [{phase,kind:"equip",heroIndex,index,cardId:card.id,slot}];
   });
+  const unequips=Object.entries(h.slots).flatMap(([slot,card])=>
+   card&&!s.cursed(card)?[{phase,kind:"unequip",heroIndex,slot,
+    cardId:card.id}]:[]);
+  const transfers=h.inventory.flatMap((card,index)=>
+   Object.entries(s.heroes).filter(([i,to])=>Number(i)!==heroIndex&&
+    to.hp>0&&!(s.cursed(card)&&s.equipped(h,card.id)))
+    .map(([i])=>({phase,kind:"transfer",heroIndex,index,
+     toHeroIndex:Number(i),cardId:card.id})));
+  return [...equips,...unequips,...transfers];
  }
  const itemPhases=new Set(["explore","between-rooms","room-choice",
   "after-roll","failed-d20","before-defence","after-hit",
@@ -412,6 +421,20 @@ export function applyAction(s,action){
  if(action.kind==="equip"){
   const h=s.heroes[action.heroIndex],c=h.inventory[action.index];
   h.slots[action.slot]=c;return observeGame(s);
+ }
+ if(action.kind==="unequip"){
+  delete s.heroes[action.heroIndex].slots[action.slot];
+  return observeGame(s);
+ }
+ if(action.kind==="transfer"){
+  const from=s.heroes[action.heroIndex],to=s.heroes[action.toHeroIndex];
+  const [card]=from.inventory.splice(action.index,1);
+  if(card?.id!==action.cardId)throw Error("Transferred Item changed");
+  for(const [slot,item] of Object.entries(from.slots))
+   if(item===card)delete from.slots[slot];
+  // Transfer is not a new acquisition; no double counting or hidden auto-equip.
+  to.inventory.push(card);
+  return observeGame(s);
  }
  if(action.kind==="item-trigger"){
   const h=s.heroes[action.heroIndex],o=itemOptions(s,h,action.phase)[action.index];
