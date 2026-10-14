@@ -10,6 +10,7 @@ import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
 import {resolveParley} from "./engine/parley.js";
+import {consumeCorpse,settleMonsterVictory} from "./engine/combat-outcomes.js";
 import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption,engraveElbereth}
  from "./engine/combat.js";
 import {verifyPrintedData} from "./playtest.js";
@@ -311,22 +312,7 @@ function eatCorpse(s,m){
  const h=s.chooseActor();if(!h)return;
  const hungry=h.hp<h.card.hp*.60||h.poison;
  if(!hungry||s.strategy==="seal"&&h.hp>h.card.hp*.35)return;
- s.setActor(h);s.metrics.corpses++;
- const roll=s.die();
- if(roll<=2){
-  if(["rat","crawler","mold","eye","rust","troll"].includes(m.id))s.apply("POISON",[],m);
-  else s.apply("HURT",[["goblin","wraith","wisp","cultist"].includes(m.id)?"d6":"2"],m);
- }else if(roll<=4){
-  if(["crawler","mold"].includes(m.id)&&m.id==="crawler")s.heal(h,2);
-  else s.heal(h,m.id==="troll"||m.id==="mold"?s.die():2);
- }else{
-  if(["rat","troll"].includes(m.id))s.heal(h,s.die());
-  else if(["crawler","mold"].includes(m.id))h.poison=false;
-  else if(["goblin","wraith","cultist"].includes(m.id))s.draw(1);
-  else if(["eye","bat"].includes(m.id))s.peek(1);
-  else if(m.id==="wisp")h.nextAdv++;
-  else if(m.id==="rust")h.nextDefenseAdv=true;
- }
+ consumeCorpse(s,m);
 }
 // Responsible for pre-attack Hero and gear triggers.
 function useItemsInCombat(s,h){
@@ -446,13 +432,9 @@ function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
  if(turns>=300)s.metrics.roundLimit=true;
  const completed=s.monsterHP<=threshold;
  if(completed&&threshold===0){
-  if(!s.banished)s.metrics.kills++;
   if(!s.banished&&!warden)eatCorpse(s,m);
-  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
-  if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
-  s.pendingReward=0;s.pendingFightHeal=null;
- }
- s.monster=null;
+  settleMonsterVictory(s,m,{warden});
+ }else s.monster=null;
  return completed&&s.alive();
 }
 function finishMonsters(s){
