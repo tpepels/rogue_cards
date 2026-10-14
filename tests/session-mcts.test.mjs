@@ -136,6 +136,8 @@ test("full-legal-action MCTS policy cannot cycle forever on free equipment chang
   budget:2,seed:87321,maxSearchSteps:4000,knowledge:"fair"
  });
  assert.equal(chosen.kind,"continue");
+ assert.equal(policy.cycleBreaks,1,
+  "The progression cap, not a coincidental MCTS choice, caused continuation");
  assert.equal(policy.consecutiveEquipment,0);
  assert.equal(JSON.stringify(observeSession(session)),before,
   "Search and policy selection never mutate the canonical session");
