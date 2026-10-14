@@ -21,6 +21,9 @@ export function seal(s){
  const h=bestWit(s);if(!h)return false;
  if(h.slots.armour?.id==="mail")s.notePassive(h.slots.armour,"wit",1);
  const boon=blessBeforeD20(s,h);
+ // Lethal Priest Blessing ends this attempt before its opposed roll.
+ // A dead negotiator cannot complete a magical SEAL.
+ if(h.hp<=0)return false;
  let atk=s.rerollIfKept(h,rollD20(s,{adv:boon.adv,dis:h.poison||h.slots.armour?.id==="mail"}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
  const ring=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
@@ -38,11 +41,11 @@ export function seal(s){
  if(!good){
   for(const hero of s.living())s.noteOptions(itemOptions(s,hero,"failed-d20"));
   // Crown of Rehearsals can rescue even a failed final magical test.
-  const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
+  const owner=s.heroes.find(x=>x.hp>0&&x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
    s.directItem(owner,crown,"rescue-failed-roll",()=>{
     s.consume(owner,crown);s.hurt(owner,s.die());return true;});
-   good=true;}
+   good=owner.hp>0;}
  }
  s.metrics.sealWin=good;return good;
 }
