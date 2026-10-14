@@ -130,7 +130,8 @@ function playMatched(session,action,{
 }
 export function compareSessionActions(session,{
  trials=30,seed=1,knowledge="fair",futureBudget=2,
- maxSearchSteps=4000,maxGameSteps=7000,referenceIndex=0
+ maxSearchSteps=4000,maxGameSteps=7000,referenceIndex=0,
+ resumeTrials=[],onTrial=null
 }={}){
  if(!Number.isSafeInteger(seed)||seed<0||seed>0xffffffff)
   throw Error("Seed must be a uint32 integer");
@@ -144,6 +145,10 @@ export function compareSessionActions(session,{
  }
  if(!["fair","oracle"].includes(knowledge))
   throw Error("Knowledge must be fair or oracle");
+ if(!Array.isArray(resumeTrials)||resumeTrials.length>trials)
+  throw Error("Invalid resumed paired trial count");
+ if(onTrial!==null&&typeof onTrial!=="function")
+  throw Error("onTrial must be a callback");
  const actions=sessionActions(session);
  if(actions.length<2)throw Error("At least two legal root choices are required");
  if(!Number.isInteger(referenceIndex)||referenceIndex<0||
@@ -161,28 +166,41 @@ export function compareSessionActions(session,{
   const chance=mix(root^0x85ebca6b);
   const deck=mix(root^0xc2b2ae35);
   const policy=mix(root^0x27d4eb2f);
-  const outcomes=[];
-  for(let i=0;i<actions.length;i++){
-   let result;
-   try{
-    result=playMatched(session,actions[i],{
-     knowledge,diceSeed:chance,deckSeed:deck,policySeed:policy,
-     futureBudget,maxSearchSteps,maxGameSteps,blueprint
-    });
-   }catch(error){
-    throw Error("Matched trial "+trial+", action "+i+" ("+
-     JSON.stringify(actions[i])+"): "+(error.stack||error));
+  let samples=resumeTrials[trial];
+  if(samples===undefined){
+   samples=[];
+   for(let i=0;i<actions.length;i++){
+    let result;
+    try{
+     result=playMatched(session,actions[i],{
+      knowledge,diceSeed:chance,deckSeed:deck,policySeed:policy,
+      futureBudget,maxSearchSteps,maxGameSteps,blueprint
+     });
+    }catch(error){
+     throw Error("Matched trial "+trial+", action "+i+" ("+
+      JSON.stringify(actions[i])+"): "+(error.stack||error));
+    }
+    samples.push(result);
    }
-   outcomes.push(result.won);
-   const row=results[i];
+   // One checkpoint means ALL root actions used the same paired seed.
+   if(onTrial)onTrial(trial,samples);
+  }
+  if(!Array.isArray(samples)||samples.length!==actions.length||
+   samples.some(x=>!x||![0,1].includes(x.won)||
+    !Number.isInteger(x.decisions)||x.decisions<1||
+    !Number.isInteger(x.searches)||x.searches<0))
+   throw Error("Invalid paired trial checkpoint at index "+trial);
+  for(let i=0;i<actions.length;i++){
+   const result=samples[i],row=results[i];
    row.wins+=result.won;row.observations++;
    row.totalDecisions+=result.decisions;
    row.totalSearches+=result.searches;
   }
-  const ref=outcomes[referenceIndex];
+  const ref=samples[referenceIndex].won;
   for(let i=0;i<actions.length;i++){
-   if(outcomes[i]>ref)pairs[i].positive++;
-   else if(outcomes[i]<ref)pairs[i].negative++;
+   const value=samples[i].won;
+   if(value>ref)pairs[i].positive++;
+   else if(value<ref)pairs[i].negative++;
    else pairs[i].ties++;
   }
  }
