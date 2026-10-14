@@ -16,7 +16,7 @@ const rows=[
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep Room. At Vault, discard Room and 1 Item to reveal Warden behaviour before acting; resolve afterward. Without payment, use 6.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep Room. At Vault, discard it and 1 Item to reveal Warden behaviour before acting; resolve afterward. If unpaid, use 6.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
  ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one and return the other to the bottom of its deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
  ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face-down; randomly return 1 unseen to bottom. Reveal the other 2; enter one, return other to bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
@@ -42,7 +42,7 @@ const rows=[
   "Rope Ladder Junction",
   "CORRIDOR",
   "stairs",
-  "Two ways down.",
+  "Two routes.",
   "CLIMB",
   "Reveal 2 Rooms; enter 1. In a LAIR, first Hero attack has ADV; otherwise draw 1 Item.",
   "TAKE THE SHAFT",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep Room. At Vault, lose 2 HP and discard. Roll Warden behaviour before acting; you may reroll, taking the new result. Resolve it afterward.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep Room. At Vault, lose 2 HP and discard. Roll Warden behaviour before acting; you may reroll and take the new result. Resolve after acting.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
