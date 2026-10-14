@@ -112,7 +112,8 @@ function compactMetric(source,result,party){
  if(result.rolloutAudit?.nonterminalBranches)
   throw Error("Research sampled a nonterminal hypothetical: "+result.rolloutAudit.nonterminalBranches);
  source.branchSamples+=(result.rolloutAudit?.roomBranches||0)+
-  (result.rolloutAudit?.combatBranches||0);
+  (result.rolloutAudit?.combatBranches||0)+
+  (result.rolloutAudit?.otherDecisionBranches||0);
  source.nestedSamples+=result.rolloutAudit?.futureReplannedBranches||0;
 }
 function newCoverage(){
@@ -291,9 +292,8 @@ function summary(c,finished){
   // Current engine search API still lacks legal-action branching at
   // every printed timing window, so never claim exhaustive game search.
   knownUnsearchedDecisionTypes:[
-   "retained Room return choices","PARLEY alternatives","Vault SEAL decision",
-   "Hero abilities and rerolls","reactive/noncombat Item timing",
-   "equipment and postcombat Item decisions"
+   "retained Room return choices","Hero abilities and rerolls",
+   "reactive/noncombat Item timing","equipment and postcombat Item decisions"
   ]};
  const completed=allCards.every(x=>x.complete),enough=allCards.every(x=>x.eligible>=500);
  return {schema:"oracle-card-audit-v1",seed:c.seed,knowledge:c.knowledge,
@@ -382,7 +382,7 @@ async function main(){
   writeFileSync(join(c.out,"manifest.json"),JSON.stringify({commit,signature:c.signature,
    config:c.study,node:process.version,modelWarnings:[
     "The oracle is two-ply, not exhaustive MCTS.",
-    "PARLEY, SEAL, reactions, retained Room returns not completely branched.",
+    "PARLEY, SEAL and Warden endings now branch; reactions, Hero abilities, equipment and retained Room returns remain unsearched.",
     "Each test deliberately changes where a Room occurs or when an Item is acquired."
    ]},null,2)+"\n");
  }
