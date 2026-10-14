@@ -3295,17 +3295,6 @@
  transform-origin:50% 50%;
  z-index:31;
 }
-.tt-card.tt-paper-collage[data-type="room"][data-id="d-oracle"] .tt-collage > .tt-content .tt-slip--results{
- left:3mm;
- right:auto;
- top:95.5mm;
- bottom:auto;
- width:84mm;
- max-width:none;
- transform:rotate(-1.35deg);
- transform-origin:50% 50%;
- z-index:21;
-}
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-collage{z-index:auto;isolation:auto}
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-collage > .tt-content{z-index:auto;isolation:auto}
 .tt-card.tt-paper-collage[data-type="room"][data-id="d-reliquary"] .tt-title{z-index:30}

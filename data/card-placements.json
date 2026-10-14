@@ -890,13 +890,6 @@
         "w": 43,
         "rotation": 3.2,
         "zIndex": 31
-      },
-      "results": {
-        "x": 3,
-        "y": 95.5,
-        "w": 84,
-        "rotation": -1.35,
-        "zIndex": 21
       }
     },
     "room:d-gate": {
