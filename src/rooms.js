@@ -118,7 +118,7 @@ const deep=make("DEEP",[
   [["SING","Roll d6."],["SILENCE","With Pitch Torch, draw 2 Items; discard FIRE to draw 2; or discard kept Treasure That Sings to choose 5–6."]],"SING",
   [["1–2","Become POISONED and lose 2 HP."],["3–4","Heal d6 HP."],["5–6","Draw 2 Items; remove POISONED."]],["Pitch Torch","Antidote"],"You recognise the tune."],
  ["d-bazaar","Midnight Bazaar","shop","ENCOUNTER","A shopkeeper sells tomorrow's luck.",
-  [["GAMBLE","Discard 1 Item; roll d6."],["TRADE","Discard 2 Items; draw 2 Items and recharge a Wand."]],"GAMBLE",
+  [["GAMBLE","Discard 1 Item, or lose 2 HP if empty-handed; roll d6."],["TRADE","Discard 2 Items; draw 2 Items and recharge a Wand."]],"GAMBLE",
   [["1–2","Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5","Draw 3 Items; discard 1."],["6","Draw 3 Items; keep this Room to reroll one d20, then discard."]],["Tunnel Raven"],"Every price is final."],
  ["d-crown","Crown of the Unking","bones","SHRINE","A crown waits on a kneeling skeleton.",
   [["WEAR","Roll d6."],["OFFER","Cleanse and discard 1 CURSED Item; draw 2 Items and recharge a Wand."]],"WEAR",
