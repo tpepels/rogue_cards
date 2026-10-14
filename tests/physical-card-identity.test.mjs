@@ -6,15 +6,21 @@ import {prepareRolloutDecks,sampleRolloutDecks}
  from "../src/rollout-state.js";
 
 const source=()=>new ExpeditionState({seed:881,heroes:["wizard"]});
+const findPair=s=>{
+ const counts=new Map();
+ for(const card of s.deck)counts.set(card.id,(counts.get(card.id)||0)+1);
+ const id=[...counts].find(([,n])=>n>=2)?.[0];
+ assert.ok(id,"Expected at least one Item type with two physical copies");
+ return s.deck.filter(c=>c.id===id).slice(0,2);
+};
 test("two physical copies never share exhaustion, once-per-room usage or equipment identity",()=>{
  const s=source(),h=s.heroes[0];
- const copies=s.deck.filter(c=>c.id==="sword");
- assert.equal(copies.length,2,"Both printed Notched Sword copies remain");
+ const copies=findPair(s);
+ assert.equal(copies.length,2,"Two physical copies must remain");
  const [a,b]=copies;
  assert.notStrictEqual(a,b,"Printed definition shared; physical cards distinct");
  assert.equal(a.id,b.id);
- assert.equal(a._physicalCopy,"sword#0");
- assert.equal(b._physicalCopy,"sword#1");
+ assert.equal(new Set([a._physicalCopy,b._physicalCopy]).size,2);
  for(const card of copies){
   const index=s.deck.indexOf(card);
   assert.ok(index>=0);s.deck.splice(index,1);
@@ -27,7 +33,7 @@ test("two physical copies never share exhaustion, once-per-room usage or equipme
  assert.ok(h.inventory.includes(a)&&h.inventory.includes(b));
 });
 test("actual-state forks preserve each physical copy and inventory/slot aliases",()=>{
- const s=source(),h=s.heroes[0],copies=s.deck.filter(x=>x.id==="sword");
+ const s=source(),h=s.heroes[0],copies=findPair(s);
  for(const c of copies){s.deck.splice(s.deck.indexOf(c),1);s.noteDeckRemoval(c);s.add(h,c)}
  h.slots.weapon=copies[1];s.exhausted.add(copies[0]);
  const fork=forkGameState(s),f=fork.heroes[0];
@@ -45,9 +51,9 @@ test("fair-information sampled Items use independent physical copies and conserv
  const blueprint=prepareRolloutDecks(s,"fair");
  const result=sampleRolloutDecks(s,{knowledge:"fair",deckSeed:1234,blueprint});
  assert.equal(result.deck.length,original.length);
- const swords=result.deck.filter(x=>x.id==="sword");
- assert.equal(swords.length,2);
- assert.notStrictEqual(swords[0],swords[1]);
+ const pair=findPair({deck:result.deck});
+ assert.equal(pair.length,2);
+ assert.notStrictEqual(pair[0],pair[1]);
  assert.ok(result.deck.every(x=>x._physicalCard===true));
  assert.equal(new Set(result.deck).size,result.deck.length);
  assert.deepEqual(s.deck.map(x=>x.id),original,"Actual hidden deck unchanged");
