@@ -182,11 +182,11 @@ const wands=[
  ["wand-frost","Wand of Cold Shoulders","wind","WAND",["MAGIC","ICE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
   [["1–2","Backfire: lose 2 HP."],["3–4","Monster skips its next response."],["5–6","Freeze solid: skip next 2 Monster responses."]],
-  "At Flooded Chamber, use and exhaust this Wand for WADE 3–4. SHRINE: recharge. OVERCHARGE: discard, lose d6 HP, use 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
+  "At Flooded Chamber, exhaust this Wand for WADE 3–4. SHRINE: recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
-  "SHRINE: recharge. OVERCHARGE: discard, lose d6 HP; choose 5–6.",["u-gate","u-mimic","m-vault","d-last-chest"],"Not every hole is a door.",1]
+  "SHRINE: recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","u-mimic","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
