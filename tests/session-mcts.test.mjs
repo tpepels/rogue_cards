@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
 import {searchDecision} from "../src/session-mcts.js";
-import {VAULT} from "../src/tabletop-data.js";
+import {VAULT,ROOMS} from "../src/tabletop-data.js";
+import {submitDecision} from "../src/engine/decision-session.js";
 
 function vault(){
  const session=createDecisionSession({seed:53210,heroes:["wizard"]}),s=session.state;
@@ -61,4 +62,42 @@ test("search refuses to call a nonterminal continuation a lost expedition",()=>{
  assert.equal(result.incomplete,1);
  assert.equal(result.completed,0);
  assert.equal(result.terminalWinRate,null);
+});
+
+test("fair search at a revealed corridor uses the actually visible Room IDs",()=>{
+ const session=createDecisionSession({seed:1846,heroes:["warrior"]});
+ session.state.beginRoom(ROOMS.find(r=>r.id==="u-fork"));
+ session.phase="room";
+ const choice=sessionActions(session).find(a=>a.index===0);
+ const pending=submitDecision(session,choice);
+ assert.equal(pending.phase,"reaction");
+ assert.equal(pending.trigger.phase,"corridor");
+ assert.equal(pending.actions.length,2);
+ const shown=pending.actions.map(a=>a.roomId);
+ const before=JSON.stringify(observeSession(session));
+ const rng=session.state.rng.snapshot();
+ const result=searchDecision(session,{budget:2,seed:19010,
+  knowledge:"fair",maxSteps:4000});
+ assert.equal(result.completed,2);
+ assert.equal(result.rootActionCount,2);
+ assert.ok(result.choices.every(x=>shown.includes(x.action.roomId)));
+ assert.ok(result.choices.every(x=>x.visits>0));
+ assert.ok(result.actionCoverage.phaseSelections["reaction:corridor"]>=2);
+ assert.equal(JSON.stringify(observeSession(session)),before);
+ assert.equal(session.state.rng.snapshot(),rng);
+});
+test("a die already shown before a Room reroll cannot change across sampled alternatives",()=>{
+ const session=createDecisionSession({seed:1842,heroes:["warrior"]});
+ session.state.beginRoom(ROOMS.find(r=>r.id==="u-fountain"));
+ session.phase="room";
+ const choice=sessionActions(session)[0];
+ const pending=submitDecision(session,choice);
+ assert.equal(pending.phase,"reaction");
+ assert.equal(pending.trigger.phase,"reroll");
+ const previous=JSON.stringify(pending.trigger);
+ const r=searchDecision(session,{budget:2,seed:19011,
+  knowledge:"oracle",maxSteps:4000});
+ assert.equal(r.completed,2);
+ assert.equal(r.rootActionCount,2);
+ assert.equal(JSON.stringify(observeSession(session).trigger),previous);
 });
