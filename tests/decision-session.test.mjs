@@ -6,6 +6,14 @@ import {ROOMS,MONSTERS,OBJECTS,WARDEN,VAULT} from "../src/tabletop-data.js";
 const room=id=>ROOMS.find(x=>x.id===id);
 const monster=id=>MONSTERS.find(x=>x.id===id);
 const advance=(session,match)=>submitDecision(session,sessionActions(session).find(match));
+const finishNested=session=>{
+ for(let i=0;i<30&&observeSession(session).phase==="reaction";i++){
+  advance(session,a=>["continue","skip","keep"].includes(a.kind)||
+   a.kind==="enter-shown-room"||a.mode==="save"||
+   a.kind==="hero-mode");
+ }
+ assert.notEqual(observeSession(session).phase,"reaction");
+};
 test("entry truly pauses before the SAME delayed printed effects as direct engine entry",()=>{
  const session=createDecisionSession({seed:9031,heroes:["warrior"]});
  const direct=createGame({seed:9031,heroes:["warrior"]});
@@ -25,6 +33,7 @@ test("entry truly pauses before the SAME delayed printed effects as direct engin
  assert.deepEqual(sessionActions(session).map(a=>a.index),
   legalActions(direct,{phase:"room"}).map(a=>a.index));
  advance(session,a=>a.index===0||a.kind==="room-choice");
+ finishNested(session);
  assert.equal(Object.values(session.state.metrics.roomChoices).reduce((a,b)=>a+b,0),1);
 });
 test("retained Well decision is prompted before entry, not preset days earlier",()=>{
@@ -54,6 +63,7 @@ test("combat has a separate player action and Monster response, then full reward
  s.monster=monster("rat");s.monsterHP=3;
  const choose=sessionActions(session)[0];
  advance(session,a=>a.index===choose.index);
+ finishNested(session);
  assert.equal(session.phase,"parley");
  assert.deepEqual(sessionActions(session).map(a=>a.kind),["fight","parley"]);
  advance(session,a=>a.kind==="fight");
