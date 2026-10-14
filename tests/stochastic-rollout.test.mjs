@@ -314,7 +314,7 @@ test("combat rollout resolves a legal choice through full-effect monster respons
   const before=s.heroes.map(h=>h.hp);
   const control=fightState(knowledge);
   const plan=pairedCombatRollouts(s,s.heroes[0]);
-  assert.ok(["attack","item"].includes(plan.action));
+  assert.ok(["attack","item","elbereth"].includes(plan.action));
   assert.equal(plan.samples,4);
   assert.deepEqual(s.heroes.map(h=>h.hp),before);
   assert.equal(s.die(),control.die());
@@ -334,7 +334,7 @@ test("full-effect rollout matches across repeated decisions at fixed seeds",()=>
   const c=fightState(knowledge),d=fightState(knowledge);
   const plan=agentPlanCombat(c,c.heroes[0]);
   assert.deepEqual(plan,agentPlanCombat(d,d.heroes[0]));
-  assert.ok(["attack","item"].includes(plan.action));
+  assert.ok(["attack","item","elbereth"].includes(plan.action));
   assert.ok(c.plannerDecisions);
  }
 });
