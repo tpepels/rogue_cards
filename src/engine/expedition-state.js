@@ -533,6 +533,8 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "KEEP_ROOM":this.keptRooms.push({card:this.room});return;
+  case "DOUBLE_BID":this.roomRoll();if(this.alive())this.roomRoll();return;
   case "LAMP_EAT":if(this.discardable(1,"FIRE"))this.discard(1,{tag:"FIRE"});
     else this.hurt(h,2);h.nextDis++;return;
   case "CRYPT_WHISPER":this.hurt(h,2);
@@ -822,7 +824,7 @@ export class ExpeditionState {
     this.strategy==="treasure"?"pay":"save")==="pay"){
    this.discard(1,{tag:"MAGIC"});face=6;
   }
-  if(this.room.id==="m-auction"&&can(this.lastSpent,"MAGIC"))face=6;
+  /* At a ghost auction, even MAGIC cannot guarantee a winning bid. */
   if(this.room.id==="m-well"&&can(firstSpent,"CURSED"))face=6;
   const scrollSub={
    "m-fungus":"scroll-flame","d-choir":"scroll-flame","m-flood":"scroll-frost",
