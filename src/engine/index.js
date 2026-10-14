@@ -30,6 +30,9 @@ const owners=s=>s.heroes.map((h,i)=>({
  index:i,hero:h.card.id,hp:h.hp,maxHP:h.card.hp,poison:h.poison,
  alive:h.hp>0,
  inventory:h.inventory.map(card=>card.id),
+ inventoryCopies:h.inventory.map(card=>card._physicalCopy||card.id),
+ usedPotionTokens:(h.keptUsedPotions||[]).map(x=>({
+  cardId:x.card.id,copy:x.card._physicalCopy||x.card.id,kind:x.kind})),
  equipped:Object.fromEntries(Object.entries(h.slots)
   .map(([slot,card])=>[slot,card.id]))
 }));
@@ -54,6 +57,9 @@ export function observeGame(s){
    [stage,s.monsters[stage].length])),
   scoutedRooms:Object.fromEntries(STAGES.map(stage=>
    [stage,[...(s.peekedRoomIds[stage]||[])]])),
+  knownBottomRooms:Object.fromEntries(STAGES.map(stage=>
+   [stage,[...(s.publicBottomRoomIds?.[stage]||[])]])),
+  telegraphedWardenBehavior:s.telegraphedWardenBehavior??null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null})),
    returnChoices:{...s.returnChoices},
