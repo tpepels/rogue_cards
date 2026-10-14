@@ -41,14 +41,16 @@ test("trapdoor from Upper skips remaining Upper Rooms and lands with a Monster",
  assert.equal(s.pendingTrapLanding,null);
 });
 
-test("the Ladder shaft can drop a party directly into the Vault",()=>{
+test("the balanced Ladder shaft reaches DEEP instead of bypassing the entire Vault run",()=>{
  const s=new ExpeditionState({seed:15});
  s.beginRoom(room("m-ladder"));
  s.roomRoll(1);
  assert.equal(s.stageProgress.MIDDLE,3);
- assert.equal(s.stageProgress.DEEP,3);
- assert.equal(s.pendingTrapLanding.stage,"FINAL");
- assert.equal(s.trapdoorHistory[0].to,"FINAL");
+ assert.equal(s.stageProgress.DEEP,0);
+ assert.equal(s.pendingTrapLanding.stage,"DEEP");
+ assert.equal(s.pendingTrapLanding.monster,true);
+ assert.equal(s.pendingTrapLanding.damage,4);
+ assert.equal(s.trapdoorHistory[0].to,"DEEP");
 });
 
 test("a cursed passage resolves a previous depth without advancing progress",()=>{
