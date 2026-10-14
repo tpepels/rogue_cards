@@ -231,3 +231,47 @@ test("forking remaining RNG states yields the same results without consuming sou
  assert.equal(next.die(20),game.rng.die(20));
  assert.notEqual(next.snapshot(),initial);
 });
+
+
+test("Ashwood Staff replaces (never stacks with) a printed Shrine Room choice",()=>{
+ const session=createDecisionSession({seed:1960,heroes:["warrior"]}),s=session.state;
+ const i=s.deck.findIndex(o=>o.id==="staff");
+ assert.ok(i>=0);
+ const [staff]=s.deck.splice(i,1);s.noteDeckRemoval(staff);
+ s.add(s.heroes[0],staff);s.heroes[0].slots.weapon=staff;
+ s.beginRoom(room("u-shrine"));session.phase="room";
+ s.hurt(s.heroes[0],3);
+ const options=sessionActions(session);
+ assert.equal(options.filter(x=>x.kind==="room-choice").length,2);
+ assert.ok(options.some(x=>x.kind==="shrine-item"&&x.mode==="heal"));
+ const before=s.heroes[0].hp;
+ advance(session,x=>x.kind==="shrine-item"&&x.mode==="heal");
+ assert.equal(s.heroes[0].hp,Math.min(s.heroes[0].card.hp,before+2));
+ assert.equal(Object.keys(s.metrics.roomChoices).length,0);
+ assert.equal(s.metrics.itemUses.staff.total,1);
+});
+test("Lantern Heart and Ghost Coin pay exact Item costs when chosen",()=>{
+ const session=createDecisionSession({seed:1961,heroes:["warrior"]}),s=session.state;
+ const grant=id=>{
+  const i=s.deck.findIndex(x=>x.id===id);assert.ok(i>=0);
+  const [c]=s.deck.splice(i,1);s.noteDeckRemoval(c);s.add(s.heroes[0],c);
+  return c;
+ };
+ s.beginRoom(room("u-shrine"));session.phase="explore";
+ const wand=grant("wand-sparks"),lantern=grant("lantern-heart");
+ s.exhausted.add(wand);
+ const use=sessionActions(session).find(x=>x.cardId==="lantern-heart"&&x.mode==="recharge");
+ assert.ok(use);
+ advance(session,x=>x===use);
+ assert.ok(!s.heroes[0].inventory.includes(lantern));
+ assert.ok(!s.exhausted.has(wand));
+ const second=createDecisionSession({seed:1962,heroes:["warrior"]});
+ const t=second.state;t.beginRoom(room("u-merchant"));second.phase="explore";
+ const i=t.deck.findIndex(c=>c.id==="coin");assert.ok(i>=0);
+ const [coin]=t.deck.splice(i,1);t.noteDeckRemoval(coin);t.add(t.heroes[0],coin);
+ const action=sessionActions(second).find(x=>x.cardId==="coin");
+ assert.ok(action);
+ submitDecision(second,action);
+ assert.ok(!t.heroes[0].inventory.includes(coin));
+ assert.ok((t.metrics.objectActivations.coin||0)>=1);
+});
