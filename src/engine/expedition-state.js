@@ -51,7 +51,7 @@ export class ExpeditionState {
    const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
     nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,
-    nextWitDis:0,nextHitBlock:0,ignoreDarknessOnce:false,
+    nextWitDis:0,nextHitBlock:0,nextDarknessDis:0,ignoreDarknessOnce:false,
     keptUsedPotions:[],
     nextDefenseAdv:false,nextDefenseBonus:0,
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
@@ -437,8 +437,10 @@ export class ExpeditionState {
   endRoom(){
   this.heroes.forEach(h=>{
    h.poison=false;h.immune=false;h.used.clear();
+   h.nextHitBlock=0;h.ignoreDarknessOnce=false;
    if(h.defDuration>0&&--h.defDuration===0)h.nextDefenseBonus=0;
   });
+  this.elberethAdv=false;
   this.monster=null;this.monsterHP=0;
  }
  nextMonster(region=this.room?.stage){
@@ -801,10 +803,12 @@ export class ExpeditionState {
   const h=this.chooseRecipient("opposed-room-check:"+kind);this.actor=h;
   let wit=kind==="CHECK_WIT";
   const stat=wit?h.card.wit+this.witBonus:this.stats(h).atk;
-  let dis=h.poison||h.nextDis>0||(wit&&h.slots.armour?.id==="mail");
+  let dis=h.poison||h.nextDis>0||
+   (wit&&(h.nextWitDis>0||h.slots.armour?.id==="mail"));
   if(wit&&h.slots.armour?.id==="mail")this.notePassive(h.slots.armour,"wit",1);
   let adv=h.nextAdv>0,blessBonus=0;
   h.nextDis=0;h.nextAdv=0;
+  if(wit)h.nextWitDis=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
   if(priest){
    const decision=this._decisionHook?.({phase:"hero-trigger",
