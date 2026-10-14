@@ -171,6 +171,17 @@ for(const card of [...MONSTERS,WARDEN,WARDEN_FURY]){
    s.beginRoom(card.stage==="FINAL"?VAULT:
     ROOMS.find(r=>r.stage===card.stage));
    s.monster=card;s.monsterHP=card.hp;s.forcedBehavior=face;
+   // Test the RAW printed outcome here. Restless Shade explicitly
+   // converts behaviour 5 to 1-2 when MAGIC gear is equipped. Wizard
+   // starts with an Ashwood Staff, so remove that optional modifier
+   // from this fixture before requiring raw-band coverage.
+   if(card.id==="wraith"&&face===5){
+    for(const hero of s.heroes)
+     for(const [slot,equipped] of Object.entries(hero.slots))
+      if(equipped?.v2.tags.includes("MAGIC"))delete hero.slots[slot];
+    if(s.anyEquippedTag("MAGIC"))
+     throw Error("Wraith raw-band fixture still has equipped MAGIC");
+   }
    monsterRespond(s,s.heroes[0]);
    const band=face<=2?0:face<=4?1:face===5?2:3;
    if(!(s.metrics.monsterBehaviorBands[card.id+":"+band]>0))
