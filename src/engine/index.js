@@ -222,9 +222,21 @@ export function createGame(options={}){
  * Research search and future UI consume the same actions; no heuristic
  * weights or hidden deck ordering may affect their legality.
  */
-export function legalActions(s,{phase=null,heroIndex=0,roomId=null}={}){
+export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(!phase)phase=s.monster?"combat":s.room?.stage==="FINAL"?"vault":
   s.room?"room":"between-rooms";
+ if(phase==="hero-trigger"){
+  const h=s.heroes[heroIndex];
+  if(!h||h.hp<=0||h.used.has("hero"))return [];
+  return [{phase,kind:"skip",heroIndex},
+   ...["steady","risk"].map(mode=>({phase,kind:"hero-mode",heroIndex,mode}))];
+ }
+ if(phase==="reroll"){
+  const h=s.heroes[heroIndex];
+  if(!h||h.hp<=0||!Number.isInteger(cost)||cost<1||cost>3)return [];
+  return [{phase,kind:"keep",heroIndex,cost},
+   ...(h.hp>cost?[{phase,kind:"reroll",heroIndex,cost}]:[])];
+ }
  if(phase==="corpse"){
   if(!s.monster||s.monsterHP>0||s.monster.stage==="FINAL"||
     s.monster.id==="sentinel"||!s.alive())return [];
