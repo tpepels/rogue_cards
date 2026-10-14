@@ -100,8 +100,7 @@ const design={schema:"canonical-paired-contrast-config-v1",
  maxGameSteps,referenceIndex};
 const atomic=(file,value)=>{
  const temp=file+".tmp-"+process.pid;
- writeFileSync(temp,JSON.stringify(value,null,2)+"
-");
+ writeFileSync(temp,JSON.stringify(value,null,2)+"\n");
  renameSync(temp,file);
 };
 if(!resume){
@@ -115,7 +114,7 @@ if(!resume){
 const completed=[];
 const saved=readdirSync(join(out,"checkpoints")).sort();
 for(const file of saved){
- if(!/^d{6}.json$/.test(file))
+ if(!/^\d{6}\.json$/.test(file))
   throw Error("Unexpected checkpoint "+file);
  const index=Number(file.slice(0,6));
  if(index!==completed.length||index>=trials)
