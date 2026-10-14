@@ -184,6 +184,9 @@ export function searchDecision(session,{budget=100,seed=1,
     depth++;
    }
    if(sim.phase!=="terminal"&&!error)error="maxSteps";
+   if(sim.phase==="terminal"&&(sim.state.metrics.roundLimit||
+      sim.state.metrics.unresolved))
+    error="unresolved-game-or-combat-round-limit";
   }catch(e){
    // Never convert unsupported printed operations into a loss.
    error="rule-error:"+(e.message||String(e));
