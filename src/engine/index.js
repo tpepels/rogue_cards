@@ -450,7 +450,10 @@ export function applyAction(s,action){
    // Ghost Coin explicitly says DISCARD on use; unlike a Potion it
    // is a TOOL and is not automatically consumed by s.activate().
    if(o.card.id==="coin"&&h.inventory.includes(o.card))s.consume(h,o.card);
-  }else throw Error("Item activation failed");
+  }else throw Error("Item activation failed: "+
+   JSON.stringify({cardId:o.card.id,mode:o.mode,phase:action.phase,
+    roomId:s.room?.id,monsterId:s.monster?.id,
+    physicalCopy:o.card._physicalCopy}));
   return observeGame(s);
  }
  if(action.kind==="continue")return observeGame(s);
