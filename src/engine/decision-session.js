@@ -185,6 +185,13 @@ function endMonster(session){
 function afterAttack(session){
  const s=session.state;
  if(done(session))return;
+ // Printed banishment/transformation effects can remove the active Monster
+ // without killing it. That is a completed encounter, not a corpse or
+ // 'No Monster to end' error. Continue with any queued encounter.
+ if(!s.monster){
+  if(!awaitingMonster(session))roomSettled(session);
+  return;
+ }
  if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
   endMonster(session);return;
  }
@@ -193,6 +200,10 @@ function afterAttack(session){
 function afterMonsterResponse(session){
  const s=session.state;
  if(done(session))return;
+ if(!s.monster){
+  if(!awaitingMonster(session))roomSettled(session);
+  return;
+ }
  if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
   endMonster(session);return;
  }
