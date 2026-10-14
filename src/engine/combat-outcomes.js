@@ -29,6 +29,18 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
  if(!m||s.monster!==m||s.monsterHP>0)
   throw Error("Only a defeated active Monster may settle its reward");
  if(!s.banished)s.metrics.kills++;
+ const stolen=s.stashedMonsterItems||[];
+ if(stolen.length){
+  s.stashedMonsterItems=stolen.filter(x=>x.monsterId!==m.id);
+  if(!s.banished&&s.alive())
+   for(const entry of stolen.filter(x=>x.monsterId===m.id)){
+    s.consumed.delete(entry.card);
+    s.add(s.chooseRecipient("recover-monster-stolen-item"),entry.card);
+   }
+  else for(const entry of stolen.filter(x=>x.monsterId===m.id)){
+   s.discardPile.push(entry.card);s.consumed.add(entry.card);
+  }
+ }
  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
  if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
  s.pendingReward=0;s.pendingFightHeal=null;
