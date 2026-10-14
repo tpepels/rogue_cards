@@ -105,6 +105,16 @@ export function roomEntry(s){
  if(s.nextLadder){s.nextLadder=false;if(room.v2?.kind==="LAIR")s.heroFirstAdv=true;else s.draw();}
  if(room.stage==="DEEP")fateStageEntry(s,"DEEP");
  if(room.stage==="FINAL")fateVaultEntry(s);
+ if(s.followingWisp&&(room.stage==="FINAL"||room.v2?.special?.corridor)){
+  const m=s.followingWisp;s.followingWisp=null;
+  if(s.monster)s.monsterQueue.unshift(m);
+  else{
+   s.monster=m;s.monsterHP=m.hp;s.banished=false;
+   s.elberethAttempts=0;s.elberethSkipResponse=false;
+   s.mustFightFollowingWisp=true;
+  }
+  s.metrics.monsterVisits[m.id]=(s.metrics.monsterVisits[m.id]||0)+1;
+ }
 }
 export function monsterEntry(s,monster){
  if(fateMonsterEntry(s,monster))return true;
