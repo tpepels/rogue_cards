@@ -67,13 +67,15 @@ test("combat has a separate player action and Monster response, then full reward
  assert.equal(session.phase,"parley");
  assert.deepEqual(sessionActions(session).map(a=>a.kind),["fight","parley"]);
  advance(session,a=>a.kind==="fight");
- assert.equal(session.phase,"combat");
+ assert.equal(session.phase,"combat-hero");
  let combatActs=0,responses=0;
- while(["combat","monster-response","reaction"].includes(
+ while(["combat-hero","combat","monster-response","reaction"].includes(
   observeSession(session).phase)&&combatActs<80){
   if(observeSession(session).phase==="reaction"){
    advance(session,a=>["continue","skip","keep"].includes(a.kind)||
     a.kind==="hero-mode");
+  }else if(session.phase==="combat-hero"){
+   advance(session,a=>a.kind==="choose-hero-turn");
   }else if(session.phase==="combat"){
    advance(session,a=>a.kind==="attack");combatActs++;
   }else{
@@ -101,6 +103,8 @@ test("Vault is a real paused SEAL versus Warden decision and has an actual endin
  assert.ok(sessionActions(session).some(a=>a.kind==="fight"));
  advance(session,a=>a.kind==="fight");
  assert.equal(s.monster.id,"warden");
+ assert.equal(session.phase,"combat-hero");
+ advance(session,a=>a.kind==="choose-hero-turn");
  assert.equal(session.phase,"combat");
  assert.ok(sessionActions(session).some(a=>a.kind==="attack"));
  assert.throws(()=>submitDecision(session,{phase:"vault",kind:"seal"}),/Illegal pending/);
