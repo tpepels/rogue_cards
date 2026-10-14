@@ -217,6 +217,23 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
   "The surviving Hero remains a real target after the response");
 });
 
+test("a pending Monster response cannot deadlock on a defeated active Hero",()=>{
+ const session=createDecisionSession({seed:1589946866,
+  heroes:["wizard","warrior"]});
+ const s=session.state;
+ s.beginRoom(room("d-last-bell"));
+ s.monster=monster("wraith");s.monsterHP=s.monster.hp;
+ s.heroes[0].hp=0;s.heroes[1].hp=17;
+ session.phase="monster-response";session.heroIndex=0;
+ const actions=sessionActions(session);
+ assert.deepEqual(actions,[{phase:"monster-response",
+  kind:"respond",heroIndex:1}]);
+ submitDecision(session,actions[0]);
+ if(session.pendingNested)finishNested(session);
+ assert.notEqual(session.phase,"monster-response");
+ assert.ok(s.heroes[1].hp>0);
+});
+
 test("Wizard can decline or choose an actual ability at the attack trigger",()=>{
  const session=createDecisionSession({seed:1844,heroes:["wizard"]});
  const s=session.state;
