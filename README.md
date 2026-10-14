@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**Complete 163-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
+[**Complete 163-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**Four-page rules and deck recipes**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
@@ -82,7 +82,7 @@ Hero starting HP ranges from 18 to 20; the Warden starts at 20 HP and
 keeps the same die when it changes phase at 10 HP. At 0 HP, remove the die.
 Use separate d20s for opposed combat and WIT rolls.
 
-The shared rules are explained in a [two-page printable guide](rules.html). Individual card text is authoritative when it overrides a shared rule. The print deck is self-contained; no online lookup or digital engine is required.
+The shared rules occupy the first two pages of the [four-page printable guide](rules.html); the final two pages contain recommended deck recipes and custom-building instructions. Individual card text is authoritative when it overrides a shared rule. The print deck is self-contained; no online lookup or digital engine is required.
 
 ## Source layout
 
@@ -96,7 +96,7 @@ The shared rules are explained in a [two-page printable guide](rules.html). Indi
 - `src/warden.js` — Amulet Vault and both Warden phases
 - `src/tabletop-view.js`, `styles/tabletop.css` — physical card layout
 - `src/tabletop-app.js`, `index.html` — one catalogue, filters and printing
-- `rules.html` — the one canonical rules sheet
+- `rules.html` — two pages of shared rules followed by two pages of physical deck recipes
 
 ## Visual card layout editor
 
