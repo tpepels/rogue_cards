@@ -546,8 +546,12 @@ const tables={
 const make=([id,stage,title,kind,art,prompt,a,ea,b,eb,label,mode])=>({
  id,stage,title,art,type:"room",copies:1,rule:prompt,flavor:"",v2:{kind,prompt,
  choices:[{label:a,effect:ea},{label:b,effect:eb}],
- roll:{label,die:"d6",outcomes:tables[mode].map(([range,effect])=>({range,effect}))},
- links:[],special:{mode,corridor:kind==="CORRIDOR",rollOps:tables[mode].map(x=>[x[2]])}}
+ // Gilded Hallway has two corridor routes, neither of which rolls d6.
+ // Do not print an unreachable third mechanism or register dead handlers.
+ roll:id==="d-gilded"?null:
+  {label,die:"d6",outcomes:tables[mode].map(([range,effect])=>({range,effect}))},
+ links:[],special:{mode,corridor:kind==="CORRIDOR",
+  rollOps:id==="d-gilded"?[]:tables[mode].map(x=>[x[2]])}}
 });
 export const SPECIAL_ROOM_CARDS=Object.freeze(rows.map(make));
 export const ROOM_REVISIONS=Object.freeze(SPECIAL_ROOM_CARDS.filter(c=>["m-fungus","m-bridge","m-well","m-clock"].includes(c.id)));
