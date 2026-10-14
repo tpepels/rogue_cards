@@ -66,7 +66,10 @@ test("search refuses to call a nonterminal continuation a lost expedition",()=>{
 
 test("fair search at a revealed corridor uses the actually visible Room IDs",()=>{
  const session=createDecisionSession({seed:1846,heroes:["warrior"]});
- session.state.beginRoom(ROOMS.find(r=>r.id==="u-fork"));
+ const deck=session.state.rooms.UPPER;
+ const index=deck.findIndex(r=>r.id==="u-fork");
+ assert.ok(index>=0);
+ session.state.beginRoom(deck.splice(index,1)[0]);
  session.phase="room";
  const choice=sessionActions(session).find(a=>a.index===0);
  const pending=submitDecision(session,choice);
