@@ -41,9 +41,10 @@ test("PARLEY is a genuine terminal choice search, not a threshold-only heuristic
 });
 test("Vault search branches actual SEAL versus the complete Warden fight",()=>{
  const s=build(713);
- for(const id of ["scroll-flame","scroll-frost","scroll-banish",
-  "scroll-lightning","scroll-mischief","scroll-last"]){
-  grant(s,id);
+ while(s.partyCount("MAGIC")<6){
+  const next=s.deck.find(c=>c.v2.tags.includes("MAGIC"));
+  assert.ok(next,"Insufficient physical MAGIC Items in test deck");
+  grant(s,next.id);
  }
  s.beginRoom(VAULT);
  const a=legalActions(s,{phase:"vault"}).map(x=>x.kind);
@@ -58,7 +59,10 @@ test("post-Warden search branches SMUGGLE and FIGHT from legal state",()=>{
  const s=build(714);
  s.keptRooms.push({card:ROOMS.find(r=>r.id==="d-gilded"),choice:1});
  s.beginRoom(VAULT);
- grant(s,"scroll-flame");
+ if(!s.discardable(1,"MAGIC")){
+  const next=s.deck.find(c=>c.v2.tags.includes("MAGIC"));
+  assert.ok(next);grant(s,next.id);
+ }
  assert.equal(s.vaultModifiers.smuggleAvailable,true);
  const actions=legalActions(s,{phase:"post-warden"}).map(x=>x.kind);
  assert.ok(actions.includes("fight")&&actions.includes("smuggle"));
