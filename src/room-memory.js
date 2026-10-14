@@ -1,6 +1,6 @@
 // Optional corridors and returning Rooms. Each effect is printed on its card.
 const rows=[
- ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep this Room as a spore culture. Discard during Monster behaviour to set it to 1–2; your next WIT in that fight has DIS. FIRE can cancel that response instead (discard 1 FIRE Item).","PICK","Roll d6 to harvest.","HARVEST","garden"],
+ ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep Room. Discard on Monster behaviour: make it 1–2; next WIT in fight DIS. Or discard Room and FIRE Item to cancel response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
  ["m-bridge","MIDDLE","Bridge of Whispering Rope","HAZARD","stairs","The ropes are whispering names.","CUT A STRAND","Keep this Room as rope. At a non-Warden Monster, discard it and 1 Item to escape without reward.","CROSS","Roll d6. Knotted Rope may SHIFT this result once.","CROSS","bridge"],
  [
   "m-well",
@@ -16,7 +16,7 @@ const rows=[
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep this Room. At Vault, discard 1 Item to TELEGRAPH Warden's first behaviour; refuse and it becomes 6. Then discard Room.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep Room. At Vault, discard 1 Item to TELEGRAPH Warden's first behaviour; otherwise it becomes 6. Discard Room.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
  ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one, return other to bottom.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
  ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face-down; randomly return 1 unseen to bottom. Reveal the other 2; enter one, return other to bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to change 1–2 to 3–4.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2 Items; keep this Room. At Vault, discard it and pay 1 Item or Warden's first behaviour is 6.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2; keep Room. At Vault, pay 1 Item or Warden's first behaviour is 6. Discard Room.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep this Room. At Vault, lose 2 HP and discard it to TELEGRAPH Warden's first behaviour; may force a reroll and accept new result.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep Room. At Vault, lose 2 HP and discard to TELEGRAPH Warden's first behaviour; may reroll once, taking new result.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
