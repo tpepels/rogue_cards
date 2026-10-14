@@ -341,7 +341,20 @@ export function monsterRespond(s,h){
  s.metrics.cardCounts[m.id]=(s.metrics.cardCounts[m.id]||0)+1;
  switch(m.id){
  case "rat":if(band===1)hit();else if(band===2)a.nextDis++;else if(band===3)hit({bonus:2});break;
- case "goblin":if(band===1)hit();else if(band===2){if(!s.discard())s.hurt(a,2);}else if(band===3)hit({adv:true});break;
+ case "goblin":
+  if(band===1)hit();
+  else if(band===2){
+   const stolen=s.discard();
+   if(!stolen)s.hurt(a,2);
+   else{
+    const i=s.discardPile.lastIndexOf(stolen);
+    if(i>=0)s.discardPile.splice(i,1);
+    s.consumed.delete(stolen);
+    s.stashedMonsterItems??=[];
+    s.stashedMonsterItems.push({monsterId:m.id,card:stolen});
+   }
+  }else if(band===3)hit({adv:true});
+  break;
  case "crawler":if(band===0)a.nextDis++;else if(band===1)hit();
   else if(band===2)hit({acid:true});else hit({bonus:2});break;
  case "bat":if(band===1)hit();else if(band===2)a.nextDis++;else if(band===3)hit({adv:true});break;
