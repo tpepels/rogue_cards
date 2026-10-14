@@ -201,10 +201,13 @@ export function executeItemOption(s,h,option){
  return used;
 }
 
-function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=false,drain=false}={}){
+function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
+ poison=false,acid=false}={}){
  if(h.hp<=0)return; s.setActor(h);
  let defenseAdv=h.nextDefenseAdv,hurtExtra=h.damageVulnerability;
+ const extraDefDis=h.nextDefenseDis||0,defPenalty=h.nextDefensePenalty||0;
  h.nextDefenseAdv=false;h.damageVulnerability=0;
+ h.nextDefenseDis=0;h.nextDefensePenalty=0;
  s.noteOptions(itemOptions(s,h,"before-defence"));
  const mirror=itemIn(s,h,"mirror");
  if(mirror&&!h.used.has(mirror)&&wantsItem(s,h,mirror,"before-defence")){
@@ -223,7 +226,8 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  const floodDis=s.room?.id==="m-flood"&&
   h.slots.armour?.v2.tags.includes("METAL")&&!s.has("rope")&&!h.used.has("flood-def");
  if(floodDis)h.used.add("flood-def");
- let def=s.rerollIfKept(h,rollD20(s,{adv:defenseAdv||blessing.adv,dis:floodDis}));
+ let def=s.rerollIfKept(h,rollD20(s,{
+  adv:defenseAdv||blessing.adv,dis:floodDis||extraDefDis>0}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
  let defenceBonus=blessing.bonus;
  const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
@@ -239,8 +243,19 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  }
  s.monsterAdv=false;s.monsterDis=false;
  if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
- const hit=atk===20||atk!==1&&atk+s.monster.atk+bonus>def+s.stats(h).def+defenceBonus+(h.nextDefenseBonus||0);
- if(!hit)return;
+ const hit=atk===20||atk!==1&&
+  atk+s.monster.atk+bonus>def+s.stats(h).def-defPenalty+
+   defenceBonus+(h.nextDefenseBonus||0);
+ if(!hit)return false;
+ if(acid){
+  const canDiscard=s.discardable(1,"METAL");
+  const mode=canDiscard?s.chooseEffect("crawler-acid-hit",
+   ["discard-metal","take-extra-damage"],"discard-metal"):
+   "take-extra-damage";
+  if(mode==="discard-metal")s.discard(1,{tag:"METAL"});
+  else damageBonus+=2;
+  if(s.room?.id==="m-flood")h.nextDefenseDis=(h.nextDefenseDis||0)+1;
+ }
  s.noteOptions(itemOptions(s,h,"after-hit"));
  let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra;
  s.pendingDamage=damage;
@@ -266,7 +281,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  }
  const done=s.hurt(h,s.pendingDamage);
  if(poison&&done>0&&!h.immune)h.poison=true;
- if(drain&&done>0)s.discard(1);
+ return done>0;
 }
 export function monsterRespond(s,h){
  if(s.elberethSkipResponse){s.elberethSkipResponse=false;return;}
