@@ -49,6 +49,9 @@ test("fair MCTS resamples unseen physical decks and is fully repeatable on a fix
  assert.deepEqual(a,b);
  assert.equal(a.completed,4);
  assert.equal(a.rootActionCount,2);
+ assert.equal(a.maxConsecutiveRolloutEquipmentActions,6);
+ assert.ok(Number.isInteger(a.rolloutEquipmentAdvances));
+ assert.ok(a.rolloutEquipmentAdvances>=0);
  assert.equal(session.state.deck.map(c=>c.id).join(","),before);
 });
 test("search refuses to call a nonterminal continuation a lost expedition",()=>{
