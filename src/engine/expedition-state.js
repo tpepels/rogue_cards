@@ -723,7 +723,7 @@ export class ExpeditionState {
   }
  }
  roomCheck(kind,dc,success,fail){
-  const h=this.chooseActor();this.actor=h;
+  const h=this.chooseRecipient("opposed-room-check:"+kind);this.actor=h;
   let wit=kind==="CHECK_WIT";
   const stat=wit?h.card.wit+this.witBonus:this.stats(h).atk;
   let dis=h.poison||h.nextDis>0||(wit&&h.slots.armour?.id==="mail");
@@ -757,14 +757,25 @@ export class ExpeditionState {
    d=this.pendingD20+this.pendingD20Modifier;
   }
   const wand=h.inventory.find(x=>x.id==="wand-undo"&&!this.exhausted.has(x));
-  if(wand&&d+stat+blessBonus<dc+11&&
+  if(wand&&(this._decisionHook||d+stat+blessBonus<dc+11)&&
      (!this._decisionHook||this._decisionHook({phase:"after-roll",
       heroIndex:this.heroes.indexOf(h),cardId:wand.id}).kind==="item-trigger")){
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,wand);
    d=this.pendingD20+this.pendingD20Modifier;
   }
   const monsterRoll=roll();
-  const ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
+  let ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
+  if(!ok){
+   const crown=h.inventory.find(x=>x.id==="crown-relic");
+   if(crown&&(!this._decisionHook||
+      this._decisionHook({phase:"failed-d20",
+       heroIndex:this.heroes.indexOf(h),cardId:crown.id}).kind==="item-trigger")){
+    this.directItem(h,crown,"rescue-failed-roll",()=>{
+     this.consume(h,crown);this.hurt(h,this.die());return true;
+    });
+    ok=true;
+   }
+  }
   this.witBonus=0;
   const code=ok?success:fail;
   if(code==="NONE")return;
