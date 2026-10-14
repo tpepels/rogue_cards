@@ -4,7 +4,7 @@ import {ROOMS,MONSTERS,OBJECTS} from "../src/tabletop-data.js";
 import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ROLL_EFFECTS} from "../src/effect-model.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
-import {legalActions} from "../src/engine/index.js";
+import {legalActions,observeGame} from "../src/engine/index.js";
 import {monsterRespond} from "../src/engine/combat.js";
 import {settleMonsterVictory} from "../src/engine/combat-outcomes.js";
 import {monsterEntry} from "../src/room-memory-engine.js";
@@ -94,4 +94,30 @@ test("WIT-only Potion and Oracle modifiers survive ATK checks and expire on the 
  s.roomCheck("CHECK_WIT",3,"NONE","NONE");
  assert.equal(s.witBonus,0);
  assert.equal(h.nextWitDis,0);
+});
+
+test("Ring of Echoes exposes both already-seen faces and accepts either, even the lower roll",()=>{
+ const s=game(896),echo=OBJECTS.find(x=>x.id==="ring-echo");
+ s.beginRoom(room("u-fountain"));
+ const originalDie=s.die.bind(s);
+ let desired="first",observed=0;
+ s.die=()=>6;
+ s._decisionHook=event=>{
+  assert.equal(event.phase,"effect-choice");
+  assert.equal(event.context,"echoes-choose-room-die");
+  assert.deepEqual(observeGame(s).observedRoomReroll,{
+   first:2,new:6,roomId:"u-fountain"
+  });
+  observed++;return {mode:desired};
+ };
+ s.pendingRoomFace=2;
+ s.apply("REROLL_ROOM",["BEST"],echo);
+ assert.equal(s.pendingRoomFace,2,"Player may keep the lower original");
+ assert.equal(observeGame(s).observedRoomReroll,null);
+ desired="new";
+ s.pendingRoomFace=2;
+ s.apply("REROLL_ROOM",["BEST"],echo);
+ assert.equal(s.pendingRoomFace,6);
+ assert.equal(observed,2);
+ delete s._decisionHook;s.die=originalDie;
 });
