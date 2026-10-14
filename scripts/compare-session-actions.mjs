@@ -12,7 +12,7 @@
  * A source Room not encountered naturally is reported, never fabricated.
  * This is conditional evidence for one state, not an all-card balance study.
  */
-import {existsSync,mkdirSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,writeFileSync,readFileSync,readdirSync,renameSync} from "node:fs";
 import {resolve,join} from "node:path";
 import {execFileSync} from "node:child_process";
 import {HEROES} from "../src/tabletop-data.js";
@@ -24,9 +24,13 @@ import {compareSessionActions} from "../src/session-counterfactual.js";
 const names=new Set(["--seed","--heroes","--target-room","--target-phase",
  "--trials","--navigate-budget","--future-budget","--knowledge",
  "--max-search-steps","--max-game-steps","--reference-index","--out"]);
-const values={};
+const values={};let resume=false;
 for(let i=2;i<process.argv.length;i++){
  const k=process.argv[i],v=process.argv[i+1];
+ if(k==="--resume"){
+  if(resume)throw Error("Duplicate --resume");
+  resume=true;continue;
+ }
  if(!names.has(k)||values[k]!==undefined||!v||v.startsWith("--"))
   throw Error("Unknown, duplicate or incomplete CLI option "+k);
  values[k]=v;i++;
@@ -54,7 +58,9 @@ if(heroes.length<1||heroes.length>2||new Set(heroes).size!==heroes.length||
 const targetPhase=values["--target-phase"]||"room";
 const targetRoom=values["--target-room"]||null;
 const out=resolve(values["--out"]||"results/session-contrast-"+seed);
-if(existsSync(out))
+if(resume&&!existsSync(out))
+ throw Error("Cannot resume missing output directory: "+out);
+if(!resume&&existsSync(out))
  throw Error("Output directory already exists, choose a new --out: "+out);
 const session=createDecisionSession({seed,heroes});
 let sourceStep=null;
@@ -83,14 +89,54 @@ console.error("Matched decision: "+JSON.stringify({
  roomId:session.state.room?.id,monsterId:session.state.monster?.id,
  choices:sessionActions(session).length,trials,knowledge
 }));
+const git=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{
+ encoding:"utf8"}).trim()}catch{return null}};
+const sourceCommit=git();
+if(!sourceCommit)throw Error("Git checkout required for reproducible resume");
+const design={schema:"canonical-paired-contrast-config-v1",
+ sourceCommit,seed,heroes,targetPhase,targetRoom,sourceStep,
+ sourceObservation:JSON.stringify(observeSession(session)),
+ trials,navigateBudget,futureBudget,knowledge,maxSearchSteps,
+ maxGameSteps,referenceIndex};
+const atomic=(file,value)=>{
+ const temp=file+".tmp-"+process.pid;
+ writeFileSync(temp,JSON.stringify(value,null,2)+"
+");
+ renameSync(temp,file);
+};
+if(!resume){
+ mkdirSync(join(out,"checkpoints"),{recursive:true});
+ atomic(join(out,"manifest.json"),design);
+}else{
+ const previous=JSON.parse(readFileSync(join(out,"manifest.json"),"utf8"));
+ if(JSON.stringify(previous)!==JSON.stringify(design))
+  throw Error("Cannot resume with changed source commit/state/options");
+}
+const completed=[];
+const saved=readdirSync(join(out,"checkpoints")).sort();
+for(const file of saved){
+ if(!/^d{6}.json$/.test(file))
+  throw Error("Unexpected checkpoint "+file);
+ const index=Number(file.slice(0,6));
+ if(index!==completed.length||index>=trials)
+  throw Error("Missing or out-of-order paired checkpoint at "+index);
+ const record=JSON.parse(readFileSync(join(out,"checkpoints",file),"utf8"));
+ if(record.index!==index)throw Error("Checkpoint index mismatch "+file);
+ completed.push(record.samples);
+}
+console.error("Resuming "+completed.length+"/"+trials+" complete matched seeds");
 const start=Date.now();
 const report=compareSessionActions(session,{
  seed:seed^0x27d4eb2f,trials,knowledge,futureBudget,
- maxSearchSteps,maxGameSteps,referenceIndex
+ maxSearchSteps,maxGameSteps,referenceIndex,
+ resumeTrials:completed,
+ onTrial:(index,samples)=>{
+  atomic(join(out,"checkpoints",String(index).padStart(6,"0")+".json"),
+   {index,samples});
+  if((index+1)%5===0||index+1===trials)
+   console.error("Paired trials: "+(index+1)+"/"+trials);
+ }
 });
-const git=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{
- encoding:"utf8"}).trim()}catch{return null}};
-mkdirSync(out,{recursive:true});
 const envelope={...report,
  provenance:{gitSha:git(),sourceSeed:seed,heroes,sourceStep,
   navigateBudget,elapsedSeconds:(Date.now()-start)/1000}};
