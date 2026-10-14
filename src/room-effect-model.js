@@ -41,7 +41,7 @@ export const ROOM_EFFECTS=Object.freeze({
  ["HURT:d6","DISCARD:1"],["NONE"],["DRAW:2"]]),
  "m-well":C(["COST:1","ROLL_ROOM_COST_REROLL"],["PEEK:1"],[
  ["MONSTER_DRAW"],["HEAL:d6"],["DRAW:2"],["DRAW:3"]]),
- "m-auction":C(["COST:1","ROLL_ROOM"],["COST:2","DOUBLE_BID"],[["PAY_ITEM_OR_HP:1:2"],["DRAW:2"],["DRAW:3"]]),
+ "m-auction":C(["PAY_ITEM_OR_HP:1:2","ROLL_ROOM"],["COST:2","DOUBLE_BID"],[["PAY_ITEM_OR_HP:1:2"],["DRAW:2"],["DRAW:3"]]),
  "m-clock":C(["ROLL_ROOM"],["CHECK_ATK:5:DRAW1_RECHARGE:HURTd6"],[
  ["HURT:d6"],["HEAL:d6"],["DRAW:1"],["NEXT_WIT:2"]]),
  "m-beetle":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:2"],[
