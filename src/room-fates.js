@@ -22,12 +22,12 @@ const rows=[
   [["TURN","Keep this Room. At Vault, roll OMEN twice and take the higher result; discard this Room."],
    ["BREAK","Keep sideways. Discard to reverse a Room d6 (1↔6, 2↔5, 3↔4). If kept until Vault, discard and use the lower of 2 OMEN rolls."]]],
  ["m-drowned-banner","MIDDLE","The Drowned Banner","altar","SHRINE","A lost army's colours drip black.",
-  [["RAISE","Lose 2 HP; keep Room. At Vault, discard and roll d6: 1–2 each Hero loses 1 HP; 3–4 Warden loses 3 HP; 5–6 Warden loses d6 HP, next DEF roll has DIS."],
+  [["RAISE","Lose 2 HP; keep Room. At Vault, discard and roll d6: 1–2 each Hero loses 1 HP; 3–4 Warden loses 3 HP; 5–6 Warden loses d6 HP; next DEF roll has DIS."],
    ["BURN","Draw 2 Items; keep this Room. At Vault discard it; Warden's first attack has ADV."]]],
  ["d-sleeping-crown","DEEP","The Sleeping Crown","bones","TREASURE","UNTHRONE: After Phase I, discard 1 MAGIC Item. Opposed d20+WIT vs d20+6: win the Amulet; fail, Warden's next attack has ADV.",
   [["WEAR","Keep this Room. Your first Vault attack has ADV; SEAL costs 1 extra MAGIC Item. With kept Crown of the Unking, unlock UNTHRONE."],
    ["BREAK","Discard 1 MAGIC Item. Keep this Room. At the Vault, SEAL costs 1 fewer MAGIC Item."]]],
- ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","If FREED, after Phase I BARGAIN: discard 2 Items; opposed d20+WIT vs d20+6. Win: Amulet. Lose: Warden's next attack has ADV.",
+ ["d-last-witness","DEEP","The Last Witness","ghost","ENCOUNTER","If FREED, after Phase I BARGAIN: discard 2 Items, then oppose d20+WIT vs d20+6. Win: Amulet. Lose: Warden's next attack has ADV.",
   [["FREE","Lose 2 HP; keep this Room. At Vault, increase or decrease OMEN by 1 (within 1–6). After Phase I, discard this Room to attempt BARGAIN above."],
    ["SILENCE","Draw 2 Items; keep this Room. At Vault, discard it and lose 2 HP. Witness stays trapped."]]]
 ];
