@@ -331,3 +331,32 @@ test("actual between-Room equipment can be unequipped and exchanged without crea
  submitDecision(session,equip);
  assert.ok(s.equipped(s.heroes[1],"sword"));
 });
+
+test("saved corridor path is an observed, searchable choice before the next Room",()=>{
+ for(const mode of ["drawn","saved"]){
+  const session=createDecisionSession({seed:31229,heroes:["warrior"]});
+  const s=session.state,pile=s.rooms.UPPER;
+  const index=pile.findIndex(card=>card.id==="u-gate");
+  assert.ok(index>=0);
+  const [saved]=pile.splice(index,1);
+  const drawn=pile[0];
+  s.savedPath=saved;s.savedPathGrace=0;
+  const before=s.rng.snapshot();
+  const pending=submitDecision(session,sessionActions(session)[0]);
+  assert.equal(pending.phase,"reaction");
+  assert.equal(pending.trigger.phase,"effect-choice");
+  assert.equal(pending.trigger.context,"saved-corridor-exit");
+  assert.deepEqual(pending.game.offeredSavedPath,{
+   drawn:drawn.id,saved:saved.id,stage:"UPPER"
+  });
+  assert.deepEqual(pending.actions.map(a=>a.mode),["drawn","saved"]);
+  assert.equal(s.rng.snapshot(),before,
+   "A suspended Room choice must not consume real dice");
+  submitDecision(session,pending.actions.find(a=>a.mode===mode));
+  assert.equal(s.room.id,mode==="saved"?saved.id:drawn.id);
+  const deferred=mode==="saved"?drawn:saved;
+  assert.ok(s.rooms.UPPER.includes(deferred));
+  assert.equal(s.savedPath,null);
+  assert.equal(s._pendingRoomSwap,undefined);
+ }
+});
