@@ -10,11 +10,24 @@ const rollD20=(s,{adv=false,dis=false}={})=>{
  const a=s.die(20);return adv&&!dis?Math.max(a,s.die(20)):
   dis&&!adv?Math.min(a,s.die(20)):a;
 };
+const promptedHeroMode=(s,h,context)=>{
+ if(!s._decisionHook)return s.heroMode(h);
+ const action=s._decisionHook({phase:"hero-trigger",
+  heroIndex:s.heroes.indexOf(h),heroId:h.card.id,context});
+ return action.kind==="skip"?null:action.mode;
+};
+const wantsItem=(s,h,card,phase)=>{
+ if(!s._decisionHook)return true;
+ return s._decisionHook({phase,heroIndex:s.heroes.indexOf(h),
+  cardId:card.id,monsterId:s.monster?.id}).kind==="item-trigger";
+};
 export function blessBeforeD20(s,target){
  const priest=s.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
  if(!priest)return {bonus:0,adv:false};
+ const mode=promptedHeroMode(s,priest,"before-d20");
+ if(mode===null)return {bonus:0,adv:false};
  priest.used.add("hero");
- if(s.heroMode(priest)==="steady"&&priest.hp>1){
+ if(mode==="steady"&&priest.hp>1){
   s.hurt(priest,1);return {bonus:2,adv:false};
  }
  const d=s.die();
@@ -29,8 +42,10 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const blessing=blessBeforeD20(s,h);extraAtk+=blessing.bonus;
  let rogueAdv=false,rogueDis=false;
  if(h.card.id==="rogue"&&!h.used.has("hero")){
-  h.used.add("hero");
-  if(s.heroMode(h)==="steady"&&s.discardable()){
+  const mode=promptedHeroMode(s,h,"before-attack-d20");
+  if(mode!==null){
+   h.used.add("hero");
+  if(mode==="steady"&&s.discardable()){
    s.discard();rogueAdv=true;
   }else{const d=s.die();
    if(d<=2)rogueDis=true;else rogueAdv=true;
@@ -38,6 +53,7 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
     const r=rollD20(s,{adv:true}),op=s.die(20);
     if(r===20||r!==1&&r+h.card.wit>op+def)s.draw();
    }
+  }
   }
  }
  const adv=attackAdv||rogueAdv||h.nextAdv>0||blessing.adv;
@@ -47,10 +63,12 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  s.noteOptions(itemOptions(s,h,"after-roll"));
  s.pendingD20Modifier=0;
  const ring=h.slots.ring;
- if(ring?.id==="ring-luck"&&!h.used.has(ring)){s.activate(h,ring);}
+ if(ring?.id==="ring-luck"&&!h.used.has(ring)&&
+    wantsItem(s,h,ring,"after-roll"))s.activate(h,ring);
  const wand=itemIn(s,h,"wand-undo");
  if(wand&&!s.exhausted.has(wand)&&s.pendingD20!==20&&
-  (s.pendingD20+bonus+extraAtk<10+def||s.strategy==="magic"))s.activate(h,wand);
+  (s.pendingD20+bonus+extraAtk<10+def||s.strategy==="magic")&&
+  wantsItem(s,h,wand,"after-roll"))s.activate(h,wand);
  const natural=s.pendingD20;const modified=natural+s.pendingD20Modifier;
  const defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv});
  h.nextDefenseAdv=false;
@@ -58,7 +76,8 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  if(!hit){
   s.noteOptions(itemOptions(s,h,"failed-d20"));
   const crown=itemIn(s,h,"crown-relic");
-  if(crown&&s.monster&&(s.monster.stage==="FINAL"||h.hp<h.card.hp*.3)){
+  if(crown&&s.monster&&(s.monster.stage==="FINAL"||h.hp<h.card.hp*.3)&&
+   wantsItem(s,h,crown,"failed-d20")){
    s.directItem(h,crown,"rescue-failed-roll",()=>{
      s.consume(h,crown);s.hurt(h,s.die());return true;});
     hit=true;return {hit,critical:true};
@@ -70,16 +89,20 @@ export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
   (s.strategy==="magic"||s.monsterHP>=8)){
+  const mode=promptedHeroMode(s,h,"attack");
+  if(mode!==null){
   h.used.add("hero");
-  if(s.heroMode(h)==="steady"){s.monsterHP-=2;return;}
+  if(mode==="steady"){s.monsterHP-=2;return;}
   const d=s.die();
   if(d<=2)s.hurt(h,Math.ceil(s.die()/2));else if(d<=4)s.monsterHP-=s.die()+2;
   else{s.monsterHP-=s.die()+s.die();s.monsterSkip++;}
   return;
+  }
  }
  const ring=h.slots.ring;
  s.noteOptions(itemOptions(s,h,"on-attack"));
- if(ring?.id==="ring-ashes"&&!h.used.has(ring))s.activate(h,ring);
+ if(ring?.id==="ring-ashes"&&!h.used.has(ring)&&
+    wantsItem(s,h,ring,"on-attack"))s.activate(h,ring);
  const stat=s.stats(h);
  if(h.slots.weapon){
   const bonus={sword:2,staff:1,"cursed-blade":4}[h.slots.weapon.id]||0;
@@ -93,15 +116,19 @@ export function playerAttack(s,h){
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
  if(h.card.id==="warrior"&&!h.used.has("hero")){
+  const mode=promptedHeroMode(s,h,"after-hit");
+  if(mode!==null){
   h.used.add("hero");
-  if(s.heroMode(h)==="steady"&&h.hp>1){s.hurt(h,1);dmg+=2;}
+  if(mode==="steady"&&h.hp>1){s.hurt(h,1);dmg+=2;}
   else{const d=s.die();
    if(d<=2)s.hurt(h,2);else if(d<=4)dmg+=2;else dmg+=s.die();
+  }
   }
  }
  for(const card of [h.slots.weapon,h.slots.companion]){
   if(card&&["sword","dog"].includes(card.id)&&!h.used.has(card)){
    // Their printed roll adds damage to the current hit (not a future hit).
+   if(!wantsItem(s,h,card,"on-hit"))continue;
    const before=h.nextDamage; s.activate(h,card);
    dmg+=h.nextDamage-before;h.nextDamage=before;
   }
@@ -172,7 +199,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  h.nextDefenseAdv=false;h.damageVulnerability=0;
  s.noteOptions(itemOptions(s,h,"before-defence"));
  const mirror=itemIn(s,h,"mirror");
- if(mirror&&!h.used.has(mirror)){
+ if(mirror&&!h.used.has(mirror)&&wantsItem(s,h,mirror,"before-defence")){
   // Printed trigger: before opposed defence. Reflection cancels the pending hit.
   s.pendingDamage=0;s.pendingReflect=false;s.activate(h,mirror);
   if(s.pendingReflect){s.pendingReflect=false;return;}
@@ -190,11 +217,12 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  let defenceBonus=blessing.bonus;
  const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
  const undo=itemIn(s,h,"wand-undo");
- if(lucky&&!h.used.has(lucky)){
+ if(lucky&&!h.used.has(lucky)&&wantsItem(s,h,lucky,"after-roll")){
   s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,lucky);
   def=s.pendingD20+s.pendingD20Modifier;
  }
- if(undo&&!s.exhausted.has(undo)&&def<13){
+ if(undo&&!s.exhausted.has(undo)&&def<13&&
+    wantsItem(s,h,undo,"after-roll")){
   s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,undo);
   def=s.pendingD20+s.pendingD20Modifier;
  }
@@ -205,12 +233,15 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
  s.noteOptions(itemOptions(s,h,"after-hit"));
  let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra;
  s.pendingDamage=damage;
- if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour))
+ if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour)&&
+    wantsItem(s,h,h.slots.armour,"after-hit"))
   s.activate(h,h.slots.armour);
  const knight=s.pendingDamage>0?s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero")):null;
  if(knight){
+  const mode=promptedHeroMode(s,knight,"after-hit");
+  if(mode!==null){
   knight.used.add("hero");
-  if(s.heroMode(knight)==="steady"&&knight.hp>1){
+  if(mode==="steady"&&knight.hp>1){
    s.hurt(knight,1);s.pendingDamage=Math.max(0,s.pendingDamage-3);
   }else{const d=s.die();
   if(d<=2){
@@ -219,6 +250,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,poison=fal
   } else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
   else if(d===5)s.pendingDamage=0;
   else{s.pendingDamage=0;s.forcedBehavior=1;}
+  }
   }
  }
  const done=s.hurt(h,s.pendingDamage);
@@ -246,14 +278,17 @@ export function monsterRespond(s,h){
  // STILLNESS on the first harmless result. Preserve the gamble: 1-2 hurts.
  const dangerous=face>=3||m.id==="warden-fury";
  if(monk&&dangerous){
+  const mode=promptedHeroMode(s,monk,"revealed-monster-behavior");
+  if(mode!==null){
   monk.used.add("hero");
-  if(s.heroMode(monk)==="steady"&&face>=5&&monk.hp>2){
+  if(mode==="steady"&&face>=5&&monk.hp>2){
    s.hurt(monk,2);face=4;
   }else{const d=s.die();
   if(d<=2)s.hurt(monk,2);
   else if(d<=4&&face>=5)face=4;
   else if(d===5){face=1;s.heal(monk,2);}
   else if(d===6){s.heal(monk,2);return;}
+  }
   }
  }
  const band=face<=2?0:face<=4?1:face===5?2:3;
@@ -296,7 +331,8 @@ export function monsterRespond(s,h){
  if(a.poison&&a.hp>0){
   s.noteOptions(itemOptions(s,a,"on-poison"));
   for(const card of [a.slots.companion,a.slots.ring]){
-   if(card&&["moth","ring-spores"].includes(card.id)&&!a.used.has(card))s.activate(a,card);
+   if(card&&["moth","ring-spores"].includes(card.id)&&
+    !a.used.has(card)&&wantsItem(s,a,card,"on-poison"))s.activate(a,card);
   }
  }
 }
