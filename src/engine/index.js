@@ -322,7 +322,8 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
    "m-hungry-door":["pay","roll"],"m-fungus":["heal","save","burn"],
    "u-hollow-knight":["escape","save"],
    "m-ferryman-oath":["recover","smuggle"],
-   "m-wax-bridge":["use","save"],"u-puppet":["use","save"]
+   "m-bridge":["use","save"],"m-wax-bridge":["use","save"],
+   "u-puppet":["use","save"]
   };
   let modes=alternatives[roomId]||[];
   if(roomId==="m-fungus"&&!s.discardable(1,"FIRE"))
