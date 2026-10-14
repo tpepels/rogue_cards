@@ -1974,11 +1974,18 @@
         "zIndex": 30
       },
       "rules": {
-        "x": 52.4,
-        "y": 92,
-        "w": 35,
+        "x": 49.4,
+        "y": 79.2,
+        "w": 38,
         "rotation": 4.64,
         "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 102,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
       }
     },
     "item:rope": {
@@ -1990,11 +1997,18 @@
         "zIndex": 30
       },
       "rules": {
-        "x": 52.4,
-        "y": 92,
-        "w": 35,
+        "x": 49.4,
+        "y": 79.2,
+        "w": 38,
         "rotation": 2.48,
         "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 102,
+        "w": 83,
+        "rotation": 1.4,
+        "zIndex": 21
       }
     },
     "item:torch": {

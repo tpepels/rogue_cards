@@ -629,15 +629,26 @@
  z-index:30;
 }
 .tt-card.tt-paper-collage[data-type="item"][data-id="key"] .tt-collage > .tt-content .tt-slip--lead{
- left:52.4mm;
+ left:49.4mm;
  right:auto;
- top:92mm;
+ top:79.2mm;
  bottom:auto;
- width:35mm;
+ width:38mm;
  max-width:none;
  transform:rotate(4.64deg);
  transform-origin:50% 50%;
  z-index:31;
+}
+.tt-card.tt-paper-collage[data-type="item"][data-id="key"] .tt-collage > .tt-content .tt-slip--results{
+ left:3mm;
+ right:auto;
+ top:102mm;
+ bottom:auto;
+ width:83mm;
+ max-width:none;
+ transform:rotate(-1.9deg);
+ transform-origin:50% 50%;
+ z-index:21;
 }
 .tt-card.tt-paper-collage[data-type="item"][data-id="lantern-heart"] .tt-collage{z-index:auto;isolation:auto}
 .tt-card.tt-paper-collage[data-type="item"][data-id="lantern-heart"] .tt-collage > .tt-content{z-index:auto;isolation:auto}
@@ -1150,15 +1161,26 @@
  z-index:30;
 }
 .tt-card.tt-paper-collage[data-type="item"][data-id="rope"] .tt-collage > .tt-content .tt-slip--lead{
- left:52.4mm;
+ left:49.4mm;
  right:auto;
- top:92mm;
+ top:79.2mm;
  bottom:auto;
- width:35mm;
+ width:38mm;
  max-width:none;
  transform:rotate(2.48deg);
  transform-origin:50% 50%;
  z-index:31;
+}
+.tt-card.tt-paper-collage[data-type="item"][data-id="rope"] .tt-collage > .tt-content .tt-slip--results{
+ left:3mm;
+ right:auto;
+ top:102mm;
+ bottom:auto;
+ width:83mm;
+ max-width:none;
+ transform:rotate(1.4deg);
+ transform-origin:50% 50%;
+ z-index:21;
 }
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-banish"] .tt-collage{z-index:auto;isolation:auto}
 .tt-card.tt-paper-collage[data-type="item"][data-id="scroll-banish"] .tt-collage > .tt-content{z-index:auto;isolation:auto}
