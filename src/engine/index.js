@@ -203,3 +203,136 @@ export function createGame(options={}){
     " (experiment policies belong in expedition-campaign.js)");
  return new ExpeditionState(options);
 }
+
+
+/**
+ * One read-only legal-action surface for *all currently representable*
+ * player timing windows. Callers must supply the phase explicitly when a
+ * reaction or a retained-Room trigger is being resolved. This API never
+ * guesses that an inactive trigger is legal.
+ *
+ * Every returned action has a stable kind, phase and identifying attributes.
+ * Research search and future UI consume the same actions; no heuristic
+ * weights or hidden deck ordering may affect their legality.
+ */
+export function legalActions(s,{phase=null,heroIndex=0,roomId=null}={}){
+ if(!phase)phase=s.monster?"combat":s.room?.stage==="FINAL"?"vault":
+  s.room?"room":"between-rooms";
+ if(phase==="room")return legalRoomChoices(s)
+  .map(index=>({phase,kind:"room-choice",index,roomId:s.room.id}));
+ if(phase==="combat")return legalCombatActions(s,heroIndex)
+  .map(a=>({...a,phase}));
+ if(phase==="parley"){
+  if(!s.monster||s.monster.stage==="FINAL"||!s.alive())return [];
+  const m=s.monster.id;
+  const needs={"rat":1,"goblin":2,"troll":2,"eye":1,"rust":1,"sentinel":2};
+  const tag=["rust","sentinel"].includes(m)?"METAL":null;
+  const canPay=m in needs?s.discardable(needs[m],tag):
+   ["crawler","mold"].includes(m)?s.heroes.some(h=>
+    h.hp>0&&h.inventory.some(c=>c.v2.kind==="POTION")):
+   ["wraith","cultist"].includes(m)?s.anyEquippedTag("CURSED"):
+   ["bat","wisp"].includes(m);
+  return [{phase,kind:"fight"},...(canPay?[{phase,kind:"parley"}]:[])];
+ }
+ if(phase==="vault"){
+  if(s.room?.stage!=="FINAL"||!s.alive())return [];
+  const options=[{phase,kind:"fight"}];
+  if(s.discardable(sealCost(s),"MAGIC"))options.push({phase,kind:"seal"});
+  return options;
+ }
+ if(phase==="post-warden"){
+  if(s.room?.stage!=="FINAL"||!s.alive())return [];
+  const v=s.vaultModifiers||{},options=[{phase,kind:"fight"}];
+  if(v.smuggleAvailable&&s.discardable(2)&&s.discardable(1,"MAGIC"))
+   options.push({phase,kind:"smuggle"});
+  if(v.bargainAvailable&&s.discardable(2))
+   options.push({phase,kind:"bargain"});
+  if(v.unthroneAvailable&&s.discardable(1,"MAGIC"))
+   options.push({phase,kind:"unthrone"});
+  if(v.smuggleAvailable&&s.discardable())
+   options.push({phase,kind:"escape"});
+  return options;
+ }
+ if(phase==="hero-ability"){
+  const h=s.heroes[heroIndex];
+  if(!h||h.hp<=0||h.used.has("hero"))return [];
+  return ["steady","risk"].map(mode=>({phase,kind:"hero-mode",heroIndex,mode}));
+ }
+ if(phase==="retained"){
+  const kept=s.keptRooms.find(k=>k.card.id===roomId);
+  if(!kept)return [];
+  const alternatives={
+   "m-well":["leave","roll"],"m-clock":["pay","roll"],
+   "m-hungry-door":["pay","roll"],"m-fungus":["heal","save","burn"],
+   "u-hollow-knight":["escape","save"],
+   "m-ferryman-oath":["recover","smuggle"],
+   "m-wax-bridge":["use","save"],"u-puppet":["use","save"]
+  };
+  let modes=alternatives[roomId]||[];
+  if(roomId==="m-fungus"&&!s.discardable(1,"FIRE"))
+   modes=modes.filter(x=>x!=="burn");
+  if(roomId==="m-ferryman-oath"&&kept.choice!==0)
+   modes=[];
+  if(["m-clock","m-hungry-door"].includes(roomId)&&!s.discardable())
+   modes=modes.filter(x=>x!=="pay");
+  return modes.map(mode=>({phase,kind:"return",roomId,mode}));
+ }
+ if(phase==="equipment"){
+  const h=s.heroes[heroIndex];
+  if(!h||h.hp<=0||s.monster)return [];
+  return h.inventory.flatMap((card,index)=>{
+   const slot=card.v2.tags.includes("WEAPON")?"weapon":
+    card.v2.tags.includes("ARMOUR")?"armour":
+    card.v2.kind==="RING"?"ring":
+    card.v2.kind==="COMPANION"?"companion":null;
+   if(!slot||h.slots[slot]===card||s.cursed(h.slots[slot]))return [];
+   return [{phase,kind:"equip",heroIndex,index,cardId:card.id,slot}];
+  });
+ }
+ const itemPhases=new Set(["explore","between-rooms","room-choice",
+  "after-roll","failed-d20","before-defence","after-hit",
+  "on-attack","on-hit","on-poison","after-magic","room-roll"]);
+ if(itemPhases.has(phase)){
+  const h=s.heroes[heroIndex];
+  if(!h||h.hp<=0)return [];
+  return [{phase,kind:"continue"},...itemOptions(s,h,phase)
+   .map((o,index)=>({phase,kind:"item-trigger",heroIndex,
+    index,cardId:o.card.id,mode:o.mode}))];
+ }
+ throw Error("Unknown decision phase "+phase);
+}
+/**
+ * Apply already-legal atomic decisions; multi-step Vault/PARLEY/Warden
+ * resolution remains owned by the expedition phase controller. The explicit
+ * refusal to apply those actions here is preferable to simulating a
+ * different rule path. Researchers use full-effect campaign continuations.
+ */
+export function applyAction(s,action){
+ if(!action||typeof action!=="object"||typeof action.phase!=="string")
+  throw Error("Action requires a phase");
+ const legal=legalActions(s,{phase:action.phase,
+  heroIndex:action.heroIndex??0,roomId:action.roomId??null});
+ const selected=legal.find(candidate=>
+  Object.keys(candidate).every(key=>candidate[key]===action[key]));
+ if(!selected)throw Error("Illegal action "+JSON.stringify(action));
+ if(action.phase==="room")return chooseRoom(s,action.index);
+ if(action.phase==="combat")return takeCombatAction(s,selected);
+ if(action.kind==="hero-mode")return setHeroAbilityMode(
+  s,s.heroes[action.heroIndex].card.id,action.mode);
+ if(action.kind==="return"){
+  // Store the chosen branch until the canonical retained-Room handler
+  // resolves its existing printed trigger, not a fabricated new effect.
+  s.returnChoices[action.roomId]=action.mode;return observeGame(s);
+ }
+ if(action.kind==="equip"){
+  const h=s.heroes[action.heroIndex],c=h.inventory[action.index];
+  h.slots[action.slot]=c;return observeGame(s);
+ }
+ if(action.kind==="item-trigger"){
+  const h=s.heroes[action.heroIndex],o=itemOptions(s,h,action.phase)[action.index];
+  if(!s.activate(h,o.card,{mode:o.mode}))throw Error("Item activation failed");
+  return observeGame(s);
+ }
+ if(action.kind==="continue")return observeGame(s);
+ throw Error("Multi-stage "+action.phase+" requires a campaign continuation; no substitute rules");
+}
