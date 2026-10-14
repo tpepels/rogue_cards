@@ -17,6 +17,7 @@ import {ROOMS,OBJECTS,MONSTERS,WARDEN,WARDEN_FURY,VAULT,HEROES}
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {monsterRespond} from "../src/engine/combat.js";
 import {d6Band} from "../src/engine/dice-bands.js";
+import {legalActions,applyAction} from "../src/engine/index.js";
 import {forkGameState} from "../src/engine/fork-state.js";
 import {createDecisionSession,sessionActions,submitDecision,observeSession}
  from "../src/engine/decision-session.js";
@@ -40,7 +41,7 @@ const stages=["UPPER","MIDDLE","DEEP"];
 const parties=[...HEROES.map(h=>[h.id]),
  ...HEROES.flatMap((h,i)=>HEROES.slice(i+1).map(g=>[h.id,g.id]))];
 const failures=[],missing=[],observed=new Set(),checked=new Set();
-const counts={roomFaces:0,itemFaces:0,monsterBands:0,
+const counts={roomChoices:0,roomFaces:0,itemFaces:0,monsterBands:0,
  legalActionsForked:0,gameSteps:0,terminalExpeditions:0};
 const logFailure=(kind,recipe,error)=>failures.push({
  kind,recipe,message:String(error?.message||error),
@@ -66,6 +67,42 @@ const validateState=(session)=>{
     !s.metrics.escaped&&!s.metrics.roundLimit)
   throw Error("Terminal expedition has no printed ending");
 };
+// Test both printed Room branches with the public legalActions/applyAction
+// boundary. For actions requiring contextual prerequisites, report a gap
+// rather than silently creating illegal inventory or claiming execution.
+for(const card of ROOMS)for(const index of [0,1]){
+ const key="room-choice:"+card.id+":"+index;
+ let succeeded=false,illegalReason=null;
+ for(let variant=0;variant<3&&!succeeded;variant++){
+  const trialSeed=(seed+300000+ROOMS.indexOf(card)*6+index*3+variant)>>>0;
+  try{
+   const state=new ExpeditionState({seed:trialSeed,
+    heroes:variant===0?["warrior","wizard"]:
+     variant===1?["witch","priest"]:["thief","wizard"]});
+   // Legal physical acquisition in a preparatory state: do not
+   // conjure cards from outside the existing Item deck.
+   for(let j=0;j<Math.min(variant*5,state.deck.length);j++){
+    const copy=state.deck.pop();
+    state.noteDeckRemoval(copy);state.add(state.heroes[j%2],copy);
+   }
+   state.beginRoom(card);
+   const choice=legalActions(state,{phase:"room"}).find(
+    a=>a.kind==="room-choice"&&a.index===index);
+   if(!choice){illegalReason="printed choice not legal in fixture";continue;}
+   applyAction(state,choice);
+   if(state.metrics.roomChoices[key.slice("room-choice:".length)]!==1)
+    throw Error("Canonical Room choice did not record execution");
+   counts.roomChoices++;checked.add(key);succeeded=true;
+  }catch(e){
+   // A legal choice that throws when executed is a genuine blocker.
+   logFailure("room-choice",{cardId:card.id,index,variant,trialSeed},e);
+   break;
+  }
+ }
+ if(!succeeded)missing.push({kind:"room-choice",cardId:card.id,index,
+  reason:illegalReason||"handler failed"});
+}
+
 // Actual production Room roll (not enact(table[band]) approximations).
 let serial=0;
 for(const card of [...ROOMS,VAULT]){
@@ -191,7 +228,8 @@ for(let run=0;run<runs;run++){
 }
 const commit=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{
  encoding:"utf8"}).trim()}catch{return null}};
-const expected={roomFaces:[...ROOMS,VAULT].filter(c=>c.v2.roll).length*6,
+const expected={roomChoices:ROOMS.length*2,
+ roomFaces:[...ROOMS,VAULT].filter(c=>c.v2.roll).length*6,
  itemFaces:OBJECTS.filter(c=>c.v2.roll).length*6,
  monsterBands:(MONSTERS.length+2)*4};
 const completeFaceCoverage=Object.keys(expected).every(
@@ -203,10 +241,10 @@ const result={schema:"rogue-cards-canonical-action-audit-v1",
  legalActionSignaturesSeen:observed.size,
  legalActionSignaturesVerified:counts.legalActionsForked,
  pass:failures.length===0&&completeFaceCoverage&&
-  runs===counts.terminalExpeditions,
+  runs===counts.terminalExpeditions&&missing.length===0,
  // A finite seed audit cannot mathematically prove all reachable states.
  exhaustiveStateSpaceProof:false,
- failures,limitations:[
+ failures,missing,limitations:[
   "Print-face dispatcher sweep uses valid manufactured card contexts",
   "Stateful combinations across all cards remain combinatorial",
   "Seeded legal-action fuzzer is for correctness, not balance",
@@ -223,7 +261,8 @@ writeFileSync(join(out,"summary.md"),[
  ...Object.keys(expected).map(k=>"- "+k+": "+counts[k]+"/"+expected[k]),
  "- Legal transitions fork-tested: "+counts.legalActionsForked,
  "- Full seeded expeditions: "+counts.terminalExpeditions+"/"+runs,
- "- Failures: "+failures.length,"",
+ "- Failures: "+failures.length,
+ "- Untested contextual branches: "+missing.length,"",
  "Each failure has a seed, action/face, and reproduction trace.",
  "No win rates from this fuzzer are valid balance results."
 ].join("\n")+"\n");
