@@ -35,7 +35,11 @@ export function applyWardenChoice(s,kind){
   s.monster=null;return {complete:true,won:!!s.metrics.won};
  }
  if(kind==="bargain"||kind==="unthrone"){
-  const h=[...s.living()].sort((a,b)=>b.card.wit-a.card.wit)[0];
+  const candidates=s.heroes.map((h,i)=>({h,i})).filter(x=>x.h.hp>0);
+  const best=[...candidates].sort((a,b)=>b.h.card.wit-a.h.card.wit)[0];
+  const choice=s.chooseEffect("warden-negotiator:"+kind,
+   candidates.map(x=>String(x.i)),String(best.i));
+  const h=s.heroes[Number(choice)];
   const amount=kind==="bargain"?2:1;
   s.discard(amount,{tag:kind==="unthrone"?"MAGIC":null});
   const a=s.die(20),b=s.die(20);
