@@ -14,6 +14,7 @@ import {rolloutRoomContinuation,rolloutCombatContinuation}
  from "./expedition-campaign.js";
 import {planRoom,planCombat} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
+import {legalActions} from "./engine/index.js";
 
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
 const mix=x=>{let v=(x+0x9e3779b9)>>>0;
@@ -104,8 +105,11 @@ function summarize(values){
  return {mean,sd:Math.sqrt(variance),samples:n};
 }
 export function pairedRoomRollouts(s,legal){
- const choices=[0,1].filter(i=>legal[i]);
+ const canonical=legalActions(s,{phase:"room"}).map(a=>a.index);
+ const choices=[0,1].filter(i=>legal[i]&&canonical.includes(i));
  if(!choices.length)throw Error("No legal Room option");
+ if(canonical.some(i=>!legal[i])||[0,1].some(i=>legal[i]&&!canonical.includes(i)))
+  throw Error("Canonical Room legality disagrees with expedition runner: "+s.room.id);
  if(choices.length===1)return {choice:choices[0],scores:
   [legal[0]?0:-Infinity,legal[1]?0:-Infinity],samples:0};
  const n=s.agentConfig.budget;
@@ -134,13 +138,14 @@ export function pairedRoomRollouts(s,legal){
   knowledge:s.agentConfig.knowledge};
 }
 export function pairedCombatRollouts(s,h){
- const eligible=itemOptions(s,h,"combat");
- if(!eligible.length)return planCombat(s,h);
- const actions=[{action:"attack"},...eligible.map((_,i)=>({
-  action:"item",itemIndex:i
- }))];
- const n=s.agentConfig.budget;
  const index=s.heroes.indexOf(h);
+ const legal=legalActions(s,{phase:"combat",heroIndex:index});
+ const eligible=itemOptions(s,h,"combat");
+ const actions=legal.map(a=>a.kind==="item"?
+  {action:"item",itemIndex:a.optionIndex}:a.kind==="elbereth"?
+  {action:"elbereth",mode:a.mode}:{action:"attack"});
+ if(actions.length<2)return planCombat(s,h);
+ const n=s.agentConfig.budget;
  if(index<0)throw Error("Unknown acting Hero");
  const origin=snapshot(s),values=actions.map(()=>[]);
  const blueprint=prepareRolloutDecks(s,s.agentConfig.knowledge);
@@ -164,15 +169,21 @@ export function pairedCombatRollouts(s,h){
  let best=0;
  for(let i=1;i<actions.length;i++)
   if(means[i]>means[best]+1e-9)best=i;
- const baselineIndex=prior.action==="item"?eligible.findIndex(o=>
-  o.card===prior.card&&o.mode===prior.mode)+1:0;
+ const baselineIndex=prior.action==="item"?actions.findIndex(a=>
+  a.action==="item"&&eligible[a.itemIndex]?.card===prior.card&&
+  eligible[a.itemIndex]?.mode===prior.mode):0;
  if(baselineIndex>=0&&Math.abs(means[baselineIndex]-means[best])<1e-6)
   best=baselineIndex;
- if(best===0)return {action:"attack",score:means[0],
-  attackScore:means[0],options:eligible.length,legal:eligible,
+ if(actions[best].action==="attack")return {action:"attack",score:means[best],
+  attackScore:means[0],options:actions.length,legal:eligible,
   reason:"full_effect_combat_rollout",samples:n};
- return {action:"item",card:eligible[best-1].card,
-  mode:eligible[best-1].mode,score:means[best],attackScore:means[0],
-  options:eligible.length,legal:eligible,
+ if(actions[best].action==="elbereth")return {action:"elbereth",
+  mode:actions[best].mode,score:means[best],attackScore:means[0],
+  options:actions.length,legal:eligible,
+  reason:"full_effect_combat_rollout",samples:n};
+ const picked=eligible[actions[best].itemIndex];
+ return {action:"item",card:picked.card,mode:picked.mode,
+  score:means[best],attackScore:means[0],
+  options:actions.length,legal:eligible,
   reason:"full_effect_combat_rollout",samples:n};
 }
