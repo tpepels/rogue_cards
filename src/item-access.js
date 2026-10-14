@@ -27,6 +27,8 @@ const onRoom=new Set(["ring-eye","ring-echo","ring-spores","ring-ashes",
  "moth","ring-hunger"]);
 const due=(h,card)=>!(/ONCE PER ROOM/i.test(card.v2.trigger)&&h.used.has(card));
 const active=(s,h,card)=>h.hp>0&&
+ !(card.v2.kind==="POTION"&&
+   h.keptUsedPotions?.some(entry=>entry.card===card))&&
  (!card.v2.roll||!(card.v2.kind==="WAND"&&s.exhausted.has(card)))&&
  due(h,card);
 const equipped=(h,card)=>Object.values(h.slots).some(c=>c===card);
