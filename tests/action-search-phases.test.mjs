@@ -19,7 +19,7 @@ const build=seed=>{
   budget:1,replanBudget:0,strictTerminal:true,
   rolloutRooms:9,combatActions:600,combatRoomDepth:9,
   samplingSeed:2317,weights:{...AGENT_WEIGHTS}});
- s.agentDecisionSerial=0;s.plannerDecisions={};
+ s.agentDecisionSerial=0;s.plannerDecisions={};s.plannerTrace=[];
  s.researchDecisions={parleyConsidered:0,parleySelected:0,
   spellsReserved:0,sealConsidered:0,sealSelected:0};
  s.plannerFeatures=new Set(["room","combat","parley","seal"]);
