@@ -889,16 +889,24 @@ export class ExpeditionState {
   default:throw Error("Unsupported printed effect "+kind+" on "+(card?.id||this.room?.id));
   }
  }
+ /** Consume exactly the next *WIT* modifier, no matter whether the
+  * opposed check came from a Room, Monster negotiation or Vault.
+  * An ATK/DEF roll must not silently spend a pending WIT boon.
+  */
+ takeWitModifiers(h){
+  const result={bonus:this.witBonus||0,dis:(h.nextWitDis||0)>0};
+  this.witBonus=0;h.nextWitDis=0;return result;
+ }
  roomCheck(kind,dc,success,fail){
   const h=this.chooseRecipient("opposed-room-check:"+kind);this.actor=h;
   let wit=kind==="CHECK_WIT";
-  const stat=wit?h.card.wit+this.witBonus:this.stats(h).atk;
+  const witModifiers=wit?this.takeWitModifiers(h):{bonus:0,dis:false};
+  const stat=wit?h.card.wit+witModifiers.bonus:this.stats(h).atk;
   let dis=h.poison||h.nextDis>0||
-   (wit&&(h.nextWitDis>0||h.slots.armour?.id==="mail"));
+   (wit&&(witModifiers.dis||h.slots.armour?.id==="mail"));
   if(wit&&h.slots.armour?.id==="mail")this.notePassive(h.slots.armour,"wit",1);
   let adv=h.nextAdv>0,blessBonus=0;
   h.nextDis=0;h.nextAdv=0;
-  if(wit)h.nextWitDis=0;
   const priest=this.living().find(x=>x.card.id==="priest"&&!x.used.has("hero"));
   if(priest){
    const decision=this._decisionHook?.({phase:"hero-trigger",
@@ -945,7 +953,6 @@ export class ExpeditionState {
     ok=true;
    }
   }
-  this.witBonus=0;
   const code=ok?success:fail;
   if(code==="NONE")return;
   if(code==="HURT1"){this.hurt(h,1);return;}
