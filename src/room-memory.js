@@ -16,9 +16,9 @@ const rows=[
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep Room. At Vault, discard it and 1 Item to reveal Warden behaviour before acting; resolve afterward. If unpaid, use 6.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
- ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one and return the other to the bottom of its deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
- ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face-down; randomly return 1 unseen to bottom. Reveal the other 2; enter one, return other to bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","BORROW · PACT","Draw 2 Items; keep Room. At Vault discard 1 Item to reveal first Warden behaviour before acting; resolve afterward. If unpaid, use 6. Turn sideways.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one; put other at bottom of this region's deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
+ ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face down; randomly put one unseen at bottom. Reveal two; enter one, put other at bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
  [
   "u-smuggler",
@@ -34,8 +34,8 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
- ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; discard 1 Item to reveal a third. Enter one, put the rest on bottom.","TEAR","Roll d6.","TEAR","path"],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave other face down on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
+ ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; discard 1 Item to reveal a third. Enter one; put others at bottom of this region's deck.","TEAR","Roll d6.","TEAR","path"],
  [
   "m-ladder",
   "MIDDLE",
@@ -71,11 +71,11 @@ const rows=[
   "Gilded Hallway",
   "CORRIDOR",
   "shop",
-  "Gilt conceals an old door.",
+  "Gilt conceals an old door. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.",
   "GAMBLE",
   "Reveal 2 Rooms; enter one, discard the other. If the discarded Room was TREASURE, draw 1 Item.",
-  "MAP EXIT",
-  "Reveal 2 Rooms; enter 1. Keep this Room. After Warden Phase I, discard it and 2 Items (one MAGIC) to SMUGGLE.",
+  "MAP EXIT · PACT",
+  "Reveal 2 Rooms; enter one, put other at bottom. Keep Room. After Warden Phase I discard 2 Items (one MAGIC) to SMUGGLE; turn sideways.",
   "MAP EXIT",
   "path"
  ],
@@ -100,9 +100,9 @@ const rows=[
   "Rat King's Favor",
   "ENCOUNTER",
   "rat",
-  "At Rat Nest, discard this kept Room to use the SOOTHE 5–6 outcome.",
-  "ACCEPT",
-  "Draw 1 Item. Keep this Room. If unused at Rat Nest, pay 1 Item at the next TREASURE Room or lose its first Item draw.",
+  "A rat offers a favor. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.",
+  "ACCEPT · PACT",
+  "Draw 2 Items, discard 1; keep Room. At next Rat Nest or TREASURE, whichever first: at Nest use SOOTHE 5–6; at TREASURE discard 1 Item or lose first Item draw. Turn sideways.",
   "DECLINE",
   "Roll this Room's d6 for a gift.",
   "GIFT",
@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to resolve 3–4 instead of 1–2.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinges chew.","FEED","Discard 1 Item; draw 2; keep Room. At Vault, discard 1 Item or Warden's first behaviour is 6. Then discard Room.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinges chew. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","FEED · PACT","Discard 1 Item; draw 3 Items; keep Room. At Vault discard 1 more Item or Warden's first behaviour is 6. Turn sideways.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep Room. At Vault, lose 2 HP and discard. Roll Warden behaviour before acting; you may reroll and take the new result. Resolve after acting.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck. PACT: one per party this expedition. Keep this Room to the end; turn sideways after use.","RING","Roll d6 to ring now.","SAVE · PACT","Keep Room. At Vault you may pay 2 HP to reveal first Warden behaviour before acting; reroll once if desired, taking new result. Resolve after acting; turn sideways.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -422,11 +422,11 @@ const printedTables={
   "u-fork": [
     [
       "1–2",
-      "Dead end: reveal 2 Rooms; randomly enter one."
+      "Dead end: reveal 2 Rooms; randomly enter one, put other at bottom."
     ],
     [
       "3–4",
-      "Reveal 2 Rooms; choose one."
+      "Reveal 2 Rooms; enter one, put other at bottom."
     ],
     [
       "5–6",
@@ -440,11 +440,11 @@ const printedTables={
     ],
     [
       "3–4",
-      "Reveal 2 Rooms; choose one."
+      "Reveal 2 Rooms; enter one, put other at bottom."
     ],
     [
       "5–6",
-      "Reveal 3 Rooms; enter one; return others to bottom."
+      "Reveal 3 Rooms; enter one, put other two at bottom."
     ]
   ],
   "u-mossy": [
@@ -468,11 +468,11 @@ const printedTables={
     ],
     [
       "3–4",
-      "Eyes adapt: reveal 2 Rooms; choose one."
+      "Eyes adapt: reveal 2 Rooms; enter one, leave other on top."
     ],
     [
       "5–6",
-      "Keep this Room as a candle; reveal 2 Rooms and choose one. Discard candle at Lightless Hall to cancel its attack DIS."
+      "Keep Room as candle; reveal 2 Rooms, enter one, leave other on top. Discard candle at Lightless Hall to cancel attack DIS."
     ]
   ],
   "m-maps": [
