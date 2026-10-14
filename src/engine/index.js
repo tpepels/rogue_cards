@@ -268,7 +268,14 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(phase==="corpse"){
   if(!s.monster||s.monsterHP>0||s.monster.stage==="FINAL"||
     s.monster.id==="sentinel"||!s.alive())return [];
-  return [{phase,kind:"leave"},{phase,kind:"eat"}];
+  const id=s.monster.id;
+  const remains={
+   rat:["eat"],crawler:["eat"],bat:["eat"],troll:["eat"],
+   mold:["eat"],rust:["eat"],goblin:["search"],
+   eye:["keep-eye"],wraith:["release","keep-whisper"]
+  };
+  return [{phase,kind:"leave"},...(remains[id]||[])
+   .map(kind=>({phase,kind}))];
  }
  if(phase==="monster-response"){
   const h=s.heroes[heroIndex];
