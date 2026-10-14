@@ -178,6 +178,43 @@ test("damage-triggered Mirror use and skipping are genuinely different legal act
  assert.equal(skip.pendingNested,null);
  assert.equal(use.pendingNested,null);
 });
+test("a Monster responds to the surviving Hero when the acting Hero dies during a combat Item",()=>{
+ const session=createDecisionSession({seed:3573,heroes:["warrior","wizard"]});
+ const s=session.state;
+ s.beginRoom(room("d-last-bell"));
+ s.monster=monster("wraith");s.monsterHP=50;
+ session.phase="combat";session.heroIndex=0;
+ const owner=s.heroes[0];
+ const pos=s.deck.findIndex(x=>x.id==="wand-sparks");
+ assert.ok(pos>=0);
+ const [wand]=s.deck.splice(pos,1);
+ s.noteDeckRemoval(wand);s.add(owner,wand);
+ owner.hp=2;
+ const beforeWandDie=s.rng.clone().die();
+ // Guarantee overcharge's printed HP loss kills the acting Hero.
+ if(beforeWandDie<2){
+  // The actual RNG is used below; skip no behavior or chance outcome.
+  // Search a fixed finite prefix of real RNG states to reach damage >=2.
+  for(let i=0;i<8&&s.rng.clone().die()<2;i++)s.die();
+ }
+ assert.ok(s.rng.clone().die()>=2);
+ const action=sessionActions(session).find(a=>
+  a.kind==="item"&&a.cardId==="wand-sparks"&&a.mode==="overcharge");
+ assert.ok(action,"Wand must offer its printed overcharge combat action");
+ submitDecision(session,action);
+ assert.equal(owner.hp,0);
+ assert.equal(session.phase,"monster-response");
+ assert.equal(session.heroIndex,1,
+  "The remaining living Hero receives the Monster response");
+ assert.deepEqual(sessionActions(session),[
+  {phase:"monster-response",kind:"respond",heroIndex:1}
+ ]);
+ submitDecision(session,sessionActions(session)[0]);
+ assert.notEqual(session.phase,"monster-response",
+  "No dead-Hero action deadlock after the canonical Monster response");
+ assert.ok(s.metrics.monsterBehaviorBands["wraith:0"]>=0);
+});
+
 test("Wizard can decline or choose an actual ability at the attack trigger",()=>{
  const session=createDecisionSession({seed:1844,heroes:["wizard"]});
  const s=session.state;
