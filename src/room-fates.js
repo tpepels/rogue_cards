@@ -55,11 +55,12 @@ const mark=(s,choice,item=null)=>{
 };
 const burnItem=(s,tag=null)=>s.discard(1,{tag});
 const take=(s,n=1)=>s.draw(n);
-const dead=(s,n)=>s.hurt(s.chooseActor(),n);
+const dead=(s,n)=>s.hurt(s.chooseRecipient("fate-damage"),n);
 // Returned tucked objects were already counted when first drawn from the deck.
-const returnTucked=(s,item)=>{if(!item)return;const h=s.chooseActor();h.inventory.push(item);
+const returnTucked=(s,item)=>{if(!item)return;
+ const h=s.chooseRecipient("return-tucked-item");h.inventory.push(item);
  s.consumed.delete(item);s.equip(h,item);};
-const restore=(s,n)=>s.heal(s.chooseActor(),n);
+const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n);
 // Called by ROOM_FATE on the printed choice. Item costs are checked here.
 export function resolveFateChoice(s,choice){
  const id=s.room.id;
