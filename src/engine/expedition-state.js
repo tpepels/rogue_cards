@@ -1168,19 +1168,22 @@ export class ExpeditionState {
     else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
    }
   }
-  // The two printed bridge cards allow choosing 5-6 with Rope.
-  // Other trapdoors use Rope's separate +/-1 or prevent-damage ability;
-  // none convert unrelated Room dice to 6.
-  const bridgeRopeOwner=this.heroes.find(h=>h.hp>0&&h.inventory.some(
-   c=>c.id==="rope"&&!h.used.has(c)));
-  if(bridgeRopeOwner&&["m-bridge","d-bridge"].includes(this.room.id)&&
-    this.chooseEffect("rope-bridge:"+this.room.id,
-     ["save","use"],"use")==="use"){
-   const rope=bridgeRopeOwner.inventory.find(c=>c.id==="rope"&&
-    !bridgeRopeOwner.used.has(c));
-   this.directItem(bridgeRopeOwner,rope,"bridge-shift",()=>{
-    bridgeRopeOwner.used.add(rope);face=6;return true;
-   });
+  // A physical Rope can shift a hazard die by exactly one. No Room can
+  // claim the 5-6 treasure band merely because Rope is carried.
+  const ropeOwner=["u-fall","m-bridge","d-bridge"].includes(this.room.id)?
+   this.heroes.find(h=>h.hp>0&&h.inventory.some(c=>c.id==="rope"&&!h.used.has(c))):null;
+  if(ropeOwner){
+   const options=["save",...(face>1?["down"]:[]),...(face<6?["up"]:[])];
+   const direction=this.chooseEffect("rope-room-roll:"+this.room.id,
+    options,face<6?"up":"down");
+   if(direction==="up"||direction==="down"){
+    const rope=ropeOwner.inventory.find(c=>c.id==="rope"&&!ropeOwner.used.has(c));
+    this.directItem(ropeOwner,rope,"rope-room-shift",()=>{
+     ropeOwner.used.add(rope);
+     face=Math.max(1,Math.min(6,face+(direction==="up"?1:-1)));
+     return true;
+    });
+   }
   }
   if(this.room.id==="u-nest"&&
      this.heroes.some(h=>h.hp>0&&this.equipped(h,"dog")))face=6;
