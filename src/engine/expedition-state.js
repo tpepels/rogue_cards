@@ -768,13 +768,25 @@ export class ExpeditionState {
   }
   this.pendingRoomFace=null;
   // Spend saved links only when their linked encounters occur.
-  if(this.room.id==="d-bridge"&&face<=2&&this.returnChoices?.["m-wax-bridge"]!=="save"){
+  if(this.room.id==="d-bridge"&&face<=2){
    const wax=this.keptRooms.find(x=>x.card.id==="m-wax-bridge");
-   if(wax){this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=6;}
+   if(wax){
+    const decision=this._decisionHook?.({phase:"retained",
+     roomId:"m-wax-bridge",context:"trap",face});
+    if((decision?.mode||this.returnChoices?.["m-wax-bridge"])!=="save"){
+     this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=6;
+    }
+   }
   }
-  if(this.room.id==="d-mouth"&&this.returnChoices?.["u-puppet"]!=="save"){
+  if(this.room.id==="d-mouth"){
    const judge=this.keptRooms.find(x=>x.card.id==="u-puppet");
-   if(judge){this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;}
+   if(judge){
+    const decision=this._decisionHook?.({phase:"retained",
+     roomId:"u-puppet",context:"talking-door",face});
+    if((decision?.mode||this.returnChoices?.["u-puppet"])!=="save"){
+     this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;
+    }
+   }
   }
   const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
   const roomKey=this.room.id+":"+band;
