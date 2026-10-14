@@ -160,7 +160,7 @@ const rings=[
 ];
 const wands=[
  ["wand-sparks","Wand of Impolite Sparks","spiral","WAND",["MAGIC","FIRE"],
-  "ACTION: Roll d6 against a Monster; turn this upright Wand sideways until recharged.",
+  "ACTION: If upright, roll d6 against a Monster; turn sideways until recharged.",
   [["1–2","Fizzle: lose 1 HP."],["3–4","Deal d6 damage to the Monster."],["5–6","Deal 2d6 damage to the Monster."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-shrine","m-altar","d-choir"],"A spark with bad manners.",1],
  ["wand-undo","Wand of Undoing","wizard","WAND",["MAGIC","LUCK"],
@@ -191,7 +191,7 @@ const wands=[
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
   "FIRST USE: Roll d6; identical Smoky Potions share this result. Drink and discard.",
-  [["1–2","Choke: lose 2 HP; your next attack roll this fight has DIS."],["3–4","Smoke hides you: skip next Monster response, or peek next Room outside combat."],["5–6","Your next attack roll here has ADV, or your next WIT roll here outside combat has ADV."]],
+  [["1–2","Choke: lose 2 HP; your next attack roll this fight has DIS."],["3–4","Smoke hides you: skip Monster response, or peek next Room outside combat."],["5–6","Your next attack roll here has ADV, or your next WIT roll here outside combat has ADV."]],
   "Keep one used Potion face up to remember its effect.",["u-fountain","m-well"],"It smells of burned herbs.",3],
  ["milky","Milky Potion","potion","POTION",["ALCHEMY"],
   "FIRST USE: Roll d6; all Milky Potions share this result. Drink and discard.",
@@ -210,8 +210,8 @@ const potions=[
   [["1–2","Hallucinate: become POISONED; your next WIT roll has DIS."],["3–4","Remove POISONED; heal 2 HP."],["5–6","Vision: peek next 2 Rooms and order them; heal 2 HP."]],
   "Keep one used Potion face up to remember its effect.",["m-fungus","d-choir"],"It is still growing.",2],
  ["midnight","Midnight Ink","ghost","POTION",["ALCHEMY","MAGIC"],
-  "FIRST USE: Roll d6; all Midnight Inks share the outcome. Drink and discard unless kept by the result.",
-  [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","In combat, skip next Monster response; otherwise your next ELBERETH roll has ADV."],["5–6","Keep this used Potion as ink. Discard at a later ELBERETH attempt to succeed automatically."]],
+  "FIRST USE: Roll d6; all Midnight Inks share the result. Drink and discard unless kept.",
+  [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","In combat, skip next Monster response; otherwise your next ELBERETH roll has ADV."],["5–6","Keep used Potion as ink. Discard at ELBERETH for automatic success."]],
   "One used copy records identity. A kept ink mark is separate.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
  ["antidote","Antidote","potion","POTION",["ALCHEMY","CURE"],
   "FIRST USE: Roll d6; all Antidotes share this result. Drink and discard.",
