@@ -149,3 +149,31 @@ test("a lethal Potion cannot open an impossible Witch reaction after her HP beco
  assert.equal(h.hp,0);
  delete s._decisionHook;
 });
+
+
+test("Restless Shade's printed MAGIC weakness changes behavior 5 to 1-2, but 5 remains executable unequipped",()=>{
+ const shade=monster("wraith");
+ const make=()=>new ExpeditionState({
+  seed:20461624,heroes:["warrior","wizard"]
+ });
+ const equipped=make();
+ equipped.beginRoom(room("d-shadow"));
+ assert.equal(equipped.heroes[1].slots.weapon?.id,"staff",
+  "Wizard must hold the actual printed MAGIC starter for this fixture");
+ assert.equal(equipped.anyEquippedTag("MAGIC"),true);
+ equipped.monster=shade;equipped.monsterHP=shade.hp;
+ equipped.forcedBehavior=5;
+ monsterRespond(equipped,equipped.heroes[0]);
+ assert.equal(equipped.metrics.monsterBehaviorBands["wraith:0"],1,
+  "Equipped MAGIC changes 5 into the 1-2 band");
+ assert.equal(equipped.metrics.monsterBehaviorBands["wraith:2"],undefined);
+ const unequipped=make();
+ unequipped.beginRoom(room("d-shadow"));
+ delete unequipped.heroes[1].slots.weapon;
+ assert.equal(unequipped.anyEquippedTag("MAGIC"),false);
+ unequipped.monster=shade;unequipped.monsterHP=shade.hp;
+ unequipped.forcedBehavior=5;
+ monsterRespond(unequipped,unequipped.heroes[0]);
+ assert.equal(unequipped.metrics.monsterBehaviorBands["wraith:2"],1,
+  "Without equipped MAGIC, the printed 5 damage behavior executes");
+});
