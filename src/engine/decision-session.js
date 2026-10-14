@@ -334,7 +334,8 @@ export function submitDecision(session,action,{
  let position=0;
  fork.state._decisionHook=event=>{
   const args={phase:event.phase,heroIndex:event.heroIndex??0,
-   roomId:event.roomId??null,cost:event.cost??0};
+   roomId:event.roomId??null,cost:event.cost??0,
+   context:event.context??null};
   let actions=legalActions(fork.state,args);
   if(event.cardId)actions=actions.filter(x=>x.kind==="continue"||
    x.kind==="item-trigger"&&x.cardId===event.cardId);
