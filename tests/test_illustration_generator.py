@@ -99,10 +99,10 @@ class IllustrationGeneratorTests(unittest.TestCase):
 
     def test_print_only_art_updates_its_own_map(self):
         source = (
-            'export const PRINT_ONLY_ART=Object.freeze({\\n'
-            ' "room:ex-u-guard-cell":"131_the_hollow_knight.png",\\n'
-            ' "item:ex-bandages":"110_antidote.png"\\n'
-            '});\\n'
+            'export const PRINT_ONLY_ART=Object.freeze({\n'
+            ' "room:ex-u-guard-cell":"131_the_hollow_knight.png",\n'
+            ' "item:ex-bandages":"110_antidote.png"\n'
+            '});\n'
         )
         updated = module.add_mapping(
             source, "room:ex-u-guard-cell", "140_empty_guard_cell.png",
