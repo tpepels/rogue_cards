@@ -195,7 +195,7 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
  if(beforeWandDie<2){
   // The actual RNG is used below; skip no behavior or chance outcome.
   // Search a fixed finite prefix of real RNG states to reach damage >=2.
-  for(let i=0;i<8&&s.rng.clone().die()<2;i++)s.die();
+  for(let i=0;i<128&&s.rng.clone().die()<2;i++)s.die();
  }
  assert.ok(s.rng.clone().die()>=2);
  const action=sessionActions(session).find(a=>
