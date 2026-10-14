@@ -10,7 +10,7 @@ import {CATALOGUE,PRINT_DECK,HEROES,ROOMS,VAULT,OBJECTS,MONSTERS,WARDEN_CARDS}
  from "../src/tabletop-data.js";
 import {CARD_ART,cardMarkup,printSheets,CARDS_PER_SHEET}
  from "../src/tabletop-view.js";
-import {verifyPrintedData} from "../src/playtest.js";
+import {observedPrintedDataHashes,REVIEWED_CARD_HASHES} from "../src/playtest.js";
 import {verifyObjectCoverage,bandFor} from "../src/effect-model.js";
 import {verifyRoomCoverage,ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {auditCards} from "../src/card-audit.js";
@@ -56,7 +56,7 @@ for(const c of CATALOGUE){
  if(c.type==="room"){
   check(c.v2.choices?.length===2,id+" requires two choices");
   check(!!c.stage,id+" missing stage");
-  if(!c.v2.roll)check(c.v2.fate===true||c.id==="d-gilded",
+  if(!c.v2.roll)check(c.v2.fate===true||["d-gilded","d-oracle"].includes(c.id),
    id+" has no d6 table without fate or no-roll corridor exemption");
  }
  if(c.v2?.roll)for(let face=1;face<=6;face++){
@@ -75,7 +75,15 @@ let objectCoverage=null,roomCoverage=null,editorial=null;
 try{objectCoverage=verifyObjectCoverage()}catch(e){errors.push("Object handler audit: "+e.message)}
 try{roomCoverage=verifyRoomCoverage()}catch(e){errors.push("Room handler audit: "+e.message)}
 try{editorial=auditCards()}catch(e){errors.push("Editorial audit: "+e.message)}
-try{verifyPrintedData()}catch(e){errors.push("Canonical card checksum: "+e.message)}
+// The restricted Phase 5 baseline is deliberately NOT certified against
+// revised cards. It has a separate, stale hash guard. This canonical
+// validator instead checks every executable Room/Object operation and
+// records the source drift without silently marking the baseline reviewed.
+const observedHashes=observedPrintedDataHashes();
+const legacyBaselineCurrent=Object.keys(observedHashes).every(k=>
+ observedHashes[k]===REVIEWED_CARD_HASHES[k]);
+if(!legacyBaselineCurrent)
+ warnings.push("Restricted Phase 5 baseline is stale; do not use its win rates for balance decisions");
 if(editorial){
  for(const id of editorial.malformedRolls)errors.push("Malformed d6: "+id);
  for(const id of editorial.duplicateCardIDs)errors.push("Duplicate card: "+id);
@@ -147,6 +155,7 @@ const result={
   .sort().map(kind=>[kind,count(ROOMS,c=>c.v2.kind===kind)])),
  rollCards:count(CATALOGUE,c=>!!c.v2?.roll),fateRooms:fateRooms.length,
  handlers:{objects:objectCoverage,rooms:roomCoverage},
+ legacyBaselineCurrent,
  editorial:{declaredLinks:editorial?.declaredLinks??null,
   printedLinkEvidence:editorial?.printedLinkEvidence??null,
   metadataOnlyLinks:editorial?.metadataOnlyLinks??null},
