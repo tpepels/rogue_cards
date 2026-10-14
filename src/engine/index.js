@@ -231,6 +231,11 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
   return [{phase,kind:"skip",heroIndex},
    ...["steady","risk"].map(mode=>({phase,kind:"hero-mode",heroIndex,mode}))];
  }
+ if(phase==="saved-reroll"){
+  const h=s.heroes[heroIndex];
+  return h?.hp>0&&h.kept.includes("reroll")?
+   [{phase,kind:"keep",heroIndex},{phase,kind:"reroll",heroIndex}]:[];
+ }
  if(phase==="reroll"){
   const h=s.heroes[heroIndex];
   if(!h||h.hp<=0||!Number.isInteger(cost)||cost<1||cost>3)return [];
