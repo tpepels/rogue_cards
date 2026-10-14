@@ -739,6 +739,12 @@ function finishVault(s){
  const preferSeal=vaultChoice==="seal-if-available"||plannerSeal?.attempt||sealPreferred||
   (vaultChoice==="policy"&&(strategy==="seal"||(strategy==="survival"&&
    s.partyCount("MAGIC")>=sealCost(s)&&s.heroes.every(h=>h.hp<h.card.hp*.55))));
+ return continueVaultAfterChoice(s,preferSeal,vaultChoice);
+}
+/** One exact Vault/SEAL decision continuation, shared with oracle forks.
+ * The real printed Vault OMEN has already been rolled at this point.
+ */
+function continueVaultAfterChoice(s,preferSeal,vaultChoice){
  if(preferSeal&&seal(s)){
   s.metrics.won=true;s.endingKind="amulet_sealed";return report(s);
  }
@@ -750,6 +756,21 @@ function finishVault(s){
  s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
  if(!fight(s,{warden:true}))return report(s);
  return finishWardenAfterPhaseOne(s,vaultChoice);
+}
+export function rolloutVaultContinuation(s,action){
+ if(s.room?.stage!=="FINAL"||!["seal","fight"].includes(action))
+  throw Error("Invalid Vault decision");
+ const r=continueVaultAfterChoice(s,action==="seal","fight");
+ return {complete:true,won:Boolean(r.won),state:s};
+}
+export function rolloutEndingContinuation(s,action){
+ const map={fight:"fight",smuggle:"smuggle-if-available",
+  bargain:"bargain-if-available",unthrone:"unthrone-if-available",
+  escape:"escape-if-available"};
+ if(s.room?.stage!=="FINAL"||!Object.hasOwn(map,action))
+  throw Error("Invalid post-Warden decision");
+ const r=finishWardenAfterPhaseOne(s,map[action]);
+ return {complete:true,won:Boolean(r.won),state:s};
 }
 function finishWardenAfterPhaseOne(s,vaultChoice){
  // Canonical post-Warden-I resolution, shared with stochastic combat forks.
