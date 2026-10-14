@@ -228,7 +228,7 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(phase==="effect-choice"){
   const pending=s._pendingEffectChoices;
   return pending?.context?pending.modes.map(mode=>({
-   phase,kind:"effect-option",context:pending.context,mode}):[];
+   phase,kind:"effect-option",context:pending.context,mode})):[];
  }
  if(phase==="spend-item"){
   return (s._pendingSpendOptions||[]).map(x=>({
