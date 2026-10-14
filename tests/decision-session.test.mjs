@@ -200,14 +200,14 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
   }
  }
  owner.hp=2;
- const beforeWandDie=s.rng.clone().die();
+ const beforeWandDie=s.rng.clone().die(6);
  // Guarantee overcharge's printed HP loss kills the acting Hero.
  if(beforeWandDie<2){
   // The actual RNG is used below; skip no behavior or chance outcome.
   // Search a fixed finite prefix of real RNG states to reach damage >=2.
-  for(let i=0;i<128&&s.rng.clone().die()<2;i++)s.die();
+  for(let i=0;i<128&&s.rng.clone().die(6)<2;i++)s.die();
  }
- assert.ok(s.rng.clone().die()>=2);
+ assert.ok(s.rng.clone().die(6)>=2);
  const action=sessionActions(session).find(a=>
   a.kind==="item"&&a.cardId==="wand-sparks"&&a.mode==="overcharge");
  assert.ok(action,"Wand must offer its printed overcharge combat action");
