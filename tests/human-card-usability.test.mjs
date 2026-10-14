@@ -84,6 +84,6 @@ test("previously ambiguous card language now names timing, rolls and locations",
   assert.ok(torch.v2.alternative.includes(name),name);
  assert.match(torch.v2.trigger,/darkness DIS/);
  const door=OBJECTS.find(x=>x.id==="wand-door");
- for(const name of ["Rusty Gate","Chest with a Pulse","Buried Lockbox","The Last Chest"])
+ for(const name of ["Rusty Gate","Chest with a Pulse","Buried Lockbox","Last Chest"])
   assert.ok(door.v2.trigger.includes(name),name);
 });
