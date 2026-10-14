@@ -5,7 +5,7 @@
 export function consumeCorpse(s,m){
  if(!m||m.id==="sentinel"||m.stage==="FINAL"||!s.alive())
   throw Error("No edible regional Monster corpse");
- const h=s.chooseActor();if(!h)return;
+ const h=s.chooseRecipient("eat-monster-remains");if(!h)return;
  s.setActor(h);s.metrics.corpses++;
  const roll=s.die();
  if(roll<=2){
@@ -17,7 +17,8 @@ export function consumeCorpse(s,m){
   if(["crawler","mold"].includes(m.id)&&m.id==="crawler")s.heal(h,2);
   else s.heal(h,m.id==="troll"||m.id==="mold"?s.die():2);
  }else{
-  if(["rat","troll"].includes(m.id))s.heal(h,s.die());
+  if(m.id==="rat")s.heal(h,s.die());
+  else if(m.id==="troll")s.draw();
   else if(["crawler","mold"].includes(m.id))h.poison=false;
   else if(["goblin","wraith","cultist"].includes(m.id))s.draw(1);
   else if(["eye","bat"].includes(m.id))s.peek(1);
