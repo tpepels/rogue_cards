@@ -258,6 +258,25 @@ test("capture all 139 rendered cards for visual inspection",async({page})=>{
  await page.goto("/");
  const dir="test-results/card-visual-inspection";
  await mkdir(dir,{recursive:true});
+ const eager=await page.locator(".tt-grid .tt-art-image").evaluateAll(async imgs=>{
+  for(const img of imgs)img.loading="eager";
+  await Promise.all(imgs.map(img=>img.decode().catch(()=>{})));
+  return imgs.map(img=>({loaded:img.complete&&img.naturalWidth>0,url:img.getAttribute("src")}));
+ });
+ expect(eager).toHaveLength(139);
+ expect(eager.filter(i=>!i.loaded),"Missing actual illustration files").toEqual([]);
+ const bounds=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
+  const r=card.getBoundingClientRect();
+  return {id:card.dataset.id,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+ }));
+ const overlaps=[];
+ for(let i=0;i<bounds.length;i++)for(let j=i+1;j<bounds.length;j++){
+  const a=bounds[i],b=bounds[j];
+  const x=Math.min(a.right,b.right)-Math.max(a.left,b.left);
+  const y=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+  if(x>2&&y>2)overlaps.push(a.id+" overlaps "+b.id);
+ }
+ expect(overlaps,"Gallery must not overlap physical cards").toEqual([]);
  const measures=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
   const cardRect=card.getBoundingClientRect();
   return {id:card.dataset.id,type:card.dataset.v2Kind,
@@ -277,6 +296,12 @@ test("capture all 139 rendered cards for visual inspection",async({page})=>{
  for(const [category,region] of groups){
   await page.getByRole("combobox",{name:"Card category"}).selectOption(category);
   if(region)await page.getByRole("combobox",{name:"Dungeon region"}).selectOption(region);
+  const loaded=await page.locator(".tt-grid .tt-art-image").evaluateAll(async imgs=>{
+   for(const img of imgs)img.loading="eager";
+   await Promise.all(imgs.map(img=>img.decode().catch(()=>{})));
+   return imgs.filter(img=>!img.complete||!img.naturalWidth).length;
+  });
+  expect(loaded,"Images not ready in "+category+"/"+(region||"all")).toBe(0);
   const name=(category+"-"+(region||"all")).toLowerCase();
   await page.locator(".tt-grid").screenshot({path:dir+"/"+name+".png",animations:"disabled",timeout:45000});
  }

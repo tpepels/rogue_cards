@@ -31,7 +31,7 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-toolbar h2{margin:0;font:900 25px Georgia,serif}
 .tt-toolbar-controls{display:flex;gap:8px;flex-wrap:wrap}
 .tt-toolbar select,.tt-toolbar button{border:2px solid #171510;padding:8px 11px;background:#fffdfa;color:#171510;font-size:12px;font-weight:bold;cursor:pointer}
-.tt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:19px;justify-items:center}
+.tt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90mm,1fr));gap:19px;justify-items:center}
 .tt-sheet{display:contents}
 /* Canonical physical frame — illustration is the centre of gravity. */
 .tt-card{
