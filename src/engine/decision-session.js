@@ -276,7 +276,9 @@ const sameAction=(a,b)=>a&&b&&
  * replay the SAME dice/printed effects and commit once, when complete.
  * No used Item, HP, die or deck mutation escapes an interrupted call.
  */
-export function submitDecision(session,action){
+export function submitDecision(session,action,{afterReactionReplay=null}={}){
+ if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
+  throw Error("Reaction replay observer must be a function");
  if(session.phase==="terminal")throw Error("Expedition already ended");
  const waiting=session.pendingNested;
  let root,responses;
@@ -306,6 +308,11 @@ export function submitDecision(session,action){
    const selected=actions.find(a=>sameAction(a,requested));
    if(!selected)throw Error("Replayed reaction ceased to be legal: "+
     JSON.stringify({requested,legal:actions}));
+   // The current observed reaction and all preceding dice are fixed.
+   // A hypothetical agent may resample only the still-hidden future
+   // AFTER the last previously committed reaction is replayed.
+   if(position===responses.length&&afterReactionReplay)
+    afterReactionReplay(fork.state);
    return selected;
   }
   throw new NeedReaction(event,actions,observeGame(fork.state));
