@@ -295,6 +295,11 @@ function submitDecisionDirect(session,action){
    session.heroIndex=-1;session.phase="combat-hero";
   }
  }else throw Error("Unreachable phase "+phase);
+ // A complete printed choice may inflict its final HP loss while the
+ // controller is transitioning into its next phase (notably Vault or
+ // post-Warden choices). A party wipe takes precedence over any pending
+ // combat turn: never expose combat-hero with zero living Heroes.
+ done(session);
  session.actionCount++;
  session.history.push({from:before,choice:{...selected},to:session.phase});
  return observeSession(session);
