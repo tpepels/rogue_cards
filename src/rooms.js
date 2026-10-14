@@ -54,7 +54,7 @@ const middle=make("MIDDLE",[
  ["m-clock","Clockwork Confessional","warden","MYSTERY","A brass mouth asks for a confession.",
   [["CONFESS","Roll d6."],["BREAK","Opposed d20+ATK vs d20+5: win, draw 1 Item and recharge a Wand; lose, lose d6 HP."]],"CONFESS",
   [["1–2","Lose d6 HP."],["3–4","Heal d6 HP."],["5","Draw 1 Item."],["6","Keep this Room: +2 to your next WIT roll; then discard it."]],["Tunnel Raven"],"The gears are listening."],
- ["m-beetle","Beetle Caravan","rust","ENCOUNTER","Beetles pull an empty cart.",
+ ["m-beetle","Beetle Caravan","rust","ENCOUNTER","Beetles pull a cart.",
   [["BARGAIN","Roll d6. Discard 1 METAL Item to resolve 6. With Loyal Hound, peek next Room. Keep for +1 Item at Midnight Bazaar."],["STEAL","Draw a MIDDLE Monster. Win: draw 2 Items. Keep this Room: Bazaar costs +1 Item."]],"BARGAIN",
   [["1–2","They charge. Lose 2 HP."],["3–4","Discard 1 Item; draw 2 Items."],["5","They give you 1 Item."],["6","They give you 2 Items."]],["Loyal Hound"],"Their driver is a moth."],
  ["m-treasure","Treasure That Sings","amulet","TREASURE","Coins hum when no one looks.",[["TAKE","Roll d6. After seeing result, lose 2 HP to roll again and choose either."],["MUFFLE","Discard 1 Item; keep this Room. Discard at a Monster to set first behaviour to 1–2, or at Choir of Mushrooms for SING 5–6."]],"TAKE",[["1–2","Song attracts a MIDDLE Monster."],["3–4","Take 1 Item."],["5–6","Take 3 Items, then discard 1."]],["Choir of Mushrooms"],"The melody follows you."],
@@ -74,7 +74,7 @@ const deep=make("DEEP",[
  ["d-bazaar","Midnight Bazaar","shop","ENCOUNTER","A shopkeeper sells tomorrow's luck.",
   [["GAMBLE","Discard 1 Item, or lose 2 HP if empty-handed; roll d6."],["TRADE","Discard 2 Items; draw 2 Items and recharge a Wand."]],"GAMBLE",
   [["1–2","Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5","Draw 3 Items; discard 1."],["6","Draw 3 Items; keep this Room to reroll one d20, then discard."]],["Tunnel Raven"],"Every price is final."],
- ["d-crown","Crown of the Unking","bones","SHRINE","A dead king demands tribute.",[["WEAR","Roll d6."],["OFFER","Discard 1 CURSED Item; draw 2 Items."]],"WEAR",[["1–2","Blood tribute: lose d6 HP; next Monster behaviour is 6."],["3–4","Command the dead: next Monster behaviour is 1–2."],["5","Keep this Room. Discard to give the next Monster's first DEF roll DIS."],["6","Keep this Room. With Sleeping Crown, unlock UNTHRONE; discard to give next Monster's first DEF roll DIS."]],["The Sleeping Crown"],"It carries someone's final order."],
+ ["d-crown","Crown of the Unking","bones","SHRINE","A dead king demands tribute.",[["WEAR","Roll d6."],["OFFER","Discard 1 CURSED Item; draw 2 Items."]],"WEAR",[["1–2","Blood tribute: lose d6 HP; next Monster behaviour is 6."],["3–4","Command the dead: next Monster behaviour is 1–2."],["5","Keep this Room. Discard to give the next Monster's first DEF roll DIS."],["6","Keep this Room. With Sleeping Crown, unlock UNTHRONE; discard for DIS on next Monster's first DEF roll."]],["The Sleeping Crown"],"It carries someone's final order."],
  ["d-last-chest","The Last Chest","door","TREASURE","A box rattles with final preparations.",[["OPEN","Roll d6. May REROLL for 1, then 2, then 3 HP; rerolled 1 draws DEEP Monster. Rusty Key changes 1–2 to 3–4."],["SEAL IT","Discard 1 Item; heal d6 HP."]],"OPEN",[["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 2 Items; keep this Room. Discard when Warden hits to prevent 3 damage."]],["Rusty Key"],"It was built for you."],
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
