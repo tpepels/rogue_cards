@@ -59,7 +59,7 @@ test("TRAP effects have exact printed labels for the Reliquary",()=>{
  const expected={
   "u-gate":["1–2"],"u-fall":["1–2","3–4"],"u-mimic":["1–2"],
   "m-vault":["1–2"],"m-bridge":["1–2"],
-  "d-bridge":["1–2","3–4"],"d-last-chest":["1–2"],"d-shadow":["1–2"]
+  "d-bridge":["1–2","3–4"],"d-last-chest":["1–2"],"d-shadow":["1–2"],"d-reliquary":["1–2"]
  };
  for(const room of ROOMS){
   const actual=(room.v2.roll?.outcomes||[]).filter(x=>/^(?:TRAP|TRAPDOOR):/.test(x.effect))
@@ -80,7 +80,7 @@ test("previously ambiguous card language now names timing, rolls and locations",
   assert.ok(m.behavior.some(x=>/next Hero d20 roll has DIS/.test(x)),m.title);
  }
  const torch=OBJECTS.find(x=>x.id==="torch");
- for(const name of ["Lamp-Eater","Opened Crypt","Lightless Hall"])
+ for(const name of ["Lamp-Eater","Fungal Garden","Lightless Hall"])
   assert.ok(torch.v2.alternative.includes(name),name);
  const door=OBJECTS.find(x=>x.id==="wand-door");
  for(const name of ["Rusty Gate","Chest with a Pulse","Buried Lockbox","The Last Chest"])

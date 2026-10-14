@@ -16,8 +16,8 @@ test("seeded die generator and full printed d6 intervals are deterministic",()=>
  assert.deepEqual(Array.from({length:200},()=>a.die(20)),Array.from({length:200},()=>b.die(20)));
  for(const room of [...ROOMS,VAULT]){
   if(!room.v2.roll){
-   assert.ok(room.v2.fate===true||room.id==="d-gilded",
-    "Only a printed fate Room or Gilded corridor may omit its d6 table: "+room.id);
+   assert.ok(room.v2.fate===true||["d-gilded","d-oracle"].includes(room.id),
+    "Only Fate Rooms, Gilded Hallway or Broken Oracle may omit d6: "+room.id);
    continue;
   }
   for(let n=1;n<=6;n++){

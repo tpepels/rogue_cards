@@ -119,8 +119,14 @@ test("all nine non-dice Objects have specific functional coverage",()=>{
   const hero=state.heroes[0],card=byId(id);
   state.beginRoom(room(location));state.setActor(hero);state.add(hero,card);
   const before=state.metrics.drawn,spentBefore=state.metrics.spent,hpBefore=hero.hp;
-  state.roomRoll(1);
-  if(["torch","lantern-heart"].includes(id)){
+  state.roomRoll(id==="rope"?2:1);
+  if(id==="rope"){
+   // Shifts one face: 2 becomes 3; Rope cannot grant the 5-6 treasure band.
+   assert.equal(state.metrics.drawn,before,"Rope must not create free treasure");
+   assert.equal(state.metrics.roomRollBands["u-fall:1"],1,
+    "Rolled 2, adjusted to 3, must resolve the printed 3-4 band");
+   assert.ok(hero.used.has(card),"Rope was not spent for this Room");
+  }else if(["torch","lantern-heart"].includes(id)){
    // A Lamp-Eater now consumes a flame or bites. Fire does not guarantee loot.
    assert.equal(state.metrics.drawn,before,id+" gave free Lamp-Eater treasure");
    assert.ok(state.metrics.spent>spentBefore||hero.hp<hpBefore,

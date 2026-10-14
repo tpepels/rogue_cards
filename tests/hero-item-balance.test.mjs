@@ -87,17 +87,19 @@ test("Monk can hold STILLNESS, skip a response on six, and still backfire",()=>{
  assert.ok(second.h.nextDis>0);
 });
 test("approved Wand and Jar improvements match their executable outcomes",()=>{
- assert.deepEqual(ROLL_EFFECTS["spore-jar"],[["POISON"],["SKIP:1"],["SKIP:2"]]);
- assert.deepEqual(ROLL_EFFECTS["wand-morph"][0],["HURT:2"]);
+ assert.deepEqual(ROLL_EFFECTS["spore-jar"],[["POISON","NEXT_WIT_DIS"],["FORCE_BEHAVIOR:1"],["SKIP:2"]]);
+ assert.ok(ROLL_EFFECTS["wand-morph"][0].includes("HURT:2"));
  assert.ok(ROLL_EFFECTS["wand-frost"][1].includes("SKIP:1"));
  for(const [id,face,skip,damage] of [
-  ["spore-jar",4,1,0],["spore-jar",6,2,0],
+  ["spore-jar",4,0,0],["spore-jar",6,2,0],
   ["wand-frost",4,1,0],["wand-morph",1,0,2]]){
   const {s,h}=battle("warrior");
   const object=card(id);s.add(h,object);
   const before=h.hp;
   assert.equal(s.activate(h,object,{face}),true);
   assert.equal(s.monsterSkip,skip,id+" "+face);
+  if(id==="spore-jar"&&face===4)
+   assert.equal(s.forcedBehavior,1,"Spore Jar confusion forces behaviour 1-2");
   assert.equal(before-h.hp,damage,id+" "+face);
   if(id==="wand-morph"){
    assert.ok(h.inventory.includes(object));

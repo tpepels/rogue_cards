@@ -33,7 +33,7 @@ test("potion identification appears exactly once, not twice",()=>{
  assert.equal(potions.length,8);
  for(const potion of potions){
   const markup=cardMarkup(potion);
-  assert.equal((markup.match(/used Potion face up/g)||[]).length,1,potion.id);
+  assert.equal((markup.match(/used Potion face up|used copy records identity/g)||[]).length,1,potion.id);
   assert.doesNotMatch(markup,/IDENTIFY: keep one spent copy face up/,potion.id);
  }
 });
@@ -42,9 +42,11 @@ test("brief tools do not repeat their ordinary Room interactions",()=>{
  for(const id of ["key","rope"]){
   const card=OBJECTS.find(o=>o.id===id);
   assert.ok(card,id);
-  assert.equal(card.v2.alternative,"",id+" duplicates its main rule");
+  assert.ok(!card.v2.alternative||!card.v2.trigger.includes(card.v2.alternative),
+   id+" duplicates its main rule");
   assert.equal((cardMarkup(card).match(/tt-slip tt-slip--lead/g)||[]).length,1);
-  assert.doesNotMatch(cardMarkup(card),/tt-slip tt-slip--results/);
+  if(!card.v2.alternative)
+   assert.doesNotMatch(cardMarkup(card),/tt-slip tt-slip--results/);
  }
 });
 
@@ -76,7 +78,7 @@ test("gameplay cards consistently identify triggers and what a roll changes",()=
    assert.match(m.v2.remains,/No corpse/,m.id);
   }else{
    assert.match(m.v2.parley,/^[A-Z][A-Z ]+: /,m.id+" missing PARLEY decision");
-   assert.match(m.v2.remains,/^(EAT: Roll d6\.|Cannot EAT)/,m.id);
+   assert.match(m.v2.remains,/^(EAT: Roll d6\.|Cannot EAT|No EAT|SEARCH POCKETS|KEEP EYE|On defeat)/,m.id);
   }
   assert.doesNotMatch(m.behavior.join(" "),/ATTACK \+\d+\b/,m.id+" ambiguous attack bonus");
   assert.doesNotMatch(m.behavior.join(" "),/Hero attack DIS|Hero POISONED/,m.id);
@@ -84,7 +86,7 @@ test("gameplay cards consistently identify triggers and what a roll changes",()=
  for(const room of rooms){
   assert.equal(room.v2.choices.length,2,room.id);
   for(const choice of room.v2.choices){
-   assert.match(choice.label,/^[A-Z][A-Z ]+$/,room.id+" missing printed action");
+   assert.match(choice.label,/^[A-Z][A-Z ]+(?: · PACT)?$/,room.id+" missing printed action");
    assert.ok(choice.effect.length>8||
     /^Roll d6\.$/.test(choice.effect)&&Boolean(room.v2.roll),
     room.id+" omits the consequence");

@@ -86,6 +86,6 @@ test("freeing versus silencing the witness yields different lasting endings",()=
  assert.match(frees.endingMemory,/witness escapes/);
  const silences=expedition();choose(silences,"d-last-witness",1);vault(silences);
  assert.match(silences.endingMemory,/remains lost/);
- assert.deepEqual(frees.fateChoices.map(x=>x.choice),["FREE"]);
+ assert.deepEqual(frees.fateChoices.map(x=>x.choice),["FREE · PACT"]);
  assert.deepEqual(silences.fateChoices.map(x=>x.choice),["SILENCE"]);
 });
