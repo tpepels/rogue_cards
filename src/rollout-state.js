@@ -7,6 +7,7 @@
  * never the hidden identities or order from the real state.
  */
 import {ExpeditionState} from "./expedition-runtime.js";
+import {physicalCopies,isPhysicalCard} from "./engine/physical-cards.js";
 import {randomSource} from "./playtest.js";
 import {ROOMS,MONSTERS,OBJECTS,HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 
@@ -15,7 +16,7 @@ const copies=cards=>cards.flatMap(card=>
  Array.from({length:card.copies||1},()=>card));
 // Printed data never changes during an expedition. Do not expand all 52
 // Object definitions or all Monster copies for every hypothetical branch.
-const ITEM_COPIES=copies(OBJECTS);
+const ITEM_COPIES=physicalCopies(OBJECTS);
 const MONSTER_COPIES=Object.fromEntries(STAGES.map(stage=>[
  stage,copies(MONSTERS.filter(m=>m.stage===stage))]));
 const STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
@@ -38,7 +39,7 @@ const PRINTED_CARDS=new WeakSet([
  */
 function cloneMutable(value,seen){
  if(value===null||typeof value!=="object")return value;
- if(PRINTED_CARDS.has(value))return value;
+ if(PRINTED_CARDS.has(value)||isPhysicalCard(value))return value;
  const prior=seen.get(value);if(prior)return prior;
  let out;
  if(Array.isArray(value)){
