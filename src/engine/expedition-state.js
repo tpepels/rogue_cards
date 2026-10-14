@@ -326,7 +326,28 @@ export class ExpeditionState {
   this.exhausted.delete(wand);this.metrics.recharged++;return true;
  }
  consume(h,card){if(!this.remove(h,card))throw Error("Missing owned card "+card.id);
+  h.keptUsedPotions=h.keptUsedPotions.filter(x=>x.card!==card);
   this.metrics.spent++;}
+ /** A retained *used physical Potion* is a distinct, once-only resource.
+  * Its discard is a real choice at the correct printed trigger, not
+  * an automatic consequence of revealing the next Monster.
+  */
+ useRetainedPotion(kind,context){
+  const candidates=this.heroes.flatMap((hero,heroIndex)=>
+   (hero.keptUsedPotions||[]).filter(x=>x.kind===kind)
+    .map(x=>({hero,heroIndex,card:x.card,
+      index:hero.inventory.indexOf(x.card)}))
+    .filter(x=>x.hero.hp>0&&x.index>=0));
+  if(!candidates.length)return false;
+  const modes=["save",...candidates.map(x=>
+   "use:"+x.heroIndex+":"+x.index)];
+  const choice=this.chooseEffect("used-potion:"+kind+":"+context,
+   modes,"use:"+candidates[0].heroIndex+":"+candidates[0].index);
+  if(choice==="save")return false;
+  const x=candidates.find(x=>choice==="use:"+x.heroIndex+":"+x.index);
+  if(!x)throw Error("Invalid physical used Potion action");
+  this.consume(x.hero,x.card);return true;
+ }
  // Passive equipment is beneficial without a roll/activation. Count actual
  // combat/WIT applications here, not merely possession or planner forecasts.
  notePassive(card,kind,amount=0){
