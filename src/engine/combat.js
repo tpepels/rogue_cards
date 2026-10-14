@@ -274,6 +274,23 @@ export function monsterRespond(s,h){
  if(s.monsterSkip>0){s.monsterSkip--;return;}
  const m=s.monster;
  let face=s.forcedBehavior||s.die();s.forcedBehavior=0;
+ // Fungal Garden is a retained response to a REVEALED monster behavior;
+ // it no longer heals at the entrance to an unrelated Room.
+ const garden=s.keptRooms.find(entry=>entry.card.id==="m-fungus");
+ if(garden){
+  const modes=["save","force-low",
+   ...(s.discardable(1,"FIRE")?["cancel-with-fire"]:[])];
+  const selection=s.chooseEffect("fungal-garden-revealed-behavior:"+m.id,
+   modes,"save");
+  if(selection!=="save"){
+   s.keptRooms.splice(s.keptRooms.indexOf(garden),1);
+   if(selection==="cancel-with-fire"){
+    s.discard(1,{tag:"FIRE"});return;
+   }
+   face=1;
+   (h.hp>0?h:s.chooseActor()).nextWitDis++;
+  }
+ }
  if(s.rewrites.has(face))face=s.rewrites.get(face);
  if(m.id==="rat"&&s.anyEquippedTag("BEAST")&&face===6)face=1;
  if(m.id==="goblin"&&s.has("goblin-pet")&&face===6)face=1;
