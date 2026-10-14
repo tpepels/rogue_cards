@@ -14,6 +14,7 @@ function savedCustom(){
  const keys=stored();
  return Array.isArray(keys)?new Set(keys.filter(k=>available.has(k))):new Set(selection);
 }
+if(Array.isArray(stored())){current="custom";selection=savedCustom();}
 const chosen=group=>group.cards.filter(card=>selection.has(cardKey(card)));
 const count=stage=>selectionSummary(selection).counts[stage];
 const cardLine=card=>{
@@ -36,7 +37,7 @@ function snapshot(){
  return cards.length?cards:SELECTABLE.filter(c=>selection.has(cardKey(c))).slice(0,9);
 }
 function updateOpen(){openGroups=new Set([...mount.querySelectorAll(".db-group[open]")].map(node=>node.dataset.group))}
-function customize(){current="custom";localStorage.setItem(SAVE_KEY,JSON.stringify([...selection]));}
+function customize(){current="custom";try{localStorage.setItem(SAVE_KEY,JSON.stringify([...selection]))}catch{/* printing still works without browser storage */}}
 function selectPreset(id){
  if(id==="custom")selection=savedCustom();
  else selection=selectionForPreset(id);
