@@ -25,6 +25,31 @@ export function consumeCorpse(s,m){
   else if(m.id==="rust")h.nextDefenseAdv=true;
  }
 }
+/** Revised non-EAT Monster remains. These are physical card outcomes, not
+ * a universal corpse table: search, release, or retain a future reaction.
+ */
+export function resolveSpecialRemains(s,m,kind){
+ if(!m||s.monster!==m||s.monsterHP>0)
+  throw Error("Cannot resolve remains before defeating Monster");
+ const h=s.chooseRecipient("monster-remains:"+m.id);
+ if(m.id==="goblin"&&kind==="search"){
+  const face=s.die();
+  if(face<=2)s.hurt(h,1);
+  else if(face<=4)s.draw();
+  else{s.draw();s.peek(1)}
+  return;
+ }
+ if(m.id==="eye"&&kind==="keep-eye"||
+    m.id==="wraith"&&kind==="keep-whisper"){
+  s.keptMonsterRewards??=[];
+  s.keptMonsterRewards.push({monsterId:m.id,card:m});
+  return;
+ }
+ if(m.id==="wraith"&&kind==="release"){
+  s.peek(1);return;
+ }
+ throw Error("No printed remains "+kind+" on "+m.id);
+}
 export function settleMonsterVictory(s,m,{warden=false}={}){
  if(!m||s.monster!==m||s.monsterHP>0)
   throw Error("Only a defeated active Monster may settle its reward");
