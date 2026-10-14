@@ -15,7 +15,11 @@ const rollD20=(s,{adv=false,dis=false}={})=>{
 export function resolveParley(s){
  const m=s.monster;
  if(!m||m.stage==="FINAL")throw Error("No negotiable Monster");
- const h=bestWit(s);if(!h)return false;
+ const best=bestWit(s);if(!best)return false;
+ const eligible=s.heroes.map((hero,i)=>({hero,i})).filter(x=>x.hero.hp>0);
+ const selected=s.chooseEffect("parley-negotiator:"+m.id,
+  eligible.map(x=>String(x.i)),String(s.heroes.indexOf(best)));
+ const h=s.heroes[Number(selected)];
  s.setActor(h);
  const cost=(n,tag=null)=>s.discardable(n,tag);
  const pay=(n,tag=null)=>{if(!cost(n,tag))return false;s.discard(n,{tag});return true};
@@ -23,20 +27,31 @@ export function resolveParley(s){
  switch(m.id){
  case "rat":success=pay(1);break;
  case "goblin":success=pay(2);if(success){
-  const owner=s.chooseActor();if(!owner.slots.companion){
+  const owner=s.chooseRecipient("goblin-recruit");
+  if(!owner.slots.companion&&s.chooseEffect("goblin-ally",
+   ["decline","recruit"],"recruit")==="recruit"){
    owner.recruitedGoblin=true;s.temporaryCompanions.push("goblin");
   }
  }break;
  case "crawler":case "mold":{
-  const potion=s.heroes.find(x=>x.inventory.some(o=>o.v2.kind==="POTION"));
-  if(potion){s.consume(potion,potion.inventory.find(o=>o.v2.kind==="POTION"));success=true}
+  const potions=s.heroes.flatMap((hero,heroIndex)=>hero.inventory
+   .map((item,index)=>({hero,heroIndex,item,index}))
+   .filter(x=>x.item.v2.kind==="POTION"));
+  if(potions.length){
+   const modes=potions.map(x=>String(x.heroIndex)+":"+x.index);
+   const pick=s.chooseEffect("parley-potion:"+m.id,modes,modes[0]);
+   const chosen=potions.find(x=>String(x.heroIndex)+":"+x.index===pick);
+   s.consume(chosen.hero,chosen.item);success=true;
+  }
   break;
  }
  case "bat":case "wisp":{
   const difficulty=m.id==="bat"?3:5;
   const boon=blessBeforeD20(s,h);
   let rogueAdv=false,rogueDis=false,rogueReward=false;
-  if(h.card.id==="rogue"&&!h.used.has("hero")){
+  if(h.card.id==="rogue"&&!h.used.has("hero")&&
+   s.chooseEffect("rogue-parley-ability",
+    ["save","risk"],"risk")==="risk"){
    h.used.add("hero");const trick=s.die();
    rogueDis=trick<=2;rogueAdv=trick>=3;rogueReward=trick>=5;
   }
