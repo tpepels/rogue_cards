@@ -89,7 +89,8 @@ const chooseRoom=s=>{
  const cost=(ops)=>ops.reduce((n,op)=>n+(/^(?:COST|DISCARD):(\d+)$/.exec(op)?.[1]*1||0),0);
  const affordable=ops=>s.discardable(cost(ops))&&(
   !ops.includes("CLEANSE_COST")||s.partyCount("CURSED")>0);
- const choiceOK=i=>affordable(choices[i])&&(
+ const choiceOK=i=>affordable(choices[i])&&
+   !(i===0&&["m-well","m-hungry-door"].includes(room.id)&&!s.discardable(1))&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
     s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
  const ok0=choiceOK(0)&&(!room.v2.fate||fateChoiceLegal(s,room.id,0));
@@ -421,7 +422,7 @@ function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
      engraveElbereth(s,hero,{mode:"ward"});
     }else if(!useItemsInCombat(s,hero))playerAttack(s,hero);
    actions++;
-   if(s.monsterHP>threshold&&s.alive())monsterRespond(s,hero);
+   if(s.monster&&s.monsterHP>threshold&&s.alive())monsterRespond(s,hero);
    if(!s.alive()||s.monsterHP<=threshold)break;
    if(actions>=maxHeroActions){truncated=true;break;}
   }
@@ -434,8 +435,14 @@ function fight(s,{warden=false,continuation=false,firstHeroIndex=0,
  if(turns>=300)s.metrics.roundLimit=true;
  const completed=s.monsterHP<=threshold;
  if(completed&&threshold===0){
-  if(!s.banished&&!warden)eatCorpse(s,m);
-  settleMonsterVictory(s,m,{warden});
+  // Banishing/transmuting a Monster removes it before the fight ends.
+  // That is an escape, not a kill: no corpse or victory reward exists.
+  if(s.monster===m){
+   if(!s.banished&&!warden)eatCorpse(s,m);
+   settleMonsterVictory(s,m,{warden});
+  }else if(!s.monster&&s.banished){
+   s.pendingReward=0;s.pendingFightHeal=null;
+  }else throw Error("Monster encounter changed unexpectedly during combat");
  }else s.monster=null;
  return completed&&s.alive();
 }
