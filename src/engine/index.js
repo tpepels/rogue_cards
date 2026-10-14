@@ -148,6 +148,11 @@ export function chooseRoom(s,index){
   const [operation,...args]=code.split(":");
   s.apply(operation,args,s.room);
  }
+ // Loyal Hound's Beetle Caravan link gives a SCOUT after BARGAIN,
+ // not a free 5-6 outcome or a modifier to STEAL.
+ if(s.room.id==="m-beetle"&&index===0&&
+    s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog"))&&s.alive())
+  s.peek(1);
  return observeGame(s);
 }
 /** Legal combat options at the current state and timing, without AI scores. */
