@@ -257,8 +257,25 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
   return h?.hp>0&&s.monster&&s.monsterHP>0?
    [{phase,kind:"respond",heroIndex}]:[];
  }
- if(phase==="room")return legalRoomChoices(s)
-  .map(index=>({phase,kind:"room-choice",index,roomId:s.room.id}));
+ if(phase==="room"){
+  const printed=legalRoomChoices(s)
+   .map(index=>({phase,kind:"room-choice",index,roomId:s.room.id}));
+  if(s.room?.v2.kind!=="SHRINE")return printed;
+  const substitutes=[];
+  for(const [heroIndex,h] of s.heroes.entries()){
+   if(h.hp<=0)continue;
+   if(s.equipped(h,"staff")){
+    if(h.hp<h.card.hp)substitutes.push({phase,kind:"shrine-item",
+     heroIndex,cardId:"staff",mode:"heal"});
+    if(s.exhaustedWand())substitutes.push({phase,kind:"shrine-item",
+     heroIndex,cardId:"staff",mode:"recharge"});
+   }
+   if(h.inventory.some(c=>c.id==="wand-market")&&s.exhaustedWand())
+    substitutes.push({phase,kind:"shrine-item",
+     heroIndex,cardId:"wand-market",mode:"recharge"});
+  }
+  return [...printed,...substitutes];
+ }
  if(phase==="combat")return legalCombatActions(s,heroIndex)
   .map(a=>({...a,phase}));
  if(phase==="parley"){
@@ -354,7 +371,18 @@ export function applyAction(s,action){
  const selected=legal.find(candidate=>
   Object.keys(candidate).every(key=>candidate[key]===action[key]));
  if(!selected)throw Error("Illegal action "+JSON.stringify(action));
- if(action.phase==="room")return chooseRoom(s,action.index);
+ if(action.phase==="room"){
+  if(selected.kind==="room-choice")return chooseRoom(s,selected.index);
+  const h=s.heroes[selected.heroIndex],
+   item=h.inventory.find(c=>c.id===selected.cardId);
+  if(!item)throw Error("Missing printed Shrine replacement Item");
+  s.directItem(h,item,"shrine-skip-choice",()=>{
+   if(selected.mode==="heal")s.heal(h,2);
+   else if(!s.recharge())throw Error("No exhausted Wand to recharge");
+   return true;
+  });
+  return observeGame(s);
+ }
  if(action.phase==="combat")return takeCombatAction(s,selected);
  if(action.kind==="hero-mode")return setHeroAbilityMode(
   s,s.heroes[action.heroIndex].card.id,action.mode);
