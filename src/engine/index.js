@@ -33,6 +33,18 @@ const owners=s=>s.heroes.map((h,i)=>({
  inventoryCopies:h.inventory.map(card=>card._physicalCopy||card.id),
  usedPotionTokens:(h.keptUsedPotions||[]).map(x=>({
   cardId:x.card.id,copy:x.card._physicalCopy||x.card.id,kind:x.kind})),
+ usedThisRoom:[...h.used].map(x=>typeof x==="string"?x:
+  x._physicalCopy||x.id).sort(),
+ exhaustedCopies:h.inventory.filter(c=>s.exhausted.has(c))
+  .map(c=>c._physicalCopy||c.id).sort(),
+ keptEffects:[...h.kept],
+ modifiers:Object.fromEntries([
+  "nextAdv","nextDis","nextAtk","nextDamage","nextWitDis",
+  "nextHitBlock","nextDarknessDis","ignoreDarknessOnce",
+  "nextDefenseAdv","nextDefenseBonus","nextDefenseDis",
+  "nextDefensePenalty","damageVulnerability","scouting",
+  "defDuration","immune"
+ ].map(k=>[k,h[k]??null])),
  equipped:Object.fromEntries(Object.entries(h.slots)
   .map(([slot,card])=>[slot,card.id]))
 }));
@@ -70,6 +82,16 @@ export function observeGame(s){
    ended:!s.alive()||s.metrics.won||!!s.metrics.escaped,
   won:!!s.metrics.won,
    elberethAttempts:s.elberethAttempts,
+  combatFlags:{actedMask:s._actedCombatMask||0,
+   monsterSkip:s.monsterSkip,monsterAdv:s.monsterAdv,
+   monsterDis:s.monsterDis,forcedBehavior:s.forcedBehavior,
+   mustFightFollowingWisp:s.mustFightFollowingWisp||false,
+   heroFirstAdv:s.heroFirstAdv,trapGuard:s.trapGuard,
+   poisonRoom:s.poisonRoom,ratFavor:s.ratFavor,
+   nextLadder:s.nextLadder,skipNextMonster:s.skipNextMonster},
+  revealedDestinations:{savedPath:s.savedPath?.id??null,
+   whisperRoom:s.whisperRoom?.id??null,
+   savedPathGrace:s.savedPathGrace},
    trapdoors:s.trapdoorHistory.map(x=>({...x})),
    rerolls:s.rerollHistory.map(x=>({...x})),
    ending:s.endingKind
