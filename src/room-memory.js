@@ -34,7 +34,7 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","RISK THE FLAME","Roll d6.","EXTINGUISH","path"],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
  ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; discard 1 Item to reveal a third. Enter one, put the rest on bottom.","TEAR","Roll d6.","TEAR","path"],
  [
   "m-ladder",
