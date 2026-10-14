@@ -118,10 +118,17 @@ test("all nine non-dice Objects have specific functional coverage",()=>{
   const state=new ExpeditionState({seed:445,heroes:["warrior"]});
   const hero=state.heroes[0],card=byId(id);
   state.beginRoom(room(location));state.setActor(hero);state.add(hero,card);
-  const before=state.metrics.drawn,spentBefore=state.metrics.spent;
+  const before=state.metrics.drawn,spentBefore=state.metrics.spent,hpBefore=hero.hp;
   state.roomRoll(1);
-  assert.ok(state.metrics.drawn>before,id+" did not produce the highest Room result");
-  if(id==="key")assert.ok(state.metrics.spent>spentBefore,"Rusty Key was not spent");
+  if(["torch","lantern-heart"].includes(id)){
+   // A Lamp-Eater now consumes a flame or bites. Fire does not guarantee loot.
+   assert.equal(state.metrics.drawn,before,id+" gave free Lamp-Eater treasure");
+   assert.ok(state.metrics.spent>spentBefore||hero.hp<hpBefore,
+    id+" did not incur the Lamp-Eater cost");
+  }else{
+   assert.ok(state.metrics.drawn>before,id+" did not produce its Room benefit");
+   if(id==="key")assert.ok(state.metrics.spent>spentBefore,"Rusty Key was not spent");
+  }
  }
  const crown=byId("crown-relic"),scroll=byId("scroll-flame");
  const sealState=new ExpeditionState({seed:915,heroes:["wizard"],strategy:"seal"});
