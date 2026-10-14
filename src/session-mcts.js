@@ -109,25 +109,60 @@ export function searchDecision(session,{budget=100,seed=1,
  if(!rootActions.length)throw Error("No pending player choice to search");
  const original=JSON.stringify(observeSession(session));
  const actualRng=session.state.rng.snapshot();
- const blueprint=knowledge==="fair"?
+ // Pending mid-roll observations must be replayed with their ACTUAL dice
+ // before sampling the unknown future at that reaction boundary.
+ const blueprint=knowledge==="fair"&&!session.pendingNested?
   prepareRolloutDecks(session.state,"fair"):null;
  const tree=new Map(),rootKey="root:"+publicState(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  const incompleteReasons={};
+ const phaseOpportunities={},phaseSelections={},actionOpportunities={},
+  actionSelections={},cardOpportunities={},cardSelections={};
+ const increment=(counter,key)=>{counter[key]=(counter[key]||0)+1};
+ const record=(actions,selected,phase)=>{
+  increment(phaseOpportunities,phase);
+  increment(phaseSelections,phase);
+  for(const a of actions){
+   increment(actionOpportunities,a.kind);
+   if(a.cardId)increment(cardOpportunities,a.cardId);
+  }
+  increment(actionSelections,selected.kind);
+  if(selected.cardId)increment(cardSelections,selected.cardId);
+ };
  for(let i=0;i<budget;i++){
   const sim=cloneSession(session),s=sim.state;
-  // Oracle sees deck order, never the real continuation of the future dice.
-  s.rng=randomSource(mix(seed^Math.imul(i+1,0x9e3779b9)));
-  if(knowledge==="fair"){
-   const drawn=sampleRolloutDecks(session.state,{
-    knowledge:"fair",blueprint,
-    deckSeed:mix(seed^Math.imul(i+1,0x85ebca6b))});
-   s.deck=drawn.deck.slice();
-   for(const stage of ["UPPER","MIDDLE","DEEP"]){
-    s.rooms[stage]=drawn.rooms[stage].slice();
-    s.monsters[stage]=drawn.monsters[stage].slice();
+  const chanceSeed=mix(seed^Math.imul(i+1,0x9e3779b9)),
+   deckSeed=mix(seed^Math.imul(i+1,0x85ebca6b));
+  // Never change the already-observed die/Room revealed inside a pending
+  // reaction. Replay it exactly first, then sample only future chance.
+  if(!sim.pendingNested){
+   s.rng=randomSource(chanceSeed);
+   if(knowledge==="fair"){
+    const drawn=sampleRolloutDecks(session.state,{
+     knowledge:"fair",blueprint,deckSeed});
+    s.deck=drawn.deck.slice();
+    for(const stage of ["UPPER","MIDDLE","DEEP"]){
+     s.rooms[stage]=drawn.rooms[stage].slice();
+     s.monsters[stage]=drawn.monsters[stage].slice();
+    }
    }
   }
+  let sampledObservedBoundary=!sim.pendingNested;
+  const onReplay=eventState=>{
+   if(sampledObservedBoundary)throw Error("Sampled observed event twice");
+   sampledObservedBoundary=true;
+   // A revealed corridor has removed its shown Rooms from the hidden pile.
+   if(knowledge==="fair"){
+    const drawn=sampleRolloutDecks(eventState,{
+     knowledge:"fair",deckSeed});
+    eventState.deck=drawn.deck.slice();
+    for(const stage of ["UPPER","MIDDLE","DEEP"]){
+     eventState.rooms[stage]=drawn.rooms[stage].slice();
+     eventState.monsters[stage]=drawn.monsters[stage].slice();
+    }
+   }
+   eventState.rng=randomSource(chanceSeed);
+  };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null;
   try{
@@ -138,9 +173,12 @@ export function searchDecision(session,{budget=100,seed=1,
     const node=nodeFor(tree,key,actions);
     const choice=select(node,actions,choiceRng,exploration);
     const edge=node.edges.get(actionKey(choice));
+    record(actions,choice,sim.pendingNested?
+     "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
     const from=sim.phase;
-    submitDecision(sim,choice);
+    submitDecision(sim,choice,{afterReactionReplay:
+     sampledObservedBoundary?null:onReplay});
     // The exact public observation at the next boundary keys the tree.
     historyKey=mix(hash(historyKey+from+actionKey(choice))).toString(16);
     depth++;
@@ -172,14 +210,17 @@ export function searchDecision(session,{budget=100,seed=1,
  const root=tree.get(rootKey+":"+publicState(session));
  const decisions=rootStats(root,rootActions).sort((a,b)=>
   b.visits-a.visits||((b.estimatedWinRate??0)-(a.estimatedWinRate??0)));
- const chosen=decisions.slice().sort((a,b)=>
-  (b.visits===0?0:b.estimatedWinRate??0)-
-  (a.visits===0?0:a.estimatedWinRate??0))[0];
+ // Select robust child (most visits), not an exploratory single lucky win.
+ const chosen=decisions[0];
  return {knowledge,seed,budget,completed,incomplete,incompleteReasons,
   terminalWins:wins,terminalWinRate:completed?wins/completed:null,
   maximumDepth,treeNodes:tree.size,
   rootActionCount:rootActions.length,choices:decisions,
   recommended:chosen?.action??null,
+  actionCoverage:{phaseOpportunities,phaseSelections,
+   actionOpportunities,actionSelections,
+   cardOpportunities,cardSelections},
+  rootEveryActionTried:decisions.every(x=>x.visits>0),
   complete:incomplete===0,
   limitations:[
    "Only currently wired pending action windows are searched",
