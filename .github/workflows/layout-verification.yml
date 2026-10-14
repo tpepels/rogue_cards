@@ -18,6 +18,13 @@ on:
       - "tests/card-layouts.test.mjs"
       - "tests/layout-editor.spec.mjs"
       - "tests/visual.spec.mjs"
+      - "tests/decks.spec.mjs"
+      - "tests/decks.test.mjs"
+      - "decks.html"
+      - "src/print-expansion.js"
+      - "src/decks.js"
+      - "src/decks-app.js"
+      - "src/tabletop-view.js"
   workflow_dispatch:
 
 jobs:
@@ -36,9 +43,9 @@ jobs:
       - name: Check every initialized layout and generated CSS
         run: |
           npm run layouts:check
-          node --test tests/card-layouts.test.mjs
+          node --test tests/card-layouts.test.mjs tests/decks.test.mjs
       - name: Test browser editor and 139-card print layouts
-        run: npx playwright test tests/layout-editor.spec.mjs tests/visual.spec.mjs
+        run: npx playwright test tests/layout-editor.spec.mjs tests/visual.spec.mjs tests/decks.spec.mjs
       - name: Upload per-card visual-inspection screenshots and diagnostics
         if: always()
         uses: actions/upload-artifact@v4

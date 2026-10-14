@@ -4,7 +4,7 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  test.setTimeout(180000);
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/");
- await expect(page.getByRole("heading",{name:/One dungeon. One deck. One rulebook/i})).toBeVisible();
+ await expect(page.getByRole("heading",{name:/Many dungeons. One rulebook/i})).toBeVisible();
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(139);
  await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(139);
  await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(139);
