@@ -88,6 +88,24 @@ test("Wax Bridge blocks up to three fall damage and never banishes a Monster",()
  assert.ok(!s.keptRooms.some(x=>x.card===wax));
 });
 
+test("Wax Bridge and physical Rope are separate legal fall-prevention payments",()=>{
+ const s=game(894),h=s.heroes[0],wax=room("m-wax-bridge");
+ let rope=h.inventory.find(card=>card.id==="rope");
+ if(!rope){
+  const position=s.deck.findIndex(card=>card.id==="rope");
+  assert.ok(position>=0,"At least one physical Rope is available");
+  rope=s.deck.splice(position,1)[0];s.noteDeckRemoval(rope);
+  s.add(h,rope);
+ }
+ s.keptRooms.push({card:wax});
+ s.beginRoom(room("u-fall"));
+ s.fallThrough("MIDDLE",{damage:5,monster:false});
+ assert.equal(s.pendingTrapLanding.damage,0,
+  "Wax prevents 3 and Rope prevents the remaining 2");
+ assert.ok(!s.keptRooms.some(x=>x.card===wax));
+ assert.ok(h.used.has(rope),"The physical Rope must be used");
+});
+
 test("WIT-only Potion and Oracle modifiers survive ATK checks and expire on the next actual WIT check",()=>{
  const s=game(895),h=s.heroes[0];
  s.beginRoom(room("u-gate"));
