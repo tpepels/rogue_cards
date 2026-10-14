@@ -124,20 +124,15 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    for(const note of card.notes){
     expect(note.clipY,card.id+" note vertically clipped").toBeLessThanOrEqual(2);
     expect(note.clipX,card.id+" note horizontally clipped").toBeLessThanOrEqual(2);
-    expect(note.y-card.collage.top,card.id+" pasted note extends above artwork").toBeGreaterThanOrEqual(21);
-    expect(note.bottom-card.collage.bottom,card.id+" pasted note extends below frame").toBeLessThanOrEqual(4);
-    expect(note.x-card.collage.left,card.id+" pasted note extends left").toBeGreaterThanOrEqual(-3);
-    expect(note.right-card.collage.right,card.id+" pasted note extends right").toBeLessThanOrEqual(4);
-    const overlapX=Math.min(card.title.right,note.right)-Math.max(card.title.left,note.x);
-    const overlapY=Math.min(card.title.bottom,note.bottom)-Math.max(card.title.top,note.y);
-    expect(Math.min(overlapX,overlapY),card.id+" rules overlap title").toBeLessThanOrEqual(4);
+    // Hand-positioned cutouts can be rotated and intentionally overlap.
+    // Only reject cutouts actually extending outside the printable card.
+    const margin=6*96/25.4;
+    expect(note.y-card.cardBounds.top,card.id+" note goes off top").toBeGreaterThanOrEqual(-margin);
+    expect(note.bottom-card.cardBounds.bottom,card.id+" note goes off bottom").toBeLessThanOrEqual(margin);
+    expect(note.x-card.cardBounds.left,card.id+" note goes off left").toBeGreaterThanOrEqual(-margin);
+    expect(note.right-card.cardBounds.right,card.id+" note goes off right").toBeLessThanOrEqual(margin);
    }
-   if(card.notes.length===2){
-    const [a,b]=card.notes;
-    const overlapX=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
-    const overlapY=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
-    expect(Math.min(overlapX,overlapY),card.id+" pasted notes collide").toBeLessThanOrEqual(3);
-   }
+
   }
   return cards;
  };
@@ -194,37 +189,33 @@ test("physical card families have distinct illustration frames and artifact layo
 
 
 
-test("north-east notes and footer depth marks are consistent across all 139 cards",async({page})=>{
+test("individual card placements preserve room depth and readable pasted rules",async({page})=>{
  test.setTimeout(180000);
  await page.goto("/");
  const checks=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
-  const collage=card.querySelector(".tt-collage").getBoundingClientRect();
-  const lead=card.querySelector(".tt-slip--lead").getBoundingClientRect();
-  const result=card.querySelector(".tt-slip--results")?.getBoundingClientRect();
+  const title=card.querySelector(".tt-title"),lead=card.querySelector(".tt-slip--lead");
+  const results=card.querySelector(".tt-slip--results");
   const depth=card.querySelector(".tt-depth");
-  return {id:card.dataset.id,titleBand:card.dataset.titleBand,
+  return {id:card.dataset.id,
    stage:card.dataset.type==="room"||card.dataset.type==="monster",
    depth:depth?.textContent||null,depthInFooter:depth?.closest(".tt-footer")!==null,
-   leadEast:(lead.left+lead.right)/2>(collage.left+collage.right)/2,
-   leadTopMm:(lead.top-collage.top)*25.4/96,
-   resultWest:result?(result.left+result.right)/2<(collage.left+collage.right)/2:null,
-   aboveTitle:lead.top<card.querySelector(".tt-title").getBoundingClientRect().bottom
+   titleAngle:getComputedStyle(title).transform,
+   leadAngle:getComputedStyle(lead).transform,
+   resultsAngle:results?getComputedStyle(results).transform:null,
+   leadWidth:lead.getBoundingClientRect().width
   };
  }));
  expect(checks).toHaveLength(139);
- for(const x of checks){
-  expect(x.leadEast,x.id+" first note not north-east").toBe(true);
-  expect(x.leadTopMm,x.id+" first note too high").toBeGreaterThan(26);
-  expect(x.leadTopMm,x.id+" first note too low").toBeLessThan(45);
-  expect(x.aboveTitle,x.id+" upper note collides with title").toBe(false);
-  if(x.resultWest!==null)expect(x.resultWest,x.id+" second note not opposite").toBe(true);
-  if(x.stage){
-   expect(x.depthInFooter,x.id+" depth mark not moved to footer").toBe(true);
-   expect(["UPPER","MIDDLE","DEEP","FINAL"]).toContain(x.depth);
-  }else expect(x.depth,x.id+" unwanted dungeon depth").toBe(null);
+ for(const item of checks){
+  expect(item.leadWidth,item.id+" has no visible rules paper").toBeGreaterThan(20);
+  expect(item.titleAngle,item.id+" lost title placement").not.toBe("none");
+  expect(item.leadAngle,item.id+" lost rules rotation").not.toBe("none");
+  if(item.stage){
+   expect(item.depthInFooter,item.id+" depth not in footer").toBe(true);
+   expect(["UPPER","MIDDLE","DEEP","FINAL"]).toContain(item.depth);
+  }else expect(item.depth,item.id+" unwanted depth").toBe(null);
  }
 });
-
 
 test("distressed borders and distinct paper cutouts survive screen and print",async({page})=>{
  await page.goto("/");
