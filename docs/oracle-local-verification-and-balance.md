@@ -98,6 +98,9 @@ results/canonical-audit-01/summary.json reports a complete passing
 audit of at least 36 seeded walks at precisely the same Git revision.
 Use --audit /path/to/summary.json if the audit has another location.
 A dry-run does not require the audit to have completed.
+A real run also executes `npm run test:session` and
+`npm run validate:deck` in local preflight. Any failed regression
+stops the run before launching MCTS workers.
 
 The runner:
 - Rotates all eight solo Heroes and 28 two-Hero combinations
