@@ -304,9 +304,13 @@ test("a lethal risky Priest blessing ends the current attack without a post-deat
 
 test("lethal Wand of Undoing misfire cannot offer Crown after a failed Warden attack d20",()=>{
  const s=new ExpeditionState({seed:11,heroes:["warrior"]});
- empty(s);
  const h=s.heroes[0];
+ // Retain a needed physical Item if it happened to be drawn at setup.
+ // Remove all other starting gear without fabricating a second copy.
+ for(const card of [...h.inventory])
+  if(!["wand-undo","crown-relic"].includes(card.id))s.remove(h,card);
  for(const id of ["wand-undo","crown-relic"]){
+  if(h.inventory.some(card=>card.id===id))continue;
   const index=s.deck.findIndex(card=>card.id===id);
   assert.ok(index>=0,"Missing original physical Item "+id);
   const [card]=s.deck.splice(index,1);
@@ -332,9 +336,13 @@ test("lethal Wand of Undoing misfire cannot offer Crown after a failed Warden at
 
 test("lethal Wand of Undoing during a Room check prevents a dead Hero's Crown prompt",()=>{
  const s=new ExpeditionState({seed:12,heroes:["warrior"]});
- empty(s);
  const h=s.heroes[0];
+ // Retain a needed physical Item if it happened to be drawn at setup.
+ // Remove all other starting gear without fabricating a second copy.
+ for(const card of [...h.inventory])
+  if(!["wand-undo","crown-relic"].includes(card.id))s.remove(h,card);
  for(const id of ["wand-undo","crown-relic"]){
+  if(h.inventory.some(card=>card.id===id))continue;
   const index=s.deck.findIndex(card=>card.id===id);
   assert.ok(index>=0,"Missing original physical Item "+id);
   const [card]=s.deck.splice(index,1);
