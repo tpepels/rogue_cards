@@ -299,6 +299,8 @@ export class ExpeditionState {
   if(!this.room||this.room.stage==="FINAL")return;
   const deck=this.rooms[this.room.stage];if(!deck)return;
   this.metrics.scouted++;this.actor.scouting++;
+  // The player knows both faces before deciding to reorder them.
+  this.peekedRoomIds[this.room.stage]=deck.slice(0,n).map(r=>r.id);
   if(swap&&n>1&&deck.length>=2){
    const danger=r=>(r.v2.roll?.outcomes||[]).some(o=>/draw an? .* monster/i.test(o.effect));
    const legacy=danger(deck[0])&&!danger(deck[1])?"swap":"keep";
@@ -415,6 +417,9 @@ export class ExpeditionState {
      else this.rooms[room.stage].push(alternative);
     }}
    this.room=room;this.skipRoom=false;
+   if(this.publicBottomRoomIds?.[room.stage])
+    this.publicBottomRoomIds[room.stage]=
+     this.publicBottomRoomIds[room.stage].filter(id=>id!==room.id);
    // Trapdoors can reach the Vault before nine ordinary Rooms.
    // Entering FINAL is the authoritative arrival metric, not cleared===9.
    if(room.stage==="FINAL")this.metrics.vaultEntered=true;
