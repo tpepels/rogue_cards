@@ -306,6 +306,14 @@ export function monsterRespond(s,h){
    (h.hp>0?h:s.chooseActor()).nextWitDis++;
   }
  }
+ const whisper=(s.keptMonsterRewards||[]).find(entry=>
+  entry.monsterId==="wraith");
+ if(whisper&&m.v2?.tags?.some(tag=>["MAGIC","CURSED"].includes(tag))&&
+  s.chooseEffect("retained-wraith-whisper:"+m.id,
+   ["save","use"],"save")==="use"){
+  s.keptMonsterRewards.splice(s.keptMonsterRewards.indexOf(whisper),1);
+  face=1;
+ }
  if(s.rewrites.has(face))face=s.rewrites.get(face);
  if(m.id==="rat"&&s.anyEquippedTag("BEAST")&&face===6)face=1;
  if(m.id==="goblin"&&s.has("goblin-pet")&&face===6)face=1;
