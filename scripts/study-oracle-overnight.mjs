@@ -39,7 +39,7 @@ const gitSha=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{encoding:"
 const hashConfig=x=>createHash("sha256").update(JSON.stringify(x)).digest("hex");
 function parse(args){
  const allowed=new Set(["--runs","--workers","--hours","--out",
-  "--seed","--chunk-size","--budget","--replan-budget","--knowledge"]);
+  "--seed","--chunk-size","--budget","--replan-budget","--knowledge","--only"]);
  const values={},flags=new Set();
  for(let i=0;i<args.length;i++){
   const k=args[i];
@@ -69,12 +69,17 @@ function parse(args){
   out:resolve(values["--out"]||"results/oracle-overnight"),
   resume:flags.has("--resume"),dryRun:flags.has("--dry-run")};
  if(c.resume&&c.dryRun)throw Error("--resume and --dry-run are mutually exclusive");
- c.plannedPairs=c.runs*CARDS.length;
+ const only=(values["--only"]||"").split(",").filter(Boolean);
+ if(only.length&&(new Set(only).size!==only.length||
+   only.some(id=>!CARDS.some(card=>card.id===id))))
+  throw Error("--only expects unique canonical Room/Item IDs");
+ c.cards=only.length?CARDS.filter(card=>only.includes(card.id)):CARDS;
+ c.plannedPairs=c.runs*c.cards.length;
  c.plannedExpeditions=2*c.plannedPairs;
  if(c.plannedPairs>1160000)throw Error("Split the workload into separately seeded studies");
  c.study={schema:1,runs:c.runs,seed:c.seed,chunkSize:c.chunkSize,
   budget:c.budget,replanBudget:c.replanBudget,knowledge:c.knowledge,
-  strictTerminal:true,printedCards:[...CARDS.map(uid)]};
+  strictTerminal:true,printedCards:c.cards.map(uid)};
  c.signature=hashConfig(c.study);
  return c;
 }
@@ -82,7 +87,7 @@ function jobs(c){
  const result=[];
  // Visit every card early, then deepen every card systematically.
  for(let from=0;from<c.runs;from+=c.chunkSize)
-  for(const card of CARDS)result.push({
+  for(const card of c.cards)result.push({
    id:uid(card)+"__"+from,card,from,count:Math.min(c.chunkSize,c.runs-from)});
  return result;
 }
@@ -227,7 +232,7 @@ function erf(x){
  return sign*(1-poly*Math.exp(-z*z));
 }
 function summary(c,finished){
- const allCards=CARDS.map(card=>{
+ const allCards=c.cards.map(card=>{
   const pieces=finished.filter(x=>x.card.id===card.id&&x.card.kind===card.kind);
   const total=pieces.reduce((a,b)=>{
    for(const name of ["tried","eligible","notReached","unaffordable",
@@ -359,7 +364,7 @@ function persist(c,done,active=false){
 async function main(){
  const c=parse(process.argv.slice(2));
  const tasks=jobs(c),s=JSON.stringify({pairs:c.plannedPairs,
-  games:c.plannedExpeditions,cards:CARDS.length,
+  games:c.plannedExpeditions,cards:c.cards.length,
   chunks:tasks.length,workers:c.workers,hours:c.hours,
   budget:c.budget,replanBudget:c.replanBudget,knowledge:c.knowledge,
   estimatedSampledBranches:"unbounded in advance; monitor actual telemetry",
