@@ -6,10 +6,9 @@
  * ExpeditionState, dice, Room ops, Item executor and combat primitives as
  * the full-effect expedition runner - no cards are simulated separately.
  *
- * LIMIT: in-roll reactions/abilities (e.g. Ring of Echoes, Knight shield,
- * Priest pre-roll blessing) still execute inside synchronous rule methods.
- * They require continuation-friendly rules primitives before they become
- * explicit decisions. This controller does NOT claim otherwise.
+ * Nested in-roll decisions are exposed transactionally by the decision
+ * hook. Exhaustive correctness across all possible timing interactions
+ * still requires stateful test coverage; this file does not certify it.
  */
 import {VAULT} from "../tabletop-data.js";
 import {createGame,observeGame,legalActions,applyAction,
@@ -86,11 +85,10 @@ export function observeSession(session){
   actionCount:session.actionCount,
   // True only when literally all pending player decisions are represented.
   completeDecisionCoverage:false,
-  unresolvedTriggerPhases:[
-   "reactive Item timing inside dice resolution",
-   "Hero ability trigger timing and reroll acceptance",
-   "first DEEP Monster Hollow Knight return decision",
-   "corridor revealed-Room selection"
+  unverifiedInteractionClasses:[
+   "rare combined nested Hero/Item/Room reactions",
+   "all contextual preconditions of printed passive effects",
+   "all simultaneous retained Room and Monster behavior triggers"
   ]};
 }
 function done(session){
