@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,submitDecision,observeSession,
- createGame,enterNextRoom,legalActions} from "../src/engine/index.js";
+ createGame,enterNextRoom,legalActions,randomSource} from "../src/engine/index.js";
 import {ROOMS,MONSTERS,OBJECTS,WARDEN,VAULT} from "../src/tabletop-data.js";
 const room=id=>ROOMS.find(x=>x.id===id);
 const monster=id=>MONSTERS.find(x=>x.id===id);
@@ -93,6 +93,47 @@ test("combat has a separate player action and Monster response, then full reward
  }
  assert.ok(session.phase!=="combat");
 });
+test("a lethal Priest Blessing during an affordable SEAL ends the decision at party defeat",()=>{
+ const session=createDecisionSession({seed:4452,heroes:["priest"]});
+ const s=session.state;
+ for(const stage of ["UPPER","MIDDLE","DEEP"])s.stageProgress[stage]=3;
+ s.beginRoom(VAULT);
+ session.phase="vault";
+ // Obtain actual physical MAGIC cards from the original deck.
+ while(!s.discardable(3,"MAGIC")){
+  const i=s.deck.findIndex(c=>c.v2.tags.includes("MAGIC")&&
+   !c.v2.tags.includes("CURSED")&&c.id!=="crown-relic");
+  assert.ok(i>=0,"Three physical MAGIC payments must be available");
+  const [card]=s.deck.splice(i,1);
+  s.noteDeckRemoval(card);s.add(s.heroes[0],card);
+ }
+ s.heroes[0].hp=1;
+ // First printed risky Priest result is 1, and its HP die is also 1.
+ s.rng=randomSource(1);
+ const sealAction=sessionActions(session).find(a=>a.kind==="seal");
+ assert.ok(sealAction,"Actual printed SEAL is affordable");
+ submitDecision(session,sealAction);
+ let risky=false;
+ for(let steps=0;steps<40&&session.pendingNested;steps++){
+  const actions=sessionActions(session);
+  const selected=actions.find(a=>a.phase==="hero-trigger"&&
+   a.mode==="risk")||
+   actions.find(a=>a.kind==="discard-card")||
+   actions.find(a=>a.kind==="continue")||actions[0];
+  assert.ok(selected,"The printed transaction must have a legal reaction");
+  if(selected.phase==="hero-trigger")risky=true;
+  submitDecision(session,selected);
+ }
+ assert.ok(risky,"The actual Priest blessing was offered during SEAL");
+ assert.equal(session.pendingNested,null);
+ assert.equal(s.heroes[0].hp,0);
+ assert.equal(session.phase,"terminal");
+ assert.deepEqual(sessionActions(session),[]);
+ assert.equal(s.metrics.won,false);
+ assert.equal(s.monster,null,
+  "A dead party must not start a Warden encounter");
+});
+
 test("Vault is a real paused SEAL versus Warden decision and has an actual ending",()=>{
  const session=createDecisionSession({seed:9034,heroes:["wizard"]});
  const s=session.state;
