@@ -74,10 +74,14 @@ export function setHeroAbilityMode(s,heroId,mode){
 }
 // Kept Rooms explicitly offer a second decision when their trigger occurs.
 export function setReturnChoice(s,roomId,choice){
- if(!["save","escape","leave","recover","smuggle","heal","burn","roll"].includes(choice))
+ if(!["save","escape","leave","recover","smuggle","heal","burn",
+   "roll","pay","use"].includes(choice))
   throw Error("Invalid return choice");
  if(!s.keptRooms.some(x=>x.card.id===roomId))
   throw Error("Room not retained: "+roomId);
+ if(!legalActions(s,{phase:"retained",roomId}).some(a=>a.mode===choice))
+  throw Error("Return choice is not printed or affordable for "+roomId+
+   ": "+choice);
  s.returnChoices[roomId]=choice;
  return observeGame(s);
 }
