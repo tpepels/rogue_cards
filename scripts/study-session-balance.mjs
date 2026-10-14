@@ -261,6 +261,8 @@ function summarize(c,completed,failed=[]){
   monsterBehaviorCausalContrastsNotImplemented:MONSTERS.map(m=>m.id)
  };
  const pairs=rows.filter(r=>r.kind==="paired").length;
+ const partySamples=Object.fromEntries(parties.map(ids=>[ids.join("+"),0]));
+ for(const row of rows)partySamples[row.heroes.join("+")]++;
  const analysis={
   schema:"rogue-cards-independent-state-matched-balance-v1",
   commit:git(),design:{
@@ -272,6 +274,9 @@ function summarize(c,completed,failed=[]){
   completedSourceSeeds:rows.length,
   pairedSourceSeeds:pairs,
   naturallyUnreached:rows.length-pairs,
+  startedPartySamples:partySamples,
+  all36PartyCombinationsRepresented:Object.values(partySamples)
+   .every(count=>count>0),
   complete:rows.length===c.runs&&failed.length===0,
   errors:failed,contrasts,missing,
   statisticallyDefensibleForAllCards:false,
@@ -297,6 +302,8 @@ const saveReport=(c,done,failed=[])=>{
   "Git revision: "+s.commit,
   "Independent completed source seeds: "+s.completedSourceSeeds+"/"+c.runs,
   "Source states with paired comparison: "+s.pairedSourceSeeds,
+  "Hero party setups visited: "+
+   Object.values(s.startedPartySamples).filter(n=>n>0).length+"/36",
   "Unreached target focus: "+s.naturallyUnreached,
   "Failures: "+s.errors.length,
   "Status: "+(s.complete?"complete":"partial / requires resume"),"",
