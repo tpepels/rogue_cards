@@ -14,7 +14,7 @@ import {Worker,isMainThread,parentPort,workerData} from "node:worker_threads";
 import {availableParallelism} from "node:os";
 import {existsSync,mkdirSync,readdirSync,readFileSync,renameSync,writeFileSync}
  from "node:fs";
-import {join,resolve} from "node:path";
+import {join,resolve,dirname} from "node:path";
 import {execFileSync} from "node:child_process";
 import {HEROES,ROOMS,OBJECTS,MONSTERS}
  from "../src/tabletop-data.js";
@@ -90,10 +90,11 @@ const classify=(session,actions)=>{
 const params=()=>{const vals={},flags=new Set();
  const allowed=new Set(["--runs","--seed","--workers","--hours",
   "--out","--future-budget","--navigate-budget","--max-search-steps",
-  "--max-game-steps","--min-eligible","--focus","--audit"]);
+  "--max-game-steps","--min-eligible","--focus","--audit",
+  "--benchmark-runs","--benchmark-minutes"]);
  for(let i=2;i<process.argv.length;i++){
   const key=process.argv[i];
-  if(key==="--resume"||key==="--dry-run"){
+  if(key==="--resume"||key==="--dry-run"||key==="--benchmark"){
    if(flags.has(key))throw Error("Duplicate "+key);
    flags.add(key);continue;
   }
@@ -119,10 +120,13 @@ const params=()=>{const vals={},flags=new Set();
   maxSearchSteps:number("--max-search-steps",4000,1,100000),
   maxGameSteps:number("--max-game-steps",7000,1,100000),
   minEligible:number("--min-eligible",60,2,100000),
+  benchmarkRuns:number("--benchmark-runs",18,1,200),
+  benchmarkMinutes:number("--benchmark-minutes",15,1,120),
   focus,auditFile:resolve(vals["--audit"]||
    "results/canonical-audit-01/summary.json"),
   out:resolve(vals["--out"]||"results/session-balance-01"),
-  resume:flags.has("--resume"),dryRun:flags.has("--dry-run")
+  resume:flags.has("--resume"),dryRun:flags.has("--dry-run"),
+  benchmark:flags.has("--benchmark")
  };
 };
 const git=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{
@@ -324,6 +328,163 @@ const saveReport=(c,done,failed=[])=>{
  ].join("\n")+"\n");
  return s;
 };
+
+/**
+ * Bounded throughput pilot using the EXACT same oneJob() and MCTS budgets
+ * as the intended overnight run. Samples strata across starting parties,
+ * decision-focus families and game seeds. It never writes study checkpoints
+ * or contributes to statistical results.
+ *
+ * A censored/timed-out pilot MUST NOT turn short-job throughput into a
+ * credible completion promise. Estimate is an optimistic extrapolation
+ * from completed jobs and a separate 2x planning sensitivity, NOT a CI.
+ */
+async function runBenchmark(c,revision){
+ const sampleCount=Math.min(c.runs,c.benchmarkRuns);
+ const sampleIndices=Array.from({length:sampleCount},(_,j)=>{
+  // Index modulo 36 selects Hero party, modulo 9 chooses focus.
+  // Add multiples of 324 to spread chance seeds without losing strata.
+  const blocks=Math.floor(c.runs/324);
+  return blocks>0?j+324*Math.floor(j*blocks/sampleCount):j;
+ });
+ if(new Set(sampleIndices).size!==sampleCount||
+  sampleIndices.some(i=>i<0||i>=c.runs))
+  throw Error("Internal benchmark indices invalid");
+ const begin=Date.now(),minutesCap=c.benchmarkMinutes;
+ const workers=Array.from({length:Math.min(c.workers,sampleCount)},()=>
+  new Worker(new URL(import.meta.url),{workerData:{config:c}}));
+ const completed=[],errors=[],active=new Map();
+ let queueAt=0,timedOut=false;
+ const collect=(type,m,i)=>errors.push({
+  index:i,type,message:m.stack||m.message||String(m),
+  repro:m.repro||null
+ });
+ const benchmarkPath=c.out+"-benchmark.json";
+ const timeoutMs=c.benchmarkMinutes*60000;
+ let timer=null;
+ try{
+  await new Promise((resolveDone,rejectDone)=>{
+   let settled=false;
+   const end=()=>{if(!settled){settled=true;resolveDone();}};
+   const fail=error=>{if(!settled){settled=true;rejectDone(error);}};
+   const dispatch=worker=>{
+    if(settled)return;
+    if(queueAt>=sampleIndices.length){
+     if(active.size===0)end();
+     return;
+    }
+    const i=sampleIndices[queueAt++];
+    active.set(worker,{i,started:Date.now()});
+    worker.postMessage({type:"job",i});
+   };
+   timer=setTimeout(()=>{
+    timedOut=true;end();
+   },timeoutMs);
+   for(const worker of workers){
+    worker.on("message",message=>{
+     if(settled)return;
+     const assigned=active.get(worker);
+     if(!assigned){fail(Error("Benchmark unsolicited worker response"));return;}
+     if(message.type==="failed"){
+      collect("engine-failure",message,assigned.i);
+      fail(Error("Canonical decision failed during benchmark, source "+
+       assigned.i+": "+message.stack));return;
+     }
+     if(message.type!=="done"||message.value.i!==assigned.i){
+      fail(Error("Benchmark worker assignment mismatch"));return;
+     }
+     const elapsedSeconds=(Date.now()-assigned.started)/1000;
+     completed.push({...message.value,elapsedSeconds});
+     active.delete(worker);
+     console.error("Pilot "+completed.length+"/"+sampleCount+
+      " completed; "+elapsedSeconds.toFixed(1)+" sec for source "+assigned.i);
+     dispatch(worker);
+    });
+    worker.on("error",error=>{
+     collect("worker-error",error,active.get(worker)?.i);
+     fail(error);
+    });
+    worker.on("exit",code=>{
+     if(code!==0&&!settled){
+      const message=Error("Pilot worker exited "+code);
+      collect("worker-exit",message,active.get(worker)?.i);
+      fail(message);
+     }
+    });
+    dispatch(worker);
+   }
+  });
+ }finally{
+  if(timer!==null)clearTimeout(timer);
+  await Promise.all(workers.map(w=>w.terminate()));
+  const elapsedSeconds=(Date.now()-begin)/1000;
+  const rate=completed.length/Math.max(.001,elapsedSeconds);
+  const predictedHours=completed.length>0?
+   c.runs/rate/3600:null;
+  const pairedCount=completed.filter(x=>x.kind==="paired").length;
+  const focusCoverage=Object.fromEntries(cardFocus.map(f=>[
+   f,{completed:completed.filter(x=>x.focus===f).length,
+      paired:completed.filter(x=>x.focus===f&&x.kind==="paired").length}
+  ]));
+  const enough=completed.length>=Math.max(14,c.workers*2)&&
+   pairedCount>=Math.max(4,Math.floor(completed.length/4))&&!timedOut;
+  const verdict=errors.length?"engine-failure":
+   !completed.length?"no-completed-sources":
+   timedOut?"time-capped-inconclusive":
+   !enough?"pilot-too-small-or-low-pair-coverage":
+   predictedHours>c.hours?"too-slow-for-hour-cap":
+   predictedHours*2<=c.hours?"plausibly-feasible":"uncertain";
+  const report={
+   schema:"rogue-cards-balanced-mcts-throughput-pilot-v1",
+   gitRevision:revision,fullyMatchingRealWorkload:true,
+   options:{runs:c.runs,seed:c.seed,workers:c.workers,hours:c.hours,
+    futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
+    maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
+    focus:c.focus},
+   pilot:{attempted:sampleCount,completed:completed.length,
+    paired:pairedCount,unreached:completed.length-pairedCount,
+    elapsedSeconds,timeoutMinutes:minutesCap,timedOut,
+    inFlightTerminatedAtTimeout:timedOut?active.size:0,
+    perFocus:focusCoverage,
+    perCompletedJobSeconds:completed.map(x=>({
+     index:x.i,heroes:x.heroes,focus:x.focus,kind:x.kind,
+     elapsedSeconds:x.elapsedSeconds})),
+    errors
+   },
+   estimate:predictedHours===null?null:{
+    hoursToCompleteAllPlannedSeeds:predictedHours,
+    hoursWithTwiceObservedWorkload:predictedHours*2,
+    hoursBudget:c.hours,
+    optimism:"Pilot completion rates favor quick seeds, especially when time-capped",
+    statisticalConfidenceInterval:false
+   },
+   verdict,
+   notes:[
+    "This is actual canonical MCTS work; no simplified substitute.",
+    "Benchmark results NEVER enter the balance study, even if complete.",
+    "Only completing full real source seeds counts toward throughput.",
+    "The 2x estimate is a planning sensitivity, NOT a statistical upper bound.",
+    "If any workers remain busy at cutoff, throughput extrapolation is biased optimistic.",
+    "A 10-hour scheduler cap does not imply all requested seeds will finish.",
+    "A single slow source can run beyond the scheduling deadline."
+   ]
+  };
+  mkdirSync(dirname(benchmarkPath),{recursive:true});
+  atom(benchmarkPath,report);
+  console.log(JSON.stringify({
+   reportPath:benchmarkPath,completed:completed.length,
+   planned:sampleCount,paired:pairedCount,
+   elapsedMinutes:Number((elapsedSeconds/60).toFixed(2)),
+   predictedHours:predictedHours===null?null:
+    Number(predictedHours.toFixed(2)),
+   twiceWorkloadHours:predictedHours===null?null:
+    Number((predictedHours*2).toFixed(2)),
+   verdict,errors:errors.length
+  },null,2));
+  if(errors.length)process.exitCode=1;
+ }
+}
+
 if(!isMainThread){
  parentPort.on("message",msg=>{
   if(msg.type!=="job")return;
@@ -334,6 +495,8 @@ if(!isMainThread){
 }else{
  const c=params(),revision=git();
  if(!revision)throw Error("Git revision is required for reproducible studies");
+ if(c.benchmark&&(c.dryRun||c.resume))
+  throw Error("--benchmark cannot be combined with --dry-run/--resume");
  if(!c.dryRun){
   if(!existsSync(c.auditFile))
    throw Error("Missing canonical audit gate: "+c.auditFile+
@@ -357,11 +520,14 @@ if(!isMainThread){
  }
  const design={schema:1,revision,
   ...Object.fromEntries(Object.entries(c).filter(([k])=>
-   !["out","resume","dryRun","workers","hours"].includes(k)))};
+   !["out","resume","dryRun","benchmark","benchmarkRuns",
+    "benchmarkMinutes","workers","hours"].includes(k)))};
  console.error(JSON.stringify({revision,plannedIndependentSources:c.runs,
   parties:parties.length,workers:c.workers,focus:c.focus,
   hourCap:c.hours,minimumEligible:c.minEligible,design},null,2));
- if(!c.dryRun){
+ if(c.benchmark){
+  await runBenchmark(c,revision);
+ }else if(!c.dryRun){
   if(!c.resume&&existsSync(c.out))throw Error("Output exists: "+c.out);
   if(c.resume&&!existsSync(c.out))throw Error("Missing output: "+c.out);
   if(!c.resume){
