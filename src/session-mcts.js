@@ -147,10 +147,11 @@ export function searchDecision(session,{budget=100,seed=1,
     }
    }
   }
-  let sampledObservedBoundary=!sim.pendingNested;
+  const originalRootWasPending=Boolean(sim.pendingNested);
+  const chanceSwitchIndex=originalRootWasPending?
+   sim.pendingNested.responses.length+1:null;
+  let observedRootResolved=!originalRootWasPending;
   const onReplay=eventState=>{
-   if(sampledObservedBoundary)throw Error("Sampled observed event twice");
-   sampledObservedBoundary=true;
    // A revealed corridor has removed its shown Rooms from the hidden pile.
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(eventState,{
@@ -177,8 +178,13 @@ export function searchDecision(session,{budget=100,seed=1,
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
     const from=sim.phase;
-    submitDecision(sim,choice,{afterReactionReplay:
-     sampledObservedBoundary?null:onReplay});
+    const replayObserved=originalRootWasPending&&!observedRootResolved&&
+     Boolean(sim.pendingNested);
+    submitDecision(sim,choice,{
+     afterReactionReplay:replayObserved?onReplay:null,
+     replayAt:replayObserved?chanceSwitchIndex:null
+    });
+    if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     historyKey=mix(hash(historyKey+from+actionKey(choice))).toString(16);
     depth++;
