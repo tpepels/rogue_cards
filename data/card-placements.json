@@ -1,5 +1,3119 @@
 {
   "version": 1,
   "units": "mm",
-  "cards": {}
+  "cards": {
+    "hero:warrior": {
+      "rules": {
+        "x": 54,
+        "y": 88,
+        "w": 32.5,
+        "rotation": 7.5,
+        "zIndex": 31,
+        "h": 27.5
+      },
+      "results": {
+        "x": 2.5,
+        "y": 100.5,
+        "w": 77.5,
+        "h": 15,
+        "rotation": 2
+      },
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 56,
+        "h": 8,
+        "rotation": 1.5
+      }
+    },
+    "potion:laughing": {
+      "rules": {
+        "x": 52,
+        "y": 90.5,
+        "w": 33.07,
+        "rotation": 2.5,
+        "zIndex": 22
+      },
+      "results": {
+        "rotation": -3,
+        "x": 2,
+        "y": 94,
+        "w": 86,
+        "h": 27.5
+      },
+      "title": {
+        "x": 1,
+        "y": 8,
+        "w": 47.89,
+        "rotation": -11
+      }
+    },
+    "potion:antidote": {
+      "title": {
+        "rotation": -11,
+        "x": 4,
+        "y": 9,
+        "w": 33,
+        "h": 6
+      },
+      "results": {
+        "x": 2.5,
+        "y": 95.5,
+        "w": 85.5,
+        "h": 26,
+        "rotation": -3.5
+      },
+      "rules": {
+        "x": 52,
+        "y": 93.5,
+        "w": 36,
+        "zIndex": 31,
+        "h": 18.5
+      }
+    },
+    "hero:knight": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 53.08,
+        "rotation": 2.7,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 51.9,
+        "y": 73.1,
+        "w": 35.5,
+        "rotation": 6.6,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 97.9,
+        "w": 77.5,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "hero:wizard": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 1.5,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 55.9,
+        "y": 74,
+        "w": 31.5,
+        "rotation": 8.04,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 98.8,
+        "w": 77.5,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "hero:witch": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 0.9,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 53.9,
+        "y": 75.7,
+        "w": 33.5,
+        "rotation": 5.88,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 100.5,
+        "w": 77.5,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "hero:rogue": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 1.5,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 55.9,
+        "y": 75.7,
+        "w": 31.5,
+        "rotation": 5.16,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 100.5,
+        "w": 77.5,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "hero:thief": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 0.3,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 51.9,
+        "y": 75.7,
+        "w": 35.5,
+        "rotation": 7.32,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 100.5,
+        "w": 77.5,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "hero:priest": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 2.1,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 51.9,
+        "y": 74,
+        "w": 35.5,
+        "rotation": 8.04,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 98.8,
+        "w": 77.5,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "hero:monk": {
+      "title": {
+        "x": 15.5,
+        "y": 5,
+        "w": 47,
+        "rotation": 1.5,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 55.9,
+        "y": 73.1,
+        "w": 31.5,
+        "rotation": 5.88,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.5,
+        "y": 97.9,
+        "w": 77.5,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-passage": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 53.08,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 75.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:u-gate": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 37.3,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-supply": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 58.34,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "room:u-nest": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 32.04,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-shrine": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 53.08,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:u-fall": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 55.71,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 66.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "room:u-fountain": {
+      "title": {
+        "x": 3.9,
+        "y": 8.6,
+        "w": 55.71,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 57.2,
+        "w": 54,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:u-merchant": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 58.34,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 71.75,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 98.55,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-lamp": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 37.3,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:u-puppet": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 53.08,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-bookcase": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 55.71,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:u-mimic": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 58.34,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 75.2,
+        "w": 43,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-flood": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 50.45,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 65.75,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 98.55,
+        "w": 84,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "room:m-statue": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 66.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:m-vault": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 47.82,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "room:m-crypt": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 42.56,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:m-fungus": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 51.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:m-altar": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:m-bridge": {
+      "title": {
+        "x": 3.9,
+        "y": 13,
+        "w": 76.75,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:m-well": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 60.97,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 51.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "room:m-auction": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 50.45,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-clock": {
+      "title": {
+        "x": 2.5,
+        "y": 13,
+        "w": 68.86,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-beetle": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 57.2,
+        "w": 54,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:m-treasure": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 60.97,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 51.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "room:d-shadow": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 47.82,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:d-bridge": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:d-reliquary": {
+      "title": {
+        "x": 2.5,
+        "y": 8.6,
+        "w": 47.82,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 66.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:d-bones": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:d-oracle": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 65.7,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95.5,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:d-gate": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 58.34,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:d-mirror": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 55.71,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:d-mouth": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 53.08,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 51.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "room:d-choir": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 58.34,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 57.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:d-bazaar": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 50.45,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 65.75,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 98.55,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:d-crown": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 60.97,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 62.7,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95.5,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:d-last-chest": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 47.82,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 51.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-fork": {
+      "title": {
+        "x": 3.9,
+        "y": 8.6,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 69.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:u-echoes": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 63.6,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:u-mossy": {
+      "title": {
+        "x": 2.5,
+        "y": 8.6,
+        "w": 53.08,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "room:u-smuggler": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 53.08,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-candle": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:m-maps": {
+      "title": {
+        "x": 3.9,
+        "y": 13,
+        "w": 71.49,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-ladder": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 63.6,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 50.7,
+        "w": 43,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95.5,
+        "w": 84,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "room:m-red-detour": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 47.82,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "room:d-whisper-junction": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 60.97,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 54.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:d-gilded": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 47.82,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 57.2,
+        "w": 54,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "room:u-lantern-shrine": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "room:u-leech-pool": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 37.3,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "room:u-rat-favor": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 53.08,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 48.2,
+        "w": 43,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-second-name": {
+      "title": {
+        "x": 3.2,
+        "y": 13,
+        "w": 76.75,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 54.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "room:m-wax-bridge": {
+      "title": {
+        "x": 3.2,
+        "y": 8.6,
+        "w": 37.3,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 54.2,
+        "w": 43,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:m-hungry-door": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 50.45,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "room:d-apothecary": {
+      "title": {
+        "x": 2.5,
+        "y": 8,
+        "w": 63.6,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 60.2,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "room:d-last-bell": {
+      "title": {
+        "x": 3.2,
+        "y": 13,
+        "w": 71.49,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63.2,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "room:u-cartographer": {
+      "title": {
+        "x": 3.9,
+        "y": 13,
+        "w": 68.86,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 78,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      }
+    },
+    "room:u-hollow-knight": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 55.71,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 78,
+        "w": 54,
+        "rotation": 3.2,
+        "zIndex": 31
+      }
+    },
+    "room:u-scribe-dust": {
+      "title": {
+        "x": 3.9,
+        "y": 8.6,
+        "w": 58.34,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 75,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      }
+    },
+    "room:u-bone-seed": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 55.71,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 78,
+        "w": 43,
+        "rotation": 4.64,
+        "zIndex": 31
+      }
+    },
+    "room:m-ferryman-oath": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 60.97,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 81,
+        "w": 54,
+        "rotation": 3.2,
+        "zIndex": 31
+      }
+    },
+    "room:m-choir-nails": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 84,
+        "w": 54,
+        "rotation": 2.48,
+        "zIndex": 31
+      }
+    },
+    "room:m-hourglass": {
+      "title": {
+        "x": 3.2,
+        "y": 13,
+        "w": 68.86,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 84,
+        "w": 54,
+        "rotation": 4.64,
+        "zIndex": 31
+      }
+    },
+    "room:m-drowned-banner": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 58.34,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 72,
+        "w": 43,
+        "rotation": 3.2,
+        "zIndex": 31
+      }
+    },
+    "room:d-sleeping-crown": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 58.34,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 69,
+        "w": 54,
+        "rotation": 1.76,
+        "zIndex": 31
+      }
+    },
+    "room:d-last-witness": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 53.08,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 44.4,
+        "y": 63,
+        "w": 43,
+        "rotation": 1.76,
+        "zIndex": 31
+      }
+    },
+    "room:vault": {
+      "title": {
+        "x": 3.2,
+        "y": 9.8,
+        "w": 53.08,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 33.4,
+        "y": 54.2,
+        "w": 54,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 84,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "monster:rat": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 34.67,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 60.6,
+        "w": 44,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "monster:goblin": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 66.5,
+        "w": 40,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.9,
+        "w": 80,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "monster:crawler": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 45.19,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 45.4,
+        "y": 60.6,
+        "w": 42,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "monster:bat": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 45.4,
+        "y": 63.6,
+        "w": 42,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "monster:troll": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 45.4,
+        "y": 55.6,
+        "w": 42,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 80,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "monster:wisp": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 60.6,
+        "w": 44,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "monster:eye": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 42.56,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 57.6,
+        "w": 44,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "monster:mold": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 39.93,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 45.4,
+        "y": 60.6,
+        "w": 42,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "monster:wraith": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 47.82,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 57.6,
+        "w": 44,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "monster:rust": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 42.56,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 60.6,
+        "w": 40,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "monster:cultist": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 55.71,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 57.6,
+        "w": 44,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "monster:sentinel": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 45.19,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 63.5,
+        "w": 40,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.9,
+        "w": 80,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "monster:warden": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 45.19,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 43.4,
+        "y": 60.6,
+        "w": 44,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "monster:warden-fury": {
+      "title": {
+        "x": 3.9,
+        "y": 8,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 54.6,
+        "w": 40,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 95,
+        "w": 80,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "item:key": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 34.67,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 92,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      }
+    },
+    "item:rope": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 92,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      }
+    },
+    "item:torch": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 39.93,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 84.2,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:crowbar": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 78.2,
+        "w": 40,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:chalk": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 53.08,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:spore-jar": {
+      "title": {
+        "x": 3.2,
+        "y": 8.6,
+        "w": 34.67,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 86,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "item:coin": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 37.3,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 84.2,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:needle": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 39.93,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 84.2,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:sword": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 45.19,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 74,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 91.8,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:staff": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 45.19,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 81.2,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:cursed-blade": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 53.08,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 81.2,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:mail": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 84.2,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:shield": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 45.19,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:cursed-mail": {
+      "title": {
+        "x": 3.2,
+        "y": 9.2,
+        "w": 39.93,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 81.2,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:dog": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 39.93,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:raven": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:moth": {
+      "title": {
+        "x": 2.5,
+        "y": 9.8,
+        "w": 39.93,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:goblin-pet": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:mirror": {
+      "title": {
+        "x": 2.5,
+        "y": 13,
+        "w": 76.75,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:skull": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 58.34,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:lantern-heart": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 45.19,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 84.2,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "item:crown-relic": {
+      "title": {
+        "x": 2.5,
+        "y": 9.2,
+        "w": 60.97,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 81.2,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 99,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-flame": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 53.08,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 77,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 91.8,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-frost": {
+      "title": {
+        "x": 3.2,
+        "y": 9.8,
+        "w": 47.82,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-lightning": {
+      "title": {
+        "x": 4.6,
+        "y": 13,
+        "w": 66.23,
+        "rotation": -7.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 82.4,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.2,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-unlock": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 60.97,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-reveal": {
+      "title": {
+        "x": 2.5,
+        "y": 13,
+        "w": 66.23,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-banish": {
+      "title": {
+        "x": 4.6,
+        "y": 8.6,
+        "w": 55.71,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 91.8,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-mischief": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 58.34,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 76.4,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 88.2,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:scroll-last": {
+      "title": {
+        "x": 2.5,
+        "y": 13,
+        "w": 71.49,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 86,
+        "w": 35,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:ring-luck": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 63.6,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 74,
+        "w": 40,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -2.45,
+        "zIndex": 21
+      }
+    },
+    "item:ring-bargain": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 60.97,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:ring-eye": {
+      "title": {
+        "x": 3.9,
+        "y": 13,
+        "w": 74.12,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:ring-spores": {
+      "title": {
+        "x": 2.5,
+        "y": 13,
+        "w": 66.23,
+        "rotation": -4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 83,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "item:ring-hunger": {
+      "title": {
+        "x": 3.9,
+        "y": 8.6,
+        "w": 39.93,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "item:ring-ashes": {
+      "title": {
+        "x": 4.6,
+        "y": 9.2,
+        "w": 47.82,
+        "rotation": -6.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "item:ring-echo": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 47.82,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:wand-sparks": {
+      "title": {
+        "x": 3.9,
+        "y": 13,
+        "w": 71.49,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:wand-undo": {
+      "title": {
+        "x": 3.9,
+        "y": 9.8,
+        "w": 50.45,
+        "rotation": -0.4,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 71,
+        "w": 40,
+        "rotation": 3.92,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:wand-morph": {
+      "title": {
+        "x": 3.2,
+        "y": 13,
+        "w": 80,
+        "rotation": -5.2,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 74,
+        "w": 35,
+        "rotation": 3.2,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 91.8,
+        "w": 83,
+        "rotation": -3.55,
+        "zIndex": 21
+      }
+    },
+    "item:wand-turn": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 50.45,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 1.76,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "item:wand-market": {
+      "title": {
+        "x": 3.2,
+        "y": 8,
+        "w": 58.34,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 76.4,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 94.2,
+        "w": 83,
+        "rotation": -3,
+        "zIndex": 21
+      }
+    },
+    "item:wand-frost": {
+      "title": {
+        "x": 4.6,
+        "y": 13,
+        "w": 68.86,
+        "rotation": -2.8,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 2.48,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "item:wand-door": {
+      "title": {
+        "x": 3.9,
+        "y": 9.2,
+        "w": 63.6,
+        "rotation": -1.6,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 47.4,
+        "y": 74,
+        "w": 40,
+        "rotation": 4.64,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 3,
+        "y": 97.8,
+        "w": 83,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "potion:smoky": {
+      "title": {
+        "x": 3.2,
+        "y": 8.6,
+        "w": 42.56,
+        "rotation": -12.1,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 54.4,
+        "y": 80,
+        "w": 33,
+        "rotation": 1.06,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 97.8,
+        "w": 85,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "potion:milky": {
+      "title": {
+        "x": 4.6,
+        "y": 8,
+        "w": 42.56,
+        "rotation": -11,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 50.4,
+        "y": 80,
+        "w": 37,
+        "rotation": 3.22,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 97.8,
+        "w": 85,
+        "rotation": -4.65,
+        "zIndex": 21
+      }
+    },
+    "potion:amber": {
+      "title": {
+        "x": 4.6,
+        "y": 9.8,
+        "w": 42.56,
+        "rotation": -12.1,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 1.06,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 97.8,
+        "w": 85,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    },
+    "potion:fizzy": {
+      "title": {
+        "x": 3.2,
+        "y": 8.6,
+        "w": 42.56,
+        "rotation": -11.55,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 50.4,
+        "y": 73.4,
+        "w": 37,
+        "rotation": 1.78,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 91.2,
+        "w": 85,
+        "rotation": -1.35,
+        "zIndex": 21
+      }
+    },
+    "potion:mushroom": {
+      "title": {
+        "x": 2.5,
+        "y": 8,
+        "w": 42.56,
+        "rotation": -11,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 52.4,
+        "y": 80,
+        "w": 35,
+        "rotation": 1.78,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 97.8,
+        "w": 85,
+        "rotation": -4.1,
+        "zIndex": 21
+      }
+    },
+    "potion:midnight": {
+      "title": {
+        "x": 3.9,
+        "y": 8.6,
+        "w": 42.56,
+        "rotation": -10.45,
+        "zIndex": 30
+      },
+      "rules": {
+        "x": 50.4,
+        "y": 80,
+        "w": 37,
+        "rotation": 3.94,
+        "zIndex": 31
+      },
+      "results": {
+        "x": 2.2,
+        "y": 97.8,
+        "w": 85,
+        "rotation": -1.9,
+        "zIndex": 21
+      }
+    }
+  }
 }
