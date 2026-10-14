@@ -13,7 +13,7 @@ const rows=[
   [["PLANT","Tuck 1 Item beneath this Room; keep it. Upon entering DEEP, recover it and draw 2 Items."],
    ["EAT","Heal 3 HP. Keep this Room. Entering DEEP, lose 2 HP."]]],
  ["m-ferryman-oath","MIDDLE","The Ferryman's Oath","water","ENCOUNTER","SMUGGLE after Phase I: discard 2 Items (one MAGIC) to win. PACT: one per expedition.",
-  [["PAY · PACT","Tuck 1 Item here; keep Room. At Vault recover it and heal 3 HP, or sacrifice it to unlock SMUGGLE. Turn sideways after choice."],
+  [["PAY · PACT","Tuck 1 Item here; keep Room. At Vault recover it and heal 3 HP, or sacrifice it to unlock SMUGGLE."],
    ["CHEAT","Draw 2 Items; keep Room. At Vault lose 3 HP; then discard."]]],
  ["m-choir-nails","MIDDLE","Choir of Nails","bones","MYSTERY","Nails sing in the stone.",
   [["LISTEN","Keep this Room. At first DEEP Monster, discard to give its first attack DIS."],

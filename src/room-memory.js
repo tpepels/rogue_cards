@@ -34,7 +34,7 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, return other face down on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","The candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, return other face down on top.","RISK THE FLAME","Roll d6.","RISK THE FLAME","path"],
  ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; pay 1 Item to reveal a third. Enter one; put others on bottom.","TEAR","Roll d6.","TEAR","path"],
  [
   "m-ladder",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, pay 2 HP to see first Warden behaviour before acting (optional). Reroll once if desired; use new result.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, you may pay 2 HP to see first Warden behaviour before acting. Reroll once; use new result.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -464,11 +464,11 @@ const printedTables={
   "u-candle": [
     [
       "1–2",
-      "Pitch dark: enter next Room unseen; next ATK has DIS."
+      "Darkness: enter next Room unseen; next ATK DIS."
     ],
     [
       "3–4",
-      "Eyes adapt: reveal 2 Rooms; enter one, leave other on top."
+      "Reveal 2 Rooms; enter one, leave other on top."
     ],
     [
       "5–6",

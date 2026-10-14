@@ -31,7 +31,7 @@ test("Phase 5 corrected actual ambiguous card text rather than changing general 
  assert.match(text(garden),/discard to set 1–2.*WIT.*DIS/);
  assert.match(text(altar),/1 other Item.*equipped CURSED Item/);
  assert.match(text(well),/REROLL.*new result/);
- assert.match(text(singing),/roll twice and choose either result/);
+ assert.match(text(singing),/roll again and choose either/);
  assert.match(WARDEN_FURY.v2.weakness,/skips its next response/);
  assert.match(VAULT.v2.choices.find(c=>c.label==="SEAL").effect,/Discard 3 MAGIC Items/);
 });
