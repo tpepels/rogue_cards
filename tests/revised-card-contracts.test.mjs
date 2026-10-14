@@ -199,3 +199,36 @@ test("Restless Shade's printed MAGIC weakness changes behavior 5 to 1-2, but 5 r
  assert.equal(unequipped.metrics.monsterBehaviorBands["wraith:2"],1,
   "Without equipped MAGIC, the printed 5 damage behavior executes");
 });
+
+test("The Last Chest stops at party defeat without a zombie reroll reaction",()=>{
+ const s=new ExpeditionState({seed:1188767358,heroes:["warrior"]});
+ s.beginRoom(room("d-last-chest"));
+ const h=s.heroes[0];h.hp=0;
+ const original=s.rng.snapshot(),drawn=s.metrics.drawn;
+ s._decisionHook=event=>{throw Error("Dead Hero cannot react: "+event.phase);};
+ assert.equal(s.pushLuck(2,{onOne:true}),2);
+ assert.equal(s.roomRoll({risk:"d6"}),false);
+ assert.equal(s.rng.snapshot(),original);
+ assert.equal(s.metrics.drawn,drawn);
+ delete s._decisionHook;
+});
+
+test("Push-your-luck never prompts the next unaffordable HP payment",()=>{
+ for(const [initialHp,expectedRerolls] of [[1,0],[2,1],[4,2]]){
+  const s=new ExpeditionState({seed:1188767358,heroes:["warrior"]});
+  s.beginRoom(room("d-last-chest"));
+  s.heroes[0].hp=initialHp;
+  const observed=[];
+  s._decisionHook=event=>{
+   assert.equal(event.phase,"reroll");
+   assert.equal(event.cost,observed.length+1);
+   observed.push(event.cost);
+   return {kind:"reroll"};
+  };
+  s.pushLuck(2,{onOne:true});
+  assert.equal(observed.length,expectedRerolls);
+  assert.equal(s.heroes[0].hp,1,
+   "The player may never reroll by paying their last HP");
+  delete s._decisionHook;
+ }
+});
