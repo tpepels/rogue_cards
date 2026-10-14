@@ -1,0 +1,44 @@
+name: Verify illustration generator catalogue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/illustration-generator-verification.yml"
+      - "scripts/generate-illustrations.py"
+      - "scripts/illustration-catalogue.mjs"
+      - "src/print-expansion.js"
+      - "src/tabletop-view.js"
+      - "src/tabletop-data.js"
+      - "tests/test_illustration_generator.py"
+  pull_request:
+    paths:
+      - ".github/workflows/illustration-generator-verification.yml"
+      - "scripts/generate-illustrations.py"
+      - "scripts/illustration-catalogue.mjs"
+      - "src/print-expansion.js"
+      - "src/tabletop-view.js"
+      - "src/tabletop-data.js"
+      - "tests/test_illustration_generator.py"
+  workflow_dispatch:
+
+jobs:
+  artwork-catalogue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify missing-image detection and map updates without API access
+        run: python3 -m unittest discover -s tests -p test_illustration_generator.py -v
+      - name: Verify print-only artwork is included in safe dry-run
+        run: |
+          python3 scripts/generate-illustrations.py --dry-run > /tmp/missing-art.log
+          head -n 6 /tmp/missing-art.log
+          grep -Fx 'Catalogue: 163 cards; existing: 139; missing: 24.' /tmp/missing-art.log
+          test "$(grep -c '^  MISSING ' /tmp/missing-art.log)" -eq 24
