@@ -43,8 +43,12 @@ export function applyWardenChoice(s,kind){
   const h=s.heroes[Number(choice)];
   const amount=kind==="bargain"?2:1;
   s.discard(amount,{tag:kind==="unthrone"?"MAGIC":null});
-  const a=s.die(20),b=s.die(20);
-  if(a===20||a!==1&&a+h.card.wit>b+6){
+  const wit=s.takeWitModifiers(h);
+  const natural=s.die(20);
+  const a=s.rerollIfKept(h,wit.dis?
+   Math.min(natural,s.die(20)):natural);
+  const b=s.die(20);
+  if(a===20||a!==1&&a+h.card.wit+wit.bonus>b+6){
    s.metrics.won=true;
    s.endingKind=kind==="bargain"?"bargained_amulet":"unthroned_warden";
    s.monster=null;return {complete:true,won:true};
