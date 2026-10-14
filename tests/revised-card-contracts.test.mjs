@@ -73,6 +73,10 @@ test("Goblin SWIPE keeps the real physical Item separate and returns it on defea
 test("Wax Bridge blocks up to three fall damage and never banishes a Monster",()=>{
  const wax=room("m-wax-bridge"),m=monster("rat");
  const s=game(894);
+ // Isolate Wax's printed -3 prevention. A physical Rope can legally
+ // absorb the remaining 2 HP as a separate optional Item decision.
+ for(const card of [...s.heroes[0].inventory])
+  if(card.id==="rope")s.remove(s.heroes[0],card);
  s.keptRooms.push({card:wax});
  s.beginRoom(room("u-fall"));
  const hp=s.heroes[0].hp;
