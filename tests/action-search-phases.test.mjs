@@ -41,8 +41,9 @@ test("PARLEY is a genuine terminal choice search, not a threshold-only heuristic
 });
 test("Vault search branches actual SEAL versus the complete Warden fight",()=>{
  const s=build(713);
- while(s.partyCount("MAGIC")<6){
-  const next=s.deck.find(c=>c.v2.tags.includes("MAGIC"));
+ while(!s.discardable(6,"MAGIC")){
+  const next=s.deck.find(c=>c.v2.tags.includes("MAGIC")&&
+   !c.v2.tags.includes("CURSED"));
   assert.ok(next,"Insufficient physical MAGIC Items in test deck");
   grant(s,next.id);
  }
