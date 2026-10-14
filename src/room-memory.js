@@ -148,9 +148,9 @@ const rows=[
   "stairs",
   "Two ways down.",
   "CLIMB",
-  "Reveal 2 Rooms; enter 1. At a LAIR your first attack has ADV; otherwise draw 1 Item.",
+  "Reveal 2 Rooms; enter 1. LAIR: first attack has ADV; otherwise draw 1 Item.",
   "TAKE THE SHAFT",
-  "Roll d6 for the shaft. Skip remaining Rooms; resolve the destination below.",
+  "Roll d6. Skip remaining Rooms; resolve the destination below.",
   "SHAFT",
   "shaft"
  ],
