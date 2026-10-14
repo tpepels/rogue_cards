@@ -89,3 +89,18 @@ test("Gilded Hallway's two printed actions have no unreachable d6 bands",()=>{
  assert.equal(s.roomRoll(),false);
  assert.equal(JSON.stringify(s.metrics.roomRollBands),before);
 });
+
+test("Midnight Bazaar never traps an empty-handed player with zero legal options",()=>{
+ const s=new ExpeditionState({seed:78991,heroes:["warrior"]});
+ s.beginRoom(room("d-bazaar"));
+ const h=s.heroes[0];
+ while(h.inventory.length)s.remove(h,h.inventory[0]);
+ s.setActor(h);
+ assert.equal(s.discardable(),false);
+ assert.deepEqual(legalActions(s,{phase:"room"}).map(a=>a.index),[0]);
+ const before=h.hp;
+ const choice=legalActions(s,{phase:"room"})[0];
+ applyAction(s,choice);
+ assert.equal(h.hp,Math.max(0,before-2));
+ assert.equal(s.metrics.roomChoices["d-bazaar:0"],1);
+});
