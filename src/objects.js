@@ -92,8 +92,8 @@ const relics=[
   "KEEP: Counts as Pitch Torch for printed Room options.",null,
   "DISCARD: Skip the Monster's next response or recharge 1 Wand.",["u-lamp","m-fungus","d-shadow","d-choir"],"A flame with a pulse.",1],
  ["crown-relic","Crown of Rehearsals","amulet","RELIC",["CURSED","MAGIC"],
-  "ONCE PER EXPEDITION: Discard to turn a failed d20 roll into a natural 20.",null,
-  "After using this Item, its wearer loses d6 HP. This counts as a CURSED Item until then.",["d-crown","d-mirror","d-reliquary"],"Practice makes royalty.",1]
+  "ONCE PER EXPEDITION, after a failed Hero d20: discard to replace the Hero's rolled face with natural 20; resolve the roll, then lose d6 HP.",null,
+  "Counts as CURSED until used. Never changes a Monster's die.",["d-crown","d-mirror","d-reliquary"],"Practice makes royalty.",1]
 ];
 const scrolls=[
  ["scroll-flame","Scroll of Cinder","spiral","SCROLL",["MAGIC","FIRE"],
@@ -125,9 +125,9 @@ const scrolls=[
   [["1–2","Reality tears: if no Monster, draw one; else its next behaviour is 6."],["3–4","Heal d6 HP; draw 1 Item."],["5","With a Monster present, choose its next d6 behaviour; otherwise peek next Room."],["6","Draw 3 Items, discard 1."]],
   "Works before a Monster is present or during combat.",["u-bookcase","m-clock"],"The spell has a typo.",2],
  ["scroll-last","Scroll of the Last Word","bones","SCROLL",["MAGIC","CURSED"],
-  "ACTION: Read, roll d6, then discard.",
-  [["1–2","Lose d6 HP; spell fails."],["3–4","Deal 2d6 damage to the Monster."],["5–6","Deal 3d6 damage; heal d6 HP."]],
-  "With a CURSED Item equipped: lose d6 HP to choose 5–6 instead of rolling.",["u-shrine","m-altar","d-crown"],"The ink looks fresh.",1]
+  "AFTER Monster behaviour is rolled, BEFORE its effect: read, roll d6, then discard.",
+  [["1–2","Mispronounce: lose d6 HP; response resolves."],["3–4","Deal 2d6 damage; response resolves only if Monster survives."],["5–6","Deal 2d6 damage. First d6 may SURGE; cancel this Monster response."]],
+  "With equipped CURSED gear: pay d6 HP to choose 5–6.",["u-shrine","m-altar","d-crown"],"The ink looks fresh.",1]
 ];
 const rings=[
  ["ring-luck","Ring of Crooked Luck","amulet","RING",["MAGIC","LUCK"],
@@ -144,8 +144,8 @@ const rings=[
   "At Broken Oracle, choose 6. Against Floating Eye, treat behaviour 6 as 1–2.",["d-oracle","d-mirror"],"It stares at the wearer.",1],
  ["ring-spores","Ring of the Mold King","mushroom","RING",["MAGIC","ALCHEMY"],
   "RING: ONCE PER ROOM when POISONED, roll d6.",
-  [["1–2","Lose 2 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; heal d6 HP."]],
-  "At Fungal Garden, choose 5–6. Against Living Mold, treat behaviour 6 as 1–2.",["m-fungus","d-choir"],"A kingdom beneath the nail.",1],
+  [["1–2","Lose 2 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; either heal d6 HP or, against a PLANT Monster, set its next behaviour to 1–2."]],
+  "At Fungal Garden, choose 5–6. Against Living Mold, turn sideways to change one Spores behaviour to 1–2.",["m-fungus","d-choir"],"A kingdom beneath the nail.",1],
  ["ring-hunger","Hungry Ring","bones","RING",["CURSED","MAGIC"],
   "CURSED RING: +2 ATK. ONCE PER ROOM after using a MAGIC Item, roll d6.",[["1–2","Lose d6 HP; your next d20 has DIS."],["3–4","Lose 1 HP; +2 damage on next hit."],["5–6","Your next hit deals +d6 damage."]],
   "Cannot remove until cleansed at a SHRINE. At Crown of the Unking, choose its 5 result.",["u-shrine","m-altar","d-crown","d-mirror"],"It keeps getting tighter.",1],
@@ -169,11 +169,11 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","Lose 2 HP; the Wand remains sideways."],["3–4","Treat the Monster's next behaviour 6 as 1–2."],["5–6","Transform it: Monster skips next response; draw 1 Item."]],
+  [["1–2","It grows teeth: lose 2 HP; its next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster into an object: discard Monster and draw 1 Item; no corpse or reward. Against Warden, cancel one response."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-fungus","d-choir"],"Are you sure it's a wand?",1],
  ["wand-turn","Wand of Turning","ghost","WAND",["MAGIC","BONE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","Misfire: lose 1 HP."],["3–4","Monster skips next response."],["5–6","Monster skips next 2 responses."]],
+  [["1–2","Backfire: Monster's next behaviour is 6."],["3–4","Monster skips next response."],["5–6","Banish CURSED/MAGIC non-Warden Monster (no reward or corpse); other Monsters skip 2 responses. Warden skips 1."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-crypt","d-gate"],"Point away from yourself.",1],
  ["wand-market","Wand of Bad Trades","shop","WAND",["MAGIC","BARGAIN"],
   "AT AN ENCOUNTER: If upright, roll d6; turn sideways until recharged.",
@@ -181,11 +181,11 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 6.",["u-merchant","m-auction","d-bazaar"],"Unfair exchange rate.",1],
  ["wand-frost","Wand of Cold Shoulders","wind","WAND",["MAGIC","ICE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","Backfire: lose 2 HP."],["3–4","Monster skips its next response."],["5–6","Monster skips next response; heal 2 HP."]],
-  "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
+  [["1–2","Backfire: lose 2 HP."],["3–4","Monster skips its next response."],["5–6","Freeze solid: skip next 2 Monster responses."]],
+  "At Flooded Chamber, spend upright Wand for the Room's 3–4 result. SHRINE recharges. OVERCHARGE: discard, lose d6 HP, choose 5–6.",["m-flood","m-bridge","u-shrine"],"Never says goodbye.",1],
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
-  [["1–2","Misfire: lose d6 HP."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose that Room's 5–6 outcome."]],
+  [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
 const potions=[
