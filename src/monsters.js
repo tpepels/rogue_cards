@@ -27,7 +27,7 @@ const SPEC=Object.freeze({
  troll:{tags:["BEAST","REGEN"],weakness:"FIRE damage prevents the next Regenerate (5).",
    parley:"TOLL: Discard 2 Items to avoid this fight.",remains:"EAT: Roll d6.  1–2 become POISONED; 3–4 heal d6 HP; 5–6 draw 1 Item."},
  wisp:{tags:["LIGHT","MAGIC"],weakness:"After using ICE Item, change next behaviour 6 to 1–2.",
-   parley:"ESCAPE: opposed d20+WIT vs d20+5. Win: keep as follower; fight at next Corridor or before Vault. Lose: fight now.",remains:"No EAT. When defeated, discard this Monster."},
+   parley:"ESCAPE: opposed d20+WIT vs d20+5. Win: keep as follower; fight at next Corridor or Vault. Lose: fight.",remains:"No EAT. When defeated, discard this Monster."},
  eye:{tags:["GAZE","MAGIC"],weakness:"With Ring of the Sideways Eye, treat behaviour 6 as 1–2.",
    parley:"COVER EYES: Discard 1 Item; it leaves. No trophy.",remains:"KEEP EYE after defeat: retain this Monster; discard to peek next 2 Rooms and order them. No EAT."},
  mold:{tags:["ALCHEMY","PLANT"],weakness:"FIRE: treat behaviour 6 as 1–2; ICE: treat behaviour 5 as 1–2.",
