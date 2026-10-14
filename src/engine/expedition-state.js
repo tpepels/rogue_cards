@@ -596,6 +596,34 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "FORK_REVEAL":
+   this.forkRevealed(Number(v),{
+    random:args[1]==="RANDOM",
+    treasureOnly:args[1]==="TREASURE"
+   });return;
+  case "FORK_ORDER":this.peek(Number(v),true);return;
+  case "CURE_OR_HEAL":if(h.poison)h.poison=false;else this.heal(h,n());return;
+  case "HUNGRY_SWALLOW":{
+   if(!this.discardable())return;
+   const swallowed=this.discard(1);
+   if(!swallowed||!this.alive())return;
+   const mode=this.chooseEffect("hungry-door-swallowed-item",
+    ["abandon","recover"],"abandon");
+   if(mode==="recover"){
+    this.hurt(h,2);
+    if(this.alive()){
+     const found=this.discardPile.lastIndexOf(swallowed);
+     if(found>=0)this.discardPile.splice(found,1);
+     this.consumed.delete(swallowed);this.add(this.chooseRecipient(
+      "recover-swallowed-item"),swallowed);
+    }
+   }
+   return;
+  }
+  case "BELL_SAVE":{
+   this.keptRooms.push({card:this.room,mode:v});
+   return;
+  }
   case "ORACLE_PROPHECY":{
    const prediction=this.chooseEffect("broken-oracle-guess",
     ["TREASURE","CORRIDOR","OTHER"],"OTHER");
@@ -913,6 +941,38 @@ export class ExpeditionState {
   else if(code==="HURT2")this.hurt(h,2);
   else if(code==="HURTd6")this.hurt(h,this.die());
   else throw Error("Unknown check consequence "+code);
+ }
+ /**
+  * Rewrite-era corridor roll: the shown cards are genuinely revealed first.
+  * RANDOM draws chance only; other modes pause at a real legal choice.
+  * Unchosen revealed Rooms go to the bottom, not out of the game.
+  */
+ forkRevealed(count,{random=false,treasureOnly=false}={}){
+  const stage=this.room.stage,pile=this.rooms[stage];
+  const offered=pile.splice(0,Math.min(count,pile.length));
+  if(!offered.length)return;
+  const treasures=offered.filter(x=>x.v2.kind==="TREASURE");
+  const candidates=treasureOnly&&treasures.length?treasures:offered;
+  let chosen;
+  if(random)chosen=candidates[this.die(candidates.length)-1];
+  else if(this._decisionHook&&candidates.length>1){
+   this._offeredRoomChoices=[...candidates];
+   const decision=this._decisionHook({
+    phase:"corridor",roomId:this.room.id,
+    offeredIds:candidates.map(r=>r.id)});
+   chosen=candidates.find(r=>r.id===decision.roomId);
+   delete this._offeredRoomChoices;
+   if(!chosen)throw Error("Illegal corridor Room selection");
+  }else chosen=candidates[0];
+  const bottom=offered.filter(x=>x!==chosen);
+  pile.push(...bottom);
+  pile.unshift(chosen);
+  // Every shown card stays in its actual physical pile exactly once;
+  // unrevealed cards remain in their original sampled order.
+  this.peekedRoomIds[stage]=[chosen.id];
+  this.publicBottomRoomIds??=Object.fromEntries(
+   stageNames.map(stage=>[stage,[]]));
+  this.publicBottomRoomIds[stage].push(...bottom.map(x=>x.id));
  }
  forkRooms(mode){
    const pile=this.rooms[this.room.stage],count=mode==="u-echoes"?3:2;
