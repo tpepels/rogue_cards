@@ -50,7 +50,8 @@
     "study:v4-item-value": "node scripts/study-v4-item-value.mjs",
     "layouts:build": "node scripts/build-card-layouts.mjs",
     "layouts:check": "node scripts/build-card-layouts.mjs --check",
-    "oracle:overnight": "node scripts/study-oracle-overnight.mjs"
+    "oracle:overnight": "node scripts/study-oracle-overnight.mjs",
+    "layouts:init": "node scripts/initialize-card-placements.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
