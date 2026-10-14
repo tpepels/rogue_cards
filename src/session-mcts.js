@@ -169,7 +169,14 @@ export function searchDecision(session,{budget=100,seed=1,
   try{
    while(sim.phase!=="terminal"&&depth<maxSteps){
     const actions=sessionActions(sim);
-    if(!actions.length){error="no-legal-actions:"+sim.phase;break}
+    if(!actions.length){error="no-legal-actions:"+JSON.stringify({
+     phase:sim.phase,roomId:sim.state.room?.id,
+     monsterId:sim.state.monster?.id,
+     heroHP:sim.state.heroes.map(h=>h.hp),
+     inventory:sim.state.heroes.map(h=>h.inventory.map(c=>c.id)),
+     pendingTrigger:sim.pendingNested?.trigger??null,
+     roomChoiceOperations:sim.state.room?.v2.choices??null
+    });break}
     const key=historyKey+":"+publicState(sim);
     const node=nodeFor(tree,key,actions);
     const choice=select(node,actions,choiceRng,exploration);
