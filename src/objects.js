@@ -21,7 +21,7 @@ const tools=[
  ["crowbar","Dented Crowbar","key","TOOL",["METAL","TOOL"],
   "LOCK: At Rusty Gate, Chest with a Pulse, Buried Lockbox or The Last Chest, use this d6 instead of the Room d6.",
   [["1–2","The bar slips: lose 2 HP."],["3–4","Open it; draw 1 Item."],["5–6","Open it; draw 2 Items."]],
-  "",["u-gate","m-vault","d-last-chest"],"Subtle as a brick.",2],
+  "",["u-gate","u-mimic","m-vault","d-last-chest"],"Subtle as a brick.",2],
  ["chalk","Chalk of Detours","spiral","TOOL",["MAGIC","TOOL"],
   "ONCE PER ROOM: Turn sideways and roll d6.",
   [["1–2","Your mark vanishes; lose 1 HP."],["3–4","Peek at the next Room."],["5–6","Peek at the next 2 Rooms; swap them if both exist."]],
@@ -186,7 +186,7 @@ const wands=[
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
-  "SHRINE: recharge. OVERCHARGE: discard, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
+  "SHRINE: recharge. OVERCHARGE: discard, lose d6 HP; choose 5–6.",["u-gate","u-mimic","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
