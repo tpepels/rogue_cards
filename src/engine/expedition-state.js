@@ -491,6 +491,7 @@ export class ExpeditionState {
    if(monsterEntry(this,m))return;
   if(!this.monster){
    this.monster=m;this.monsterHP=m.hp;this.banished=false;
+   this.monsterFirstAttackPending=true;
    this.elberethAttempts=0;this.elberethSkipResponse=false;
    if(m.stage!=="FINAL"&&this.useRetainedPotion("laughter",m.id))
     this.forcedBehavior=1;
