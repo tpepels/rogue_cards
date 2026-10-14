@@ -187,6 +187,7 @@ export function searchDecision(session,{budget=100,seed=1,
   };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null;
+  const reproductionTrace=[];
   try{
    while(sim.phase!=="terminal"&&depth<maxSteps){
     const actions=sessionActions(sim);
@@ -206,6 +207,11 @@ export function searchDecision(session,{budget=100,seed=1,
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
     const from=sim.phase;
+    reproductionTrace.push({depth,phase:from,
+     pending:sim.pendingNested?.trigger??null,
+     roomId:sim.state.room?.id??null,
+     monsterId:sim.state.monster?.id??null,
+     heroHP:sim.state.heroes.map(h=>h.hp),action:choice});
     const replayObserved=originalRootWasPending&&!observedRootResolved&&
      Boolean(sim.pendingNested);
     const replaySwitches=replayObserved?[
@@ -226,8 +232,22 @@ export function searchDecision(session,{budget=100,seed=1,
   }catch(e){
    // Never convert unsupported printed operations into a loss.
    error="rule-error:"+(e.message||String(e));
-   if(strictTerminal)throw Error("MCTS unsupported branch at trial "+i+
-    ", depth "+depth+": "+error);
+   if(strictTerminal){
+    const failure=Error("MCTS unsupported branch at trial "+i+
+     ", depth "+depth+": "+error);
+    failure.repro={searchSeed:seed,knowledge,budget,maxSteps,
+     trial:i,depth,chanceSeed,deckSeed,
+     rootPhase:session.pendingNested?"reaction:"+
+      session.pendingNested.trigger.phase:session.phase,
+     rootRoomId:session.state.room?.id??null,
+     failingPhase:sim.pendingNested?"reaction:"+
+      sim.pendingNested.trigger.phase:sim.phase,
+     failingRoomId:sim.state.room?.id??null,
+     failingMonsterId:sim.state.monster?.id??null,
+     heroHP:sim.state.heroes.map(h=>h.hp),
+     observedReplay,recentActions:reproductionTrace.slice(-120)};
+    throw failure;
+   }
   }
   maximumDepth=Math.max(maximumDepth,depth);
   if(error){
