@@ -552,6 +552,18 @@ if(!isMainThread){
  if(c.benchmark){
   await runBenchmark(c,revision);
  }else if(!c.dryRun){
+  const capacity=theoreticalCoverage(c);
+  if(c.focus==="all"&&
+   (!capacity.enoughToCoverEveryRoomEvenInBestCase||
+    !capacity.enoughToCoverEveryObjectEvenInBestCase))
+   throw Error("All-card experiment is structurally underpowered: "+
+    "only "+capacity.maxPairedSourceSlotsByFocus.room+
+    " possible Room pairs and "+capacity.maxPairedSourceSlotsByFocus.item+
+    " possible Item pairs, versus the minimum "+
+    capacity.minimumForAllRoomCards+" Room / "+
+    capacity.minimumForAllObjectCards+
+    " Item source pairs. Choose a focused study (--focus room "+
+    "or --focus item) or increase runs before spending CPU.");
   if(!c.resume&&existsSync(c.out))throw Error("Output exists: "+c.out);
   if(c.resume&&!existsSync(c.out))throw Error("Missing output: "+c.out);
   if(!c.resume){
