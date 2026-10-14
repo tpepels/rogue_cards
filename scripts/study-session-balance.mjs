@@ -90,7 +90,7 @@ const classify=(session,actions)=>{
 const params=()=>{const vals={},flags=new Set();
  const allowed=new Set(["--runs","--seed","--workers","--hours",
   "--out","--future-budget","--navigate-budget","--max-search-steps",
-  "--max-game-steps","--min-eligible","--focus"]);
+  "--max-game-steps","--min-eligible","--focus","--audit"]);
  for(let i=2;i<process.argv.length;i++){
   const key=process.argv[i];
   if(key==="--resume"||key==="--dry-run"){
@@ -119,7 +119,9 @@ const params=()=>{const vals={},flags=new Set();
   maxSearchSteps:number("--max-search-steps",4000,1,100000),
   maxGameSteps:number("--max-game-steps",7000,1,100000),
   minEligible:number("--min-eligible",60,2,100000),
-  focus,out:resolve(vals["--out"]||"results/session-balance-01"),
+  focus,auditFile:resolve(vals["--audit"]||
+   "results/canonical-audit-01/summary.json"),
+  out:resolve(vals["--out"]||"results/session-balance-01"),
   resume:flags.has("--resume"),dryRun:flags.has("--dry-run")
  };
 };
@@ -332,6 +334,17 @@ if(!isMainThread){
 }else{
  const c=params(),revision=git();
  if(!revision)throw Error("Git revision is required for reproducible studies");
+ if(!c.dryRun){
+  if(!existsSync(c.auditFile))
+   throw Error("Missing canonical audit gate: "+c.auditFile+
+    " (run npm run audit:canonical first)");
+  const audit=JSON.parse(readFileSync(c.auditFile,"utf8"));
+  if(audit.commit!==revision||audit.pass!==true||
+    audit.completeFaceCoverage!==true||audit.allWalksEnded!==true||
+    audit.runs<36)
+   throw Error("Canonical audit must PASS for at least 36 real walks at "+
+    "the SAME Git revision before launching balance jobs");
+ }
  const design={schema:1,revision,
   ...Object.fromEntries(Object.entries(c).filter(([k])=>
    !["out","resume","dryRun","workers","hours"].includes(k)))};
