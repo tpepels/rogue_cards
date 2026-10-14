@@ -5,6 +5,7 @@
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 import {randomSource} from "./random.js";
+import {physicalCopies} from "./physical-cards.js";
 import {d6Band} from "./dice-bands.js";
 import {applyCardRoll,NON_ROLL_EFFECTS} from "../effect-model.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
@@ -26,7 +27,9 @@ const ranges=(card,face)=>{
  return index;
 };
 const stageNames=["UPPER","MIDDLE","DEEP"];
-const copyDeck=(rng,source)=>rng.shuffle(source.flatMap(c=>Array.from({length:c.copies},()=>c)));
+const copyDeck=(rng,source)=>rng.shuffle(
+ source===OBJECTS?physicalCopies(source):
+ source.flatMap(c=>Array.from({length:c.copies||1},()=>c)));
 const scoreItem=(o,strategy)=>{
  const k=o.v2.kind;
  const power={EQUIPMENT:15,RING:13,COMPANION:12,WAND:11,RELIC:9,SCROLL:6,POTION:4,TOOL:4}[k]||1;
@@ -254,7 +257,7 @@ export class ExpeditionState {
   for(let i=0;i<n;i++){
    const options=this.heroes.flatMap(h=>h.inventory
     .filter(o=>(!tag||can(o,tag))&&o!==exclude&&
-     (!this.equipped(h,o.id)||!this.cursed(o)))
+     (!Object.values(h.slots).includes(o)||!this.cursed(o)))
     .map(o=>({hero:h,item:o})))
     .sort((a,b)=>scoreItem(a.item,this.strategy)-scoreItem(b.item,this.strategy));
    if(!options.length)return last;
@@ -303,7 +306,8 @@ export class ExpeditionState {
   this.peekedRoomIds[this.room.stage]=deck.slice(0,n).map(r=>r.id);
  }
  discardable(n=1,tag=null){return this.heroes.reduce((total,h)=>
-   total+h.inventory.filter(c=>(!tag||can(c,tag))&&!(can(c,"CURSED")&&this.equipped(h,c.id))).length,0)>=n;}
+   total+h.inventory.filter(c=>(!tag||can(c,tag))&&
+    !(this.cursed(c)&&Object.values(h.slots).includes(c))).length,0)>=n;}
  exhaustedWand(){for(const h of this.heroes)for(const o of h.inventory)
   if(o.v2.kind==="WAND"&&this.exhausted.has(o))return o;return null;}
  recharge(){
