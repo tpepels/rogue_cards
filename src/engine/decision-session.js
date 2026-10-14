@@ -55,7 +55,10 @@ const canonical=session=>{
   // Equipment can be changed at a safe action boundary, not mid-roll.
   const equipment=s.heroes.flatMap((h,i)=>
    h.hp>0?legalActions(s,{phase:"equipment",heroIndex:i}):[]);
-  return [...opts,...equipment,
+  const remains=(s.keptMonsterRewards||[]).flatMap((entry,index)=>
+   entry.monsterId==="eye"?[{
+    phase:"remains",kind:"use-eye",index,monsterId:"eye"}]:[]);
+  return [...opts,...equipment,...remains,
    {phase:src,kind:"continue",heroIndex}];
  }
  if(phase==="retained-entry")return legalActions(s,{
