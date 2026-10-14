@@ -88,9 +88,9 @@ indefinitely, reaching the 7,000-step source limit without a game
 ending. The engine does **not** change this choice set.
 
 `src/session-policy.js` now lets MCTS inspect **all currently legal
-actions**, but if it recommends a thirteenth consecutive reversible
-equipment change, the *study policy* selects the existing legal
-`continue` action. This is a declared anti-cycle convention for
+actions**, then after twelve consecutive reversible
+equipment changes, the *study policy* selects the existing legal
+`continue` action, regardless of which action MCTS recommends. This is a declared anti-cycle convention for
 computational evaluation, not an additional printed-card restriction.
 It is applied identically to source expeditions and both paired
 counterfactual continuations. Counts of these policy interventions
