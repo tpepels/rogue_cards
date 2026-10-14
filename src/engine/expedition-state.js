@@ -731,7 +731,10 @@ export class ExpeditionState {
     const discarded=offered.splice(this.die(3)-1,1)[0];
     this.discardedRoomIds.add(discarded.id);
    }
-   if(mode==="m-maps"&&this.discardable()&&pile.length){this.discard();offered.push(pile.shift());}
+   if(mode==="m-maps"&&this.discardable()&&pile.length&&
+    this.chooseEffect("cartographer-extra-map",["save","trade"],"trade")==="trade"){
+    this.discard();offered.push(pile.shift());
+   }
    const rank=r=>(r.v2.kind==="TREASURE"?(this.strategy==="treasure"?7:3):0)+
     (r.v2.kind==="SHRINE"&&this.chooseActor().hp<this.chooseActor().card.hp-2?4:0)-
     (r.v2.kind==="LAIR"?4:0)-(r.v2.kind==="HAZARD"?2:0);
@@ -781,12 +784,19 @@ export class ExpeditionState {
   // Persistent choice Rooms intentionally have no d6 results. An incidental
   // item effect or engine probe must not roll dice or change their choices.
   if(!this.room.v2.roll)return false;
+  // Lantern Shrine says discard BEFORE a later Room d6. The decision
+  // must be taken before even a hypothetical die face is observed.
+  const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
+  const lampChoice=lamp>=0&&this._decisionHook?
+   this.chooseEffect("lantern-shrine-before-roll",
+    ["save","use"],"use")==="use":null;
   let face=typeof forced==="number"?forced:this.die();
    if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
     const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
    }
-   const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
-   if(lamp>=0&&face<=4){face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);}
+   if(lamp>=0&&(lampChoice??face<=4)){
+    face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);
+   }
   const risk=forced&&typeof forced==="object"?forced.risk:null;
   const firstSpent=this.lastSpent;
   if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
