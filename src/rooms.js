@@ -55,7 +55,7 @@ const middle=make("MIDDLE",[
   [["CONFESS","Roll d6."],["BREAK","Opposed d20+ATK vs d20+5: win, draw 1 Item and recharge a Wand; lose, lose d6 HP."]],"CONFESS",
   [["1–2","Lose d6 HP."],["3–4","Heal d6 HP."],["5","Draw 1 Item."],["6","Keep this Room: +2 to your next WIT roll; then discard it."]],["Tunnel Raven"],"The gears are listening."],
  ["m-beetle","Beetle Caravan","rust","ENCOUNTER","Armoured beetles drag an empty cart.",
-  [["BARGAIN","Roll d6; Hound or discarded METAL chooses 6. Keep this Room: +1 Item at Midnight Bazaar."],["STEAL","Draw a MIDDLE Monster. Win: draw 2 Items. Keep this Room: Bazaar costs +1 Item."]],"BARGAIN",
+  [["BARGAIN","Roll d6. Discard 1 METAL Item to use result 6. With Loyal Hound, peek at next Room afterward. Keep this Room: +1 Item at Midnight Bazaar."],["STEAL","Draw a MIDDLE Monster. Win: draw 2 Items. Keep this Room: Bazaar costs +1 Item."]],"BARGAIN",
   [["1–2","They charge. Lose 2 HP."],["3–4","Discard 1 Item; draw 2 Items."],["5","They give you 1 Item."],["6","They give you 2 Items."]],["Loyal Hound"],"Their driver is a moth."],
  ["m-treasure","Treasure That Sings","amulet","TREASURE","Coins hum when no one looks.",[["TAKE","Roll d6. After seeing result, lose 2 HP to roll again and choose either."],["MUFFLE","Discard 1 Item; keep this Room. Discard at a Monster to set first behaviour to 1–2, or at Choir of Mushrooms for SING 5–6."]],"TAKE",[["1–2","Song attracts a MIDDLE Monster."],["3–4","Take 1 Item."],["5–6","Take 3 Items, then discard 1."]],["Choir of Mushrooms"],"The melody follows you."],
 ]);
