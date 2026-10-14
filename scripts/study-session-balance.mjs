@@ -344,6 +344,16 @@ if(!isMainThread){
     audit.runs<36)
    throw Error("Canonical audit must PASS for at least 36 real walks at "+
     "the SAME Git revision before launching balance jobs");
+  // A passing enumerated-face audit is insufficient when behavioral
+  // regressions still fail. Fail closed before starting costly workers.
+  console.error("Preflight: canonical session regression suite");
+  execFileSync("npm",["run","test:session"],{
+   stdio:"inherit",timeout:240000
+  });
+  console.error("Preflight: printed deck and handler validation");
+  execFileSync("npm",["run","validate:deck"],{
+   stdio:"ignore",timeout:120000
+  });
  }
  const design={schema:1,revision,
   ...Object.fromEntries(Object.entries(c).filter(([k])=>
