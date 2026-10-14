@@ -1,6 +1,6 @@
 // Optional corridors and returning Rooms. Each effect is printed on its card.
 const rows=[
- ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep this Room. When a Monster rolls behaviour, discard to make it 1–2; next WIT roll in the fight has DIS. Or discard this Room and 1 FIRE Item to cancel that response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
+ ["m-fungus","MIDDLE","Fungal Garden","MYSTERY","mushroom","Fungal faces sway in the spores.","PRESERVE","Keep this Room. On Monster behaviour, discard to make it 1–2; your next WIT roll has DIS. Discard a FIRE Item too to cancel the response.","PICK","Roll d6 to harvest.","HARVEST","garden"],
  ["m-bridge","MIDDLE","Bridge of Whispering Rope","HAZARD","stairs","The ropes are whispering names.","CUT A STRAND","Keep this Room as rope. At a non-Warden Monster, discard it and 1 Item to escape without reward.","CROSS","Roll d6. Knotted Rope may raise or lower the result by 1 (between 1 and 6).","CROSS","bridge"],
  [
   "m-well",
@@ -10,13 +10,13 @@ const rows=[
   "water",
   "An offering is never truly lost.",
   "OFFER",
-  "Tuck 1 Item under this Room. Heal 3 HP; keep this Room. On entering DEEP: leave Item to heal 3 HP, or roll this Room's d6 and recover Item.",
+  "Tuck 1 Item here; heal 3 HP and keep Room. On entering DEEP, leave the Item to heal 3 more HP, or roll this Room's d6 and recover it.",
   "LISTEN",
   "Peek at the next Room.",
   "DEEP RETURN",
   "well"
  ],
- ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep this Room. At Vault, discard 1 Item to see the Warden's first behaviour before your action; resolve it afterward. Otherwise that behaviour is 6. Discard this Room.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
+ ["m-clock","MIDDLE","Clockwork Confessional","MYSTERY","warden","A brass mouth demands a confession.","BORROW","Draw 1 Item; keep this Room. At Vault, discard Room and 1 Item to see the Warden's first behaviour before acting; resolve it afterward. Otherwise it is 6.","LIE","Roll d6 to deceive the machine.","LIE","debt"],
  ["u-fork","UPPER","Forked Passage","CORRIDOR","corridor","Two drafts indicate two possible routes.","CHOOSE","Reveal 2 Rooms; enter one and return the other to the bottom of its deck.","SEARCH","Roll d6 to search for an exit.","SEARCH","path"],
  ["u-echoes","UPPER","Hall of Three Echoes","CORRIDOR","whisper","One echo lies about the exit.","LISTEN","Take 3 Rooms face-down; randomly return 1 unseen to bottom. Reveal the other 2; enter one, return other to bottom.","RUSH","Roll d6 to follow an echo.","RUSH","path"],
  ["u-mossy","UPPER","Mossy Switchback","CORRIDOR","mushroom","A moss-covered slope doubles back.","REST","Heal 1 HP. Reveal 2 Rooms; enter one, leave other on top.","HURRY","Roll d6 to hurry downhill.","HURRY","path"],
@@ -34,8 +34,8 @@ const rows=[
   "TURN BACK",
   "path"
  ],
- ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","EXTINGUISH","Roll d6. If you keep a candle, discard it at Lightless Hall to cancel the first-attack DIS.","EXTINGUISH","path"],
- ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms (3 if you discard 1 Item); choose one, return the rest to bottom.","TEAR","Roll d6 to follow a torn map.","TEAR","path"],
+ ["u-candle","UPPER","Candle Tunnel","CORRIDOR","wind","A small candle burns backward.","FOLLOW THE CANDLE","Reveal 2 Rooms; enter one, leave the other on top.","EXTINGUISH","Roll d6. A 5–6 result lets you keep this Room as a candle.","EXTINGUISH","path"],
+ ["m-maps","MIDDLE","Gallery of Cracked Maps","CORRIDOR","wizard","Three maps disagree about the corridor.","STUDY","Reveal 2 Rooms; discard 1 Item to reveal a third. Enter one, put the rest on bottom.","TEAR","Roll d6.","TEAR","path"],
  [
   "m-ladder",
   "MIDDLE",
@@ -44,7 +44,7 @@ const rows=[
   "stairs",
   "Two ways down.",
   "CLIMB",
-  "Reveal 2 Rooms; enter 1. If you choose a LAIR, your first attack has ADV; otherwise draw 1 Item.",
+  "Reveal 2 Rooms; enter 1. Enter a LAIR: first Hero attack has ADV. Otherwise draw 1 Item.",
   "TAKE THE SHAFT",
   "Roll d6. Skip remaining Rooms; resolve the destination below.",
   "SHAFT",
@@ -123,7 +123,7 @@ const rows=[
   "name"
  ],
  ["m-wax-bridge","MIDDLE","Wax Bridge","HAZARD","stairs","The bridge melts underfoot.","SCRAPE WAX","Keep this Room. Discard it to prevent 3 falling damage, or at Broken Bridge to resolve 3–4 instead of 1–2.","CROSS","Roll d6 to cross the wax.","CROSS","wax"],
- ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2; keep this Room. At Vault, discard 1 Item or Warden's first behaviour is 6. Then discard this Room.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
+ ["m-hungry-door","MIDDLE","The Hungry Door","MYSTERY","door","Its hinge mouths demand a meal.","FEED","Discard 1 Item; draw 2; keep Room. At Vault, discard 1 Item or Warden's first behaviour is 6. Then discard Room.","STARVE","Roll d6 to pass without feeding it.","STARVE","hungry"],
  [
   "d-apothecary",
   "DEEP",
@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep this Room. At Vault, lose 2 HP and discard to roll Warden behaviour before your first action. You may reroll once, accepting the new result; resolve it after your action.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Its bell sounds before being struck.","RING","Roll d6 to ring now.","SAVE","Keep Room. At Vault, lose 2 HP and discard it. Roll Warden behaviour before you act; you may reroll, keeping the new result. Resolve it after your action.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
@@ -472,7 +472,7 @@ const printedTables={
     ],
     [
       "5–6",
-      "Keep this Room as a candle; reveal 2 Rooms and choose one."
+      "Keep this Room as a candle; reveal 2 Rooms and choose one. Discard candle at Lightless Hall to cancel its attack DIS."
     ]
   ],
   "m-maps": [
@@ -486,7 +486,7 @@ const printedTables={
     ],
     [
       "5–6",
-      "As 3–4; keep this Room as a map. Discard to raise or lower a trapdoor d6 by 1 (minimum 1, maximum 6)."
+      "As 3–4; keep this Room. Discard to adjust one trapdoor d6 by ±1 (within 1–6)."
     ]
   ],
   "m-red-detour": [
