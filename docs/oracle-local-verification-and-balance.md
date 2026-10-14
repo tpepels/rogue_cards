@@ -97,6 +97,17 @@ counterfactual continuations. Counts of these policy interventions
 are retained in the report. They must not be interpreted as
 strong evidence of optimal human play.
 
+Nested MCTS rollouts now have a separate **six consecutive free equipment
+actions** cap. The canonical legal-action interface is unchanged; the
+search still starts by exploring every legal root alternative (including
+equipment and transfers). Beyond that limit in sampled future play,
+it selects the *actual legal Continue action* instead of walking through
+reversible gear changes indefinitely. This keeps full, genuine printed
+terminal expeditions while making the finite-budget search less prone
+to spending most of its rollout on no-progress actions. This is a
+decision-policy assumption, not a proof of optimal play or a change
+to the physical cards.
+
 Failed matched continuations are still errors, never automatic losses
 or excluded successful-looking samples. Failure reports include
 policy counts, action-kind frequencies, the last forty actions and
