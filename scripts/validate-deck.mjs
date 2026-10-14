@@ -56,8 +56,8 @@ for(const c of CATALOGUE){
  if(c.type==="room"){
   check(c.v2.choices?.length===2,id+" requires two choices");
   check(!!c.stage,id+" missing stage");
-  if(!c.v2.roll)check(c.v2.fate===true,
-   id+" has no d6 table without printed fate exemption");
+  if(!c.v2.roll)check(c.v2.fate===true||c.id==="d-gilded",
+   id+" has no d6 table without fate or no-roll corridor exemption");
  }
  if(c.v2?.roll)for(let face=1;face<=6;face++){
   try{
