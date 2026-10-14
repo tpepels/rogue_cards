@@ -2,7 +2,7 @@
 import {resolveFateChoice,fateStageEntry,fateMonsterEntry,fateVaultEntry} from "./room-fates.js";
 export function resolveRoomChoice(s,choice){
  if(s.room.v2.fate)return resolveFateChoice(s,choice);
- const id=s.room.id,h=s.chooseActor();
+ const id=s.room.id,h=s.actor||s.chooseRecipient("retained-room-choice");
  const keep=(item=null)=>s.keptRooms.push({card:s.room,item});
  if(s.room.v2.special.corridor){
   if(id==="d-gilded"&&choice===1){
@@ -48,9 +48,11 @@ export function roomEntry(s){
   for(const entry of [...s.keptRooms])if(["m-well","u-leech-pool"].includes(entry.card.id)){
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="m-well"){
-    if(s.returnChoices?.["m-well"]==="leave")s.heal(s.chooseActor(),3);
+    if(s.returnChoices?.["m-well"]==="leave")
+     s.heal(s.chooseRecipient("well-healing"),3);
     else{s.resolveKeptRoll(entry.card);
-     if(entry.item){const h=s.chooseActor();h.inventory.push(entry.item);
+     if(entry.item){const h=s.chooseRecipient("well-returned-item");
+      h.inventory.push(entry.item);
       s.consumed.delete(entry.item);s.equip(h,entry.item);}}
    }else if(s.discardable()&&s.chooseEffect("leech-pool-debt",
     ["lose-hp","discard"],"discard")==="discard")s.discard();
@@ -83,8 +85,13 @@ export function roomEntry(s){
  }
  if(room.stage!=="FINAL"&&!room.v2?.special?.corridor){
   const garden=s.keptRooms.findIndex(x=>x.card.id==="m-fungus");
-  const h=s.chooseActor();
-  if(garden>=0&&h.card.hp-h.hp>=3){
+  const candidates=s.heroes.filter(h=>h.hp>0&&h.card.hp-h.hp>=3);
+  const h=candidates.length?
+   (candidates.length===1?candidates[0]:
+    s.heroes[Number(s.chooseEffect("fungal-garden-target",
+     candidates.map(x=>String(s.heroes.indexOf(x))),
+     String(s.heroes.indexOf(candidates[0]))))]):null;
+  if(garden>=0&&h){
    const mode=s.returnChoices?.["m-fungus"]||"heal";
    if(mode!=="save"){
     s.keptRooms.splice(garden,1);
@@ -112,7 +119,7 @@ export function monsterEntry(s,monster){
    monsterId:monster.id,context:"monster-entry"});
   if(action?.mode==="save")continue;
   if(id==="m-bridge")s.discard();
-  else s.hurt(s.chooseActor(),1);
+  else s.hurt(s.chooseRecipient("wax-bridge-payment"),1);
   s.keptRooms.splice(i,1);return true;
  }
  return false;
