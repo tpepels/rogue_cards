@@ -31,9 +31,15 @@ export function resolveRoomChoice(s,choice){
 export function protectHero(s,h,damage){
  if(damage<=0)return damage;
  const heal=s.keptRooms.findIndex(x=>x.card.id==="d-apothecary");
- if(heal!==-1){s.keptRooms.splice(heal,1);damage=Math.max(0,damage-2);}
+ if(heal!==-1&&s.chooseEffect("apothecary-protect",
+  ["save","use"],"use")==="use"){
+  s.keptRooms.splice(heal,1);damage=Math.max(0,damage-2);
+ }
  if(damage>=h.hp){const guard=s.keptRooms.findIndex(x=>x.card.id==="m-second-name");
-  if(guard!==-1){s.keptRooms.splice(guard,1);damage=Math.max(0,h.hp-1);}}
+  if(guard!==-1&&s.chooseEffect("second-name-protect",
+    ["save","use"],"use")==="use"){
+    s.keptRooms.splice(guard,1);damage=Math.max(0,h.hp-1);
+  }}
  return damage;
 }
 export function roomEntry(s){
@@ -46,7 +52,9 @@ export function roomEntry(s){
     else{s.resolveKeptRoll(entry.card);
      if(entry.item){const h=s.chooseActor();h.inventory.push(entry.item);
       s.consumed.delete(entry.item);s.equip(h,entry.item);}}
-   }else if(s.discardable())s.discard();else s.hurt(s.chooseActor(),2);
+   }else if(s.discardable()&&s.chooseEffect("leech-pool-debt",
+    ["lose-hp","discard"],"discard")==="discard")s.discard();
+   else s.hurt(s.chooseRecipient("leech-pool-debt"),2);
   }
  }
  if(room.stage==="FINAL"){
@@ -54,7 +62,9 @@ export function roomEntry(s){
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="d-last-bell")s.resolveKeptRoll(entry.card);
    else if(s.returnChoices?.[entry.card.id]==="roll")s.resolveKeptRoll(entry.card);
-   else if(s.discardable())s.discard();else s.resolveKeptRoll(entry.card);
+   else if(s.discardable()&&s.chooseEffect(
+    "vault-debt:"+entry.card.id,["roll","pay"],"pay")==="pay")s.discard();
+   else s.resolveKeptRoll(entry.card);
   }
  }
  if(room.id==="u-nest"){
@@ -64,7 +74,12 @@ export function roomEntry(s){
  }
  if(room.v2?.kind==="TREASURE"){
   const rat=s.keptRooms.findIndex(x=>x.card.id==="u-rat-favor");
-  if(rat>=0){s.keptRooms.splice(rat,1);if(s.discardable())s.discard();else s.forfeitNextItem=true;}
+  if(rat>=0){
+   s.keptRooms.splice(rat,1);
+   if(s.discardable()&&s.chooseEffect("rat-favor-debt",
+    ["forfeit-next-item","discard"],"discard")==="discard")s.discard();
+   else s.forfeitNextItem=true;
+  }
  }
  if(room.stage!=="FINAL"&&!room.v2?.special?.corridor){
   const garden=s.keptRooms.findIndex(x=>x.card.id==="m-fungus");
