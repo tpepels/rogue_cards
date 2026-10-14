@@ -679,17 +679,43 @@ export class ExpeditionState {
    if(granted&&this.alive())this.keptRooms.push({card:this.room});
    return;
   }
-  case "BOOKCASE_FIRE_OR_SCROLL":if(this.has("torch")||this.anyEquippedTag("FIRE"))this.draw();
-    else{const owner=this.heroes.find(x=>x.inventory.some(y=>y.v2.kind==="SCROLL"));
-      if(owner){const item=owner.inventory.find(y=>y.v2.kind==="SCROLL");
-       this.consume(owner,item);this.peek(2);}}return;
-  case "FUNGUS_BURN":if(this.has("torch"))this.heal(h,this.die());
-    else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.heal(h,this.die());}return;
+  case "BOOKCASE_FIRE_OR_SCROLL":{
+   const fire=this.has("torch")||this.anyEquippedTag("FIRE");
+   const scrolls=this.heroes.flatMap((hero,heroIndex)=>hero.inventory
+    .map((item,index)=>({hero,item,heroIndex,index}))
+    .filter(x=>x.item.v2.kind==="SCROLL"));
+   const modes=[...(fire?["fire"]:[]),
+    ...scrolls.map(x=>"scroll:"+x.heroIndex+":"+x.index)];
+   if(!modes.length)return;
+   const mode=this.chooseEffect("bookcase-payment",modes,modes[0]);
+   if(mode==="fire")this.draw();
+   else{
+    const chosen=scrolls.find(x=>mode==="scroll:"+x.heroIndex+":"+x.index);
+    this.consume(chosen.hero,chosen.item);this.peek(2);
+   }
+   return;
+  }
+  case "FUNGUS_BURN":{
+   const modes=[...(this.has("torch")?["torch"]:[]),
+    ...(this.discardable(1,"FIRE")?["discard-fire"]:[])];
+   if(!modes.length)return;
+   const mode=this.chooseEffect("fungus-fire-source",modes,modes[0]);
+   if(mode==="discard-fire")this.discard(1,{tag:"FIRE"});
+   this.heal(h,this.die());return;
+  }
   case "CHOIR_SILENCE":{
    const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
-   if(song){this.keptRooms.splice(this.keptRooms.indexOf(song),1);this.roomRoll(6);return;}
-   if(this.has("torch"))this.draw(2);
-   else if(this.discardable(1,"FIRE")){this.discard(1,{tag:"FIRE"});this.draw(2);}return;
+   const modes=[...(song?["song"]:[]),
+    ...(this.has("torch")?["torch"]:[]),
+    ...(this.discardable(1,"FIRE")?["discard-fire"]:[])];
+   if(!modes.length)return;
+   const mode=this.chooseEffect("choir-silence-source",modes,modes[0]);
+   if(mode==="song"){
+    this.keptRooms.splice(this.keptRooms.indexOf(song),1);
+    this.roomRoll(6);return;
+   }
+   if(mode==="discard-fire")this.discard(1,{tag:"FIRE"});
+   this.draw(2);return;
   }
   case "SEAL":return;
   case "WARDEN_FIGHT":return;
