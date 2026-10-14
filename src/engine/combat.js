@@ -74,11 +74,15 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  const ring=h.slots.ring;
  if(ring?.id==="ring-luck"&&!h.used.has(ring)&&
     wantsItem(s,h,ring,"after-roll"))s.activate(h,ring);
+ if(h.hp<=0)return {hit:false,critical:false,natural:null};
  const wand=itemIn(s,h,"wand-undo");
  if(wand&&!s.exhausted.has(wand)&&s.pendingD20!==20&&
   (s._decisionHook||s.pendingD20+bonus+extraAtk<10+def||
    s.strategy==="magic")&&wantsItem(s,h,wand,"after-roll"))
   s.activate(h,wand);
+ // Lethal Wand misfires and paid rerolls end the attempted attack before
+ // any failed-d20 Crown prompt or attack damage is resolved.
+ if(h.hp<=0)return {hit:false,critical:false,natural:null};
  const natural=s.pendingD20;const modified=natural+s.pendingD20Modifier;
  const defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv});
  h.nextDefenseAdv=false;
@@ -260,13 +264,17 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,lucky);
   def=s.pendingD20+s.pendingD20Modifier;
  }
+ if(h.hp<=0)return false;
  if(undo&&!s.exhausted.has(undo)&&def<13&&
     wantsItem(s,h,undo,"after-roll")){
   s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,undo);
   def=s.pendingD20+s.pendingD20Modifier;
  }
+ // A dead defending Hero cannot roll onward or activate a Shield.
+ if(h.hp<=0)return false;
  s.monsterAdv=false;s.monsterDis=false;
  if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
+ if(h.hp<=0)return false;
  const hit=atk===20||atk!==1&&
   atk+s.monster.atk+bonus>def+s.stats(h).def-defPenalty+
    defenceBonus+(h.nextDefenseBonus||0);
