@@ -39,11 +39,6 @@ const pendingReturnIds=s=>{
    if(s.keptRooms.some(x=>x.card.id===id))ids.push(id);
   }
  }
- if(stage!=="FINAL"&&!s.room?.v2.special?.corridor){
-  if(s.keptRooms.some(x=>x.card.id==="m-fungus")&&
-    s.heroes.some(h=>h.hp>0&&h.card.hp-h.hp>=3))
-    ids.push("m-fungus");
- }
  return ids.filter(id=>legalActions(s,{phase:"retained",roomId:id}).length>1);
 };
 const canonical=session=>{
