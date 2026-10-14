@@ -361,15 +361,13 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
   if(!kept)return [];
   const alternatives={
    "m-well":["leave","roll"],"m-clock":["pay","roll"],
-   "m-hungry-door":["pay","roll"],"m-fungus":["heal","save","burn"],
+   "m-hungry-door":["pay","roll"],
    "u-hollow-knight":["escape","save"],
    "m-ferryman-oath":["recover","smuggle"],
    "m-bridge":["use","save"],"m-wax-bridge":["use","save"],
    "u-puppet":["use","save"]
   };
   let modes=alternatives[roomId]||[];
-  if(roomId==="m-fungus"&&!s.discardable(1,"FIRE"))
-   modes=modes.filter(x=>x!=="burn");
   if(roomId==="m-ferryman-oath"&&kept.choice!==0)
    modes=[];
   if(["m-clock","m-hungry-door"].includes(roomId)&&!s.discardable())
