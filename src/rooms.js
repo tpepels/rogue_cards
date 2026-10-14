@@ -20,7 +20,7 @@ const upper=make("UPPER",[
  ["u-gate","Rusty Gate","door","HAZARD","Something knocks from the other side.",
   [["UNLOCK","Roll d6. Discard Rusty Key to choose 5–6 instead."],["FORCE","Opposed d20+ATK vs d20+3: win, draw 1 Item; lose, lose 2 HP."]],"UNLOCK",
   [["1–2","TRAP: Lose d6 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],["Rusty Key"],"A lock with opinions."],
- ["u-supply","Forgotten Supplies","shop","TREASURE","A dusty storehouse of abandoned equipment.",[["SCAVENGE","Roll d6."],["BARTER","Discard 1 Item to draw 2, or discard a MAGIC Item to recharge a Wand."]],"SCAVENGE",[["1–2","Rotten shelves collapse. Lose 2 HP."],["3–4","SALVAGE the most recently discarded Item; if none, draw 1 Item."],["5–6","Draw 2 Items, then discard 1 damaged Item."]],["Loyal Hound"],"The dust has a price."],
+ ["u-supply","Forgotten Supplies","shop","TREASURE","A dusty storehouse of abandoned equipment.",[["SCAVENGE","Roll d6."],["BARTER","Discard 1 Item to draw 2, or discard a MAGIC Item to recharge a Wand."]],"SCAVENGE",[["1–2","Rotten shelves collapse. Lose 2 HP."],["3–4","SALVAGE the most recently discarded Item; if none, draw 1 Item."],["5–6","Draw 2 Items, then discard 1 Item."]],["Loyal Hound"],"The dust has a price."],
  ["u-nest","Rat Nest","rat","LAIR","Rats hoard stolen trinkets. Kept Rat King's Favor makes SOOTHE 5–6.",[["SOOTHE","Roll d6. With Loyal Hound, choose 5–6."],["DISTURB","Opposed d20+ATK vs d20+3: win, draw 1 Item; lose, lose d6 HP."]],"SOOTHE",[["1–2","The rats swarm and bite. Lose 2 HP."],["3–4","The rats scatter."],["5–6","They surrender a stolen Item. Draw 1 Item."]],["Loyal Hound","Rat King's Favor"],"They consider you enormous."],
  ["u-shrine","Abandoned Shrine","altar","SHRINE","An empty bowl waits for an offering.",
   [["PRAY","Roll d6."],["OFFER","Discard 1 Item; heal d6 HP. If the discarded Item was CURSED, recharge a Wand too."]],"PRAY",
@@ -72,7 +72,7 @@ const middle=make("MIDDLE",[
   [["1–2","The song summons a MIDDLE Monster."],["3–4","Draw 1 Item."],["5–6","Draw 3 Items, then discard 1 Item."]],["Pitch Torch"],"The melody follows you."]
 ]);
 const deep=make("DEEP",[
- ["d-shadow","Lightless Hall","crypt","HAZARD","The dark swallows even your shadow.",[["PROCEED","Roll d6. FIRE removes the first-attack DIS; ICE chooses 3–4."],["FEEL ALONG WALL","Lose 1 HP; peek next 2 Rooms."]],"PROCEED",[["1–2","Stumble into a DEEP Monster; first Hero attack has DIS."],["3–4","Feel a lost pack: draw 1 Item."],["5–6","Find a glinting cache: draw 2 Items."]],["Pitch Torch","Candle Tunnel"],"The dark is watching."],
+ ["d-shadow","Lightless Hall","crypt","HAZARD","The dark swallows even your shadow.",[["PROCEED","Roll d6. FIRE removes the first-attack DIS; ICE chooses 3–4."],["FEEL ALONG WALL","Lose 1 HP; peek next 2 Rooms."]],"PROCEED",[["1–2","TRAP: Stumble into a DEEP Monster; first Hero attack has DIS."],["3–4","Feel a lost pack: draw 1 Item."],["5–6","Find a glinting cache: draw 2 Items."]],["Pitch Torch","Candle Tunnel"],"The dark is watching."],
  ["d-bridge","Broken Bridge","stairs","HAZARD","The far side looks almost reachable.",
   [["LEAP","Roll d6. With Knotted Rope, choose 5–6."],["CRAWL","Lose d6 HP; draw 1 Item."]],"LEAP",
   [["1–2","TRAP: Fall into the Vault; lose 2d6 HP."],["3–4","TRAP: Lose d6 HP."],["5–6","Draw 1 Item."]],["Knotted Rope"],"Do not look down."],
