@@ -19,6 +19,8 @@ export {ExpeditionState,strategies,roomPolicies}
  from "./expedition-state.js";
 export {seal,sealCost} from "./vault.js";
 export {randomSource} from "./random.js";
+export {createDecisionSession,sessionActions,submitDecision,observeSession}
+ from "./decision-session.js";
 export {d6Band} from "./dice-bands.js";
 export {playerAttack,monsterRespond,executeItemOption,engraveElbereth,blessBeforeD20}
  from "./combat.js";
