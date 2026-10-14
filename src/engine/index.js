@@ -225,6 +225,16 @@ export function createGame(options={}){
 export function legalActions(s,{phase=null,heroIndex=0,roomId=null,cost=0}={}){
  if(!phase)phase=s.monster?"combat":s.room?.stage==="FINAL"?"vault":
   s.room?"room":"between-rooms";
+ if(phase==="effect-choice"){
+  const pending=s._pendingEffectChoices;
+  return pending?.context?pending.modes.map(mode=>({
+   phase,kind:"effect-option",context:pending.context,mode}):[];
+ }
+ if(phase==="spend-item"){
+  return (s._pendingSpendOptions||[]).map(x=>({
+   phase,kind:"discard-card",heroIndex:x.heroIndex,
+   index:x.index,cardId:x.cardId}));
+ }
  if(phase==="corridor"){
   const offered=s._offeredRoomChoices||[];
   return offered.map((room,index)=>({phase,kind:"enter-shown-room",
