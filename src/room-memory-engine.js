@@ -24,7 +24,9 @@ export function resolveRoomChoice(s,choice){
  case "m-well":if(s.discardable()){const item=s.discard();s.heal(h,3);keep(item);}break;
  case "m-clock":case "u-rat-favor":s.draw();keep();break;
  case "u-leech-pool":s.heal(h,3);keep();break;
- case "m-hungry-door":s.draw(2);if(s.discardable())s.discard();keep();break;
+ case "m-hungry-door":
+  if(!s.discardable())throw Error("Hungry Door requires 1 Item");
+  s.discard(1);s.draw(2);keep();break;
  default:throw Error("Unimplemented Room choice "+id);
  }
 }
@@ -54,19 +56,36 @@ export function roomEntry(s){
      if(entry.item){const h=s.chooseRecipient("well-returned-item");
       h.inventory.push(entry.item);
       s.consumed.delete(entry.item);s.equip(h,entry.item);}}
-   }else if(s.discardable()&&s.chooseEffect("leech-pool-debt",
-    ["lose-hp","discard"],"discard")==="discard")s.discard();
+   }else if(s.discardable(1,"ALCHEMY")&&s.chooseEffect("leech-pool-debt",
+    ["lose-hp","discard-alchemy"],"discard-alchemy")==="discard-alchemy")
+     s.discard(1,{tag:"ALCHEMY"});
    else s.hurt(s.chooseRecipient("leech-pool-debt"),2);
   }
  }
  if(room.stage==="FINAL"){
-  for(const entry of [...s.keptRooms])if(["m-clock","m-hungry-door","d-last-bell"].includes(entry.card.id)){
+  for(const entry of [...s.keptRooms]){
+   if(!["m-clock","m-hungry-door","d-last-bell"].includes(entry.card.id))
+    continue;
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
-   if(entry.card.id==="d-last-bell")s.resolveKeptRoll(entry.card);
-   else if(s.returnChoices?.[entry.card.id]==="roll")s.resolveKeptRoll(entry.card);
-   else if(s.discardable()&&s.chooseEffect(
-    "vault-debt:"+entry.card.id,["roll","pay"],"pay")==="pay")s.discard();
-   else s.resolveKeptRoll(entry.card);
+   if(entry.card.id==="m-clock"){
+    if(s.discardable()&&s.chooseEffect(
+      "confessional-vault-debt",["force-six","pay-and-telegraph"],
+      "pay-and-telegraph")==="pay-and-telegraph"){
+     s.discard();s.telegraphWarden();
+    }else s.forcedBehavior=6;
+   }else if(entry.card.id==="m-hungry-door"){
+    if(s.discardable()&&s.chooseEffect(
+      "hungry-door-vault-debt",["force-six","pay"],"pay")==="pay")
+     s.discard();
+    else s.forcedBehavior=6;
+   }else{
+    // Bell saved instead of rung: a known cost and a first-response
+    // telegraph. The d6 outcomes that KEEP a bell resolve on the
+    // next Monster, not automatically on Vault entry.
+    if(entry.mode){s.keptRooms.push(entry);continue;}
+    s.hurt(s.chooseRecipient("last-bell-vault-debt"),2);
+    if(s.alive())s.telegraphWarden({mayReroll:true});
+   }
   }
  }
  if(room.id==="u-nest"){
@@ -83,31 +102,20 @@ export function roomEntry(s){
    else s.forfeitNextItem=true;
   }
  }
- if(room.stage!=="FINAL"&&!room.v2?.special?.corridor){
-  const garden=s.keptRooms.findIndex(x=>x.card.id==="m-fungus");
-  const candidates=s.heroes.filter(h=>h.hp>0&&h.card.hp-h.hp>=3);
-  const h=candidates.length?
-   (candidates.length===1?candidates[0]:
-    s.heroes[Number(s.chooseEffect("fungal-garden-target",
-     candidates.map(x=>String(s.heroes.indexOf(x))),
-     String(s.heroes.indexOf(candidates[0]))))]):null;
-  if(garden>=0&&h){
-   const mode=s.returnChoices?.["m-fungus"]||"heal";
-   if(mode!=="save"){
-    s.keptRooms.splice(garden,1);
-    if(mode==="burn"&&s.discardable(1,"FIRE")){
-     s.discard(1,{tag:"FIRE"});s.draw(2);h.poison=false;
-    }else s.heal(h,3);
-    s.skipRoom=true;
-   }
-  }
- }
  if(s.nextLadder){s.nextLadder=false;if(room.v2?.kind==="LAIR")s.heroFirstAdv=true;else s.draw();}
  if(room.stage==="DEEP")fateStageEntry(s,"DEEP");
  if(room.stage==="FINAL")fateVaultEntry(s);
 }
 export function monsterEntry(s,monster){
  if(fateMonsterEntry(s,monster))return true;
+ const bell=s.keptRooms.find(entry=>entry.card.id==="d-last-bell"&&
+  ["force","skip"].includes(entry.mode));
+ if(bell&&s.chooseEffect("last-bell-monster:"+monster.id,
+   ["save","use"],"use")==="use"){
+  s.keptRooms.splice(s.keptRooms.indexOf(bell),1);
+  if(bell.mode==="force")s.forcedBehavior=1;
+  else s.monsterSkip++;
+ }
  if(s.whisperRoom){s.rooms[s.whisperRoom.stage].unshift(s.whisperRoom);s.whisperRoom=null;}
  for(const id of ["m-bridge","m-wax-bridge"]){
   const i=s.keptRooms.findIndex(x=>x.card.id===id);if(i<0)continue;
