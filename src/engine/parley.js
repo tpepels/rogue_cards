@@ -55,12 +55,14 @@ export function resolveParley(s){
    h.used.add("hero");const trick=s.die();
    rogueDis=trick<=2;rogueAdv=trick>=3;rogueReward=trick>=5;
   }
+  const wit=s.takeWitModifiers(h);
   const r=s.rerollIfKept(h,rollD20(s,{
    adv:boon.adv||rogueAdv,
-   dis:h.poison||h.slots.armour?.id==="mail"||rogueDis
+   dis:h.poison||h.slots.armour?.id==="mail"||rogueDis||wit.dis
   }));
   const opp=s.die(20);
-  success=r===20||(r!==1&&r+h.card.wit+boon.bonus>opp+difficulty);
+  success=r===20||(r!==1&&
+   r+h.card.wit+boon.bonus+wit.bonus>opp+difficulty);
   if(success&&rogueReward)s.draw();
   if(success&&m.id==="wisp"){
    // A successful ESCAPE delays this same physical encounter: it returns
