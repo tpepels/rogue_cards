@@ -35,9 +35,10 @@ export function selectSessionPolicyAction(session,policy,{
  }).recommended;
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  const progress=legal.find(a=>a.kind==="continue");
+ // At the cap, progress deterministically after searching all legal
+ // alternatives; this is a study policy, not a printed-game restriction.
  if(progress&&safePhases.has(session.phase)&&
-  policy.consecutiveEquipment>=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS&&
-  equipmentKinds.has(recommended.kind)){
+  policy.consecutiveEquipment>=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS){
   policy.cycleBreaks++;
   policy.consecutiveEquipment=0;
   return progress;
