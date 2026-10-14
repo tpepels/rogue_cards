@@ -301,3 +301,57 @@ test("a lethal risky Priest blessing ends the current attack without a post-deat
  assert.equal(s.monsterHP,monsterHP);
  delete s._decisionHook;
 });
+
+test("lethal Wand of Undoing misfire cannot offer Crown after a failed Warden attack d20",()=>{
+ const s=new ExpeditionState({seed:11,heroes:["warrior"]});
+ empty(s);
+ const h=s.heroes[0];
+ for(const id of ["wand-undo","crown-relic"]){
+  const index=s.deck.findIndex(card=>card.id===id);
+  assert.ok(index>=0,"Missing original physical Item "+id);
+  const [card]=s.deck.splice(index,1);
+  s.noteDeckRemoval(card);s.add(h,card);
+ }
+ h.hp=1;s.room=VAULT;s.monster=WARDEN;s.monsterHP=WARDEN.hp;
+ s.rng=randomSource(1); // d20=1, Wand d6=1: misfire kills Hero.
+ const events=[];
+ s._decisionHook=event=>{
+  events.push(event);
+  if(event.phase==="after-roll"&&event.cardId==="wand-undo")
+   return {kind:"item-trigger"};
+  throw Error("Reaction offered after death: "+JSON.stringify(event));
+ };
+ assert.doesNotThrow(()=>playerAttack(s,h));
+ assert.equal(h.hp,0);
+ assert.equal(s.monsterHP,WARDEN.hp);
+ assert.ok(h.inventory.some(card=>card.id==="crown-relic"));
+ assert.ok(events.some(event=>event.cardId==="wand-undo"));
+ assert.ok(!events.some(event=>event.phase==="failed-d20"));
+ delete s._decisionHook;
+});
+
+test("lethal Wand of Undoing during a Room check prevents a dead Hero's Crown prompt",()=>{
+ const s=new ExpeditionState({seed:12,heroes:["warrior"]});
+ empty(s);
+ const h=s.heroes[0];
+ for(const id of ["wand-undo","crown-relic"]){
+  const index=s.deck.findIndex(card=>card.id===id);
+  assert.ok(index>=0,"Missing original physical Item "+id);
+  const [card]=s.deck.splice(index,1);
+  s.noteDeckRemoval(card);s.add(h,card);
+ }
+ h.hp=1;s.room=room("u-nest");s.rng=randomSource(1);
+ const events=[];
+ s._decisionHook=event=>{
+  events.push(event);
+  if(event.phase==="after-roll"&&event.cardId==="wand-undo")
+   return {kind:"item-trigger"};
+  throw Error("Reaction offered after death: "+JSON.stringify(event));
+ };
+ assert.doesNotThrow(()=>s.roomCheck("CHECK_WIT",30,"DRAW1","NONE"));
+ assert.equal(h.hp,0);
+ assert.ok(h.inventory.some(card=>card.id==="crown-relic"));
+ assert.ok(events.some(event=>event.cardId==="wand-undo"));
+ assert.ok(!events.some(event=>event.phase==="failed-d20"));
+ delete s._decisionHook;
+});
