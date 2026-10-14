@@ -17,6 +17,9 @@ import {observeSession,sessionActions,submitDecision}
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
 
+export const MAX_ROLLOUT_EQUIPMENT_ACTIONS=6;
+const freeEquipmentKinds=new Set(["equip","unequip","transfer"]);
+const progressionPhases=new Set(["between-rooms","explore"]);
 const u32=n=>n>>>0;
 const mix=n=>{
  n=u32(n+0x9e3779b9);
@@ -121,6 +124,7 @@ export function searchDecision(session,{budget=100,seed=1,
   prepareRolloutDecks(session.state,"fair"):null;
  const tree=new Map(),rootKey="root:"+publicState(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
+ let rolloutEquipmentAdvances=0;
  const incompleteReasons={};
  const phaseOpportunities={},phaseSelections={},actionOpportunities={},
   actionSelections={},cardOpportunities={},cardSelections={};
@@ -186,7 +190,7 @@ export function searchDecision(session,{budget=100,seed=1,
    eventState.rng=randomSource(chanceSeed);
   };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
-  let historyKey=rootKey,depth=0,error=null;
+  let historyKey=rootKey,depth=0,error=null,equipmentStreak=0;
   const reproductionTrace=[];
   try{
    while(sim.phase!=="terminal"&&depth<maxSteps){
@@ -201,7 +205,17 @@ export function searchDecision(session,{budget=100,seed=1,
     });break}
     const key=historyKey+":"+publicState(sim);
     const node=nodeFor(tree,key,actions);
-    const choice=select(node,actions,choiceRng,exploration);
+    // The printed rules allow reversible zero-time equipment changes.
+    // Each root alternative is still evaluated. During sampled future
+    // play, after six consecutive equipment actions, take the real
+    // Continue action instead of oscillating forever.
+    const progress=progressionPhases.has(sim.phase)&&
+     equipmentStreak>=MAX_ROLLOUT_EQUIPMENT_ACTIONS?
+     actions.find(a=>a.kind==="continue"):null;
+    const choice=progress||select(node,actions,choiceRng,exploration);
+    if(progress)rolloutEquipmentAdvances++;
+    equipmentStreak=progressionPhases.has(sim.phase)&&
+     freeEquipmentKinds.has(choice.kind)?equipmentStreak+1:0;
     const edge=node.edges.get(actionKey(choice));
     record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
@@ -292,6 +306,8 @@ export function searchDecision(session,{budget=100,seed=1,
  return {knowledge,seed,budget,completed,incomplete,incompleteReasons,
   terminalWins:wins,terminalWinRate:completed?wins/completed:null,
   maximumDepth,treeNodes:tree.size,
+  rolloutEquipmentAdvances,
+  maxConsecutiveRolloutEquipmentActions:MAX_ROLLOUT_EQUIPMENT_ACTIONS,
   rootActionCount:rootActions.length,choices:decisions,
   recommended:chosen?.action??null,
   actionCoverage:{phaseOpportunities,phaseSelections,
@@ -303,6 +319,9 @@ export function searchDecision(session,{budget=100,seed=1,
    "Only currently wired pending action windows are searched",
    "Information-set UCT samples unknown cards without seeing future dice",
    "Confidence intervals represent conditional rollout wins, not independent human-play strength",
-   "Uninstrumented printed auto-effects remain outside the action tree"
+   "Uninstrumented printed auto-effects remain outside the action tree",
+   "After six consecutive reversible equipment moves in a sampled rollout "+
+    "the canonical Continue action is selected; every legal root action "+
+    "is still searched and all printed consequences are executed"
   ]};
 }
