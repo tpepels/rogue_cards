@@ -718,7 +718,7 @@ export class ExpeditionState {
    if(pile?.length){
     const known=new Set(this.peekedRoomIds[this.room.stage]||[]);
     const index=pile.findIndex(x=>!known.has(x.id));
-    if(index>=0)pile.unshift(...pile.splice(index,1));
+    if(index>=0)pile.push(...pile.splice(index,1));
    }
    return;
   }
