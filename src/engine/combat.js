@@ -115,7 +115,8 @@ export function playerAttack(s,h){
  let dmg=s.die()+(r.critical?s.die():0);
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
  if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
- if(h.card.id==="warrior"&&!h.used.has("hero")){
+ // A cursed weapon can kill its wielder before BLOOD RUSH is offered.
+ if(h.hp>0&&h.card.id==="warrior"&&!h.used.has("hero")){
   const mode=promptedHeroMode(s,h,"after-hit");
   if(mode!==null){
   h.used.add("hero");
