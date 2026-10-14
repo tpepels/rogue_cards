@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
 import {searchDecision} from "../src/session-mcts.js";
+import {createSessionPolicy,selectSessionPolicyAction,
+ MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "../src/session-policy.js";
 import {VAULT,ROOMS} from "../src/tabletop-data.js";
 import {submitDecision} from "../src/engine/decision-session.js";
 
@@ -103,4 +105,31 @@ test("a die already shown before a Room reroll cannot change across sampled alte
  assert.equal(r.completed,2);
  assert.equal(r.rootActionCount,2);
  assert.equal(JSON.stringify(observeSession(session).trigger),previous);
+});
+
+test("full-legal-action MCTS policy cannot cycle forever on free equipment changes",()=>{
+ const session=createDecisionSession({seed:3573,heroes:["warrior"]});
+ const s=session.state;
+ // Preserve one real equip action and the canonical continue action.
+ const equippable=s.heroes[0].inventory.find(c=>
+  c.v2.tags.includes("WEAPON")||c.v2.tags.includes("ARMOUR")||
+  c.v2.kind==="RING"||c.v2.kind==="COMPANION");
+ assert.ok(equippable,"Warrior starts with equippable gear");
+ for(const card of [...s.heroes[0].inventory])
+  if(card!==equippable)s.remove(s.heroes[0],card);
+ const legal=sessionActions(session);
+ assert.ok(legal.some(a=>a.kind==="equip"));
+ assert.ok(legal.some(a=>a.kind==="continue"));
+ const policy=createSessionPolicy();
+ policy.consecutiveEquipment=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS;
+ const before=JSON.stringify(observeSession(session));
+ const chosen=selectSessionPolicyAction(session,policy,{
+  budget:2,seed:87321,maxSearchSteps:4000,knowledge:"fair"
+ });
+ assert.equal(chosen.kind,"continue");
+ assert.equal(policy.consecutiveEquipment,0);
+ assert.equal(JSON.stringify(observeSession(session)),before,
+  "Search and policy selection never mutate the canonical session");
+ assert.ok(sessionActions(session).some(a=>a.kind==="equip"),
+  "The legal equipment decision is still available to human players");
 });
