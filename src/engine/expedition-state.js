@@ -140,14 +140,31 @@ export class ExpeditionState {
   return face;
  }
  fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
-  // Wax Bridge is a single-use falling-damage guard; it does NOT
-  // dismiss Monsters. Spend it after the fall's damage is known.
-  if(damage>0){
-   const i=this.keptRooms.findIndex(x=>x.card.id==="m-wax-bridge");
-   if(i>=0&&this.chooseEffect("wax-bridge-fall",
-    ["save","prevent-three"],"prevent-three")==="prevent-three"){
-    this.keptRooms.splice(i,1);damage=Math.max(0,damage-3);
+  // Knotted Rope and kept Wax Bridge are genuine optional once-only
+  // payments AFTER the fall damage is known. Neither can dismiss a Monster.
+  // Choosing to save them remains legal, and the search can spend multiple
+  // different resources if more than 3 damage remains.
+  for(let turn=0;damage>0&&turn<12;turn++){
+   const ropes=this.heroes.flatMap((hero,heroIndex)=>hero.inventory
+    .map((card,index)=>({hero,heroIndex,card,index}))
+    .filter(x=>x.hero.hp>0&&x.card.id==="rope"&&
+     !x.hero.used.has(x.card)));
+   const wax=this.keptRooms.findIndex(x=>x.card.id==="m-wax-bridge");
+   if(!ropes.length&&wax<0)break;
+   const modes=["accept",...(wax>=0?["wax"]:[]),
+    ...ropes.map(x=>"rope:"+x.heroIndex+":"+x.index)];
+   const mode=this.chooseEffect("fall-damage-prevention",
+    modes,wax>=0?"wax":modes[1]);
+   if(mode==="accept")break;
+   if(mode==="wax")this.keptRooms.splice(wax,1);
+   else{
+    const paid=ropes.find(x=>mode==="rope:"+x.heroIndex+":"+x.index);
+    if(!paid)throw Error("Illegal physical Rope payment");
+    this.directItem(paid.hero,paid.card,"prevent-falling",()=>{
+     paid.hero.used.add(paid.card);return true;
+    });
    }
+   damage=Math.max(0,damage-3);
   }
   const order=["UPPER","MIDDLE","DEEP","FINAL"];
   const from=order.indexOf(this.room?.stage),to=order.indexOf(destination);
@@ -1130,10 +1147,19 @@ export class ExpeditionState {
     else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
    }
   }
-  if(this.has("rope")&&["u-fall","m-bridge","d-bridge"].includes(this.room.id)&&
-    this.chooseEffect("rope-room:"+this.room.id,["save","use"],"use")==="use"){
-   const h=this.own("rope"),card=byId(h.inventory,"rope");
-   this.directItem(h,card,"room-override",()=>{face=6;return true;});
+  // The two printed bridge cards allow choosing 5-6 with Rope.
+  // Other trapdoors use Rope's separate +/-1 or prevent-damage ability;
+  // none convert unrelated Room dice to 6.
+  const bridgeRopeOwner=this.heroes.find(h=>h.hp>0&&h.inventory.some(
+   c=>c.id==="rope"&&!h.used.has(c)));
+  if(bridgeRopeOwner&&["m-bridge","d-bridge"].includes(this.room.id)&&
+    this.chooseEffect("rope-bridge:"+this.room.id,
+     ["save","use"],"use")==="use"){
+   const rope=bridgeRopeOwner.inventory.find(c=>c.id==="rope"&&
+    !bridgeRopeOwner.used.has(c));
+   this.directItem(bridgeRopeOwner,rope,"bridge-shift",()=>{
+    bridgeRopeOwner.used.add(rope);face=6;return true;
+   });
   }
   if(this.room.id==="u-nest"&&
      this.heroes.some(h=>h.hp>0&&this.equipped(h,"dog")))face=6;
