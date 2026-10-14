@@ -125,6 +125,9 @@ export function playerAttack(s,h){
   }
   }
  }
+ // A risky Warrior hit or cursed weapon can defeat its own attacker.
+ // No additional on-hit Item trigger is legal after that Hero reaches 0 HP.
+ if(h.hp<=0)return;
  for(const card of [h.slots.weapon,h.slots.companion]){
   if(card&&["sword","dog"].includes(card.id)&&!h.used.has(card)){
    // Their printed roll adds damage to the current hit (not a future hit).
