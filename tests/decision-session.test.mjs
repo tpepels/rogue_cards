@@ -279,3 +279,49 @@ test("Lantern Heart and Ghost Coin pay exact Item costs when chosen",()=>{
  assert.ok(!t.heroes[0].inventory.includes(coin));
  assert.ok((t.metrics.objectActivations.coin||0)>=1);
 });
+
+
+test("either Hero may act first in combat and PASS consumes exactly one Hero turn",()=>{
+ const session=createDecisionSession({seed:1981,heroes:["warrior","wizard"]}),s=session.state;
+ s.beginRoom(room("u-nest"));
+ s.monster=monster("rat");s.monsterHP=s.monster.hp;
+ session.phase="combat-hero";session.heroIndex=-1;
+ s._actedCombatMask=0;
+ assert.deepEqual(sessionActions(session).map(x=>x.heroIndex),[0,1]);
+ advance(session,a=>a.kind==="choose-hero-turn"&&a.heroIndex===1);
+ assert.equal(session.phase,"combat");
+ assert.ok(sessionActions(session).some(a=>a.kind==="pass"));
+ advance(session,a=>a.kind==="pass");
+ assert.equal(session.phase,"monster-response");
+ assert.equal(s._actedCombatMask,2);
+ advance(session,a=>a.kind==="respond");
+ assert.equal(session.phase,"combat-hero");
+ assert.deepEqual(sessionActions(session).map(x=>x.heroIndex),[0]);
+ advance(session,a=>a.heroIndex===0);
+ assert.ok(sessionActions(session).some(a=>a.kind==="attack"));
+});
+test("actual between-Room equipment can be unequipped and exchanged without creating Items",()=>{
+ const session=createDecisionSession({seed:1982,heroes:["warrior","wizard"]}),s=session.state;
+ const i=s.deck.findIndex(c=>c.id==="sword");assert.ok(i>=0);
+ const card=s.deck.splice(i,1)[0];s.noteDeckRemoval(card);
+ s.add(s.heroes[0],card);
+ assert.ok(s.equipped(s.heroes[0],"sword"));
+ const acquired=s.metrics.objectAcquisitions.sword;
+ const undo=sessionActions(session).find(a=>a.kind==="unequip"&&
+  a.heroIndex===0&&a.cardId==="sword");
+ assert.ok(undo);
+ submitDecision(session,undo);
+ assert.equal(s.equipped(s.heroes[0],"sword"),false);
+ const transfer=sessionActions(session).find(a=>a.kind==="transfer"&&
+  a.heroIndex===0&&a.toHeroIndex===1&&a.cardId==="sword");
+ assert.ok(transfer);
+ submitDecision(session,transfer);
+ assert.ok(!s.heroes[0].inventory.includes(card));
+ assert.ok(s.heroes[1].inventory.includes(card));
+ assert.equal(s.metrics.objectAcquisitions.sword,acquired);
+ const equip=sessionActions(session).find(a=>a.kind==="equip"&&
+  a.heroIndex===1&&a.cardId==="sword");
+ assert.ok(equip);
+ submitDecision(session,equip);
+ assert.ok(s.equipped(s.heroes[1],"sword"));
+});
