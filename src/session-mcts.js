@@ -96,7 +96,7 @@ const rootStats=(node,rootActions)=>{
  */
 export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
- strictTerminal=true}={}){
+ strictTerminal=true,observedReplay=null}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -105,6 +105,12 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Knowledge must be fair or oracle");
  if(!Number.isFinite(exploration)||exploration<0)
   throw Error("Exploration coefficient must be nonnegative");
+ if(observedReplay!==null&&(
+  !Number.isInteger(observedReplay.replayAt)||
+  observedReplay.replayAt<1||
+  !Number.isInteger(observedReplay.diceSeed)||
+  !Number.isInteger(observedReplay.deckSeed)))
+  throw Error("Invalid prior observed chance replay");
  const rootActions=sessionActions(session);
  if(!rootActions.length)throw Error("No pending player choice to search");
  const original=JSON.stringify(observeSession(session));
@@ -151,6 +157,21 @@ export function searchDecision(session,{budget=100,seed=1,
   const chanceSwitchIndex=originalRootWasPending?
    sim.pendingNested.responses.length+1:null;
   let observedRootResolved=!originalRootWasPending;
+  // Earlier nested responses may have been observed inside a sampled
+  // counterfactual continuation. Reconstruct that SAME past before
+  // resampling the as-yet-unseen future for this MCTS trial.
+  const onObservedReplay=eventState=>{
+   if(knowledge==="fair"){
+    const drawn=sampleRolloutDecks(eventState,{
+     knowledge:"fair",deckSeed:observedReplay.deckSeed});
+    eventState.deck=drawn.deck.slice();
+    for(const stage of ["UPPER","MIDDLE","DEEP"]){
+     eventState.rooms[stage]=drawn.rooms[stage].slice();
+     eventState.monsters[stage]=drawn.monsters[stage].slice();
+    }
+   }
+   eventState.rng=randomSource(observedReplay.diceSeed);
+  };
   const onReplay=eventState=>{
    // A revealed corridor has removed its shown Rooms from the hidden pile.
    if(knowledge==="fair"){
@@ -187,10 +208,12 @@ export function searchDecision(session,{budget=100,seed=1,
     const from=sim.phase;
     const replayObserved=originalRootWasPending&&!observedRootResolved&&
      Boolean(sim.pendingNested);
-    submitDecision(sim,choice,{
-     afterReactionReplay:replayObserved?onReplay:null,
-     replayAt:replayObserved?chanceSwitchIndex:null
-    });
+    const replaySwitches=replayObserved?[
+     ...(observedReplay?[{at:observedReplay.replayAt,
+      callback:onObservedReplay}]:[]),
+     {at:chanceSwitchIndex,callback:onReplay}
+    ]:[];
+    submitDecision(sim,choice,{replaySwitches});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     historyKey=mix(hash(historyKey+from+actionKey(choice))).toString(16);
