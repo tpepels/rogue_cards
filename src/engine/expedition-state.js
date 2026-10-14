@@ -161,6 +161,7 @@ export class ExpeditionState {
   if(!Array.isArray(modes)||!modes.length||
      new Set(modes).size!==modes.length||
      !modes.includes(legacyMode))throw Error("Invalid effect alternatives "+context);
+  if(modes.length===1)return modes[0];
   if(!this._decisionHook)return legacyMode;
   this._pendingEffectChoices={context,modes:[...modes]};
   const action=this._decisionHook({phase:"effect-choice",context});
