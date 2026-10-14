@@ -20,7 +20,7 @@ const ui={
  warning:$("#layout-warning"),snap:$("#snap"),file:$("#import-file"),
  undo:$("#undo"),redo:$("#redo")
 };
-let layout=emptyPlacements(),currentCard=CATALOGUE[0],selectedPart="rules";
+let layout=emptyPlacements(),baseLayout=emptyPlacements(),currentCard=CATALOGUE[0],selectedPart="rules";
 let snapshots=[],historyIndex=0,activePointer=null;
 const round=n=>Math.round(n*100)/100;
 const step=()=>ui.snap.checked?.5:.1;
@@ -73,7 +73,19 @@ function patchPlacement(part,patch){
  applyCSS();
  updateInspector();
 }
-function applyCSS(){editStyle.textContent=placementCSS(layout);}
+// All unedited cards inherit the checked-in generated stylesheet. Compile
+// only the selected card while dragging, not a 180 KB stylesheet on every move.
+function applyCSS(){
+ const key=cardKey(currentCard);
+ editStyle.textContent=placementCSS({version:1,units:"mm",cards:layout.cards[key]?{[key]:layout.cards[key]}:{}});
+}
+function mergeWithDefaults(patch){
+ const next=JSON.parse(JSON.stringify(baseLayout));
+ for(const [key,value] of Object.entries(patch.cards))next.cards[key]={
+  ...(next.cards[key]||{}),...value
+ };
+ return normalizePlacements(next);
+}
 function localSave(){
  try{localStorage.setItem(STORAGE,JSON.stringify(layout));return true;}
  catch{ui.warning.textContent="Local storage unavailable. Export JSON to preserve your work.";return false;}
@@ -160,6 +172,7 @@ function populatePicker(){
 }
 function render(){
  populatePicker();
+ applyCSS();
  if(!currentCard)return;
  ui.host.innerHTML=cardMarkup(currentCard);
  for(const part of PARTS){
@@ -283,8 +296,12 @@ function applyNumber(field,value){
 }
 function discard(part){
  const key=cardKey(currentCard);
- if(!layout.cards[key])return;
- if(part)delete layout.cards[key][part];
+ const preset=baseLayout.cards[key];
+ if(part){
+  layout.cards[key]??={};
+  if(preset?.[part])layout.cards[key][part]={...preset[part]};
+  else delete layout.cards[key][part];
+ }else if(preset)layout.cards[key]=JSON.parse(JSON.stringify(preset));
  else delete layout.cards[key];
  if(layout.cards[key]&&!Object.keys(layout.cards[key]).length)delete layout.cards[key];
  applyCSS();historyPush();render();
@@ -309,8 +326,8 @@ function installEvents(){
   if(!file)return;
   try{
    const parsed=normalizePlacements(JSON.parse(await file.text()));
-   if(!confirm("Replace the current browser layout draft with "+Object.keys(parsed.cards).length+" imported cards?"))return;
-   layout=parsed;snapshots=[JSON.stringify(layout)];historyIndex=0;
+   if(!confirm("Apply placements for "+Object.keys(parsed.cards).length+" imported cards over the initialized layouts?"))return;
+   layout=mergeWithDefaults(parsed);snapshots=[JSON.stringify(layout)];historyIndex=0;
    applyCSS();localSave();render();showStatus();
   }catch(e){alert("Cannot import this layout: "+e.message);}
   finally{ui.file.value="";}
@@ -382,11 +399,12 @@ async function initialise(){
  try{
   const response=await fetch("./data/card-placements.json",{cache:"no-store"});
   if(!response.ok)throw Error("HTTP "+response.status);
-  layout=normalizePlacements(await response.json());
+  baseLayout=normalizePlacements(await response.json());
+  layout=JSON.parse(JSON.stringify(baseLayout));
  }catch(e){ui.warning.textContent="Could not load repository layouts: "+e.message;}
  try{
   const saved=localStorage.getItem(STORAGE);
-  if(saved)layout=normalizePlacements(JSON.parse(saved));
+  if(saved)layout=mergeWithDefaults(normalizePlacements(JSON.parse(saved)));
  }catch(e){ui.warning.textContent="Previous draft could not be opened: "+e.message;}
  snapshots=[JSON.stringify(layout)];historyIndex=0;
  applyCSS();installEvents();render();showStatus();
