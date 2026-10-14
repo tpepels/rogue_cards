@@ -11,6 +11,8 @@ import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-
 import {itemOptions} from "./item-access.js";
 import {resolveParley} from "./engine/parley.js";
 import {consumeCorpse,settleMonsterVictory} from "./engine/combat-outcomes.js";
+import {beginWarden,wardenOptions,applyWardenChoice}
+ from "./engine/vault-encounter.js";
 import {playerAttack,monsterRespond,blessBeforeD20,executeItemOption,engraveElbereth}
  from "./engine/combat.js";
 import {verifyPrintedData} from "./playtest.js";
@@ -690,11 +692,7 @@ function continueVaultAfterChoice(s,preferSeal,vaultChoice){
   s.metrics.won=true;s.endingKind="amulet_sealed";return report(s);
  }
  if(s.metrics.sealAttempt)s.monsterAdv=true;
- s.monster=WARDEN;s.monsterHP=Math.max(11,WARDEN.hp-s.vaultModifiers.wardenDamage);
- if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
- if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
- if(s.vaultModifiers.wardenOpeningSkip)s.monsterSkip++;
- s.metrics.monsterVisits.warden=(s.metrics.monsterVisits.warden||0)+1;
+ beginWarden(s);
  if(!fight(s,{warden:true}))return report(s);
  return finishWardenAfterPhaseOne(s,vaultChoice);
 }
@@ -727,40 +725,17 @@ function finishWardenAfterPhaseOne(s,vaultChoice){
   vaultChoice=labels[picked.action];
  }
  // Rare alternative endings require earlier saved Rooms and payment.
- const v=s.vaultModifiers;
- const canSmuggle=v.smuggleAvailable&&s.discardable(2)&&s.discardable(1,"MAGIC");
- const canBargain=v.bargainAvailable&&s.discardable(2);
- const canUnthrone=v.unthroneAvailable&&s.discardable(1,"MAGIC");
+ const options=wardenOptions(s);
  const prefer=choice=>vaultChoice===choice+"-if-available"||
   vaultChoice==="policy"&&(
    choice==="smuggle"&&s.strategy==="survival"||
    choice==="bargain"&&s.strategy==="negotiation"||
    choice==="unthrone"&&s.strategy==="magic");
- if(canSmuggle&&prefer("smuggle")){
-  // The retained Gilded Hallway is spent when its printed exit is used.
-  const map=s.keptRooms.findIndex(x=>x.card.id==="d-gilded");
-  if(map>=0)s.keptRooms.splice(map,1);
-  s.discard(1,{tag:"MAGIC"});s.discard();
-  s.metrics.won=true;s.endingKind="smuggled_amulet";return report(s);
- }
- if(v.smuggleAvailable&&s.discardable()&&vaultChoice==="escape-if-available"){
-  const map=s.keptRooms.findIndex(x=>x.card.id==="d-gilded");
-  if(map>=0)s.keptRooms.splice(map,1);
-  s.discard();s.endingKind="escaped_empty_handed";s.metrics.escaped=true;
-  return report(s);
- }
- const challenge=(cost,kind,tag=null)=>{
-  s.discard(cost,{tag});
-  const h=bestWit(s),a=s.die(20),b=s.die(20);
-  if(a===20||a!==1&&a+h.card.wit>b+6){
-   s.metrics.won=true;s.endingKind=kind;return true;
-  }
-  s.monsterAdv=true;return false;
- };
- if(canBargain&&prefer("bargain")&&challenge(2,"bargained_amulet"))return report(s);
- if(canUnthrone&&prefer("unthrone")&&challenge(1,"unthroned_warden","MAGIC"))return report(s);
- s.monster=WARDEN_FURY;s.monsterHP=Math.max(0,Math.min(WARDEN_FURY.hp,s.monsterHP));
- s.metrics.monsterVisits["warden-fury"]=(s.metrics.monsterVisits["warden-fury"]||0)+1;
+ const action=["smuggle","escape","bargain","unthrone"]
+  .find(choice=>options.includes(choice)&&
+   (choice==="escape"?vaultChoice==="escape-if-available":prefer(choice)))||"fight";
+ const result=applyWardenChoice(s,action);
+ if(result.complete)return report(s);
  if(!fight(s,{warden:true}))return report(s);
  s.metrics.won=true;s.endingKind="amulet_taken";return report(s);
 }
