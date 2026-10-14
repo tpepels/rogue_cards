@@ -138,7 +138,7 @@ const rows=[
   "MEDICINE",
   "apothecary"
  ],
- ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","A silent bell. PACT: one per party per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, pay 2 HP to see Warden's first behaviour before acting. May reroll once; take new result. Resolve after acting.","THE BELL","bell"]
+ ["d-last-bell","DEEP","Chapel of the Last Bell","SHRINE","altar","Silent bell. PACT: one per party per expedition. Keep sideways after use.","RING","Roll d6.","SAVE · PACT","Keep Room. At Vault, you may pay 2 HP to see Warden's first behaviour before acting. May reroll once; take new result. Resolve after acting.","THE BELL","bell"]
 ];
 const tables={
  "shaft":[
