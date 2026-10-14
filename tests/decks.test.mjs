@@ -78,3 +78,19 @@ test("custom sets can add/remove any optional card without losing fixed victory 
  const grouped=selectionGroups.flatMap(g=>g.cards.map(cardKey));
  assert.equal(new Set(grouped).size,SELECTABLE.length);
 });
+
+test("new printed cards use the established draw/heal/monster terminology",()=>{
+ for(const card of PRINT_ONLY_ROOMS){
+  const text=[card.v2.prompt,...card.v2.choices.map(x=>x.effect),...card.v2.roll.outcomes.map(x=>x.effect)].join(" ");
+  assert.doesNotMatch(text,/Find [12] (?:wrapped |abandoned )?Items?\b|Take [12] Items?\b|Reach [12] Items?\b|restores? [12] HP/i,card.id);
+  assert.doesNotMatch(text,/\bPACT\b|keep this Room|\bafter Phase I\b|\bAt Vault\b/i,card.id);
+ }
+ const locks=PRINT_ONLY_ITEMS.find(c=>c.id==="ex-lockpicks");
+ for(const room of ["Rusty Gate","Chest with a Pulse","Buried Lockbox","The Last Chest"])
+  assert.ok(locks.v2.trigger.includes(room));
+ assert.doesNotMatch(locks.v2.trigger,/locked Room/i);
+ const spear=PRINT_ONLY_ITEMS.find(c=>c.id==="ex-spear");
+ assert.match(spear.v2.trigger,/Monsters tagged BEAST/);
+ const helmet=PRINT_ONLY_ITEMS.find(c=>c.id==="ex-helm");
+ assert.match(helmet.v2.trigger,/equipped Helm/);
+});

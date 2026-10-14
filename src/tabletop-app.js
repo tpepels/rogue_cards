@@ -17,12 +17,12 @@ function show(){
  const hasRegions=["all","room","monster"].includes(category);
  mount.innerHTML=ink+
  '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">THE PHYSICAL DUNGEON CARD GAME · '+EDITION.toUpperCase()+'</div></div>'+
- '<nav class="tt-nav" aria-label="Main links"><a href="./tutorial.html">LEARN TO PLAY</a><a href="./rules.html">HOW TO PLAY</a><a href="./decks.html">BUILD A DUNGEON</a><a href="#cards">CARDS & PRINTING</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
+ '<nav class="tt-nav" aria-label="Main links"><a href="./tutorial.html">LEARN TO PLAY</a><a href="./rules.html">HOW TO PLAY</a><a href="./decks.html">BUILD A DUNGEON</a><a href="./cards.html">ALL PRINTABLE CARDS</a><a href="#cards">ORIGINAL CATALOGUE</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
  '<main class="tt-shell"><section class="rc-intro">'+
  '<h1>Many dungeons. One rulebook.</h1>'+
  '<p>Descend through nine strange Rooms and the Amulet Vault. Fight by opposed d20 rolls, discover the results of d6 rolls printed on every card, negotiate with Monsters, and gamble with magic. A complete solo or cooperative tabletop game - no app required.</p>'+
  '<p class="rc-subline">8 HEROES · 64 ORIGINAL ROOMS + 15 SIMPLE ROOMS · 12 CREATURES · 52 ORIGINAL OBJECTS + 9 BASIC ITEMS</p>'+
- '<div class="tt-links"><a href="./decks.html">CHOOSE YOUR DUNGEON DECK ↗</a><a href="./tutorial.html">LEARN TO PLAY WITH THE CARDS ↗</a><a href="./rules.html">READ / PRINT THE RULEBOOK ↗</a><a href="#cards">BROWSE / PRINT THE CARDS ↗</a></div></section>'+
+ '<div class="tt-links"><a href="./decks.html">CHOOSE YOUR DUNGEON DECK ↗</a><a href="./tutorial.html">LEARN TO PLAY WITH THE CARDS ↗</a><a href="./rules.html">READ / PRINT THE RULEBOOK ↗</a><a href="./cards.html">PRINT ALL 163 CARDS ↗</a><a href="#cards">ORIGINAL CARDS ↗</a></div></section>'+
  '<div id="cards" class="tt-toolbar"><h2>ALL CARDS <small class="rc-count">'+cards.length+' shown · '+total+' printed copies</small></h2>'+
  '<div class="tt-toolbar-controls rc-controls">'+
  '<label for="deck-filter">TYPE <select id="deck-filter" aria-label="Card category">'+options.map(([value,label])=>'<option value="'+value+'"'+(value===category?' selected':'')+'>'+label+'</option>').join("")+'</select></label>'+

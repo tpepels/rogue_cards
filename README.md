@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**One card catalogue and print kit**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
+[**Complete 163-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
@@ -31,7 +31,7 @@ Use the [**interactive Dungeon Deck Builder**](https://tpepels.github.io/rogue_c
 | **Strange Paths** | 39 (13 per depth) | 6 | Standard exploration interspersed with occasional long-term bargains |
 | **Everything Goes** | 79 (29 UPPER / 27 MIDDLE / 23 DEEP) | 10 | All original and expansion Rooms and every unusual combination |
 
-The builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
+The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rules.html) contains the core rules followed by the Classic and Strange card lists (with copies), Everything Goes setup, and custom-deck guidance. The [**full cards.html catalogue**](https://tpepels.github.io/rogue_cards/cards.html) displays all 163 cards and prints all physical copies without applying any deck preset.\n\nThe builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
 
 **New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. They add **24 designs** to the 139 originals, for **163 selectable physical card designs**. They do not introduce new Pacts, delayed debts or universal rules. These extra cards deliberately live in `src/print-expansion.js` rather than the engine's `CATALOGUE`: the Oracle/engine and existing 139 canonical designs remain untouched until the print playtest is accepted.
 

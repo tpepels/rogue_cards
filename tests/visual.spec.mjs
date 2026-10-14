@@ -52,12 +52,14 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  }
  expect(errors).toEqual([]);
 });
-test("readable two-page guide prints as exactly two A4 pages without clipped content",async({page})=>{
+test("core rules and two deck appendix pages print as four A4 sheets without clipped content",async({page})=>{
  await page.goto("/rules.html");
  await expect(page.getByRole("heading",{name:"ROGUE CARDS"})).toBeVisible();
  await expect(page.getByRole("heading",{name:/Explore a Room/})).toBeVisible();
  await expect(page.getByRole("heading",{name:/The Amulet Vault/})).toBeVisible();
- await expect(page.locator(".sheet")).toHaveCount(2);
+ await expect(page.locator(".sheet")).toHaveCount(4);
+ await expect(page.getByRole("heading",{name:"CHOOSE YOUR DUNGEON"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"OBJECT DECKS"})).toBeVisible();
  await page.emulateMedia({media:"print"});
  const sizes=await page.locator(".sheet").evaluateAll(elements=>elements.map(el=>({
   width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,
