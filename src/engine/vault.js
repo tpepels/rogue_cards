@@ -31,17 +31,21 @@ export function seal(s){
   s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,ring);
   atk=s.pendingD20+s.pendingD20Modifier;
  }
+ if(h.hp<=0)return false;
  const undo=itemIn(s,h,"wand-undo");
  if(undo&&!s.exhausted.has(undo)&&atk+h.card.wit+s.witBonus+boon.bonus<15){
   s.pendingD20=atk;s.pendingD20Modifier=0;s.activate(h,undo);
   atk=s.pendingD20+s.pendingD20Modifier;
  }
+ // A lethal Wand/reroll cost ends the attempted SEAL before a result
+ // or an otherwise illegal Crown reaction can be evaluated.
+ if(h.hp<=0)return false;
  const def=s.die(20);
  let good=atk===20||atk!==1&&atk+h.card.wit+s.witBonus+boon.bonus>def+6;
  if(!good){
   for(const hero of s.living())s.noteOptions(itemOptions(s,hero,"failed-d20"));
   // Crown of Rehearsals can rescue even a failed final magical test.
-  const owner=s.heroes.find(x=>x.inventory.some(o=>o.id==="crown-relic"));
+  const owner=s.heroes.find(x=>x.hp>0&&x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
    s.directItem(owner,crown,"rescue-failed-roll",()=>{
     s.consume(owner,crown);s.hurt(owner,s.die());return true;});
