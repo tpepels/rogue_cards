@@ -34,9 +34,9 @@ test("layout editor drags, resizes and exports real per-card millimetres",async(
  const name=await card.getAttribute("data-type")+":"+await card.getAttribute("data-id");
  expect(data.cards[name].rules.w).toBeGreaterThan(widthBefore);
  await page.reload();
- await expect(page.locator("#draft-status")).toContainText("1 / 139 cards adjusted");
- await page.getByRole("button",{name:"RESET THIS CARD"}).click();
- await expect(page.locator("#draft-status")).toContainText("0 / 139 cards adjusted");
+ await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
+ await page.getByRole("button",{name:"RESTORE STARTING LAYOUT"}).click();
+ await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
 });
 test("layout editor imports a multi-card JSON and shows those placements",async({page})=>{
  await page.goto("/layout-editor.html");
@@ -49,7 +49,7 @@ test("layout editor imports a multi-card JSON and shows those placements",async(
   name:"rogue-cards-layouts.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(importData))
  });
- await expect(page.locator("#draft-status")).toContainText("2 / 139 cards adjusted");
+ await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
  const actual=await page.locator("#editor-card .tt-title").evaluate(el=>getComputedStyle(el).left);
  expect(parseFloat(actual)).toBeGreaterThan(50);
  await page.locator("#family").selectOption("room");
