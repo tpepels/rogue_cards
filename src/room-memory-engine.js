@@ -120,9 +120,12 @@ export function roomEntry(s){
  if(room.stage==="FINAL")fateVaultEntry(s);
  if(s.followingWisp&&(room.stage==="FINAL"||room.v2?.special?.corridor)){
   const m=s.followingWisp;s.followingWisp=null;
-  if(s.monster)s.monsterQueue.unshift(m);
-  else{
+  if(s.monster){
+   s.monsterQueue.unshift(m);s.queuedForcedWisp=m;
+  }else{
    s.monster=m;s.monsterHP=m.hp;s.banished=false;
+   s.monsterFirstAttackPending=true;
+   if(s.useRetainedPotion("laughter","pursuing-wisp"))s.forcedBehavior=1;
    s.elberethAttempts=0;s.elberethSkipResponse=false;
    s.mustFightFollowingWisp=true;
   }
