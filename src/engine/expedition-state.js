@@ -544,7 +544,9 @@ export class ExpeditionState {
   if(consume&&["SCROLL","POTION"].includes(card.v2.kind)&&
      h.inventory.includes(card)&&!keepPotion)
    this.consume(h,card);
-  if(h.card.id==="witch"&&!h.used.has("witch-ability")&&
+  // Printed reactive powers are not available after the activating Item
+  // itself defeated the Hero (e.g. a backfiring Potion).
+  if(h.hp>0&&h.card.id==="witch"&&!h.used.has("witch-ability")&&
    ["SCROLL","POTION"].includes(card.v2.kind))this.witchReaction(h);
   if(h.hp>0&&h.slots.ring?.id==="ring-hunger"&&card.id!=="ring-hunger"&&
    can(card,"MAGIC")&&!h.used.has(h.slots.ring)){
