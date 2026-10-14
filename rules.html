@@ -52,6 +52,30 @@ strong{font-weight:900}
  .sheet:nth-of-type(2):not(.deck-appendix) .example{font-size:10.9px;line-height:1.3;margin:1.5mm 0;padding:1.8mm 2.3mm}
  .sheet:nth-of-type(2):not(.deck-appendix) .end{margin-top:2mm;padding-top:1mm}
 }
+
+/* Pages 3–4: reproducible recipes generated from the same deck presets. */
+.deck-appendix .mast{margin-bottom:3mm}
+.deck-appendix .deck-intro{font:12px/1.4 Georgia,serif;margin:0 0 3mm}
+.deck-appendix .deck-columns{display:grid;grid-template-columns:1fr 1fr;gap:7mm;align-items:start}
+.deck-appendix h2{font-size:16px;margin:1mm 0 2mm}
+.deck-appendix h3{font:bold 12px/1.2 "Courier New",monospace;margin:2.5mm 0 .7mm}
+.deck-appendix .deck-list{list-style:none;margin:0 0 1.5mm;padding:0;columns:2;column-gap:3mm}
+.deck-appendix .deck-list li{font:10.5px/1.24 "Courier New",monospace;margin:0 0 .65mm;padding:0;break-inside:avoid}
+.deck-appendix .deck-list.deck-single{columns:1}
+.deck-appendix .deck-recipe{margin:0 0 2mm}
+.deck-appendix .deck-note{background:#ede3d2;border-left:2px solid #211a12;font:11px/1.35 Georgia,serif;padding:1.5mm 2mm;margin:2mm 0}
+.deck-appendix .deck-compact{font:11px/1.38 Georgia,serif;margin:0 0 2mm}
+@media print{
+ .deck-appendix{padding:5mm 5mm 2mm}
+ .deck-appendix .mast{margin-bottom:3mm;padding-bottom:2mm}
+ .deck-appendix h1{font-size:27px}
+ .deck-appendix h2{font-size:15px}
+ .deck-appendix h3{font-size:11px}
+ .deck-appendix .deck-list li{font-size:10px;line-height:1.2;margin-bottom:.45mm}
+ .deck-appendix .deck-intro{font-size:11.5px;margin-bottom:2mm}
+ .deck-appendix .deck-compact{font-size:10.5px}
+ .deck-appendix .deck-note{font-size:10.5px}
+}
 </style>
 </head>
 <body>
