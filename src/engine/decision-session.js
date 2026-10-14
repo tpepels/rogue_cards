@@ -311,12 +311,20 @@ const sameAction=(a,b)=>a&&b&&
  * No used Item, HP, die or deck mutation escapes an interrupted call.
  */
 export function submitDecision(session,action,{
- afterReactionReplay=null,replayAt=null
+ afterReactionReplay=null,replayAt=null,replaySwitches=[]
 }={}){
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
   throw Error("Invalid observed reaction replay index");
+ if(!Array.isArray(replaySwitches)||replaySwitches.some(x=>
+  !x||!Number.isInteger(x.at)||x.at<1||
+  typeof x.callback!=="function"))
+  throw Error("Invalid multi-stage replay switches");
+ const switches=[...replaySwitches];
+ if(afterReactionReplay)switches.push({
+  at:replayAt,callback:afterReactionReplay
+ });
  if(session.phase==="terminal")throw Error("Expedition already ended");
  const waiting=session.pendingNested;
  let root,responses;
@@ -359,8 +367,9 @@ export function submitDecision(session,action,{
    // A sampled path may itself reach another reaction before the
    // originally chosen root action finishes. On every retry, switch at
    // the SAME observed reaction, not after the latest pending reply.
-   if(position===(replayAt??responses.length)&&afterReactionReplay)
-    afterReactionReplay(fork.state);
+   for(const switchAt of switches)
+    if(position===(switchAt.at??responses.length))
+     switchAt.callback(fork.state);
    return selected;
   }
   throw new NeedReaction(event,actions,observeGame(fork.state));
