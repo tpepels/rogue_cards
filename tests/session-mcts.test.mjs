@@ -110,15 +110,22 @@ test("a die already shown before a Room reroll cannot change across sampled alte
 test("full-legal-action MCTS policy cannot cycle forever on free equipment changes",()=>{
  const session=createDecisionSession({seed:3573,heroes:["warrior"]});
  const s=session.state;
- // Preserve one real equip action and the canonical continue action.
- const equippable=s.heroes[0].inventory.find(c=>
-  c.v2.tags.includes("WEAPON")||c.v2.tags.includes("ARMOUR")||
-  c.v2.kind==="RING"||c.v2.kind==="COMPANION");
- assert.ok(equippable,"Warrior starts with equippable gear");
- for(const card of [...s.heroes[0].inventory])
-  if(card!==equippable)s.remove(s.heroes[0],card);
+ // Warrior's printed starting Sword is automatically equipped when
+ // acquired. Unequip it through the real player-decision API to create
+ // an actual, reproducible equip/continue choice at this boundary.
+ const hero=s.heroes[0];
+ const sword=hero.inventory.find(c=>c.id==="sword");
+ assert.ok(sword,"Warrior starts with the printed Sword");
+ for(const card of [...hero.inventory])
+  if(card!==sword)s.remove(hero,card);
+ assert.equal(hero.slots.weapon,sword);
+ const unequip=sessionActions(session).find(a=>
+  a.kind==="unequip"&&a.cardId==="sword");
+ assert.ok(unequip,"Sword can be unequipped");
+ submitDecision(session,unequip);
+ assert.equal(hero.slots.weapon,undefined);
  const legal=sessionActions(session);
- assert.ok(legal.some(a=>a.kind==="equip"));
+ assert.ok(legal.some(a=>a.kind==="equip"&&a.cardId==="sword"));
  assert.ok(legal.some(a=>a.kind==="continue"));
  const policy=createSessionPolicy();
  policy.consecutiveEquipment=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS;
