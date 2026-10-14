@@ -40,9 +40,9 @@ jobs:
           node-version: "22"
       - name: Validate pausable game and printed mechanics
         run: |
-          npm run validate:deck
           npm run test:session
           npm run test:rollout
+          npm run validate:deck
           npm run oracle:mcts -- --heroes warrior --seed 555 \
             --budget 2 --knowledge fair --out results/session-mcts-smoke.json
       - name: Smoke-test a complete actual game using only MCTS legal decisions
