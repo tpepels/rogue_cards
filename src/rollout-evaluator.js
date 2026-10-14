@@ -109,7 +109,10 @@ function summarize(values){
  return {mean,sd:Math.sqrt(variance),samples:n};
 }
 export function pairedRoomRollouts(s,legal){
- const canonical=legalActions(s,{phase:"room"}).map(a=>a.index);
+ // Legacy two-choice rollout handles printed Room choices only.
+ // The unified session MCTS additionally searches Shrine Item replacements.
+ const canonical=legalActions(s,{phase:"room"})
+  .filter(a=>a.kind==="room-choice").map(a=>a.index);
  const choices=[0,1].filter(i=>legal[i]&&canonical.includes(i));
  if(!choices.length)throw Error("No legal Room option");
  if(canonical.some(i=>!legal[i])||[0,1].some(i=>legal[i]&&!canonical.includes(i)))
