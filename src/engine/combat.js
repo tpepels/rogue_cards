@@ -36,6 +36,11 @@ export function blessBeforeD20(s,target){
  target.poison=false;return {bonus:0,adv:true};
 }
 function playerRoll(s,h,bonus,def,actorType="attack"){
+ if(h.ignoreDarknessOnce&&h.nextDarknessDis>0){
+  h.nextDis=Math.max(0,h.nextDis-1);
+  h.nextDarknessDis=Math.max(0,h.nextDarknessDis-1);
+  h.ignoreDarknessOnce=false;
+ }
  const attackAdv=h.nextAdv>0,attackDis=h.nextDis>0||h.poison;
  h.nextAdv=0;h.nextDis=0;
  let extraAtk=h.nextAtk||0;h.nextAtk=0;
@@ -88,6 +93,10 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
 }
 export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
+ if(s.monsterFirstAttackPending){
+  if(s.useRetainedPotion("foam","first-attack:"+m.id))h.nextAdv++;
+  s.monsterFirstAttackPending=false;
+ }
  if(h.card.id==="wizard"&&!h.used.has("hero")&&
   (s._decisionHook||s.strategy==="magic"||s.monsterHP>=8)){
   const mode=promptedHeroMode(s,h,"attack");
@@ -154,7 +163,11 @@ export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
  const useChalk=!!chalk&&face===null&&
   s.chooseEffect("elbereth-chalk",["save","use"],"use")==="use";
  if(useChalk)h.used.add(chalk);
- const roll=face??rollD20(s,{adv:useChalk,dis:attempt===2});
+ const useInk=face===null&&s.useRetainedPotion("ink","elbereth");
+ const bonusAdv=s.elberethAdv;
+ s.elberethAdv=false;
+ const roll=useInk?20:
+  face??rollD20(s,{adv:useChalk||bonusAdv,dis:attempt===2});
  const success=roll===20||roll!==1&&roll+h.card.wit>=15;
  if(success){
   s.metrics.elberethSuccesses=(s.metrics.elberethSuccesses||0)+1;
