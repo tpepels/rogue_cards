@@ -9,6 +9,12 @@ on:
       - src/engine/decision-session.js
       - src/engine/index.js
       - src/engine/expedition-state.js
+      - src/engine/combat.js
+      - src/engine/random.js
+      - src/engine/fork-state.js
+      - src/session-mcts.js
+      - scripts/run-session-mcts.mjs
+      - tests/session-mcts.test.mjs
       - src/engine/parley.js
       - src/engine/combat-outcomes.js
       - src/engine/vault-encounter.js
@@ -29,6 +35,8 @@ jobs:
           npm run validate:deck
           npm run test:session
           npm run test:rollout
+          npm run oracle:mcts -- --heroes warrior --seed 555 \
+            --budget 2 --knowledge fair --out results/session-mcts-smoke.json
       - name: Record verified revision
         if: success()
         run: echo "Verified $(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
