@@ -186,7 +186,7 @@ const wands=[
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
-  "SHRINE recharges. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
+  "SHRINE: recharge. OVERCHARGE: discard, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
@@ -212,7 +212,7 @@ const potions=[
  ["midnight","Midnight Ink","ghost","POTION",["ALCHEMY","MAGIC"],
   "FIRST USE: identify d6 for all Midnight Inks. Drink and discard.",
   [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","Mark the floor: next ELBERETH here gets ADV; in combat, skip next Monster response."],["5–6","Keep this used Potion face up as ink. Discard to make a later ELBERETH roll succeed automatically."]],
-  "Keep used copy for identity; a 5–6 mark is separately kept.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
+  "Keep copy for identity; 5–6 ink mark is kept separately.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
  ["antidote","Antidote","potion","POTION",["ALCHEMY","CURE"],
   "FIRST USE: Roll d6; all Antidotes share this result. Drink and discard.",
   [["1–2","It fails: lose 1 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; heal d6 HP."]],
