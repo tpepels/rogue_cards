@@ -311,10 +311,10 @@ const rows=[
 ];
 const tables={
  "shaft":[
-  ["1","Fall straight to the Vault; lose 2d6 HP.","TRAPDOOR:FINAL:2d6"],
+  ["1","Fall to DEEP; lose 4 HP; face a DEEP Monster.","TRAPDOOR:DEEP:4:MONSTER"],
   ["2–3","Fall to DEEP; lose 2 HP; face a DEEP Monster.","TRAPDOOR:DEEP:2:MONSTER"],
-  ["4–5","Fall safely to DEEP.","TRAPDOOR:DEEP:0"],
-  ["6","Find 2 Items; descend to DEEP.","TRAPDOOR:DEEP:0:DRAW2"]
+  ["4–5","Fall to DEEP; draw 1 Item.","TRAPDOOR:DEEP:0:DRAW1"],
+  ["6","Find 3 Items; descend to DEEP.","TRAPDOOR:DEEP:0:DRAW3"]
  ],
  "cursed":[
   ["1–2","Draw a DEEP Monster.","MONSTER_DRAW"],
