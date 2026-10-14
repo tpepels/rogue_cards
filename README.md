@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**One card catalogue and print kit**](https://tpepels.github.io/rogue_cards/) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
+[**One card catalogue and print kit**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**One-A4 rulebook**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
@@ -19,7 +19,24 @@ All cards, dice ranges, behaviours, rewards and strange exceptions are printed o
 | Potions | 8 |
 | **Total** | **139 card designs** |
 
-The catalogue can show **one of each** or **full physical print quantities**, filter by card family and dungeon depth, and print four **90 × 130 mm** cards per A4.
+The original catalogue can show **one of each** or **full physical print quantities**, filter by card family and dungeon depth, and print four **90 × 130 mm** cards per A4.
+
+## Choose your dungeon deck
+
+Use the [**interactive Dungeon Deck Builder**](https://tpepels.github.io/rogue_cards/decks.html) to start from three recommended physical decks, then add or remove any eligible card:
+
+| Deck | Regional Rooms | Pacts on offer | Purpose |
+| --- | ---: | ---: | --- |
+| **Classic Crawl** | 36 (12 per depth) | 0 | Corridors, ordinary treasure, traps, Monsters and basic equipment |
+| **Strange Paths** | 39 (13 per depth) | 6 | Standard exploration interspersed with occasional long-term bargains |
+| **Everything Goes** | 79 (29 UPPER / 27 MIDDLE / 23 DEEP) | 10 | All original and expansion Rooms and every unusual combination |
+
+The builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
+
+**New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. They add **24 designs** to the 139 originals, for **163 selectable physical card designs**. They do not introduce new Pacts, delayed debts or universal rules. These extra cards deliberately live in `src/print-expansion.js` rather than the engine's `CATALOGUE`: the Oracle/engine and existing 139 canonical designs remain untouched until the print playtest is accepted.
+
+**Artwork status:** the 24 extra cards currently reuse thematically related original illustrations to keep the new print kit usable; their names and rules are different. Those reused images are temporary and are not presented as 24 newly commissioned illustrations.
+
 
 ## Generated card illustrations
 
@@ -69,7 +86,9 @@ The shared rules are explained in a [two-page printable guide](rules.html). Indi
 
 ## Source layout
 
-- `src/tabletop-data.js` — **the single canonical catalogue and print-deck API**
+- `src/tabletop-data.js` — **the original 139-card canonical catalogue and engine print-deck API**
+- `src/print-expansion.js` — 24 extra physical-only card definitions and temporary illustration aliases
+- `src/decks.js`, `src/decks-app.js`, `decks.html` — three recommended print decks and custom deck builder
 - `src/heroes.js` — Hero archetypes, starting Objects and reliable/risky abilities
 - `src/rooms.js` — regional encounters, dangerous choices and trapdoor results
 - `src/objects.js` — Items, Potions, Scrolls, Rings and Wands
