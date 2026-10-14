@@ -10,14 +10,14 @@ const make=([id,title,art,family,tags,trigger,effects,alternative,links,flavor,c
 export const V2_ITEM_FAMILIES=Object.freeze(["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND"]);
 const tools=[
  ["key","Rusty Key","key","TOOL",["METAL","TOOL"],
-  "LOCK: Discard when a Room names Rusty Key; follow its Key instruction. Buried Lockbox chooses 5–6; Gate, living Chest and Last Chest change 1–2 to 3–4.",null,
+  "LOCK: Discard when named by Room. Lockbox: 5–6; Rusty Gate, living Chest and Last Chest: change 1–2 to 3–4.",null,
   "At Talking Door, discard for ADV on CONFESS. A key cannot guarantee the contents are safe.",["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"],"Old locks fear it.",3],
  ["rope","Knotted Rope","stairs","TOOL",["TOOL"],
-  "ONCE PER ROOM: After a bridge/trapdoor d6, turn sideways to SHIFT it by 1; or prevent up to 3 HP of falling damage. Straighten next Room.",null,
+  "ONCE PER ROOM: Turn sideways to SHIFT a bridge/trapdoor d6 by 1, or prevent 3 falling damage. Straighten next Room.",null,
   "At Flooded Chamber, turn sideways instead to cancel first water-caused DEF DIS. Never generates treasure.",["u-fall","m-flood","m-bridge","d-bridge"],"The knots count the dead.",3],
  ["torch","Pitch Torch","wind","TOOL",["FIRE","TOOL"],
   "KEEP: FIRE. ONCE PER ROOM, turn sideways to ignore darkness DIS or peek next Room in darkness.",null,
-  "DISCARD: remove POISONED using cleansing heat, or make a PLANT Monster skip its next response. At Lamp-Eater, feed it to peek next 2 Rooms.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
+  "DISCARD: cure POISONED, or skip a PLANT Monster's next response. At Lamp-Eater, feed it to peek next 2 Rooms.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
  ["crowbar","Dented Crowbar","key","TOOL",["METAL","TOOL"],
   "LOCK: At Rusty Gate, Chest with a Pulse, Buried Lockbox or The Last Chest, use this d6 instead of the Room d6.",
   [["1–2","The bar slips: lose 2 HP."],["3–4","Open it; draw 1 Item."],["5–6","Open it; draw 2 Items."]],
@@ -92,7 +92,7 @@ const relics=[
   "KEEP: Counts as Pitch Torch for printed Room options.",null,
   "DISCARD: Skip the Monster's next response or recharge 1 Wand.",["u-lamp","m-fungus","d-shadow","d-choir"],"A flame with a pulse.",1],
  ["crown-relic","Crown of Rehearsals","amulet","RELIC",["CURSED","MAGIC"],
-  "ONCE PER EXPEDITION, after a failed Hero d20: discard to replace the Hero's rolled face with natural 20; resolve the roll, then lose d6 HP.",null,
+  "AFTER a failed Hero d20, discard to replace its face with natural 20. Resolve, then lose d6 HP. ONCE PER EXPEDITION.",null,
   "Counts as CURSED until used. Never changes a Monster's die.",["d-crown","d-mirror","d-reliquary"],"Practice makes royalty.",1]
 ];
 const scrolls=[
@@ -169,7 +169,7 @@ const wands=[
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-clock","d-oracle","u-shrine"],"Said in the wrong tense.",1],
  ["wand-morph","Wand of Questionable Shapes","mushroom","WAND",["MAGIC","CHAOS"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
-  [["1–2","It grows teeth: lose 2 HP; its next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster into an object: discard Monster and draw 1 Item; no corpse or reward. Against Warden, cancel one response."]],
+  [["1–2","It grows teeth: lose 2 HP; its next behaviour is 6."],["3–4","Distort limbs: Monster's next behaviour is 1–2."],["5–6","Transform non-Warden Monster: discard it, draw 1 Item; no corpse or reward. Against Warden, cancel response."]],
   "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["m-fungus","d-choir"],"Are you sure it's a wand?",1],
  ["wand-turn","Wand of Turning","ghost","WAND",["MAGIC","BONE"],
   "ACTION: If upright, roll d6 vs a Monster; turn sideways until recharged.",
@@ -186,7 +186,7 @@ const wands=[
  ["wand-door","Wand of Almost Doors","door","WAND",["MAGIC","KEY"],
   "LOCKS: Rusty Gate, Chest with a Pulse, Buried Lockbox, The Last Chest. If upright, roll d6; turn sideways until recharged.",
   [["1–2","False door: lose 2 HP; move next Room unseen to bottom (never Vault)."],["3–4","Choose that Room's 3–4 outcome."],["5–6","Choose Room's 5–6 result or reveal next 2 Rooms and order them."]],
-  "SHRINE: Skip its choice to recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
+  "SHRINE: recharge. OVERCHARGE: discard Wand, lose d6 HP; choose 5–6.",["u-gate","m-vault","d-last-chest"],"Not every hole is a door.",1]
 ];
 const potions=[
  ["smoky","Smoky Potion","potion","POTION",["ALCHEMY","MAGIC"],
@@ -203,16 +203,16 @@ const potions=[
   "Keep one used Potion face up to remember its effect.",["m-bridge","d-shadow"],"Holds a trapped sunrise.",3],
  ["fizzy","Fizzy Potion","potion","POTION",["ALCHEMY","CHAOS"],
   "FIRST USE: Roll d6; all Fizzy Potions share this result. Drink and discard.",
-  [["1–2","Loud belch: draw a Monster of this depth; if fighting, its next behaviour is 6."],["3–4","Heal d6 HP."],["5–6","Foam staggers current Monster: skip its next response. Outside combat, keep this used Potion; discard for ADV on first attack against next Monster."]],
+  [["1–2","Loud belch: draw a Monster of this depth; if fighting, its next behaviour is 6."],["3–4","Heal d6 HP."],["5–6","Foam: skip Monster's next response. Outside combat, keep used Potion; discard for ADV on first attack against next Monster."]],
   "Keep one used Potion face up to remember its effect.",["u-merchant","d-bazaar"],"Bottle rattles when shaken.",2],
  ["mushroom","Mushroom Tea","mushroom","POTION",["ALCHEMY","BONE"],
   "FIRST USE: Roll d6; all Mushroom Teas share this result. Drink and discard.",
   [["1–2","Hallucinate: become POISONED; next WIT has DIS."],["3–4","Remove POISONED; heal 2 HP."],["5–6","Vision: peek next 2 Rooms and order them; heal 2 HP."]],
   "Keep one used Potion face up to remember its effect.",["m-fungus","d-choir"],"It is still growing.",2],
  ["midnight","Midnight Ink","ghost","POTION",["ALCHEMY","MAGIC"],
-  "FIRST USE: Roll d6; all Midnight Inks share this result. Drink and discard.",
+  "FIRST USE: identify d6 for all Midnight Inks. Drink, then discard.",
   [["1–2","Black cough: lose 2 HP; next attack this fight has DIS."],["3–4","Ink marks the floor: next ELBERETH here gets ADV; if fighting, skip Monster's next response."],["5–6","Keep this used Potion face up as ink. Discard to make a later ELBERETH roll succeed automatically."]],
-  "Keep one used copy for identification; a 5–6 mark is a separate, discardable used copy.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
+  "Keep used copy for identity; a 5–6 mark is a separate used copy.",["d-shadow","d-oracle"],"The dark stains your teeth.",2],
  ["antidote","Antidote","potion","POTION",["ALCHEMY","CURE"],
   "FIRST USE: Roll d6; all Antidotes share this result. Drink and discard.",
   [["1–2","It fails: lose 1 HP."],["3–4","Remove POISONED."],["5–6","Remove POISONED; heal d6 HP."]],
