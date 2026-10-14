@@ -140,6 +140,15 @@ export class ExpeditionState {
   return face;
  }
  fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
+  // Wax Bridge is a single-use falling-damage guard; it does NOT
+  // dismiss Monsters. Spend it after the fall's damage is known.
+  if(damage>0){
+   const i=this.keptRooms.findIndex(x=>x.card.id==="m-wax-bridge");
+   if(i>=0&&this.chooseEffect("wax-bridge-fall",
+    ["save","prevent-three"],"prevent-three")==="prevent-three"){
+    this.keptRooms.splice(i,1);damage=Math.max(0,damage-3);
+   }
+  }
   const order=["UPPER","MIDDLE","DEEP","FINAL"];
   const from=order.indexOf(this.room?.stage),to=order.indexOf(destination);
   if(from<0||to<=from)throw Error("Trapdoor must descend to a deeper stage");
