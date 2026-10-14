@@ -60,7 +60,7 @@ export const ROOM_EFFECTS=Object.freeze({
  ["TRAPDOOR:FINAL:2d6"],["HURT:d6"],["DRAW:1"]]),
  "d-reliquary":C(["ROLL_ROOM"],["COST:2","DRAW:3","MAGIC_HEAL:2"],[
  ["HURT:d6","DRAW:1"],["DRAW:2"],["DRAW:3","SAVE_TRAP"]]),
- "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:3"],[
+ "d-bones":C(["ROLL_ROOM"],["MONSTER_DRAW","FIGHT_REWARD:4"],[
  ["MONSTER_DRAW"],["DRAW:1"],["DRAW:2","HEAL:2"]]),
  "d-oracle":C(["ROLL_ROOM"],["HEAL:2"],[
  ["HURT:d6"],["PEEK_SWAP:2"],["PEEK:1","DRAW:1"],["PEEK_SWAP:2","DRAW:2"]]),
