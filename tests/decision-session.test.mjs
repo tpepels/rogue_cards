@@ -202,7 +202,7 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
   a.kind==="item"&&a.cardId==="wand-sparks"&&a.mode==="overcharge");
  assert.ok(action,"Wand must offer its printed overcharge combat action");
  submitDecision(session,action);
- assert.equal(owner.hp,0);
+ assert.equal(s.heroes[0].hp,0);
  assert.equal(session.phase,"monster-response");
  assert.equal(session.heroIndex,1,
   "The remaining living Hero receives the Monster response");
@@ -210,9 +210,11 @@ test("a Monster responds to the surviving Hero when the acting Hero dies during 
   {phase:"monster-response",kind:"respond",heroIndex:1}
  ]);
  submitDecision(session,sessionActions(session)[0]);
+ if(session.pendingNested)finishNested(session);
  assert.notEqual(session.phase,"monster-response",
   "No dead-Hero action deadlock after the canonical Monster response");
- assert.ok(s.metrics.monsterBehaviorBands["wraith:0"]>=0);
+ assert.equal(s.heroes[1].hp>0,true,
+  "The surviving Hero remains a real target after the response");
 });
 
 test("Wizard can decline or choose an actual ability at the attack trigger",()=>{
