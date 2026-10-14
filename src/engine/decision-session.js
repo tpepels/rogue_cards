@@ -52,7 +52,8 @@ const canonical=session=>{
   const opts=legalActions(s,{phase:src,heroIndex})
    .filter(x=>x.kind!=="continue");
   // Equipment can be changed at a safe action boundary, not mid-roll.
-  const equipment=legalActions(s,{phase:"equipment",heroIndex});
+  const equipment=s.heroes.flatMap((h,i)=>
+   h.hp>0?legalActions(s,{phase:"equipment",heroIndex:i}):[]);
   return [...opts,...equipment,
    {phase:src,kind:"continue",heroIndex}];
  }
