@@ -70,3 +70,18 @@ test("revealed Room-reroll actions are compared only after preserving the actual
  assert.equal(result.actions[0].observations,1);
  assert.equal(JSON.stringify(observeSession(session)),before);
 });
+
+test("restricted subset is a real pair from the canonical root action list",()=>{
+ const session=affordableVault();
+ const before=JSON.stringify(observeSession(session));
+ const result=compareSessionActions(session,{trials:1,
+  seed:1790,knowledge:"oracle",futureBudget:1,
+  maxSearchSteps:1200,actionIndices:[1,0]});
+ assert.equal(result.actions.length,2);
+ assert.equal(result.actions[0].action.kind,"seal");
+ assert.equal(result.actions[1].action.kind,"fight");
+ assert.deepEqual(result.actionIndices,[1,0]);
+ assert.throws(()=>compareSessionActions(session,{
+  trials:1,actionIndices:[0,0]}),/actionIndices/);
+ assert.equal(JSON.stringify(observeSession(session)),before);
+});
