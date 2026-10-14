@@ -27,6 +27,8 @@ on:
       - src/engine/fork-state.js
       - src/engine/physical-cards.js
       - tests/physical-card-identity.test.mjs
+      - tests/revised-card-contracts.test.mjs
+      - tests/canonical-effect-sweep.test.mjs
       - tests/decision-completeness.test.mjs
       - package.json
       - src/session-mcts.js
