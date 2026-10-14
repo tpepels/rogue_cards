@@ -41,7 +41,7 @@ const stages=["UPPER","MIDDLE","DEEP"];
 const parties=[...HEROES.map(h=>[h.id]),
  ...HEROES.flatMap((h,i)=>HEROES.slice(i+1).map(g=>[h.id,g.id]))];
 const failures=[],missing=[],observed=new Set(),checked=new Set();
-const counts={roomChoices:0,roomFaces:0,itemFaces:0,monsterBands:0,
+const counts={heroModes:0,roomChoices:0,roomFaces:0,itemFaces:0,monsterBands:0,
  legalActionsForked:0,gameSteps:0,terminalExpeditions:0};
 const logFailure=(kind,recipe,error)=>failures.push({
  kind,recipe,message:String(error?.message||error),
@@ -67,6 +67,22 @@ const validateState=(session)=>{
     !s.metrics.escaped&&!s.metrics.roundLimit)
   throw Error("Terminal expedition has no printed ending");
 };
+// Enumerate every Hero's opt-out, steady and risky power decision.
+for(const hero of HEROES){
+ const trialSeed=(seed+400000+HEROES.indexOf(hero))>>>0;
+ try{
+  const state=new ExpeditionState({seed:trialSeed,heroes:[hero.id]});
+  state.beginRoom(ROOMS.find(r=>r.id==="u-gate"));
+  const choices=legalActions(state,{phase:"hero-trigger",heroIndex:0,
+   context:hero.id==="witch"?"after-scroll-or-potion":"test-trigger"});
+  const modes=choices.filter(a=>a.kind==="hero-mode").map(a=>a.mode);
+  if(modes.length!==2||!modes.includes("steady")||!modes.includes("risk")||
+    !choices.some(a=>a.kind==="skip"))
+   throw Error("Missing canonical Hero ability actions");
+  counts.heroModes+=modes.length;
+ }catch(e){logFailure("hero-actions",{heroId:hero.id,trialSeed},e)}
+}
+
 // Test both printed Room branches with the public legalActions/applyAction
 // boundary. For actions requiring contextual prerequisites, report a gap
 // rather than silently creating illegal inventory or claiming execution.
@@ -228,7 +244,7 @@ for(let run=0;run<runs;run++){
 }
 const commit=()=>{try{return execFileSync("git",["rev-parse","HEAD"],{
  encoding:"utf8"}).trim()}catch{return null}};
-const expected={roomChoices:ROOMS.length*2,
+const expected={heroModes:HEROES.length*2,roomChoices:ROOMS.length*2,
  roomFaces:[...ROOMS,VAULT].filter(c=>c.v2.roll).length*6,
  itemFaces:OBJECTS.filter(c=>c.v2.roll).length*6,
  monsterBands:(MONSTERS.length+2)*4};
