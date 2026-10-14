@@ -980,6 +980,9 @@ export class ExpeditionState {
    }
    }
   }
+  // A risky Priest omen may have defeated the Hero making this check.
+  // Do not request more dice or Item decisions from that Hero.
+  if(h.hp<=0)return;
   const roll=()=>this.die(20),a=roll();
   let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
   this.noteOptions(itemOptions(this,h,"after-roll"));
@@ -990,6 +993,7 @@ export class ExpeditionState {
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,ring);
    d=this.pendingD20+this.pendingD20Modifier;
   }
+  if(h.hp<=0)return;
   const wand=h.inventory.find(x=>x.id==="wand-undo"&&!this.exhausted.has(x));
   if(wand&&(this._decisionHook||d+stat+blessBonus<dc+11)&&
      (!this._decisionHook||this._decisionHook({phase:"after-roll",
@@ -997,6 +1001,9 @@ export class ExpeditionState {
    this.pendingD20=d;this.pendingD20Modifier=0;this.activate(h,wand);
    d=this.pendingD20+this.pendingD20Modifier;
   }
+  // Wand of Undoing can misfire for the final HP during a Room check.
+  // Its dead owner has no legal Crown of Rehearsals trigger.
+  if(h.hp<=0)return;
   const monsterRoll=roll();
   let ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
   if(!ok){
