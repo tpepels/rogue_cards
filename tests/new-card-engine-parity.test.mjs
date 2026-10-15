@@ -373,3 +373,63 @@ test("frontier and full-tree Oracle both search the revised printed Fork",()=>{
  assert.equal(JSON.stringify(observeGame(session.state)),before);
  assert.equal(session.state.rng.snapshot(),rng);
 });
+
+test("Floating Eye's raw 6 and Sideways Eye ring conversion both execute canonically",()=>{
+ const eye=MONSTERS.find(card=>card.id==="eye");
+ assert.ok(eye);
+ const make=()=>{
+  const s=new ExpeditionState({seed:20461618,heroes:["warrior","wizard"]});
+  s.beginRoom(ROOMS.find(r=>r.stage===eye.stage));
+  s.monster=eye;s.monsterHP=eye.hp;
+  return s;
+ };
+ const ringState=make();
+ let owner=ringState.heroes.find(h=>
+  h.inventory.some(card=>card.id==="ring-eye"));
+ if(!owner){
+  const index=ringState.deck.findIndex(card=>card.id==="ring-eye");
+  assert.ok(index>=0,"Ring must be a real physical Item");
+  const [ring]=ringState.deck.splice(index,1);
+  ringState.noteDeckRemoval(ring);
+  owner=ringState.heroes[0];
+  ringState.add(owner,ring);
+ }
+ const ring=owner.inventory.find(card=>card.id==="ring-eye");
+ assert.ok(ring);
+ if(!ringState.equipped(owner,"ring-eye"))ringState.equip(owner,ring);
+ assert.ok(ringState.equipped(owner,"ring-eye"));
+ ringState.forcedBehavior=6;
+ monsterRespond(ringState,ringState.heroes[0]);
+ assert.equal(ringState.metrics.monsterBehaviorBands["eye:0"],1);
+ assert.equal(ringState.metrics.monsterBehaviorBands["eye:3"]||0,0);
+
+ const raw=make();
+ for(const hero of raw.heroes)
+  for(const [slot,card] of Object.entries(hero.slots))
+   if(card?.id==="ring-eye")delete hero.slots[slot];
+ assert.ok(raw.heroes.every(h=>!raw.equipped(h,"ring-eye")));
+ raw.forcedBehavior=6;
+ monsterRespond(raw,raw.heroes[0]);
+ assert.equal(raw.metrics.monsterBehaviorBands["eye:3"],1);
+ assert.equal(raw.metrics.monsterBehaviorBands["eye:0"]||0,0);
+});
+
+test("Crown OFFER requires and spends one genuine discardable CURSED Item",()=>{
+ const s=game(20461618);
+ if(!s.discardable(1,"CURSED")){
+  const index=s.deck.findIndex(c=>
+   ["crown-relic","scroll-last"].includes(c.id));
+  assert.ok(index>=0,"Printed CURSED Item must be physically available");
+  const [card]=s.deck.splice(index,1);
+  s.noteDeckRemoval(card);
+  s.add(s.heroes[0],card);
+ }
+ const before= s.metrics.drawn;
+ s.beginRoom(room("d-crown"));
+ assert.ok(legalActions(s,{phase:"room"}).some(a=>
+  a.kind==="room-choice"&&a.index===1));
+ chooseRoom(s,1);
+ assert.equal(s.metrics.roomChoices["d-crown:1"],1);
+ assert.equal(s.metrics.drawn-before,2);
+ assert.ok(s.discardPile.some(c=>c.v2.tags.includes("CURSED")));
+});

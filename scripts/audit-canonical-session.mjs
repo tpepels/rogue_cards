@@ -101,6 +101,22 @@ for(const card of ROOMS)for(const index of [0,1]){
     const copy=state.deck.pop();
     state.noteDeckRemoval(copy);state.add(state.heroes[j%2],copy);
    }
+   // The Crown's OFFER is legal only when a CURSED Item can actually
+   // be discarded. Fetch a real, unconsumed non-equipment CURSED copy
+   // from the finite deck instead of skipping this contextual branch.
+   // Cursed gear is often locked in its slot and cannot pay OFFER.
+   if(card.id==="d-crown"&&index===1&&
+      !state.discardable(1,"CURSED")){
+    const physicalIndex=state.deck.findIndex(item=>
+     ["crown-relic","scroll-last"].includes(item.id));
+    if(physicalIndex<0)
+     throw Error("Crown OFFER fixture lacks a physical CURSED resource");
+    const [physical]=state.deck.splice(physicalIndex,1);
+    state.noteDeckRemoval(physical);
+    state.add(state.heroes[0],physical);
+    if(!state.discardable(1,"CURSED"))
+     throw Error("Crown OFFER fixture cannot discard acquired CURSED Item");
+   }
    state.beginRoom(card);
    const choice=legalActions(state,{phase:"room"}).find(
     a=>a.kind==="room-choice"&&a.index===index);
@@ -181,6 +197,16 @@ for(const card of [...MONSTERS,WARDEN,WARDEN_FURY]){
       if(equipped?.v2.tags.includes("MAGIC"))delete hero.slots[slot];
     if(s.anyEquippedTag("MAGIC"))
      throw Error("Wraith raw-band fixture still has equipped MAGIC");
+   }
+   // The physical Ring of the Sideways Eye intentionally changes
+   // Floating Eye's printed 6 to band 1-2. Test the RAW 6 with that
+   // optional ring unequipped; separate regression covers the modifier.
+   if(card.id==="eye"&&face===6){
+    for(const hero of s.heroes)
+     for(const [slot,equipped] of Object.entries(hero.slots))
+      if(equipped?.id==="ring-eye")delete hero.slots[slot];
+    if(s.heroes.some(hero=>s.equipped(hero,"ring-eye")))
+     throw Error("Eye raw-band fixture still has Ring of the Sideways Eye");
    }
    monsterRespond(s,s.heroes[0]);
    const band=face<=2?0:face<=4?1:face===5?2:3;
