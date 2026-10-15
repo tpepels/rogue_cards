@@ -474,3 +474,66 @@ test("deep-uct agent profile is explicit, reproducible and does not mutate actua
  assert.throws(()=>selectSessionPolicyAction(session,createSessionPolicy(),{
   ...options,searchProfile:"not-mcts"}),/Unknown searchProfile/);
 });
+
+
+test("private MCTS commits preserve complete seeded outcomes and physical-copy aliases",()=>{
+ const trials=[
+  {session:vault(),opts:{seed:7817,budget:6,
+   knowledge:"oracle",maxSteps:1200,treeMode:"full"}},
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   opts:{seed:66712,budget:3,
+    knowledge:"fair",maxSteps:4000,treeMode:"frontier"}}
+ ];
+ for(const {session,opts} of trials){
+  const original=JSON.stringify(observeSession(session));
+  const dice=session.state.rng.snapshot();
+  const baseline=searchDecision(session,{...opts,fastPrivateCommit:false});
+  const optimized=searchDecision(session,{...opts,fastPrivateCommit:true});
+  assert.deepEqual(optimized,baseline,
+   "Adopting a private fork must not change MCTS tree visits, rewards or root decisions");
+  assert.equal(JSON.stringify(observeSession(session)),original);
+  assert.equal(session.state.rng.snapshot(),dice);
+ }
+});
+
+test("reused MCTS diagnostic ring reproduces the same failing canonical trace",()=>{
+ const session=vault();
+ const options={budget:1,seed:7819,knowledge:"oracle",
+  maxSteps:1,treeMode:"frontier"};
+ const fail=compactTrace=>{
+  try{
+   searchDecision(session,{...options,compactTrace});
+   assert.fail("Expected a nonterminal rollout");
+  }catch(error){
+   assert.match(error.message,/nonterminal/);
+   return error.repro;
+  }
+ };
+ assert.deepEqual(fail(true),fail(false));
+});
+
+test("fast immutable pile cloning exactly matches legacy state and preserves mutable isolation",()=>{
+ for(const seed of [8391,59112,2091]){
+  const session=createDecisionSession({seed,heroes:["warrior","witch"]});
+  const a=forkGameState(session.state,{fastCardPiles:true});
+  const b=forkGameState(session.state,{fastCardPiles:false});
+  const sa={...session,state:a},sb={...session,state:b};
+  assert.deepEqual(observeSession(sa),observeSession(sb));
+  assert.deepEqual(a.metrics,b.metrics);
+  assert.equal(a.rng.snapshot(),b.rng.snapshot());
+  for(const stage of ["UPPER","MIDDLE","DEEP"]){
+   assert.notStrictEqual(a.rooms[stage],session.state.rooms[stage]);
+   assert.notStrictEqual(a.monsters[stage],session.state.monsters[stage]);
+   assert.deepEqual(a.rooms[stage].map(c=>c.id),
+    b.rooms[stage].map(c=>c.id));
+   assert.deepEqual(a.monsters[stage].map(c=>c.id),
+    b.monsters[stage].map(c=>c.id));
+  }
+  assert.notStrictEqual(a.deck,session.state.deck);
+  assert.strictEqual(a.deck[0],session.state.deck[0]);
+  if(a.rooms.UPPER.length)a.rooms.UPPER.shift();
+  assert.notEqual(a.rooms.UPPER.length,session.state.rooms.UPPER.length);
+  a.metrics.cleared=100;
+  assert.notEqual(a.metrics.cleared,session.state.metrics.cleared);
+ }
+});
