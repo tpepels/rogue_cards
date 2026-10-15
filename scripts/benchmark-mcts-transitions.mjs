@@ -26,8 +26,8 @@ function param(name,defaultValue,min,max){
 }
 const modeIndex=argv.indexOf("--mode");
 const mode=modeIndex<0?"transitions":argv[modeIndex+1];
-if(!["transitions","legality","hash","combined"].includes(mode))
- throw Error("Invalid --mode: choose transitions, legality, hash or combined");
+if(!["transitions","legality","hash","combined","private","trace","private-all"].includes(mode))
+ throw Error("Invalid --mode: transitions, legality, hash, combined, private, trace or private-all");
 const budget=param("--budget",3,1,32);
 const samples=param("--samples",3,1,20);
 const seed=param("--seed",7817,1,0xffffffff);
@@ -41,7 +41,9 @@ function run(optimized){
   strictTerminal:true,collectCoverage:false,
   fastTransitions:mode==="transitions"?optimized:true,
   reuseLegalActions:["legality","combined"].includes(mode)?optimized:true,
-  fastStateHash:["hash","combined"].includes(mode)?optimized:true
+  fastStateHash:["hash","combined"].includes(mode)?optimized:true,
+  fastPrivateCommit:["private","private-all"].includes(mode)?optimized:true,
+  compactTrace:["trace","private-all"].includes(mode)?optimized:true
  });
  assert.equal(result.incomplete,0);
  assert.equal(JSON.stringify(observeSession(session)),startingObservation);
@@ -67,7 +69,7 @@ console.log(JSON.stringify({
  schema:mode==="transitions"?"rogue-cards-canonical-mcts-transition-benchmark-v1":
   mode==="legality"?"rogue-cards-canonical-mcts-legality-benchmark-v1":
   mode==="hash"?"rogue-cards-canonical-mcts-state-hash-benchmark-v1":
-  "rogue-cards-canonical-mcts-combined-benchmark-v1",
+  "rogue-cards-canonical-mcts-"+mode+"-benchmark-v1",
  revision:"Run git rev-parse HEAD separately to identify the tested revision",
  mode,budget,samples,seed,identicalCanonicalSearch:true,
  baselineMedianMs:Number(old.toFixed(2)),
