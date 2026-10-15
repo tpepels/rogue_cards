@@ -59,7 +59,7 @@
     "layouts:check": "node scripts/build-card-layouts.mjs --check",
     "oracle:overnight": "node scripts/study-oracle-overnight.mjs",
     "layouts:init": "node scripts/initialize-card-placements.mjs",
-    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs tests/session-counterfactual.test.mjs tests/migrate-session-balance.test.mjs tests/mcts-agent-strength.test.mjs tests/mcts-diagnostics.test.mjs tests/mcts-four-speed-steps.test.mjs tests/mcts-direct-settlements.test.mjs",
+    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs tests/session-counterfactual.test.mjs tests/migrate-session-balance.test.mjs tests/mcts-agent-strength.test.mjs tests/mcts-diagnostics.test.mjs tests/mcts-four-speed-steps.test.mjs tests/mcts-direct-settlements.test.mjs tests/mcts-speculative-transitions.test.mjs",
     "oracle:mcts": "node scripts/run-session-mcts.mjs",
     "oracle:play": "node scripts/study-session-agent.mjs",
     "oracle:contrast": "node scripts/compare-session-actions.mjs",
