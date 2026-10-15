@@ -349,6 +349,7 @@ const sameAction=(a,b)=>a&&b&&
  * Items, and continuing an existing nested reaction - retain the normal
  * copy/replay fork. No speculation about whether printed effects trigger.
  */
+const EMPTY_REPLAY_SWITCHES=Object.freeze([]);
 const freeEquipmentActions=new Set(["equip","unequip","transfer"]);
 function safeDirectAction(session,action){
  if(session.pendingNested||!action||typeof action!=="object")return false;
@@ -428,7 +429,11 @@ export function submitDecision(session,action,{
   !x||!Number.isInteger(x.at)||x.at<1||
   typeof x.callback!=="function"))
   throw Error("Invalid multi-stage replay switches");
- const switches=[...replaySwitches];
+ // Almost every canonical rollout action has no replay callback.
+ // Avoid allocating an empty list at those decisions. Defensive copy
+ // remains mandatory when the caller provides a mutable switch list.
+ const switches=replaySwitches.length||afterReactionReplay?
+  [...replaySwitches]:EMPTY_REPLAY_SWITCHES;
  if(afterReactionReplay)switches.push({
   at:replayAt,callback:afterReactionReplay
  });
