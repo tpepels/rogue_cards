@@ -29,7 +29,7 @@ const options={budget,seed,knowledge:"fair",treeMode,
 const times={legacy:[],optimized:[]};
 const run=(lazyColdEdges)=>{
  const start=performance.now();
- const result=searchDecision(session,{...options,lazyColdEdges});
+ const result=searchDecision(session,{...options,lazyColdEdges,reuseTraceSlots:lazyColdEdges});
  const elapsed=performance.now()-start;
  assert.equal(result.completed,budget);
  assert.equal(result.incomplete,0);
@@ -58,6 +58,7 @@ console.log(JSON.stringify({
  optimizedMedianMs:Number(optimizedMs.toFixed(2)),
  speedup:Number((legacyMs/optimizedMs).toFixed(2)),
  exactCanonicalSearchParity:true,
+ optimizations:["lazy-first-visit-edges","pooled-bounded-error-traces"],
  note:"All full terminal trials and chosen root actions are identical. "+
   "Times represent a single canonical MCTS search, not complete balance studies."
 },null,2));
