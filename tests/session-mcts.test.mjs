@@ -537,3 +537,34 @@ test("fast immutable pile cloning exactly matches legacy state and preserves mut
   assert.notEqual(a.metrics.cleared,session.state.metrics.cleared);
  }
 });
+
+
+test("one-root-public-hash cache preserves canonical full-game UCT, fair samples and reaction trees",()=>{
+ const reaction=()=>{
+  const session=createDecisionSession({seed:1842,heroes:["warrior"]});
+  const deck=session.state.rooms.UPPER;
+  const i=deck.findIndex(room=>room.id==="u-fountain");
+  assert.ok(i>=0);
+  session.state.beginRoom(deck.splice(i,1)[0]);
+  session.phase="room";
+  assert.equal(submitDecision(session,sessionActions(session)[0]).phase,"reaction");
+  return session;
+ };
+ const fixtures=[
+  {session:vault(),opts:{seed:7817,budget:6,knowledge:"oracle",
+   maxSteps:1200,treeMode:"full"}},
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   opts:{seed:66712,budget:4,knowledge:"fair",
+    maxSteps:4000,treeMode:"frontier"}},
+  {session:reaction(),opts:{seed:19011,budget:2,knowledge:"oracle",
+   maxSteps:4000,treeMode:"full"}}
+ ];
+ for(const {session,opts} of fixtures){
+  const before=JSON.stringify(observeSession(session));
+  const old=searchDecision(session,{...opts,cacheRootHash:false});
+  const fast=searchDecision(session,{...opts,cacheRootHash:true});
+  assert.deepEqual(fast,old,
+   "Root hashing must not change visits, choices, rolls or terminal outcomes");
+  assert.equal(JSON.stringify(observeSession(session)),before);
+ }
+});
