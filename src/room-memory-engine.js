@@ -29,7 +29,11 @@ export function resolveRoomChoice(s,choice){
  case "m-fungus":case "m-bridge":case "u-lantern-shrine":case "m-second-name":
  case "m-wax-bridge":case "d-apothecary":case "d-last-bell":keep();break;
  case "m-well":if(s.discardable()){
-  const item=s.discard();s.heal(h,3);keep(item);
+  const item=s.discard();
+  // The physical offering lives beneath the kept Room, not in discard.
+  const index=s.discardPile.lastIndexOf(item);
+  if(index>=0)s.discardPile.splice(index,1);
+  s.heal(h,3);keep(item);
  }else throw Error("Bottomless Well OFFER requires an Item");
  break;
  case "m-clock":s.draw(2);keep();break;
