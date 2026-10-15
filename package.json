@@ -49,6 +49,8 @@
     "bench:mcts-hashing": "node scripts/benchmark-mcts-transitions.mjs --mode hash",
     "bench:mcts-combined": "node scripts/benchmark-mcts-transitions.mjs --mode combined",
     "bench:mcts-private": "node scripts/benchmark-mcts-transitions.mjs --mode private-all",
+    "bench:mcts-v3": "node scripts/benchmark-mcts-transitions.mjs --mode v3",
+    "bench:mcts-root-hash": "node scripts/benchmark-mcts-transitions.mjs --mode root-hash",
     "bench:state-copy": "node scripts/benchmark-fork-state.mjs",
     "bench:mcts-frontier": "node scripts/benchmark-mcts-frontier.mjs",
     "validate:deck": "node scripts/validate-deck.mjs",
