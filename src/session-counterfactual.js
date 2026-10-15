@@ -13,7 +13,7 @@ import {forkGameState} from "./engine/fork-state.js";
 import {sessionActions,observeSession,submitDecision}
  from "./engine/decision-session.js";
 import {createSessionPolicy,selectSessionPolicyAction,
- MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "./session-policy.js";
+ forcesEquipmentProgress,MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "./session-policy.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
 
@@ -103,6 +103,8 @@ function playMatched(session,action,{
  while(sim.phase!=="terminal"&&decisions<maxGameSteps){
   const legal=sessionActions(sim);
   if(!legal.length)throw Error("No legal action at "+sim.phase);
+  const searchIsNeeded=legal.length>1&&
+   !forcesEquipmentProgress(sim,policy,legal);
   const chosen=selectSessionPolicyAction(sim,policy,{
    budget:futureBudget,knowledge,maxSearchSteps,
    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
@@ -110,7 +112,7 @@ function playMatched(session,action,{
     {replayAt:switchIndex,diceSeed,deckSeed}:null,
    legalActions:legal
   });
-  if(legal.length>1)searches++;
+  if(searchIsNeeded)searches++;
   actionKinds[chosen.kind]=(actionKinds[chosen.kind]||0)+1;
   recentActions.push({step:decisions,phase:sim.phase,
    roomId:sim.state.room?.id??null,action:chosen,
