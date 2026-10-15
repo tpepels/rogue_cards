@@ -149,3 +149,21 @@ test("non-reaction rule failures also restore the exact checkpoint",()=>{
  assert.equal(session.phase,"corpse");
  assert.equal(session.actionCount,0);
 });
+
+test("checkpoint replay retains legacy observed transitions and no-transaction mode",()=>{
+ const session=atRoom(1842,"u-fountain");
+ const options={seed:20261021,budget:2,knowledge:"fair",
+  maxSteps:4000,collectCoverage:true,fastTransitions:false};
+ const old=searchDecision(session,options);
+ const speculative=searchDecision(session,{
+  ...options,speculativeTransitions:true,checkpointEvery:4
+ });
+ assert.deepEqual(speculative,old);
+ const noTransaction=searchDecision(session,{
+  ...options,transactional:false
+ });
+ assert.deepEqual(searchDecision(session,{
+  ...options,transactional:false,speculativeTransitions:true
+ }),noTransaction,
+ "Speculation must not override an explicit non-transactional search");
+});
