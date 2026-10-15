@@ -1233,9 +1233,10 @@ export class ExpeditionState {
   // Lantern Shrine says discard BEFORE a later Room d6. The decision
   // must be taken before even a hypothetical die face is observed.
   const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
-  const lampChoice=lamp>=0&&this._decisionHook?
-   this.chooseEffect("lantern-shrine-before-roll",
-    ["save","use"],"use")==="use":null;
+  // The saved Shrine is a decision BEFORE the die is revealed. The
+  // scripted agent may select a policy, but cannot inspect a future face.
+  const lampChoice=lamp>=0&&this.chooseEffect("lantern-shrine-before-roll",
+   ["save","use"],"use")==="use";
   let face=typeof forced==="number"?forced:this.die();
   if(this.reverseNextRoomStage===this.room.stage&&this.room.id!=="d-mirror"){
    this.reverseNextRoomStage=null;
@@ -1251,7 +1252,7 @@ export class ExpeditionState {
     delete this._observedRoomRollFace;
     face+=mode==="up"?1:mode==="down"?-1:0;
    }
-   if(lamp>=0&&(lampChoice??face<=4)){
+   if(lampChoice){
     face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);
    }
   const risk=forced&&typeof forced==="object"?forced.risk:null;
