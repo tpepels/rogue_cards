@@ -16,8 +16,8 @@ function clone(value,seen){
  if(seen.has(value))return seen.get(value);
  let out;
  if(Array.isArray(value)){
-  out=[];seen.set(value,out);
-  for(const item of value)out.push(clone(item,seen));
+  out=new Array(value.length);seen.set(value,out);
+  for(let i=0;i<value.length;i++)out[i]=clone(value[i],seen);
  }else if(value instanceof Set){
   out=new Set();seen.set(value,out);
   for(const item of value)out.add(clone(item,seen));
@@ -25,21 +25,27 @@ function clone(value,seen){
   out=new Map();seen.set(value,out);
   for(const [k,v] of value)out.set(clone(k,seen),clone(v,seen));
  }else{
-  if(Object.getPrototypeOf(value)!==Object.prototype &&
-     Object.getPrototypeOf(value)!==null)
+  const proto=Object.getPrototypeOf(value);
+  if(proto!==Object.prototype&&proto!==null)
    throw Error("Cannot fork unsupported mutable game state");
-  out={};seen.set(value,out);
-  for(const [key,v] of Object.entries(value))out[key]=clone(v,seen);
+  out=Object.create(proto);seen.set(value,out);
+  for(const key of Object.keys(value))out[key]=clone(value[key],seen);
  }
  return out;
 }
 export function forkGameState(state){
  if(!(state instanceof ExpeditionState)||typeof state.rng?.clone!=="function")
   throw Error("Only a clonable canonical ExpeditionState can be forked");
- const props=Object.fromEntries(Object.entries(state).filter(
-  ([key])=>key!=="rng"&&key!=="_decisionHook"));
- const fork=Object.assign(Object.create(ExpeditionState.prototype),
-  clone(props,new WeakMap()));
+ // Fork the live state directly. Building and then recursively cloning
+ // an intermediate Object.entries/filter/fromEntries payload adds arrays,
+ // tuple allocations and callbacks to every MCTS transition.
+ const fork=Object.create(ExpeditionState.prototype);
+ const seen=new WeakMap();
+ seen.set(state,fork);
+ for(const key of Object.keys(state)){
+  if(key!=="rng"&&key!=="_decisionHook")
+   fork[key]=clone(state[key],seen);
+ }
  fork.rng=state.rng.clone();
  return fork;
 }
