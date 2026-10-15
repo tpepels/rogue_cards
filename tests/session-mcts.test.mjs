@@ -504,7 +504,7 @@ test("lazy first-visit MCTS nodes reproduce original full tree and fair frontier
  }
  const session=vault();
  assert.throws(()=>searchDecision(session,{budget:2,lazyColdEdges:0}),
-  /lazyColdEdges and reuseTraceSlots must be boolean/);
+  /lazyColdEdges, reuseTraceSlots and fastPileClones must be boolean/);
 });
 
 test("reused error-trace ring preserves complete original reproduction output",()=>{
