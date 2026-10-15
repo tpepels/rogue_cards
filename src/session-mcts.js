@@ -17,6 +17,8 @@ import {observeSession,sessionActions,submitDecision}
  from "./engine/decision-session.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
+// sampleRolloutDecks allocates fresh arrays for each call. These are owned
+// by the current hypothetical game and can be assigned without copying.
 
 export const MAX_ROLLOUT_EQUIPMENT_ACTIONS=6;
 const freeEquipmentKinds=new Set(["equip","unequip","transfer"]);
@@ -46,9 +48,9 @@ export const mctsActionKey=action=>{
  return JSON.stringify(ordered.map(key=>[key,action[key]]));
 };
 const actionKey=mctsActionKey;
-const cloneSession=s=>({
+const cloneSession=(s,recordHistory=true)=>({
  ...s,state:forkGameState(s.state),
- history:s.history.slice(),
+ history:recordHistory?s.history.slice():[],
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
   ...s.pendingNested,
@@ -97,8 +99,8 @@ export const mctsPublicStateHash=s=>{
  return hashPart(hashPart(initial,JSON.stringify(game)),"}");
 };
 function nodeFor(tree,key,actions){
- let node=tree.get(key);
- if(!node){node={visits:0,edges:new Map()};tree.set(key,node);}
+ let node=tree.get(key),isNew=false;
+ if(!node){node={visits:0,edges:new Map()};tree.set(key,node);isNew=true;}
  // One canonical fingerprint per legal action. It was previously sorted
  // and JSON-stringified repeatedly for insertion, selection, lookup and
  // history tracking. Keep each edge paired with its action for this step.
@@ -111,7 +113,7 @@ function nodeFor(tree,key,actions){
   }
   return {action,id,edge};
  });
- return {node,candidates};
+ return {node,candidates,isNew};
 }
 function select(node,candidates,rng,c){
  const unseen=[];
@@ -160,7 +162,7 @@ export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
- reuseLegalActions=true,fastStateHash=true}={}){
+ reuseLegalActions=true,fastStateHash=true,treeMode="full"}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -172,6 +174,8 @@ export function searchDecision(session,{budget=100,seed=1,
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
     typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean")
   throw Error("transactional, fastTransitions, reuseLegalActions and fastStateHash must be boolean");
+ if(!["full","frontier"].includes(treeMode))
+  throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
@@ -205,10 +209,9 @@ export function searchDecision(session,{budget=100,seed=1,
   if(selected.cardId)increment(cardSelections,selected.cardId);
  };
  for(let i=0;i<budget;i++){
-  const sim=cloneSession(session),s=sim.state;
-  // Search never reads the display-only action history; keep the real
-  // canonical action count and all state-dependent rules unchanged.
-  if(fastTransitions)sim.history=[];
+  // Rollout histories are never read by game rules. Avoid copying the
+  // original history only to discard it immediately afterward.
+  const sim=cloneSession(session,!fastTransitions),s=sim.state;
   const chanceSeed=mix(seed^Math.imul(i+1,0x9e3779b9)),
    deckSeed=mix(seed^Math.imul(i+1,0x85ebca6b));
   // Never change the already-observed die/Room revealed inside a pending
@@ -218,10 +221,10 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(session.state,{
      knowledge:"fair",blueprint,deckSeed});
-    s.deck=drawn.deck.slice();
+    s.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     s.rooms[stage]=drawn.rooms[stage].slice();
-     s.monsters[stage]=drawn.monsters[stage].slice();
+     s.rooms[stage]=drawn.rooms[stage];
+     s.monsters[stage]=drawn.monsters[stage];
     }
    }
   }
@@ -236,10 +239,10 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(eventState,{
      knowledge:"fair",deckSeed:observedReplay.deckSeed});
-    eventState.deck=drawn.deck.slice();
+    eventState.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     eventState.rooms[stage]=drawn.rooms[stage].slice();
-     eventState.monsters[stage]=drawn.monsters[stage].slice();
+     eventState.rooms[stage]=drawn.rooms[stage];
+     eventState.monsters[stage]=drawn.monsters[stage];
     }
    }
    eventState.rng=randomSource(observedReplay.diceSeed);
@@ -249,16 +252,20 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(eventState,{
      knowledge:"fair",deckSeed});
-    eventState.deck=drawn.deck.slice();
+    eventState.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     eventState.rooms[stage]=drawn.rooms[stage].slice();
-     eventState.monsters[stage]=drawn.monsters[stage].slice();
+     eventState.rooms[stage]=drawn.rooms[stage];
+     eventState.monsters[stage]=drawn.monsters[stage];
     }
    }
    eventState.rng=randomSource(chanceSeed);
   };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null,equipmentStreak=0;
+  // Standard UCT: expand one new action per trial, then use the same
+  // random default policy from actual legal canonical actions. "full"
+  // preserves the historical study's tree bookkeeping and seed results.
+  let inRollout=false;
   // Keep the last 120 actions with constant-time recording. Error
   // reports still reconstruct the exact same chronological action trace.
   const reproductionTrace=new Array(120);
@@ -278,24 +285,39 @@ export function searchDecision(session,{budget=100,seed=1,
      pendingTrigger:sim.pendingNested?.trigger??null,
      roomChoiceOperations:sim.state.room?.v2.choices??null
     });break}
-    const key=historyKey+":"+stateHash(sim);
-    const {node,candidates}=nodeFor(tree,key,actions);
-    // The printed rules allow reversible zero-time equipment changes.
-    // Each root alternative is still evaluated. During sampled future
-    // play, after six consecutive equipment actions, take the real
-    // Continue action instead of oscillating forever.
-    const progress=progressionPhases.has(sim.phase)&&
-     equipmentStreak>=MAX_ROLLOUT_EQUIPMENT_ACTIONS?
-     candidates.find(c=>c.action.kind==="continue"):null;
-    const selected=progress||select(node,candidates,choiceRng,exploration);
-    const choice=selected.action;
+    // In "frontier" mode, a newly expanded UCT edge is followed by a
+    // default rollout rather than allocating thousands of single-visit
+    // subtrees. This is still real MCTS: revisited paths expand deeper.
+    // The selected legal action, its dice and all printed effects remain
+    // canonical; only search bookkeeping differs.
+    const forced=progressionPhases.has(sim.phase)&&
+     equipmentStreak>=MAX_ROLLOUT_EQUIPMENT_ACTIONS;
+    let choice,selectedId,progress=false;
+    if(treeMode==="frontier"&&inRollout){
+     const continueAction=forced?actions.find(a=>a.kind==="continue"):null;
+     choice=continueAction||choiceRng.choose(actions);
+     progress=Boolean(continueAction);
+     // The history key is not used after entering a default rollout.
+     selectedId=null;
+    }else{
+     const key=historyKey+":"+stateHash(sim);
+     const {node,candidates}=nodeFor(tree,key,actions);
+     const forcedCandidate=forced?
+      candidates.find(c=>c.action.kind==="continue"):null;
+     const selected=forcedCandidate||
+      select(node,candidates,choiceRng,exploration);
+     choice=selected.action;
+     selectedId=selected.id;
+     progress=Boolean(forcedCandidate);
+     path.push({node,edge:selected.edge});
+     if(treeMode==="frontier"&&selected.edge.visits===0)
+      inRollout=true;
+    }
     if(progress)rolloutEquipmentAdvances++;
     equipmentStreak=progressionPhases.has(sim.phase)&&
      freeEquipmentKinds.has(choice.kind)?equipmentStreak+1:0;
-    const edge=selected.edge;
     if(collectCoverage)record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
-    path.push({node,edge});
     const from=sim.phase;
     reproductionTrace[traceCursor]={depth,phase:from,
      pending:sim.pendingNested?.trigger??null,
@@ -316,7 +338,8 @@ export function searchDecision(session,{budget=100,seed=1,
      verifiedLegalActions:reuseLegalActions?actions:null});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
-    historyKey=mix(hash(historyKey+from+selected.id)).toString(16);
+    if(!inRollout||treeMode==="full")
+     historyKey=mix(hash(historyKey+from+selectedId)).toString(16);
     depth++;
    }
    if(sim.phase!=="terminal"&&!error)error="maxSteps";

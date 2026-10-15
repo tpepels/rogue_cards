@@ -362,6 +362,10 @@ function safeDirectAction(session,action){
     action.kind==="choose-hero-turn")return true;
  if(phase==="parley"&&action.phase==="parley"&&
     action.kind==="fight")return true;
+ // PASS has no dice, printed effects or nested triggers. It only marks
+ // this Hero's turn as spent and advances to the Monster response.
+ if(phase==="combat"&&action.phase==="combat"&&
+    action.kind==="pass")return true;
  return false;
 }
 function beginDirectTransaction(session,action){
@@ -373,7 +377,8 @@ function beginDirectTransaction(session,action){
   actionCount:session.actionCount,
   historyLength:session.history.length,
   actedMask:s._actedCombatMask,
-  hadActedMask:Object.hasOwn(s,"_actedCombatMask")
+  hadActedMask:Object.hasOwn(s,"_actedCombatMask"),
+  actor:s.actor
  };
  const indices=action.phase==="equipment"?
   [...new Set([action.heroIndex,action.toHeroIndex]
@@ -394,6 +399,7 @@ function beginDirectTransaction(session,action){
   session.history.length=meta.historyLength;
   if(meta.hadActedMask)s._actedCombatMask=meta.actedMask;
   else delete s._actedCombatMask;
+  s.actor=meta.actor;
   for(const {hero,inventory,slots} of touched){
    hero.inventory.splice(0,hero.inventory.length,...inventory);
    for(const key of Object.keys(hero.slots))delete hero.slots[key];
