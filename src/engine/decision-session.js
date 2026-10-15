@@ -416,11 +416,14 @@ function beginDirectTransaction(session,action){
 export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
  transactional=true,observeResult=true,recordHistory=true,
- verifiedLegalActions=null,fastPileClones=false
+ verifiedLegalActions=null,fastPileClones=false,
+ reuseEmptyReplaySwitches=false
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
   throw Error("transactional, observeResult, recordHistory and fastPileClones must be boolean");
+ if(typeof reuseEmptyReplaySwitches!=="boolean")
+  throw Error("reuseEmptyReplaySwitches must be boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -432,8 +435,9 @@ export function submitDecision(session,action,{
  // Almost every canonical rollout action has no replay callback.
  // Avoid allocating an empty list at those decisions. Defensive copy
  // remains mandatory when the caller provides a mutable switch list.
- const switches=replaySwitches.length||afterReactionReplay?
-  [...replaySwitches]:EMPTY_REPLAY_SWITCHES;
+ const switches=reuseEmptyReplaySwitches&&
+  !replaySwitches.length&&!afterReactionReplay?
+   EMPTY_REPLAY_SWITCHES:[...replaySwitches];
  if(afterReactionReplay)switches.push({
   at:replayAt,callback:afterReactionReplay
  });
