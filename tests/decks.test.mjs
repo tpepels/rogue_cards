@@ -28,8 +28,8 @@ test("15 plain Rooms resolve immediately, never create persistent state or Pacts
    return Array.from({length:b-a+1},(_,i)=>a+i);
   });
   assert.deepEqual(faces,[1,2,3,4,5,6],c.id);
-  const printed=[c.v2.prompt,...c.v2.choices.flatMap(c=>[c.label,c.effect]),...c.v2.roll.outcomes.map(o=>o.effect)].join(" ");
-  assert.doesNotMatch(printed,/\bPACT\b|\bKEEP\b|at (?:the )?Vault|on entering DEEP|after Phase I|next (?:MONSTER|WIT|DEF)/i,c.id);
+  const printedRules=[c.v2.prompt,...c.v2.choices.flatMap(c=>[c.label,c.effect]),...c.v2.roll.outcomes.map(o=>o.effect)].join(" ");
+  assert.doesNotMatch(printedRules,/\bPACT\b|\bKEEP\b|at (?:the )?Vault|on entering DEEP|after Phase I|next (?:MONSTER|WIT|DEF)/i,c.id);
   const art=assetPath(c);
   const printed=cardMarkup(c);
   if(art){
