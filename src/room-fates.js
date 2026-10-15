@@ -173,8 +173,8 @@ export function fateVaultEntry(s){
     else if(face<=4)v.wardenDamage+=3;
     else{
      v.wardenDamage+=s.die();
-     for(const hero of s.living())
-      hero.nextDefenseDis=(hero.nextDefenseDis||0)+1;
+     const defender=s.chooseRecipient("drowned-banner-next-def-dis");
+     defender.nextDefenseDis=(defender.nextDefenseDis||0)+1;
     }
    }else v.wardenFirstAdv=true;
    break;

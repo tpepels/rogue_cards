@@ -84,15 +84,20 @@ export function roomEntry(s){
     continue;
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="m-clock"){
-    if(s.discardable()&&s.chooseEffect(
-      "confessional-vault-debt",["force-six","pay-and-telegraph"],
-      "pay-and-telegraph")==="pay-and-telegraph"){
+    const preset=s.returnChoices["m-clock"];
+    const mode=!s.discardable()?"force-six":preset?
+     (preset==="pay"?"pay-and-telegraph":"force-six"):
+     s.chooseEffect("confessional-vault-debt",
+      ["force-six","pay-and-telegraph"],"pay-and-telegraph");
+    if(mode==="pay-and-telegraph"){
      s.discard();s.telegraphWarden();
     }else s.forcedBehavior=6;
    }else if(entry.card.id==="m-hungry-door"){
-    if(s.discardable()&&s.chooseEffect(
-      "hungry-door-vault-debt",["force-six","pay"],"pay")==="pay")
-     s.discard();
+    const preset=s.returnChoices["m-hungry-door"];
+    const mode=!s.discardable()?"force-six":preset?
+     (preset==="pay"?"pay":"force-six"):
+     s.chooseEffect("hungry-door-vault-debt",["force-six","pay"],"pay");
+    if(mode==="pay")s.discard();
     else s.forcedBehavior=6;
    }else{
     // Bell saved instead of rung: a known cost and a first-response

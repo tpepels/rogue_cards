@@ -713,6 +713,14 @@ export class ExpeditionState {
   case "PEEK_SWAP":this.peek(n(),true);return;
   case "NEXT_ADV":h.nextAdv++;return;
   case "NEXT_DIS":{
+   if(card?.id==="d-shadow"){
+    const candle=this.keptRooms.find(x=>x.card.id==="u-candle");
+    if(candle&&this.chooseEffect("candle-cancel-lightless-hall",
+      ["save","use"],"use")==="use"){
+     this.keptRooms.splice(this.keptRooms.indexOf(candle),1);
+     return;
+    }
+   }
    h.nextDis++;
    if(["d-shadow","u-lamp"].includes(card?.id))h.nextDarknessDis++;
    return;
@@ -1165,7 +1173,9 @@ export class ExpeditionState {
    }
    if(this.room.id==="vault"&&this.vaultModifiers.omenAdjust){
     const modes=[...(face>1?["down"]:[]),"keep",...(face<6?["up"]:[])];
+    this._observedRoomRollFace=face;
     const mode=this.chooseEffect("witness-omen-adjust",modes,"keep");
+    delete this._observedRoomRollFace;
     face+=mode==="up"?1:mode==="down"?-1:0;
    }
    if(lamp>=0&&(lampChoice??face<=4)){
@@ -1266,10 +1276,29 @@ export class ExpeditionState {
   }
   this.pendingRoomFace=null;
   const hourglass=this.keptRooms.find(x=>x.card.id==="m-hourglass"&&x.choice===1);
-  if(hourglass&&this.chooseEffect("hourglass-reverse-room-die",
-    ["save","reverse"],"save")==="reverse"){
-   this.keptRooms.splice(this.keptRooms.indexOf(hourglass),1);
-   face=7-face;
+  if(hourglass){
+   this._observedRoomRollFace=face;
+   const reverse=this.chooseEffect("hourglass-reverse-room-die",
+    ["save","reverse"],"save")==="reverse";
+   delete this._observedRoomRollFace;
+   if(reverse){
+    this.keptRooms.splice(this.keptRooms.indexOf(hourglass),1);
+    face=7-face;
+   }
+  }
+  // Gallery of Cracked Maps allows one revealed trapdoor die shift. Its
+  // kept map is consumed only if the player takes the adjustment.
+  const map=this.keptRooms.find(x=>x.card.id==="m-maps");
+  if(map&&["u-fall","m-ladder","d-bridge"].includes(this.room.id)){
+   const directions=["save",...(face>1?["down"]:[]),...(face<6?["up"]:[])];
+   this._observedRoomRollFace=face;
+   const move=this.chooseEffect("maps-adjust-trapdoor:"+this.room.id,
+    directions,"save");
+   delete this._observedRoomRollFace;
+   if(move!=="save"){
+    this.keptRooms.splice(this.keptRooms.indexOf(map),1);
+    face+=move==="up"?1:-1;
+   }
   }
   // Spend saved links only when their linked encounters occur.
   if(this.room.id==="d-bridge"&&face<=2){
