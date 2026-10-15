@@ -408,6 +408,7 @@ function beginDirectTransaction(session,action){
  const settlement=ending||corpse?{
   monster:s.monster,monsterHP:s.monsterHP,
   monsterFirstAttackPending:s.monsterFirstAttackPending,
+  hadMonsterFirstAttackPending:Object.hasOwn(s,"monsterFirstAttackPending"),
   monsterAdv:s.monsterAdv,heroFirstAdv:s.heroFirstAdv,
   monsterSkip:s.monsterSkip,
   endingKind:s.endingKind,
@@ -417,6 +418,7 @@ function beginDirectTransaction(session,action){
    battles:s.metrics.battles,kills:s.metrics.kills,
    cleared:s.metrics.cleared,won:s.metrics.won,
    escaped:s.metrics.escaped,
+   hadEscaped:Object.hasOwn(s.metrics,"escaped"),
    monsterVisits:{...s.metrics.monsterVisits}
   },
   progress:{...s.stageProgress},
@@ -450,7 +452,9 @@ function beginDirectTransaction(session,action){
   if(settlement){
    s.monster=settlement.monster;
    s.monsterHP=settlement.monsterHP;
-   s.monsterFirstAttackPending=settlement.monsterFirstAttackPending;
+   if(settlement.hadMonsterFirstAttackPending)
+    s.monsterFirstAttackPending=settlement.monsterFirstAttackPending;
+   else delete s.monsterFirstAttackPending;
    s.monsterAdv=settlement.monsterAdv;
    s.heroFirstAdv=settlement.heroFirstAdv;
    s.monsterSkip=settlement.monsterSkip;
@@ -464,6 +468,10 @@ function beginDirectTransaction(session,action){
      for(const k of Object.keys(s.metrics.monsterVisits))
       delete s.metrics.monsterVisits[k];
      Object.assign(s.metrics.monsterVisits,value);
+    }else if(key==="hadEscaped"){
+     if(!value)delete s.metrics.escaped;
+    }else if(key==="escaped"){
+     if(settlement.metrics.hadEscaped)s.metrics.escaped=value;
     }else s.metrics[key]=value;
    Object.assign(s.stageProgress,settlement.progress);
    for(const h of settlement.heroes||[]){
