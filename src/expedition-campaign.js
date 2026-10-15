@@ -6,6 +6,7 @@ import {HEROES,ROOMS,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 import {ExpeditionState,strategies,roomPolicies} from "./expedition-runtime.js";
 import {ROOM_EFFECTS,verifyRoomCoverage} from "./room-effect-model.js";
 import {fateChoiceLegal} from "./room-fates.js";
+import {completePrintedRoomChoice} from "./room-memory-engine.js";
 import {verifyObjectCoverage} from "./effect-model.js";
 import {planRoom,planParley,planCombat,planSeal,PLANNER_RISKS} from "./decision-planner.js";
 import {itemOptions} from "./item-access.js";
@@ -282,19 +283,7 @@ function actRoom(s,{prepared=false,choiceOverride=null}={}){
  for(const op of ops){
   const [kind,...args]=op.split(":");s.apply(kind,args,room);
  }
- if(s.alive()&&["m-beetle","m-treasure"].includes(room.id)&&
-    (room.id==="m-beetle"||n===1))
-  if(!s.keptRooms.some(x=>x.card.id===room.id))
-   s.keptRooms.push({card:room,choice:n});
- if(room.id==="d-bazaar"&&s.alive()){
-  const beetle=s.keptRooms.find(x=>x.card.id==="m-beetle");
-  if(beetle){
-   s.keptRooms.splice(s.keptRooms.indexOf(beetle),1);
-   if(beetle.choice===0)s.draw();
-   else if(s.discardable())s.discard();
-   else s.hurt(s.chooseActor(),2);
-  }
- }
+ completePrintedRoomChoice(s,room,n);
 }
 // Deliberately require the printed parley cost/roll, and never grant a corpse.
 function attemptParley(s,m,forced=null){
