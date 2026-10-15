@@ -6,7 +6,7 @@ Lo-fi, printed, dark late-1980s to mid-1990s fantasy computer-game / RPG zine il
 
 The images should feel like cheap printed game illustrations reproduced on old damaged paper: worn, dirty, imperfect, and low-quality. Printed, damaged paper texture is important: ink spread, rough halftone or bitmap texture, print wear, photocopy degradation, imperfect registration, grime, and scan-like dirt. The roughness should come mainly from the reproduction process, not from overly busy drawing detail.
 
-Color: black + off-white paper + one accent color (e.g. magenta, cyan, acid green, orange). Accent color should be used boldly but simply.
+Color: black + off-white paper + one accent color (e.g. magenta, cyan, acid green, orange). Accent color should be used boldly but simply. Prefer darker dungeon- or cave-like backgrounds over empty or light backgrounds. For items, show them in a context, but keep the item as the main focal point.
 
 Composition: the illustration should fill the entire card background vertically. Design it to work as a background image for a card, with a strong central silhouette or focal subject and clear readable forms. Keep it iconic and uncluttered.
 
@@ -21,3 +21,5 @@ Important constraints:
 - no more than 3 main value levels
 - full-card vertical illustration
 - no borders, the image should cover the entire canvas
+
+Use the reference image as a style-guide only, make distinctly different content.
