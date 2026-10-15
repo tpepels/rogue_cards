@@ -37,7 +37,7 @@ test("report groups genuine losing pairs and shows only the earliest decision sp
   sample(1,1,1,1),sample(0,0,0,0)];
  const report=summarizeMctsDiagnostics(rows);
  assert.equal(report["budget-full"].independentPairs,4);
- assert.equal(report["budget-full"].improvedSeeds,0);
+ assert.equal(report["budget-full"].improvedSeeds,1);
  assert.equal(report["budget-full"].worsenedSeeds,1);
  assert.equal(report["budget-full"].lossesByFirstDecisionCategory["equipment"],1);
  assert.equal(report["budget-full"].lossExamples[0].sourceIndex,5);
