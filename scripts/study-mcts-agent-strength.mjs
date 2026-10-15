@@ -15,6 +15,7 @@ import {availableParallelism} from "node:os";
 import {readFileSync,writeFileSync,existsSync,mkdirSync,renameSync,readdirSync}
  from "node:fs";
 import {resolve,join} from "node:path";
+import {pathToFileURL} from "node:url";
 import {execFileSync} from "node:child_process";
 import {HEROES} from "../src/tabletop-data.js";
 import {createDecisionSession,sessionActions,submitDecision}
@@ -200,7 +201,7 @@ const save=(c,revision,completed,errors)=>{
  atomic(join(c.out,"summary.json"),summary);
  return summary;
 };
-if(!isMainThread){
+if(!isMainThread&&workerData?.config){
  parentPort.on("message",msg=>{
   if(msg?.type!=="job")return;
   try{parentPort.postMessage({type:"done",value:oneJob(msg.i,workerData.config)})}
@@ -208,7 +209,8 @@ if(!isMainThread){
    type:"failed",index:msg.i,stack:e.stack||String(e),repro:e.repro??null
   })}
  });
-}else{
+}else if(isMainThread&&process.argv[1]&&
+ import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  const c=parse(),revision=git();
  if(!existsSync(c.audit))throw Error("Missing target canonical audit "+c.audit);
  const audit=JSON.parse(readFileSync(c.audit,"utf8"));
