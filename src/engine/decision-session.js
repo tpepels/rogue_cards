@@ -74,11 +74,18 @@ const canonical=session=>{
 const issuedLegalLists=new WeakMap();
 export const sessionActions=(session,{issueTicket=false}={})=>{
  const list=session.pendingNested?session.pendingNested.actions:canonical(session);
- if(issueTicket)issuedLegalLists.set(list,{
-  session,state:session.state,phase:session.phase,
-  heroIndex:session.heroIndex,pendingNested:session.pendingNested,
-  count:session.actionCount
- });
+ if(issueTicket){
+  // Freeze the issued array and shallow action records. Otherwise a caller
+  // could append or mutate a fabricated action after it was enumerated
+  // and incorrectly have it treated as verified by the search fast path.
+  for(const action of list)Object.freeze(action);
+  Object.freeze(list);
+  issuedLegalLists.set(list,{
+   session,state:session.state,phase:session.phase,
+   heroIndex:session.heroIndex,pendingNested:session.pendingNested,
+   count:session.actionCount
+  });
+ }
  return list;
 };
 export function observeSession(session){
