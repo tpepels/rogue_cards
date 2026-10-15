@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
-import {searchDecision} from "../src/session-mcts.js";
+import {searchDecision,mctsPublicStateHash} from "../src/session-mcts.js";
 import {createSessionPolicy,selectSessionPolicyAction,
  MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "../src/session-policy.js";
 import {VAULT,ROOMS} from "../src/tabletop-data.js";
@@ -146,4 +146,31 @@ test("full-legal-action MCTS policy cannot cycle forever on free equipment chang
   "Search and policy selection never mutate the canonical session");
  assert.ok(sessionActions(session).some(a=>a.kind==="equip"),
   "The legal equipment decision is still available to human players");
+});
+
+test("fast MCTS position hashing equals the full canonical public observation",()=>{
+ const legacyHash=text=>{
+  let h=2166136261;
+  for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);
+  return h>>>0;
+ };
+ const legacyKey=session=>{
+  const observation=observeSession(session);
+  return legacyHash(JSON.stringify({
+   phase:observation.phase,
+   trigger:observation.trigger??null,
+   heroIndex:observation.heroIndex??null,
+   game:observation.game
+  }));
+ };
+ const normal=createDecisionSession({seed:9314,heroes:["warrior","witch"]});
+ assert.equal(mctsPublicStateHash(normal),legacyKey(normal));
+ const equipped=vault();
+ assert.equal(mctsPublicStateHash(equipped),legacyKey(equipped));
+ const pending=createDecisionSession({seed:1842,heroes:["warrior"]});
+ pending.state.beginRoom(ROOMS.find(r=>r.id==="u-fountain"));
+ pending.phase="room";
+ submitDecision(pending,sessionActions(pending)[0]);
+ assert.ok(pending.pendingNested,"Expected a real nested reroll reaction");
+ assert.equal(mctsPublicStateHash(pending),legacyKey(pending));
 });
