@@ -559,3 +559,68 @@ test("nested reroll replay preserves an earlier sampled result before switching 
  ]});
  assert.deepEqual(seen,[1,2]);
 });
+
+test("Coffin Moth curing poison invalidates the next Ring of the Mold King reaction",()=>{
+ const session=createDecisionSession({seed:118,heroes:["warrior"]});
+ const state=session.state,hero=state.heroes[0];
+ for(const card of [...hero.inventory])
+  if(!["moth","ring-spores"].includes(card.id))state.remove(hero,card);
+ for(const id of ["moth","ring-spores"]){
+  if(hero.inventory.some(card=>card.id===id))continue;
+  const index=state.deck.findIndex(card=>card.id===id);
+  assert.ok(index>=0,"Missing original physical "+id);
+  const [card]=state.deck.splice(index,1);
+  state.noteDeckRemoval(card);state.add(hero,card);
+ }
+ assert.equal(hero.slots.companion?.id,"moth");
+ assert.equal(hero.slots.ring?.id,"ring-spores");
+ hero.poison=true;
+ state.room=room("d-bones");
+ state.monster=monster("sentinel");
+ state.monsterHP=state.monster.hp;
+ state.forcedBehavior=1; // Printed Sentinel 1-2: no damage.
+ state.rng=randomSource(5376); // Moth d6=3: REMOVE POISONED.
+ session.phase="monster-response";
+ session.heroIndex=0;
+ const respond=sessionActions(session).find(a=>a.kind==="respond");
+ assert.ok(respond);
+ submitDecision(session,respond);
+ const moth=sessionActions(session).find(a=>
+  a.kind==="item-trigger"&&a.cardId==="moth"&&a.phase==="on-poison");
+ assert.ok(moth,"The still-poisoned Hero has a real Coffin Moth choice");
+ assert.doesNotThrow(()=>submitDecision(session,moth));
+ assert.equal(hero.poison,false);
+ assert.notEqual(observeSession(session).phase,"reaction");
+ assert.equal(state.metrics.objectActivations.moth,1);
+ assert.equal(state.metrics.objectActivations["ring-spores"]||0,0);
+ assert.deepEqual(sessionActions(session).filter(a=>a.cardId==="ring-spores"),[]);
+});
+
+test("skipping Coffin Moth retains the legal Ring of the Mold King poison reaction",()=>{
+ const session=createDecisionSession({seed:119,heroes:["warrior"]});
+ const state=session.state,hero=state.heroes[0];
+ for(const card of [...hero.inventory])
+  if(!["moth","ring-spores"].includes(card.id))state.remove(hero,card);
+ for(const id of ["moth","ring-spores"]){
+  if(hero.inventory.some(card=>card.id===id))continue;
+  const index=state.deck.findIndex(card=>card.id===id);
+  assert.ok(index>=0);
+  const [card]=state.deck.splice(index,1);
+  state.noteDeckRemoval(card);state.add(hero,card);
+ }
+ hero.poison=true;
+ state.room=room("d-bones");
+ state.monster=monster("sentinel");
+ state.monsterHP=state.monster.hp;
+ state.forcedBehavior=1;
+ session.phase="monster-response";
+ session.heroIndex=0;
+ submitDecision(session,sessionActions(session).find(a=>a.kind==="respond"));
+ const skipMoth=sessionActions(session).find(a=>a.kind==="continue");
+ assert.ok(skipMoth);
+ submitDecision(session,skipMoth);
+ assert.equal(hero.poison,true);
+ const ring=sessionActions(session).find(a=>a.cardId==="ring-spores"&&
+  a.phase==="on-poison"&&a.kind==="item-trigger");
+ assert.ok(ring,"Skipping Moth leaves the independently legal Ring reaction");
+});
