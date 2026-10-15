@@ -62,7 +62,14 @@ checkpoints, canonical forks, recovery copies, nested reactions and replayed
 decisions. Timings overlap: recovery includes replay, and speculative
 transition includes recovery. Profiling is disabled by default.
 
-Compare uninstrumented throughput first, then inspect an instrumented run:
+Compare uninstrumented throughput first, using a paired eager-versus-lazy
+reference to avoid comparing runtimes from separate processes. The reference
+option uses the same seeded canonical search and alternates execution order:
+
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-lazy --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-lazy --mode expedition --budget 8 --runs 8
+
+Then inspect an instrumented run:
 
     npm run bench:mcts-settlements -- --optimization speculative --budget 16 --samples 33 --distinct-seeds
     npm run bench:mcts-settlements -- --optimization speculative-lazy --budget 16 --samples 33 --distinct-seeds
