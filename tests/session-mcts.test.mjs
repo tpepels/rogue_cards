@@ -488,8 +488,8 @@ test("lazy first-visit MCTS nodes reproduce original full tree and fair frontier
     const dice=session.state.rng.snapshot();
     const args={seed:13729,budget,knowledge:fixture.knowledge,
      maxSteps:4000,treeMode,collectCoverage:true};
-    const legacy=searchDecision(session,{...args,lazyColdEdges:false});
-    const optimized=searchDecision(session,{...args,lazyColdEdges:true});
+    const legacy=searchDecision(session,{...args,lazyColdEdges:false,reuseTraceSlots:false});
+    const optimized=searchDecision(session,{...args,lazyColdEdges:true,reuseTraceSlots:true});
     assert.deepEqual(optimized,legacy,
      fixture.name+" "+treeMode+" budget "+budget+
       " must not change any selected action, tree node or rollout outcome");
@@ -500,5 +500,20 @@ test("lazy first-visit MCTS nodes reproduce original full tree and fair frontier
  }
  const session=vault();
  assert.throws(()=>searchDecision(session,{budget:2,lazyColdEdges:0}),
-  /lazyColdEdges must be boolean/);
+  /lazyColdEdges and reuseTraceSlots must be boolean/);
+});
+
+test("reused error-trace ring preserves complete original reproduction output",()=>{
+ const session=createDecisionSession({seed:3573,heroes:["warrior"]});
+ const options={seed:37291,budget:2,maxSteps:1,knowledge:"fair",
+  strictTerminal:true,treeMode:"full"};
+ function getFailure(flags){
+  try{searchDecision(session,{...options,...flags});}
+  catch(error){assert.ok(error.repro);return error.repro;}
+  assert.fail("One canonical action must not terminate an entire expedition");
+ }
+ const legacy=getFailure({lazyColdEdges:false,reuseTraceSlots:false});
+ const faster=getFailure({lazyColdEdges:true,reuseTraceSlots:true});
+ assert.deepEqual(faster,legacy);
+ assert.ok(faster.recentActions.length>=1);
 });
