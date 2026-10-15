@@ -155,26 +155,13 @@ export function oneDiagnosticSeed(i,c){
    throw failed;
   }
  }
- // Keep compact traces only where a stronger-budget candidate loses.
- // The rest retain full outcomes, costs, choices and independent seeds.
- if(agents.classic16.won>=agents.frontier16.won)
-  agents.classic16.trace=[];
- if(agents.classic16.won<=agents.frontier16.won)
-  agents.frontier16.trace=[];
- if(agents.classic2.won>=agents.classic16.won)
-  agents.classic2.trace=[];
- if(agents.classic2.won<=agents.classic16.won&&
-    agents.classic16.won<=agents.frontier16.won)
-  agents.classic16.trace=[];
- // If classic16 beats classic2 but loses to frontier16, neither contrast
- // is a "candidate worse" case. Dropping traces is harmless.
- if(agents.classic2.won!==1||agents.classic16.won!==0)
-  agents.classic2.trace=[];
- if((agents.classic2.won!==1||agents.classic16.won!==0)&&
-    (agents.classic16.won!==1||agents.frontier16.won!==0))
-  agents.classic16.trace=[];
- if(agents.classic16.won!==1||agents.frontier16.won!==0)
-  agents.frontier16.trace=[];
+ // Preserve decision traces only when a higher-budget or frontier agent
+ // LOST despite identical initial seeds. Other results remain complete.
+ const budgetLoss=agents.classic2.won===1&&agents.classic16.won===0;
+ const treeLoss=agents.classic16.won===1&&agents.frontier16.won===0;
+ if(!budgetLoss)agents.classic2.trace=[];
+ if(!budgetLoss&&!treeLoss)agents.classic16.trace=[];
+ if(!treeLoss)agents.frontier16.trace=[];
  return {i,gameSeed,heroes,agents};
 }
 function report(c,revision,completed,errors=[]){
