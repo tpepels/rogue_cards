@@ -41,6 +41,27 @@ export function resolveRoomChoice(s,choice){
  default:throw Error("Unimplemented Room choice "+id);
  }
 }
+/** Effects that happen once AFTER a printed Room choice resolves.
+ * Both the scripted expedition and the pausable Oracle call this executor,
+ * so there is no separate policy-specific Beetle/Bazaar interpretation.
+ */
+export function completePrintedRoomChoice(s,room,choice){
+ if(!s.alive())return;
+ if(room.id==="m-beetle"){
+  if(!s.keptRooms.some(x=>x.card.id===room.id))
+   s.keptRooms.push({card:room,choice});
+  if(choice===0&&s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog")))
+   s.peek(1);
+ }
+ if(room.id==="d-bazaar"){
+  const kept=s.keptRooms.find(x=>x.card.id==="m-beetle");
+  if(!kept)return;
+  s.keptRooms.splice(s.keptRooms.indexOf(kept),1);
+  if(kept.choice===0)s.draw();
+  else if(s.discardable())s.discard();
+  else s.hurt(s.chooseRecipient("beetle-bazaar-payment"),2);
+ }
+}
 export function protectHero(s,h,damage){
  if(damage<=0)return damage;
  if(s._trapDamageContext&&s._trapPrevention>0){
