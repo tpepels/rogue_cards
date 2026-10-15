@@ -76,15 +76,25 @@ function nodeFor(tree,key,actions){
  return {node,candidates};
 }
 function select(node,candidates,rng,c){
- const unseen=candidates.filter(candidate=>candidate.edge.visits===0);
+ const unseen=[];
+ for(const candidate of candidates)
+  if(candidate.edge.visits===0)unseen.push(candidate);
  if(unseen.length)return rng.choose(unseen);
- const scored=candidates.map(candidate=>{
-  const e=candidate.edge;
-  return {candidate,score:e.wins/e.visits+
-   c*Math.sqrt(Math.log(Math.max(2,node.visits))/e.visits)};
- });
- const maximum=Math.max(...scored.map(x=>x.score));
- return rng.choose(scored.filter(x=>Math.abs(x.score-maximum)<1e-12)).candidate;
+ // Preserve identical UCT scores and the same single tie-breaking draw,
+ // without allocating score objects or computing log(visits) per action.
+ const logVisits=Math.log(Math.max(2,node.visits));
+ const scores=new Array(candidates.length);
+ let maximum=-Infinity;
+ for(let i=0;i<candidates.length;i++){
+  const e=candidates[i].edge;
+  const score=e.wins/e.visits+c*Math.sqrt(logVisits/e.visits);
+  scores[i]=score;
+  if(score>maximum)maximum=score;
+ }
+ const tied=[];
+ for(let i=0;i<candidates.length;i++)
+  if(Math.abs(scores[i]-maximum)<1e-12)tied.push(candidates[i]);
+ return rng.choose(tied);
 }
 const interval=(wins,visits)=>{
  if(!visits)return null;
