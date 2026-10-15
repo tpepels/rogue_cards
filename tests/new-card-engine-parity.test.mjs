@@ -226,6 +226,12 @@ test("Oracle session enumerator and transition honor the same global Pact limit"
  const allowed=sessionActions(session).filter(x=>x.kind==="room-choice");
  assert.deepEqual(allowed.map(x=>x.index),[0,1]);
  submitDecision(session,allowed[0],{observeResult:false});
+ for(let i=0;i<20&&session.pendingNested;i++){
+  const reaction=sessionActions(session);
+  assert.ok(reaction.length,"A pending Oracle reaction must have a legal choice");
+  submitDecision(session,reaction[0],{observeResult:false});
+ }
+ assert.equal(session.pendingNested,null);
  assert.equal(session.state.pactUsed,true);
  session.state.beginRoom(room("u-hollow-knight"));session.phase="room";
  const after=sessionActions(session).filter(x=>x.kind==="room-choice");
