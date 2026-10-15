@@ -29,17 +29,27 @@ function number(name,def,max){
 const mode=arg("--mode","search");
 const optimization=arg("--optimization","settlements");
 if(!["search","expedition"].includes(mode))throw Error("Unknown --mode");
-if(!["settlements","metrics","combined"].includes(optimization))
+if(!["settlements","metrics","combined","speculative",
+     "speculative-frozen","everything"].includes(optimization))
  throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
  seed=number("--seed",20261016,0xffffffff);
 const names=new Set(["--budget","--samples","--runs","--seed","--mode",
  "--optimization"]);
-const fastOptions=optimization==="combined"?
- {directSettlements:true,fastMetricClones:true}:
- optimization==="settlements"?{directSettlements:true}:
- {fastMetricClones:true};
+const fastOptions={
+ settlements:{directSettlements:true},
+ metrics:{fastMetricClones:true},
+ combined:{directSettlements:true,fastMetricClones:true},
+ speculative:{speculativeTransitions:true},
+ "speculative-frozen":{speculativeTransitions:true,reuseEdgeActions:true},
+ everything:{
+  speculativeTransitions:true,
+  directSettlements:true,fastMetricClones:true,
+  reuseEmptyReplaySwitches:true,reuseEdgeActions:true,
+  streamHistoryHash:true,reuseSelectionScratch:true
+ }
+}[optimization];
 for(let i=0;i<args.length;i+=2){
  if(!names.has(args[i])||args[i+1]===undefined)throw Error("Unknown option "+args[i]);
 }
@@ -148,7 +158,7 @@ const old=median(timings.baseline),current=median(timings.fast);
 const baselineTotal=sum(timings.baseline),optimizedTotal=sum(timings.fast);
 const rounded=value=>Number(value.toFixed(2));
 console.log(JSON.stringify({
- schema:"canonical-direct-settlements-benchmark-v1",
+ schema:"canonical-mcts-transaction-benchmark-v2",
  mode,optimization,budget,seed,samples:count,canonicalParity:true,
  baselineMedianMs:rounded(old),
  optimizedMedianMs:rounded(current),
