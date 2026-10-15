@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
-import {searchDecision,mctsPublicStateHash,mctsActionKey} from "../src/session-mcts.js";
+import {searchDecision,mctsPublicStateHash,mctsLegacyPublicStateHash,mctsActionKey} from "../src/session-mcts.js";
 import {createSessionPolicy,selectSessionPolicyAction,
  MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "../src/session-policy.js";
 import {VAULT,ROOMS} from "../src/tabletop-data.js";
@@ -378,5 +378,46 @@ test("verified MCTS action tickets execute real Room choices and combat attacks 
   submitDecision(slow,sessionActions(slow).find(a=>a.kind==="room-choice"&&a.index===0));
   assert.deepEqual(observeSession(fast),observeSession(slow));
   assert.equal(fast.state.rng.snapshot(),slow.state.rng.snapshot());
+ }
+});
+
+
+test("streamed MCTS public state hash is bit-identical to original JSON hash across phases and reactions",()=>{
+ const fixtures=[
+  createDecisionSession({seed:7291,heroes:["warrior"]}),
+  createDecisionSession({seed:7292,heroes:["warrior","witch"]}),
+  vault()
+ ];
+ for(const session of fixtures){
+  for(const index of [-1,0,1]){
+   session.heroIndex=index;
+   assert.equal(mctsPublicStateHash(session),mctsLegacyPublicStateHash(session));
+  }
+ }
+ const pending=createDecisionSession({seed:1842,heroes:["warrior"]});
+ const deck=pending.state.rooms.UPPER;
+ const i=deck.findIndex(card=>card.id==="u-fountain");
+ assert.ok(i>=0);
+ pending.state.beginRoom(deck.splice(i,1)[0]);
+ pending.phase="room";
+ const first=submitDecision(pending,sessionActions(pending)[0]);
+ assert.equal(first.phase,"reaction");
+ assert.equal(mctsPublicStateHash(pending),mctsLegacyPublicStateHash(pending));
+ const keep=sessionActions(pending).find(a=>a.kind==="keep");
+ assert.ok(keep);
+ submitDecision(pending,keep);
+ assert.equal(mctsPublicStateHash(pending),mctsLegacyPublicStateHash(pending));
+});
+
+test("streamed hashing preserves the entire seeded MCTS tree and chosen actions",()=>{
+ const trials=[
+  {session:vault(),opts:{seed:61972,budget:4,knowledge:"oracle",maxSteps:4000}},
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   opts:{seed:61973,budget:4,knowledge:"fair",maxSteps:4000}}
+ ];
+ for(const {session,opts} of trials){
+  const previous=searchDecision(session,{...opts,fastStateHash:false});
+  const fast=searchDecision(session,{...opts,fastStateHash:true});
+  assert.deepEqual(fast,previous);
  }
 });
