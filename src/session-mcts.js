@@ -169,7 +169,7 @@ export function searchDecision(session,{budget=100,seed=1,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
  lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false,
  reuseEdgeActions=false,streamHistoryHash=false,
- reuseSelectionScratch=false}={}){
+ reuseSelectionScratch=false,reuseEmptyReplaySwitches=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -186,6 +186,8 @@ export function searchDecision(session,{budget=100,seed=1,
  if(typeof reuseEdgeActions!=="boolean"||typeof streamHistoryHash!=="boolean"||
     typeof reuseSelectionScratch!=="boolean")
   throw Error("reuseEdgeActions, streamHistoryHash and reuseSelectionScratch must be boolean");
+ if(typeof reuseEmptyReplaySwitches!=="boolean")
+  throw Error("reuseEmptyReplaySwitches must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -391,7 +393,7 @@ export function searchDecision(session,{budget=100,seed=1,
     submitDecision(sim,choice,{replaySwitches,transactional,
      observeResult:!fastTransitions,recordHistory:!fastTransitions,
      verifiedLegalActions:reuseLegalActions?actions:null,
-     fastPileClones});
+     fastPileClones,reuseEmptyReplaySwitches});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
