@@ -490,6 +490,10 @@ test("lazy first-visit MCTS nodes reproduce original full tree and fair frontier
      maxSteps:4000,treeMode,collectCoverage:true};
     const legacy=searchDecision(session,{...args,lazyColdEdges:false,reuseTraceSlots:false});
     const optimized=searchDecision(session,{...args,lazyColdEdges:true,reuseTraceSlots:true});
+    const normal=searchDecision(session,args);
+    assert.deepEqual(normal,legacy,
+     fixture.name+" "+treeMode+" budget "+budget+
+      " default must retain the measured legacy performance path");
     assert.deepEqual(optimized,legacy,
      fixture.name+" "+treeMode+" budget "+budget+
       " must not change any selected action, tree node or rollout outcome");
