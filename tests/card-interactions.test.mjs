@@ -78,6 +78,8 @@ test("every Object can coexist with every regional Room and its choices",()=>{
    s.beginRoom(room);const h=s.heroes[0];feed(s,h);s.add(h,o);
    s.setActor(h);
    activate(s,h,o,4);
+   if(room.id==="d-crown"&&option===1&&!s.discardable(1,"CURSED"))
+    s.add(h,OBJECTS.find(card=>card.v2.tags?.includes("CURSED")));
    for(const op of ROOM_EFFECTS[room.id].choices[option]){
     const [kind,...args]=op.split(":");s.apply(kind,args,room);
    }
