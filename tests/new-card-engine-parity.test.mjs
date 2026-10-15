@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
-import {chooseRoom,legalActions,observeGame} from "../src/engine/index.js";
+import {chooseRoom,legalActions,observeGame,createDecisionSession,sessionActions,submitDecision} from "../src/engine/index.js";
 
 const room=id=>{const c=ROOMS.find(x=>x.id===id);assert.ok(c,id);return c;};
 const game=seed=>new ExpeditionState({seed,heroes:["warrior"]});
@@ -218,4 +218,16 @@ test("Judge acquittal turns sideways at Talking Door and cannot be used twice",(
  assert.equal(observeGame(s).keptRooms.find(x=>x.id==="u-puppet")?.spent,true);
  s.roomRoll(2);
  assert.equal(s.metrics.roomRollBands["d-mouth:0"],1);
+});
+
+test("Oracle session enumerator and transition honor the same global Pact limit",()=>{
+ const session=createDecisionSession({seed:3033,heroes:["warrior"]});
+ session.state.beginRoom(room("m-clock"));session.phase="room";
+ const allowed=sessionActions(session).filter(x=>x.kind==="room-choice");
+ assert.deepEqual(allowed.map(x=>x.index),[0,1]);
+ submitDecision(session,allowed[0],{observeResult:false});
+ assert.equal(session.state.pactUsed,true);
+ session.state.beginRoom(room("u-hollow-knight"));session.phase="room";
+ const after=sessionActions(session).filter(x=>x.kind==="room-choice");
+ assert.deepEqual(after.map(x=>x.index),[1]);
 });
