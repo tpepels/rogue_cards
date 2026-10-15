@@ -45,6 +45,7 @@
     "bench:rollout-forks": "node scripts/benchmark-rollout-forks.mjs",
     "bench:session-transactions": "node scripts/benchmark-session-transactions.mjs",
     "bench:mcts-transitions": "node scripts/benchmark-mcts-transitions.mjs",
+    "bench:mcts-legality": "node scripts/benchmark-mcts-transitions.mjs --mode legality",
     "validate:deck": "node scripts/validate-deck.mjs",
     "test:engine": "node --test tests/engine-api.test.mjs tests/stochastic-rollout.test.mjs tests/decision-api.test.mjs tests/action-search-phases.test.mjs tests/decision-session.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs",
     "bench:rollout-scenarios": "node scripts/benchmark-rollout-scenarios.mjs",
