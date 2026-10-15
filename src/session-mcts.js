@@ -162,7 +162,8 @@ export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
- reuseLegalActions=true,fastStateHash=true,treeMode="full"}={}){
+ reuseLegalActions=true,fastStateHash=true,treeMode="full",
+ fastPrivateCommit=true,compactTrace=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -176,6 +177,8 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("transactional, fastTransitions, reuseLegalActions and fastStateHash must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
+ if(typeof fastPrivateCommit!=="boolean"||typeof compactTrace!=="boolean")
+  throw Error("fastPrivateCommit and compactTrace must be boolean");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
@@ -270,10 +273,17 @@ export function searchDecision(session,{budget=100,seed=1,
   // reports still reconstruct the exact same chronological action trace.
   const reproductionTrace=new Array(120);
   let traceCount=0,traceCursor=0;
-  const recentActions=()=>traceCount<120?
-   reproductionTrace.slice(0,traceCount):
-   [...reproductionTrace.slice(traceCursor),
-    ...reproductionTrace.slice(0,traceCursor)];
+  const recentActions=()=>{
+   const records=traceCount<120?
+    reproductionTrace.slice(0,traceCount):
+    [...reproductionTrace.slice(traceCursor),
+     ...reproductionTrace.slice(0,traceCursor)];
+   return compactTrace?records.map(x=>({
+    depth:x.depth,phase:x.phase,pending:x.pending,
+    roomId:x.roomId,monsterId:x.monsterId,
+    heroHP:x.hp1===null?[x.hp0]:[x.hp0,x.hp1],action:x.action
+   })):records;
+  };
   try{
    while(sim.phase!=="terminal"&&depth<maxSteps){
     const actions=sessionActions(sim,{issueTicket:reuseLegalActions});
@@ -319,7 +329,19 @@ export function searchDecision(session,{budget=100,seed=1,
     if(collectCoverage)record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     const from=sim.phase;
-    reproductionTrace[traceCursor]={depth,phase:from,
+    if(compactTrace){
+     // Reuse a bounded ring of diagnostic records rather than allocating
+     // one object and one HP array for *every* successful game action.
+     const slot=reproductionTrace[traceCursor]||
+      (reproductionTrace[traceCursor]={});
+     slot.depth=depth;slot.phase=from;
+     slot.pending=sim.pendingNested?.trigger??null;
+     slot.roomId=sim.state.room?.id??null;
+     slot.monsterId=sim.state.monster?.id??null;
+     slot.hp0=sim.state.heroes[0]?.hp??null;
+     slot.hp1=sim.state.heroes[1]?.hp??null;
+     slot.action=choice;
+    }else reproductionTrace[traceCursor]={depth,phase:from,
      pending:sim.pendingNested?.trigger??null,
      roomId:sim.state.room?.id??null,
      monsterId:sim.state.monster?.id??null,
@@ -335,7 +357,8 @@ export function searchDecision(session,{budget=100,seed=1,
     ]:[];
     submitDecision(sim,choice,{replaySwitches,transactional,
      observeResult:!fastTransitions,recordHistory:!fastTransitions,
-     verifiedLegalActions:reuseLegalActions?actions:null});
+     verifiedLegalActions:reuseLegalActions?actions:null,
+     preserveStateIdentity:!fastPrivateCommit});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
