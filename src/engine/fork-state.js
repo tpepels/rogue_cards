@@ -47,7 +47,9 @@ const cloneImmutableStages=(stages,seen)=>{
   result[key]=cloneImmutablePile(stages[key],seen);
  return result;
 };
-export function forkGameState(state){
+export function forkGameState(state,{fastCardPiles=true}={}){
+ if(typeof fastCardPiles!=="boolean")
+  throw Error("fastCardPiles must be a boolean");
  if(!(state instanceof ExpeditionState)||typeof state.rng?.clone!=="function")
   throw Error("Only a clonable canonical ExpeditionState can be forked");
  // Fork the live state directly. Building and then recursively cloning
@@ -58,9 +60,9 @@ export function forkGameState(state){
  seen.set(state,fork);
  for(const key of Object.keys(state)){
   if(key==="rng"||key==="_decisionHook")continue;
-  if(key==="deck"&&Array.isArray(state.deck))
+  if(fastCardPiles&&key==="deck"&&Array.isArray(state.deck))
    fork[key]=cloneImmutablePile(state.deck,seen);
-  else if((key==="rooms"||key==="monsters")&&
+  else if(fastCardPiles&&(key==="rooms"||key==="monsters")&&
     state[key]&&["UPPER","MIDDLE","DEEP"].every(
      stage=>Array.isArray(state[key][stage])))
    fork[key]=cloneImmutableStages(state[key],seen);
