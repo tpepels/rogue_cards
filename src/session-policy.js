@@ -43,7 +43,7 @@ export function selectSessionPolicyAction(session,policy,{
  const optimizationKeys=new Set([
   "reuseEmptyReplaySwitches","reuseEdgeActions",
   "streamHistoryHash","reuseSelectionScratch",
-  "directSettlements","fastMetricClones"
+  "directSettlements","fastMetricClones","speculativeTransitions"
  ]);
  if(mctsOptimizations!==null&&(
     !mctsOptimizations||typeof mctsOptimizations!=="object"||
