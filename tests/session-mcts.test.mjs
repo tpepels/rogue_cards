@@ -474,3 +474,31 @@ test("deep-uct agent profile is explicit, reproducible and does not mutate actua
  assert.throws(()=>selectSessionPolicyAction(session,createSessionPolicy(),{
   ...options,searchProfile:"not-mcts"}),/Unknown searchProfile/);
 });
+
+test("lazy first-visit MCTS nodes reproduce original full tree and fair frontier exactly",()=>{
+ const roots=[
+  {name:"Vault",make:()=>vault(),knowledge:"oracle",budgets:[2,4,8]},
+  {name:"Fair expedition",make:()=>createDecisionSession({
+   seed:3573,heroes:["warrior"]}),knowledge:"fair",budgets:[2,4,8]}
+ ];
+ for(const fixture of roots){
+  for(const treeMode of ["full","frontier"]){
+   for(const budget of fixture.budgets){
+    const session=fixture.make(),root=JSON.stringify(observeSession(session));
+    const dice=session.state.rng.snapshot();
+    const args={seed:13729,budget,knowledge:fixture.knowledge,
+     maxSteps:4000,treeMode,collectCoverage:true};
+    const legacy=searchDecision(session,{...args,lazyColdEdges:false});
+    const optimized=searchDecision(session,{...args,lazyColdEdges:true});
+    assert.deepEqual(optimized,legacy,
+     fixture.name+" "+treeMode+" budget "+budget+
+      " must not change any selected action, tree node or rollout outcome");
+    assert.equal(JSON.stringify(observeSession(session)),root);
+    assert.equal(session.state.rng.snapshot(),dice);
+   }
+  }
+ }
+ const session=vault();
+ assert.throws(()=>searchDecision(session,{budget:2,lazyColdEdges:0}),
+  /lazyColdEdges must be boolean/);
+});
