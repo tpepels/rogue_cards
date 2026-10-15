@@ -26,7 +26,7 @@ test("compact diagnostic runs exactly the intended independent 3-arm contrasts",
  assert.deepEqual(MCTS_DIAGNOSTIC_ARMS.map(x=>x.id),
   ["classic2","classic16","frontier16"]);
  assert.deepEqual(MCTS_DIAGNOSTIC_COMPARISONS.map(x=>x.id),
-  ["tree-16","budget-full"]);
+  ["tree-16","budget-full","old-vs-deep"]);
  assert.equal(MCTS_DIAGNOSTIC_ARMS[1].budget,
   MCTS_DIAGNOSTIC_ARMS[2].budget);
  assert.equal(MCTS_DIAGNOSTIC_ARMS[0].treeMode,
@@ -39,10 +39,12 @@ test("report groups genuine losing pairs and shows only the earliest decision sp
  assert.equal(report["budget-full"].independentPairs,4);
  assert.equal(report["budget-full"].improvedSeeds,0);
  assert.equal(report["budget-full"].worsenedSeeds,1);
- assert.equal(report["budget-full"].lossesByFirstDecisionCategory["equipment-or-progress"],1);
+ assert.equal(report["budget-full"].lossesByFirstDecisionCategory["equipment"],1);
  assert.equal(report["budget-full"].lossExamples[0].sourceIndex,5);
  assert.equal(report["tree-16"].worsenedSeeds,1);
  assert.equal(report["tree-16"].lossExamples[0].sourceIndex,2);
+ assert.equal(report["old-vs-deep"].worsenedSeeds,2);
+ assert.equal(report["old-vs-deep"].lossExamples.length,2);
  assert.equal(report["tree-16"].baselineRequestedRollouts,64);
  assert.equal(report["tree-16"].candidateRequestedRollouts,64);
  assert.equal(report["tree-16"].exploratoryBonferroniP,1);
@@ -52,7 +54,7 @@ test("identical canonical prefixes do not invent card-level causes after diverge
  const diff=trace("room-choice","room");
  const split=firstPolicyDivergence([same,diff],[same,trace("pass","room")]);
  assert.equal(split.step,1);
- assert.equal(split.category,"room-or-reaction");
+ assert.equal(split.category,"room-choice");
  assert.equal(split.trustworthySameState,true);
  assert.equal(split.baselineAction.kind,"room-choice");
  assert.equal(split.candidateAction.kind,"pass");
