@@ -347,11 +347,13 @@ export function monsterRespond(s,h){
    modes,"save");
   if(selection!=="save"){
    s.keptRooms.splice(s.keptRooms.indexOf(garden),1);
+   // The printed WIT penalty applies to both uses of PRESERVE,
+   // including the extra FIRE payment that cancels the response.
+   (h.hp>0?h:s.chooseActor()).nextWitDis++;
    if(selection==="cancel-with-fire"){
     s.discard(1,{tag:"FIRE"});return;
    }
    face=1;
-   (h.hp>0?h:s.chooseActor()).nextWitDis++;
   }
  }
  const whisper=(s.keptMonsterRewards||[]).find(entry=>
