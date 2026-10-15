@@ -24,17 +24,23 @@ function param(name,defaultValue,min,max){
   throw Error("Invalid "+name);
  return value;
 }
+const modeIndex=argv.indexOf("--mode");
+const mode=modeIndex<0?"transitions":argv[modeIndex+1];
+if(!["transitions","legality"].includes(mode))
+ throw Error("Invalid --mode: choose transitions or legality");
 const budget=param("--budget",3,1,32);
 const samples=param("--samples",3,1,20);
 const seed=param("--seed",7817,1,0xffffffff);
 const session=createDecisionSession({seed:3573,heroes:["warrior"]});
 const startingObservation=JSON.stringify(observeSession(session));
 const startingDice=session.state.rng.snapshot();
-function run(fastTransitions){
+function run(optimized){
  const start=performance.now();
  const result=searchDecision(session,{
   seed,budget,knowledge:"fair",maxSteps:4000,
-  strictTerminal:true,collectCoverage:false,fastTransitions
+  strictTerminal:true,collectCoverage:false,
+  fastTransitions:mode==="transitions"?optimized:true,
+  reuseLegalActions:mode==="legality"?optimized:true
  });
  assert.equal(result.incomplete,0);
  assert.equal(JSON.stringify(observeSession(session)),startingObservation);
@@ -57,11 +63,12 @@ for(let i=0;i<samples;i++){
 const median=a=>[...a].sort((x,y)=>x-y)[Math.floor(a.length/2)];
 const old=median(baseline),fast=median(optimized);
 console.log(JSON.stringify({
- schema:"rogue-cards-canonical-mcts-transition-benchmark-v1",
+ schema:mode==="transitions"?"rogue-cards-canonical-mcts-transition-benchmark-v1":
+  "rogue-cards-canonical-mcts-legality-benchmark-v1",
  revision:"Run git rev-parse HEAD separately to identify the tested revision",
- budget,samples,seed,identicalCanonicalSearch:true,
+ mode,budget,samples,seed,identicalCanonicalSearch:true,
  baselineMedianMs:Number(old.toFixed(2)),
  optimizedMedianMs:Number(fast.toFixed(2)),
  speedup:Number((old/fast).toFixed(2)),
- note:"Exact canonical complete-expedition MCTS with identical seeds, not a full multi-worker balance-study throughput estimate."
+ note:"Exact canonical complete-expedition MCTS with identical seeds and identical results; this is not a full multi-worker balance-study throughput estimate."
 },null,2));
