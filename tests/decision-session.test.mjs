@@ -808,3 +808,73 @@ test("transactional combat PASS preserves canonical state, dice and rollback-saf
  assert.notStrictEqual(fast.state.actor,originalActor,
   "The canonical acting Hero should be updated by PASS");
 });
+
+
+test("private canonical commits replace only isolated forks, preserving rules and public identity by default",()=>{
+ for(const seed of [3573,4901,7731]){
+  const privateSession=createDecisionSession({seed,heroes:["warrior","witch"]});
+  const publicSession=createDecisionSession({seed,heroes:["warrior","witch"]});
+  const publicIdentity=publicSession.state;
+  let privateReplacements=0;
+  for(let step=0;step<24&&privateSession.phase!=="terminal";step++){
+   const legal=sessionActions(privateSession);
+   assert.deepEqual(legal,sessionActions(publicSession));
+   const selected=legal.find(x=>x.kind==="continue")||legal[0];
+   const priorPrivate=privateSession.state;
+   submitDecision(privateSession,selected,{
+    preserveStateIdentity:false,observeResult:false,recordHistory:false
+   });
+   submitDecision(publicSession,selected);
+   if(priorPrivate!==privateSession.state)privateReplacements++;
+   assert.strictEqual(publicSession.state,publicIdentity);
+   assert.deepEqual(observeSession(privateSession),observeSession(publicSession));
+   assert.equal(privateSession.state.rng.snapshot(),
+    publicSession.state.rng.snapshot());
+   assert.deepEqual(privateSession.state.metrics,publicSession.state.metrics);
+  }
+  assert.ok(privateReplacements>0,"At least one full fork was committed privately");
+ }
+});
+
+test("Vault FIGHT and post-Warden FIGHT use exactly the canonical reversible transition",()=>{
+ const make=(phase,seed)=>{
+  const session=createDecisionSession({seed,heroes:["warrior"]});
+  session.state.beginRoom(VAULT);session.phase=phase;
+  if(phase==="post-warden"){
+   session.state.monster=WARDEN;
+   session.state.monsterHP=8;
+  }
+  return session;
+ };
+ for(const phase of ["vault","post-warden"]){
+  const fast=make(phase,40218),slow=make(phase,40218);
+  const beforeDice=fast.state.rng.snapshot();
+  const act=sessionActions(fast).find(a=>a.kind==="fight");
+  assert.ok(act,"Expected a real FIGHT decision at "+phase);
+  const observed=submitDecision(fast,act,{transactional:true});
+  const legacy=submitDecision(slow,sessionActions(slow)
+   .find(a=>a.kind==="fight"),{transactional:false});
+  assert.deepEqual(observed,legacy);
+  assert.deepEqual(fast.state.metrics,slow.state.metrics);
+  assert.equal(fast.state.rng.snapshot(),beforeDice);
+  assert.equal(fast.state.rng.snapshot(),slow.state.rng.snapshot());
+  assert.deepEqual(observeSession(fast),observeSession(slow));
+ }
+});
+
+test("a failed Vault direct transaction rolls back monster and visit metrics",()=>{
+ const session=createDecisionSession({seed:7731,heroes:["warrior"]});
+ session.state.beginRoom(VAULT);session.phase="vault";
+ const action=sessionActions(session).find(a=>a.kind==="fight");
+ const original=JSON.stringify(observeSession(session));
+ const previous=session.history.push;
+ session.history.push=()=>{throw Error("synthetic commit failure")};
+ try{
+  assert.throws(()=>submitDecision(session,action),/synthetic commit failure/);
+ }finally{session.history.push=previous}
+ assert.equal(JSON.stringify(observeSession(session)),original);
+ assert.equal(session.actionCount,0);
+ assert.equal(session.state.metrics.monsterVisits.warden,undefined);
+ assert.equal(session.state.metrics.battles,0);
+ assert.equal(session.state.monster,null);
+});
