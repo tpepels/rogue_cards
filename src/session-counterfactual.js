@@ -107,7 +107,8 @@ function playMatched(session,action,{
    budget:futureBudget,knowledge,maxSearchSteps,
    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
    observedReplay:wasPending&&sim.pendingNested?
-    {replayAt:switchIndex,diceSeed,deckSeed}:null
+    {replayAt:switchIndex,diceSeed,deckSeed}:null,
+   legalActions:legal
   });
   if(legal.length>1)searches++;
   actionKinds[chosen.kind]=(actionKinds[chosen.kind]||0)+1;
