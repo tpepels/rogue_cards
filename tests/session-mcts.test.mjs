@@ -149,6 +149,46 @@ test("full-legal-action MCTS policy cannot cycle forever on free equipment chang
   "The legal equipment decision is still available to human players");
 });
 
+test("canonical MCTS policy elides a fully overridden search without changing dice",()=>{
+ const session=createDecisionSession({seed:3573,heroes:["warrior"]});
+ const sword=session.state.heroes[0].inventory.find(c=>c.id==="sword");
+ assert.ok(sword);
+ submitDecision(session,sessionActions(session).find(a=>
+  a.kind==="unequip"&&a.cardId==="sword"));
+ const legal=sessionActions(session);
+ assert.ok(legal.length>1&&legal.some(a=>a.kind==="continue"));
+ const before=JSON.stringify(observeSession(session));
+ const dice=session.state.rng.snapshot();
+ const policy=createSessionPolicy();
+ policy.consecutiveEquipment=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS;
+ // A real MCTS continuation with maxSteps=1 cannot reach a terminal
+ // expedition. If search still ran before forced Continue, it would throw.
+ const recommended=selectSessionPolicyAction(session,policy,{
+  seed:7123,knowledge:"fair",maxSearchSteps:1,legalActions:legal
+ });
+ assert.equal(recommended.kind,"continue");
+ assert.equal(policy.cycleBreaks,1);
+ assert.equal(policy.consecutiveEquipment,0);
+ assert.equal(session.state.rng.snapshot(),dice);
+ assert.equal(JSON.stringify(observeSession(session)),before);
+});
+
+test("MCTS telemetry and precomputed root-actions toggles preserve the chosen move",()=>{
+ const session=vault();
+ const opts={budget:4,seed:7818,knowledge:"fair",maxSteps:1200};
+ const baseline=searchDecision(session,opts);
+ const faster=searchDecision(session,{
+  ...opts,rootActions:sessionActions(session),collectCoverage:false
+ });
+ assert.ok(Object.keys(baseline.actionCoverage.actionOpportunities).length>0);
+ assert.ok(Object.keys(faster.actionCoverage.actionOpportunities).length===0);
+ assert.deepEqual(
+  {...faster,actionCoverage:undefined},
+  {...baseline,actionCoverage:undefined},
+  "No-telemetry MCTS must explore identical canonical futures and select identical actions"
+ );
+});
+
 test("fast MCTS position hashing equals the full canonical public observation",()=>{
  const legacyHash=text=>{
   let h=2166136261;
