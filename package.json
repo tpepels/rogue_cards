@@ -68,6 +68,7 @@
     "oracle:migrate-checkpoints": "node scripts/migrate-session-balance.mjs",
     "bench:mcts-frontier": "node scripts/benchmark-mcts-frontier.mjs",
     "bench:mcts-cold": "node scripts/benchmark-mcts-cold.mjs",
+    "bench:mcts-piles": "node scripts/benchmark-mcts-piles.mjs",
     "oracle:agent-strength": "node scripts/study-mcts-agent-strength.mjs",
     "oracle:mcts-diagnostics": "node scripts/study-mcts-diagnostics.mjs"
   },
