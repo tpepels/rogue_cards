@@ -724,3 +724,58 @@ test("transactional mode never bypasses canonical copy/replay for nested Room re
   reference.state.heroes.map(h=>h.hp),"Interrupted rolls cannot leak HP changes");
  pairedAction(fast,reference,a=>a.kind==="keep");
 });
+
+
+test("silent canonical transitions preserve every legal action, die and observation",()=>{
+ for(const heroes of [["warrior"],["warrior","witch"]]){
+  const fast=createDecisionSession({seed:9031,heroes});
+  const reference=createDecisionSession({seed:9031,heroes});
+  let triggeredReaction=false;
+  for(let i=0;i<40&&fast.phase!=="terminal";i++){
+   const legal=sessionActions(reference);
+   assert.deepEqual(sessionActions(fast),legal,"Divergent legal actions at "+i);
+   assert.ok(legal.length,"Expected an actionable canonical decision");
+   const action=legal.find(a=>a.kind==="continue"||a.kind==="attack"||
+    a.kind==="fight"||a.kind==="keep"||a.kind==="skip"||
+    a.kind==="respond"||a.kind==="choose-hero-turn")||legal[0];
+   if(fast.pendingNested)triggeredReaction=true;
+   assert.equal(submitDecision(fast,action,{
+    observeResult:false,recordHistory:false}),undefined);
+   submitDecision(reference,action);
+   assert.deepEqual(observeSession(fast),observeSession(reference),
+    "Skipping UI observations changed printed consequences at "+i);
+   assert.equal(fast.state.rng.snapshot(),reference.state.rng.snapshot(),
+    "Skipping UI observations changed remaining real dice at "+i);
+   assert.deepEqual(fast.state.metrics,reference.state.metrics);
+   assert.equal(fast.history.length,0,"Fast internal study does not need display history");
+   assert.equal(reference.history.length,reference.actionCount);
+  }
+  assert.ok(fast.actionCount>10);
+  assert.deepEqual(sessionActions(fast),sessionActions(reference));
+  // Decisions are not silently removed when printing of the UI is skipped.
+  assert.equal(fast.actionCount,reference.actionCount);
+ }
+});
+
+test("silent Room reaction replay preserves actual dice and interrupts atomically",()=>{
+ const fast=createDecisionSession({seed:1842,heroes:["warrior"]});
+ const legacy=createDecisionSession({seed:1842,heroes:["warrior"]});
+ for(const s of [fast,legacy]){
+  s.state.beginRoom(room("u-fountain"));s.phase="room";
+ }
+ const first=sessionActions(fast)[0];
+ assert.equal(submitDecision(fast,first,{
+  observeResult:false,recordHistory:false}),undefined);
+ const pending=submitDecision(legacy,first);
+ assert.equal(pending.phase,"reaction");
+ assert.deepEqual(observeSession(fast),observeSession(legacy));
+ assert.equal(fast.state.rng.snapshot(),legacy.state.rng.snapshot());
+ const choice=sessionActions(fast).find(x=>x.kind==="keep");
+ assert.ok(choice);
+ assert.equal(submitDecision(fast,choice,{
+  observeResult:false,recordHistory:false}),undefined);
+ submitDecision(legacy,choice);
+ assert.deepEqual(observeSession(fast),observeSession(legacy));
+ assert.equal(fast.state.rng.snapshot(),legacy.state.rng.snapshot());
+ assert.deepEqual(fast.state.metrics,legacy.state.metrics);
+});
