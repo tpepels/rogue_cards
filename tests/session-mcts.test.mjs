@@ -421,3 +421,56 @@ test("streamed hashing preserves the entire seeded MCTS tree and chosen actions"
   assert.deepEqual(fast,previous);
  }
 });
+
+
+test("frontier UCT is real tree search and preserves each unvisited-root trial's canonical result",()=>{
+ const session=vault(),opts={seed:98817,budget:2,knowledge:"oracle",
+  maxSteps:4000,collectCoverage:true};
+ const legacy=searchDecision(session,{...opts,treeMode:"full"});
+ const frontier=searchDecision(session,{...opts,treeMode:"frontier"});
+ // With at most one visit per root edge, both policies choose the same
+ // default legal actions and consume the same random draws. The explicit
+ // tree-node count is EXPECTED to differ.
+ assert.deepEqual(
+  {...frontier,treeNodes:legacy.treeNodes},
+  legacy,
+  "UCT frontier changed sampled canonical outcomes before any re-visit");
+ assert.ok(frontier.treeNodes<=legacy.treeNodes);
+ assert.ok(frontier.treeNodes>=1,"The root UCT tree must remain present");
+ assert.ok(frontier.complete);
+ assert.ok(frontier.rootEveryActionTried);
+});
+
+test("frontier UCT expands revisited branches and remains deterministic with more visits",()=>{
+ const session=vault(),opts={seed:99125,budget:12,knowledge:"oracle",
+  maxSteps:4000,treeMode:"frontier"};
+ const original=JSON.stringify(observeSession(session));
+ const dice=session.state.rng.snapshot();
+ const a=searchDecision(session,opts),b=searchDecision(session,opts);
+ assert.deepEqual(a,b);
+ assert.equal(a.completed,12);
+ assert.equal(a.choices.reduce((n,x)=>n+x.visits,0),12);
+ assert.ok(a.treeNodes>1,"Revisited UCT roots must expand deeper tree nodes");
+ assert.equal(JSON.stringify(observeSession(session)),original);
+ assert.equal(session.state.rng.snapshot(),dice);
+ assert.ok(sessionActions(session).some(x=>
+  JSON.stringify(x)===JSON.stringify(a.recommended)));
+});
+
+test("deep-uct agent profile is explicit, reproducible and does not mutate actual dice",()=>{
+ const session=vault(),original=JSON.stringify(observeSession(session));
+ const rng=session.state.rng.snapshot();
+ const policyA=createSessionPolicy(),policyB=createSessionPolicy();
+ const options={searchProfile:"deep-uct",deepMinBudget:8,
+  deepVisitsPerAction:3,budget:2,seed:99820,knowledge:"oracle",
+  maxSearchSteps:4000};
+ const a=selectSessionPolicyAction(session,policyA,options);
+ const b=selectSessionPolicyAction(session,policyB,options);
+ assert.deepEqual(a,b);
+ assert.deepEqual(policyA,policyB);
+ assert.ok(sessionActions(session).some(x=>JSON.stringify(x)===JSON.stringify(a)));
+ assert.equal(JSON.stringify(observeSession(session)),original);
+ assert.equal(session.state.rng.snapshot(),rng);
+ assert.throws(()=>selectSessionPolicyAction(session,createSessionPolicy(),{
+  ...options,searchProfile:"not-mcts"}),/Unknown searchProfile/);
+});
