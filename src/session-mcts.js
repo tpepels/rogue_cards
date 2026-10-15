@@ -98,7 +98,7 @@ export const mctsPublicStateHash=s=>{
  const game=nested?nested.observation:observeGame(s.state);
  return hashPart(hashPart(initial,JSON.stringify(game)),"}");
 };
-function nodeFor(tree,key,actions){
+function nodeFor(tree,key,actions,reuseEdgeActions=false){
  let node=tree.get(key),isNew=false;
  if(!node){node={visits:0,edges:new Map()};tree.set(key,node);isNew=true;}
  // One canonical fingerprint per legal action. It was previously sorted
@@ -108,7 +108,8 @@ function nodeFor(tree,key,actions){
   const id=actionKey(action);
   let edge=node.edges.get(id);
   if(!edge){
-   edge={action:{...action},visits:0,wins:0};
+   edge={action:reuseEdgeActions&&Object.isFrozen(action)?action:{...action},
+    visits:0,wins:0};
    node.edges.set(id,edge);
   }
   return {action,id,edge};
@@ -163,7 +164,8 @@ export function searchDecision(session,{budget=100,seed=1,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
- lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false}={}){
+ lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false,
+ reuseEdgeActions=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -177,6 +179,8 @@ export function searchDecision(session,{budget=100,seed=1,
     typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean"||
     typeof fastPileClones!=="boolean")
   throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash, lazyColdEdges, reuseTraceSlots and fastPileClones must be boolean");
+ if(typeof reuseEdgeActions!=="boolean")
+  throw Error("reuseEdgeActions must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -319,11 +323,12 @@ export function searchDecision(session,{budget=100,seed=1,
        actions.find(a=>a.kind==="continue"):null;
       choice=forcedChoice||choiceRng.choose(actions);
       selectedId=actionKey(choice);
-      selectedEdge={action:{...choice},visits:0,wins:0};
+      selectedEdge={action:reuseEdgeActions&&Object.isFrozen(choice)?choice:{...choice},
+       visits:0,wins:0};
       node.edges.set(selectedId,selectedEdge);
       progress=Boolean(forcedChoice);
      }else{
-      const found=nodeFor(tree,key,actions);
+      const found=nodeFor(tree,key,actions,reuseEdgeActions);
       node=found.node;
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):null;
