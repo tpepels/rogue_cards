@@ -4,6 +4,16 @@
 
 Implemented directly on main. `directSettlements` is opt-in for both `submitDecision()` and `searchDecision()`; default remains false. This work does not remove the four earlier opt-in performance switches (`reuseEmptyReplaySwitches`, `reuseEdgeActions`, `streamHistoryHash`, `reuseSelectionScratch`).
 
+## Second independent clone optimization
+
+The `fastMetricClones` flag speeds up cloning of flat scalar counter maps
+in the canonical expedition's metrics data. It preserves a single shared
+alias map between counters and any other state fields, and falls back to
+the full recursive clone for nested or unexpected shapes. It is opt-in
+and is intended to address repeated cloning across *all* canonical
+transitions, not just the three deterministic settlements. Both
+optimizations can be combined, independently of the earlier four flags.
+
 ## What is allowed to execute without cloning the entire expedition
 
 - `vault` + `fight`: the printed transition only begins the Warden fight and updates deterministic bookkeeping.
@@ -22,19 +32,23 @@ All other Room choices, die rolls, Item use, combat responses, deferred rewards,
     npm run test:session
     npm run validate:deck
 
-The new `tests/mcts-direct-settlements.test.mjs` covers three transitions, failure rollback, an unsafe delayed reward that must still suspend for a player, and full-tree/frontier MCTS parity. The tests must pass before performance conclusions.
+The new `tests/mcts-direct-settlements.test.mjs` covers three transitions, failure rollback, an unsafe delayed reward that must still suspend for a player, metrics counter aliasing and deep-copy isolation, plus full-tree/frontier MCTS parity. The tests must pass before performance conclusions.
 
 ### Identical canonical MCTS search
 
     npm run bench:mcts-settlements -- --budget 2 --samples 11
     npm run bench:mcts-settlements -- --budget 8 --samples 11
     npm run bench:mcts-settlements -- --budget 16 --samples 11
+    npm run bench:mcts-settlements -- --optimization metrics --budget 8 --samples 11
+    npm run bench:mcts-settlements -- --optimization combined --budget 8 --samples 11
 
 Each paired sample executes actual complete MCTS rollouts from the same starting state and verifies equality of search decisions, terminal results, tree visits, state observations and RNG. The source scenarios emphasize the three transitions; this is *not* a forecast of total expedition throughput.
 
 ### Actual full expeditions
 
     npm run bench:mcts-settlements -- --mode expedition --budget 8 --runs 2
+    npm run bench:mcts-settlements -- --mode expedition --optimization metrics --budget 8 --runs 2
+    npm run bench:mcts-settlements -- --mode expedition --optimization combined --budget 8 --runs 2
 
 Runs two independent source seeds under the same canonical game rules and MCTS search. Every chosen action, final public state and future RNG snapshot must match. The report includes the number of encountered eligible settlement actions, to distinguish real improvement from benchmark noise.
 
