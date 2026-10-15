@@ -26,8 +26,8 @@ function param(name,defaultValue,min,max){
 }
 const modeIndex=argv.indexOf("--mode");
 const mode=modeIndex<0?"transitions":argv[modeIndex+1];
-if(!["transitions","legality"].includes(mode))
- throw Error("Invalid --mode: choose transitions or legality");
+if(!["transitions","legality","hash"].includes(mode))
+ throw Error("Invalid --mode: choose transitions, legality or hash");
 const budget=param("--budget",3,1,32);
 const samples=param("--samples",3,1,20);
 const seed=param("--seed",7817,1,0xffffffff);
@@ -40,7 +40,8 @@ function run(optimized){
   seed,budget,knowledge:"fair",maxSteps:4000,
   strictTerminal:true,collectCoverage:false,
   fastTransitions:mode==="transitions"?optimized:true,
-  reuseLegalActions:mode==="legality"?optimized:true
+  reuseLegalActions:mode==="legality"?optimized:true,
+  fastStateHash:mode==="hash"?optimized:true
  });
  assert.equal(result.incomplete,0);
  assert.equal(JSON.stringify(observeSession(session)),startingObservation);
@@ -64,7 +65,8 @@ const median=a=>[...a].sort((x,y)=>x-y)[Math.floor(a.length/2)];
 const old=median(baseline),fast=median(optimized);
 console.log(JSON.stringify({
  schema:mode==="transitions"?"rogue-cards-canonical-mcts-transition-benchmark-v1":
-  "rogue-cards-canonical-mcts-legality-benchmark-v1",
+  mode==="legality"?"rogue-cards-canonical-mcts-legality-benchmark-v1":
+  "rogue-cards-canonical-mcts-state-hash-benchmark-v1",
  revision:"Run git rev-parse HEAD separately to identify the tested revision",
  mode,budget,samples,seed,identicalCanonicalSearch:true,
  baselineMedianMs:Number(old.toFixed(2)),
