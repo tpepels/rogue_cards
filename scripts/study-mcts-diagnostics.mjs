@@ -160,9 +160,10 @@ export function oneDiagnosticSeed(i,c){
  // LOST despite identical initial seeds. Other results remain complete.
  const budgetLoss=agents.classic2.won===1&&agents.classic16.won===0;
  const treeLoss=agents.classic16.won===1&&agents.frontier16.won===0;
- if(!budgetLoss)agents.classic2.trace=[];
+ const oldVsDeepLoss=agents.classic2.won===1&&agents.frontier16.won===0;
+ if(!budgetLoss&&!oldVsDeepLoss)agents.classic2.trace=[];
  if(!budgetLoss&&!treeLoss)agents.classic16.trace=[];
- if(!treeLoss)agents.frontier16.trace=[];
+ if(!treeLoss&&!oldVsDeepLoss)agents.frontier16.trace=[];
  return {i,gameSeed,heroes,agents};
 }
 function report(c,revision,completed,errors=[]){
