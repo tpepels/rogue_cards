@@ -27,11 +27,19 @@ function number(name,def,max){
  return n;
 }
 const mode=arg("--mode","search");
+const optimization=arg("--optimization","settlements");
 if(!["search","expedition"].includes(mode))throw Error("Unknown --mode");
+if(!["settlements","metrics","combined"].includes(optimization))
+ throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
  seed=number("--seed",20261016,0xffffffff);
-const names=new Set(["--budget","--samples","--runs","--seed","--mode"]);
+const names=new Set(["--budget","--samples","--runs","--seed","--mode",
+ "--optimization"]);
+const fastOptions=optimization==="combined"?
+ {directSettlements:true,fastMetricClones:true}:
+ optimization==="settlements"?{directSettlements:true}:
+ {fastMetricClones:true};
 for(let i=0;i<args.length;i+=2){
  if(!names.has(args[i])||args[i+1]===undefined)throw Error("Unknown option "+args[i]);
 }
@@ -65,7 +73,7 @@ function search(fast,kind,gameSeed){
  const t=performance.now();
  const result=searchDecision(session,{
   budget,seed,knowledge:"oracle",treeMode:"full",
-  directSettlements:fast,collectCoverage:false,maxSteps:4000
+  ...(fast?fastOptions:{}),collectCoverage:false,maxSteps:4000
  });
  const timeMs=performance.now()-t;
  assert.equal(result.completed,budget);
@@ -86,13 +94,13 @@ function expedition(fast,gameSeed,heroes){
    budget,knowledge:"fair",
    seed:mix(gameSeed^Math.imul(i+1,0xc2b2ae35)),
    maxSearchSteps:4000,legalActions:legal,
-   mctsOptimizations:{directSettlements:fast}
+   mctsOptimizations:fast?fastOptions:{}
   });
   if(["corpse","vault","post-warden"].includes(session.phase)&&
    ["leave","fight"].includes(chosen.kind))eligible++;
   actions.push(chosen);
   submitDecision(session,chosen,{observeResult:false,recordHistory:false,
-   directSettlements:fast});
+   ...(fast?fastOptions:{})});
  }
  assert.equal(session.phase,"terminal","Canonical expedition unresolved");
  assert.ok(!session.state.metrics.roundLimit&&!session.state.metrics.unresolved);
@@ -132,7 +140,7 @@ const median=xs=>[...xs].sort((a,b)=>a-b)[Math.floor(xs.length/2)];
 const old=median(timings.baseline),current=median(timings.fast);
 console.log(JSON.stringify({
  schema:"canonical-direct-settlements-benchmark-v1",
- mode,budget,seed,samples:count,canonicalParity:true,
+ mode,optimization,budget,seed,samples:count,canonicalParity:true,
  baselineMedianMs:Number(old.toFixed(2)),
  optimizedMedianMs:Number(current.toFixed(2)),
  speedup:Number((old/current).toFixed(2)),
