@@ -12,6 +12,7 @@
  * fail loudly; callers cannot mistake them for win/loss samples.
  */
 import {forkGameState} from "./engine/fork-state.js";
+import {observeGame} from "./engine/index.js";
 import {observeSession,sessionActions,submitDecision}
  from "./engine/decision-session.js";
 import {randomSource} from "./engine/random.js";
@@ -44,36 +45,46 @@ const cloneSession=s=>({
   actions:s.pendingNested.actions.map(a=>({...a}))
  }:null
 });
-const publicState=s=>{
- const observation=observeSession(s);
+// A public tree key must describe the exact same information as
+// observeSession(), but observeSession() also enumerates every legal action.
+// MCTS already has those actions. Avoid doing that expensive work twice at
+// every node (especially at safe equipment boundaries).
+export const mctsPublicStateHash=s=>{
+ const nested=s.pendingNested;
  return hash(JSON.stringify({
-  phase:observation.phase,
-  trigger:observation.trigger??null,
-  heroIndex:observation.heroIndex??null,
-  game:observation.game
+  phase:nested?"reaction":s.phase,
+  trigger:nested?nested.trigger??null:null,
+  heroIndex:nested?null:s.heroIndex??null,
+  game:nested?nested.observation:observeGame(s.state)
  }));
 };
 function nodeFor(tree,key,actions){
  let node=tree.get(key);
  if(!node){node={visits:0,edges:new Map()};tree.set(key,node);}
- for(const action of actions){
+ // One canonical fingerprint per legal action. It was previously sorted
+ // and JSON-stringified repeatedly for insertion, selection, lookup and
+ // history tracking. Keep each edge paired with its action for this step.
+ const candidates=actions.map(action=>{
   const id=actionKey(action);
-  if(!node.edges.has(id))node.edges.set(id,{
-   action:{...action},visits:0,wins:0
-  });
- }
- return node;
+  let edge=node.edges.get(id);
+  if(!edge){
+   edge={action:{...action},visits:0,wins:0};
+   node.edges.set(id,edge);
+  }
+  return {action,id,edge};
+ });
+ return {node,candidates};
 }
-function select(node,actions,rng,c){
- const unseen=actions.filter(action=>node.edges.get(actionKey(action)).visits===0);
+function select(node,candidates,rng,c){
+ const unseen=candidates.filter(candidate=>candidate.edge.visits===0);
  if(unseen.length)return rng.choose(unseen);
- const scored=actions.map(action=>{
-  const e=node.edges.get(actionKey(action));
-  return {action,score:e.wins/e.visits+
+ const scored=candidates.map(candidate=>{
+  const e=candidate.edge;
+  return {candidate,score:e.wins/e.visits+
    c*Math.sqrt(Math.log(Math.max(2,node.visits))/e.visits)};
  });
  const maximum=Math.max(...scored.map(x=>x.score));
- return rng.choose(scored.filter(x=>Math.abs(x.score-maximum)<1e-12)).action;
+ return rng.choose(scored.filter(x=>Math.abs(x.score-maximum)<1e-12)).candidate;
 }
 const interval=(wins,visits)=>{
  if(!visits)return null;
@@ -122,7 +133,7 @@ export function searchDecision(session,{budget=100,seed=1,
  // before sampling the unknown future at that reaction boundary.
  const blueprint=knowledge==="fair"&&!session.pendingNested?
   prepareRolloutDecks(session.state,"fair"):null;
- const tree=new Map(),rootKey="root:"+publicState(session),rng=randomSource(seed);
+ const tree=new Map(),rootKey="root:"+mctsPublicStateHash(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0;
  const incompleteReasons={};
@@ -203,20 +214,21 @@ export function searchDecision(session,{budget=100,seed=1,
      pendingTrigger:sim.pendingNested?.trigger??null,
      roomChoiceOperations:sim.state.room?.v2.choices??null
     });break}
-    const key=historyKey+":"+publicState(sim);
-    const node=nodeFor(tree,key,actions);
+    const key=historyKey+":"+mctsPublicStateHash(sim);
+    const {node,candidates}=nodeFor(tree,key,actions);
     // The printed rules allow reversible zero-time equipment changes.
     // Each root alternative is still evaluated. During sampled future
     // play, after six consecutive equipment actions, take the real
     // Continue action instead of oscillating forever.
     const progress=progressionPhases.has(sim.phase)&&
      equipmentStreak>=MAX_ROLLOUT_EQUIPMENT_ACTIONS?
-     actions.find(a=>a.kind==="continue"):null;
-    const choice=progress||select(node,actions,choiceRng,exploration);
+     candidates.find(c=>c.action.kind==="continue"):null;
+    const selected=progress||select(node,candidates,choiceRng,exploration);
+    const choice=selected.action;
     if(progress)rolloutEquipmentAdvances++;
     equipmentStreak=progressionPhases.has(sim.phase)&&
      freeEquipmentKinds.has(choice.kind)?equipmentStreak+1:0;
-    const edge=node.edges.get(actionKey(choice));
+    const edge=selected.edge;
     record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
@@ -237,7 +249,7 @@ export function searchDecision(session,{budget=100,seed=1,
     submitDecision(sim,choice,{replaySwitches});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
-    historyKey=mix(hash(historyKey+from+actionKey(choice))).toString(16);
+    historyKey=mix(hash(historyKey+from+selected.id)).toString(16);
     depth++;
    }
    if(sim.phase!=="terminal"&&!error)error="maxSteps";
@@ -298,7 +310,7 @@ export function searchDecision(session,{budget=100,seed=1,
  if(JSON.stringify(observeSession(session))!==original||
     session.state.rng.snapshot()!==actualRng)
   throw Error("MCTS mutated the actual player state or future dice");
- const root=tree.get(rootKey+":"+publicState(session));
+ const root=tree.get(rootKey+":"+mctsPublicStateHash(session));
  const decisions=rootStats(root,rootActions).sort((a,b)=>
   b.visits-a.visits||((b.estimatedWinRate??0)-(a.estimatedWinRate??0)));
  // Select robust child (most visits), not an exploratory single lucky win.
