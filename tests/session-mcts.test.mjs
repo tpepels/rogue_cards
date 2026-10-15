@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
-import {searchDecision,mctsPublicStateHash} from "../src/session-mcts.js";
+import {searchDecision,mctsPublicStateHash,mctsActionKey} from "../src/session-mcts.js";
 import {createSessionPolicy,selectSessionPolicyAction,
  MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "../src/session-policy.js";
 import {VAULT,ROOMS} from "../src/tabletop-data.js";
@@ -293,4 +293,63 @@ test("pending printed reactions retain exactly the same MCTS outcomes without ob
  const previous=searchDecision(session,{...opts,fastTransitions:false});
  assert.deepEqual(fast,previous);
  assert.equal(observeSession(session).phase,"reaction");
+});
+
+
+test("cached canonical MCTS action signatures exactly match sorted JSON fingerprints",()=>{
+ const original=action=>JSON.stringify(Object.keys(action).sort()
+  .map(key=>[key,action[key]]));
+ const single=createDecisionSession({seed:3573,heroes:["warrior"]});
+ const actions=[
+  ...sessionActions(single),
+  {phase:"combat",kind:"item",heroIndex:0,optionIndex:2,cardId:"wand-undo"},
+  {cardId:"wand-undo",phase:"combat",optionIndex:2,kind:"item",heroIndex:0},
+  {mode:"steady",kind:"hero-mode",phase:"hero-trigger",heroIndex:0},
+  {kind:"effect-option",phase:"effect-choice",mode:"1",context:"select-hero:room-action"}
+ ];
+ for(const action of actions){
+  assert.equal(mctsActionKey(action),original(action));
+  assert.equal(mctsActionKey(action),original(action),"Cached shape changed key");
+ }
+ const altered={...actions[0],index:19};
+ assert.equal(mctsActionKey(altered),original(altered));
+});
+
+test("issued legal decision tickets reject stale and forged lists, without removing any legal moves",()=>{
+ const session=createDecisionSession({seed:3573,heroes:["warrior"]});
+ const actions=sessionActions(session,{issueTicket:true});
+ const unequip=actions.find(a=>a.kind==="unequip"&&a.cardId==="sword");
+ assert.ok(unequip);
+ assert.throws(()=>submitDecision(session,unequip,{
+  verifiedLegalActions:[...actions]}),/Stale or unissued/);
+ const baseline=createDecisionSession({seed:3573,heroes:["warrior"]});
+ submitDecision(session,unequip,{verifiedLegalActions:actions});
+ submitDecision(baseline,sessionActions(baseline).find(a=>a.kind==="unequip"&&a.cardId==="sword"));
+ assert.deepEqual(observeSession(session),observeSession(baseline));
+ assert.throws(()=>submitDecision(session,unequip,{
+  verifiedLegalActions:actions}),/Stale or unissued/);
+ const newActions=sessionActions(session,{issueTicket:true});
+ const equip=newActions.find(a=>a.kind==="equip"&&a.cardId==="sword");
+ assert.ok(equip);
+ submitDecision(session,equip,{verifiedLegalActions:newActions});
+ submitDecision(baseline,sessionActions(baseline).find(a=>a.kind==="equip"&&a.cardId==="sword"));
+ assert.deepEqual(observeSession(session),observeSession(baseline));
+});
+
+test("verified full-expedition MCTS decisions are bit-for-bit identical to repeated canonical legality checks",()=>{
+ const fixtures=[
+  {session:createDecisionSession({seed:531,heroes:["warrior","witch"]}),
+   options:{seed:66101,budget:4,knowledge:"fair",maxSteps:4000}},
+  {session:vault(),
+   options:{seed:66102,budget:4,knowledge:"oracle",maxSteps:4000}}
+ ];
+ for(const {session,options} of fixtures){
+  const start=JSON.stringify(observeSession(session));
+  const startDice=session.state.rng.snapshot();
+  const old=searchDecision(session,{...options,reuseLegalActions:false});
+  const fast=searchDecision(session,{...options,reuseLegalActions:true});
+  assert.deepEqual(fast,old,"UCT visits, completed rollouts, choices and win counts differ");
+  assert.equal(JSON.stringify(observeSession(session)),start);
+  assert.equal(session.state.rng.snapshot(),startDice);
+ }
 });
