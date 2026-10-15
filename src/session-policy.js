@@ -36,8 +36,20 @@ export function forcesEquipmentProgress(session,policy,legal){
 export function selectSessionPolicyAction(session,policy,{
  budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
  legalActions=null,searchProfile="classic",deepMinBudget=16,
- deepVisitsPerAction=4,treeMode=null
+ deepVisitsPerAction=4,treeMode=null,mctsOptimizations=null
 }={}){
+ // Performance A/B flags cannot change the search budget, legal actions,
+ // game rules, chance knowledge, or UCT algorithm.
+ const optimizationKeys=new Set([
+  "reuseEmptyReplaySwitches","reuseEdgeActions",
+  "streamHistoryHash","reuseSelectionScratch"
+ ]);
+ if(mctsOptimizations!==null&&(
+    !mctsOptimizations||typeof mctsOptimizations!=="object"||
+    Array.isArray(mctsOptimizations)||
+    Object.entries(mctsOptimizations).some(([key,value])=>
+     !optimizationKeys.has(key)||typeof value!=="boolean")))
+  throw Error("Invalid performance-only MCTS optimization flags");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
  if(!["classic","deep-uct"].includes(searchProfile))
@@ -71,7 +83,8 @@ export function selectSessionPolicyAction(session,policy,{
   budget:searchBudget,seed,
   maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay,
   rootActions:legal,collectCoverage:false,
-  treeMode:treeMode??(searchProfile==="deep-uct"?"frontier":"full")
+  treeMode:treeMode??(searchProfile==="deep-uct"?"frontier":"full"),
+  ...(mctsOptimizations??{})
  }).recommended;
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
