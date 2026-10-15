@@ -127,6 +127,8 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
      if(code==="DRAW2")return 2*weights.draw;
      if(code==="HEAL2")return Math.min(party.missing,2)*weights.damage;
      if(code==="HURT2")return -Math.min(party.hp,2)*weights.damage;
+     if(code==="HURT2_DEF_DIS")
+      return -Math.min(party.hp,2)*weights.damage-1.5;
      if(code==="HURTd6")return -Math.min(party.hp,3.5)*weights.damage;
      throw Error("Unmodelled printed check consequence "+code);
     };
