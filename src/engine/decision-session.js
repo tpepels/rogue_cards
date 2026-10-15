@@ -126,7 +126,7 @@ function roomSettled(session){
  if(awaitingMonster(session))return;
  const s=session.state;
  if(s.room?.stage==="FINAL")throw Error("Vault must end in a terminal result");
- finishCurrentRoom(s);
+ finishCurrentRoom(s,{observeResult:false});
  session.phase="between-rooms";session.heroIndex=0;
 }
 function finishEntry(session){
@@ -232,7 +232,7 @@ export function createDecisionSession(options={}){
 /** The controller is the ONLY place that accepts a player's choice in the
  * new pausable API. Unexpected actions are rejected BEFORE mutating state.
  */
-function submitDecisionDirect(session,action){
+function submitDecisionDirect(session,action,{observeResult=true,recordHistory=true}={}){
  if(session.phase==="terminal")throw Error("Expedition already ended");
  const actions=canonical(session);
  const selected=actions.find(x=>
@@ -249,11 +249,11 @@ function submitDecisionDirect(session,action){
     if(next<0)session.phase="room";
     else session.heroIndex=next;
    }
-  }else applyAction(s,selected);
+  }else applyAction(s,selected,{observeResult:false});
  }else if(phase==="retained-entry"){
-  applyAction(s,selected);queuedReturn(session);
+  applyAction(s,selected,{observeResult:false});queuedReturn(session);
  }else if(phase==="room"){
-  applyAction(s,selected);
+  applyAction(s,selected,{observeResult:false});
   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
  }else if(phase==="parley"){
   if(selected.kind==="parley"&&resolveParley(s)){
@@ -264,11 +264,11 @@ function submitDecisionDirect(session,action){
  }else if(phase==="combat-hero"){
   session.heroIndex=selected.heroIndex;session.phase="combat";
  }else if(phase==="combat"){
-  applyAction(s,selected);
+  applyAction(s,selected,{observeResult:false});
   s._actedCombatMask|=1<<selected.heroIndex;
   afterAttack(session);
  }else if(phase==="monster-response"){
-  takeMonsterResponse(s,selected.heroIndex);afterMonsterResponse(session);
+  takeMonsterResponse(s,selected.heroIndex,{observeResult:false});afterMonsterResponse(session);
  }else if(phase==="corpse"){
   const m=s.monster;
   if(selected.kind==="eat")consumeCorpse(s,m);
@@ -304,8 +304,8 @@ function submitDecisionDirect(session,action){
  // combat turn: never expose combat-hero with zero living Heroes.
  done(session);
  session.actionCount++;
- session.history.push({from:before,choice:{...selected},to:session.phase});
- return observeSession(session);
+ if(recordHistory)session.history.push({from:before,choice:{...selected},to:session.phase});
+ return observeResult?observeSession(session):undefined;
 }
 
 class NeedReaction extends Error {
@@ -390,10 +390,11 @@ function beginDirectTransaction(session,action){
  */
 export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
- transactional=true
+ transactional=true,observeResult=true,recordHistory=true
 }={}){
- if(typeof transactional!=="boolean")
-  throw Error("transactional must be a boolean");
+ if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
+    typeof recordHistory!=="boolean")
+  throw Error("transactional, observeResult and recordHistory must be boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -412,7 +413,7 @@ export function submitDecision(session,action,{
  // many legal equipment moves are evaluated before the next Room.
  if(transactional&&!switches.length&&safeDirectAction(session,action)){
   const rollback=beginDirectTransaction(session,action);
-  try{return submitDecisionDirect(session,action)}
+  try{return submitDecisionDirect(session,action,{observeResult,recordHistory})}
   catch(error){rollback();throw error}
  }
  const waiting=session.pendingNested;
@@ -425,7 +426,7 @@ export function submitDecision(session,action,{
  const fork={
   ...session,state:forkGameState(session.state),
   remainingReturns:[...session.remainingReturns],
-  history:session.history.slice(),
+  history:recordHistory?session.history.slice():session.history,
   pendingNested:null
  };
  let position=0;
@@ -464,7 +465,7 @@ export function submitDecision(session,action,{
   throw new NeedReaction(event,actions,observeGame(fork.state));
  };
  try{
-  const committedObservation=submitDecisionDirect(fork,root);
+  const committedObservation=submitDecisionDirect(fork,root,{observeResult,recordHistory});
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
   // Preserve the canonical game-state object identity across accepted
@@ -482,6 +483,6 @@ export function submitDecision(session,action,{
   if(!(e instanceof NeedReaction))throw e;
   session.pendingNested={root,responses,
    trigger:e.event,actions:e.actions,observation:e.observation};
-  return observeSession(session);
+  return observeResult?observeSession(session):undefined;
  }
 }
