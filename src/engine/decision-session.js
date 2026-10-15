@@ -415,11 +415,11 @@ function beginDirectTransaction(session,action){
 export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
  transactional=true,observeResult=true,recordHistory=true,
- verifiedLegalActions=null
+ verifiedLegalActions=null,fastPileClones=false
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
-    typeof recordHistory!=="boolean")
-  throw Error("transactional, observeResult and recordHistory must be boolean");
+    typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
+  throw Error("transactional, observeResult, recordHistory and fastPileClones must be boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -461,7 +461,7 @@ export function submitDecision(session,action,{
   root=waiting.root;responses=[...waiting.responses,selected];
  }else{root=action;responses=[];}
  const fork={
-  ...session,state:forkGameState(session.state),
+  ...session,state:forkGameState(session.state,{fastPiles:fastPileClones}),
   remainingReturns:[...session.remainingReturns],
   history:recordHistory?session.history.slice():session.history,
   pendingNested:null
