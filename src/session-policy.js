@@ -42,7 +42,8 @@ export function selectSessionPolicyAction(session,policy,{
  // game rules, chance knowledge, or UCT algorithm.
  const optimizationKeys=new Set([
   "reuseEmptyReplaySwitches","reuseEdgeActions",
-  "streamHistoryHash","reuseSelectionScratch","directSettlements"
+  "streamHistoryHash","reuseSelectionScratch",
+  "directSettlements","fastMetricClones"
  ]);
  if(mctsOptimizations!==null&&(
     !mctsOptimizations||typeof mctsOptimizations!=="object"||
