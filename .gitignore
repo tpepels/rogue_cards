@@ -16,3 +16,13 @@ analysis/planner-study.md
 analysis/rooms.json
 # Locally generated multi-seed studies (may contain large raw cohorts)
 results/
+
+# Dependencies, browser test output and local caches
+node_modules/
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+__pycache__/
+.pytest_cache/
+*.pyc
