@@ -99,6 +99,15 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
   const [kind,...args]=raw.split(":"),amount=estimatedDice(args[0]);
   switch(kind){
    case "COST":case "DISCARD":spend+=amount;break;
+   case "COST_CURSED":spend+=amount;break;
+   case "DISCARD_OR_HURT":
+    if(s.discardable(amount))spend+=amount;
+    else harm+=estimatedDice(args[1]);
+    break;
+   case "MIMIC_TUCK":utility-=0.8;break;
+   case "RELIQUARY_OFFER":spend+=1;utility+=2.5;break;
+   case "REVERSE_NEXT_ROOM":utility+=1.2;break;
+   case "KEEP_CROWN":utility+=1.3;break;
    case "DRAW":draw+=amount;break;
    case "TRADE":spend+=amount;draw+=estimatedDice(args[1]);break;
    case "HEAL":healing+=amount;break;
@@ -127,6 +136,8 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
      if(code==="DRAW2")return 2*weights.draw;
      if(code==="HEAL2")return Math.min(party.missing,2)*weights.damage;
      if(code==="HURT2")return -Math.min(party.hp,2)*weights.damage;
+     if(code==="HURT2_DEF_DIS")
+      return -Math.min(party.hp,2)*weights.damage-2.5;
      if(code==="HURT2_DEF_DIS")
       return -Math.min(party.hp,2)*weights.damage-1.5;
      if(code==="HURTd6")return -Math.min(party.hp,3.5)*weights.damage;
@@ -177,20 +188,17 @@ function textScore(s,ops,weights,party,stage,{outcome=false}={}){
 // as an ordinary uniform d6 would mis-rank the Room's two options.
 export function fixedRoomFace(s,room){
  const id=room.id;
- if(s.has("rope")&&["u-fall","m-flood","m-bridge","d-bridge"].includes(id))return 6;
- if(s.has("dog")&&["u-nest","m-beetle"].includes(id))return 6;
- if(s.has("raven")&&id==="d-oracle")return 6;
- if(s.has("key")&&s.strategy!=="seal"&&
-  ["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"].includes(id))return 6;
- if((s.has("torch")||s.has("lantern-heart")||s.anyEquippedTag("FIRE"))&&
-  ["u-lamp","m-crypt"].includes(id))return 6;
- if(s.anyEquippedTag("FIRE")&&id==="d-shadow")return 6;
+ // Only unconditional printed face overrides qualify. These estimates
+ // cannot replace the actual canonical Room actions or dice outcomes.
+ // Rope changes a face by +/-1; FIRE often cancels a penalty; Rusty Key
+ // only substitutes particular low bands. None guarantees a 5-6 result.
+ if(s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog"))&&id==="u-nest")return 6;
+ if(s.has("key")&&id==="m-vault")return 6;
  if(s.anyEquippedTag("ICE")&&id==="d-shadow")return 4;
- if(s.heroes.some(h=>s.equipped(h,"ring-eye"))&&id==="d-oracle")return 6;
  if(s.heroes.some(h=>s.equipped(h,"ring-spores"))&&id==="m-fungus")return 6;
+ if(s.heroes.some(h=>s.equipped(h,"ring-ashes"))&&id==="u-lamp")return 6;
  if(s.heroes.some(h=>s.equipped(h,"ring-hunger"))&&id==="d-crown")return 5;
  if(id==="m-statue"&&s.lastSpent?.v2?.tags?.includes("MAGIC"))return 6;
- if(id==="m-auction"&&s.lastSpent?.v2?.tags?.includes("MAGIC"))return 6;
  if(id==="m-well"&&s.lastSpent?.v2?.tags?.includes("CURSED"))return 6;
  return null;
 }
