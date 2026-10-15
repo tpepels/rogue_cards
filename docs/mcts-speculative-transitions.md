@@ -29,6 +29,8 @@ The existing paired benchmark now supports these additional modes:
     npm run bench:mcts-settlements -- --optimization speculative --budget 2 --samples 11
     npm run bench:mcts-settlements -- --optimization speculative --budget 8 --samples 11
     npm run bench:mcts-settlements -- --optimization speculative --budget 16 --samples 11
+    npm run bench:mcts-settlements -- --optimization speculative --budget 8 --samples 11 --checkpoint-every 8
+    npm run bench:mcts-settlements -- --optimization speculative --budget 8 --samples 11 --checkpoint-every 64
     npm run bench:mcts-settlements -- --optimization speculative-frozen --budget 8 --samples 11
 
 Then evaluate actual complete expedition throughput, not just a search microbenchmark:
