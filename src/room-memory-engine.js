@@ -115,14 +115,13 @@ export function roomEntry(s){
   }
  }
  if(room.id==="u-nest"){
-  const favor=s.keptRooms.find(x=>x.card.id==="u-rat-favor");
-  if(favor){s.keptRooms.splice(s.keptRooms.indexOf(favor),1);
-   s.ratFavor=true;}
+  const favor=s.keptRooms.find(x=>x.card.id==="u-rat-favor"&&!x.spent);
+  if(favor){favor.spent=true;s.ratFavor=true;}
  }
  if(room.v2?.kind==="TREASURE"){
-  const rat=s.keptRooms.findIndex(x=>x.card.id==="u-rat-favor");
-  if(rat>=0){
-   s.keptRooms.splice(rat,1);
+  const favor=s.keptRooms.find(x=>x.card.id==="u-rat-favor"&&!x.spent);
+  if(favor){
+   favor.spent=true;
    if(s.discardable()&&s.chooseEffect("rat-favor-debt",
     ["forfeit-next-item","discard"],"discard")==="discard")s.discard();
    else s.forfeitNextItem=true;

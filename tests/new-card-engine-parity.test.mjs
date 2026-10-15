@@ -136,3 +136,66 @@ test("Last Bell's optional 2 HP Vault payment is not forced when unaffordable",(
  assert.equal(s.heroes[0].hp,1);
  assert.equal(s.telegraphedWardenBehavior??null,null);
 });
+
+test("Wax Bridge selects the safe 3-4 band, never an unprinted treasure award",()=>{
+ const s=game(3020);
+ s.keptRooms.push({card:room("m-wax-bridge")});
+ s.beginRoom(room("d-bridge"));
+ s.roomRoll(1);
+ assert.equal(s.metrics.roomRollBands["d-bridge:1"],1);
+ assert.equal(s.metrics.roomRollBands["d-bridge:2"]??0,0);
+ assert.equal(s.keptRooms.some(x=>x.card.id==="m-wax-bridge"),false);
+});
+
+test("Rat King's Favor remains physically spent after its first printed trigger",()=>{
+ const s=game(3021);
+ s.beginRoom(room("u-rat-favor"));chooseRoom(s,0);
+ s.beginRoom(room("u-nest"));
+ const favor=s.keptRooms.find(x=>x.card.id==="u-rat-favor");
+ assert.ok(favor?.spent,"Card remains sideways, rather than disappearing");
+ s.ratFavor=false;
+ s.beginRoom(room("u-nest"));
+ assert.equal(s.ratFavor,false,"Spent Favor must not trigger twice");
+ assert.ok(observeGame(s).keptRooms.find(x=>x.id==="u-rat-favor")?.spent);
+});
+
+test("Retained Pact choices selected by Oracle drive canonical Vault payments",()=>{
+ const paid=game(3022);
+ paid.beginRoom(room("m-clock"));chooseRoom(paid,0);
+ const itemCount=paid.heroes[0].inventory.length;
+ paid.returnChoices["m-clock"]="pay";
+ paid.beginRoom(VAULT);
+ assert.equal(paid.heroes[0].inventory.length,itemCount-1);
+ assert.ok(paid.telegraphedWardenBehavior>=1);
+ const refused=game(3023);
+ refused.beginRoom(room("m-clock"));chooseRoom(refused,0);
+ refused.returnChoices["m-clock"]="roll";
+ refused.beginRoom(VAULT);
+ assert.equal(refused.forcedBehavior,6);
+ assert.equal(refused.telegraphedWardenBehavior??null,null);
+});
+
+test("Candle from a 5-6 roll can cancel Lightless Hall attack DIS",()=>{
+ const s=game(3024);
+ s.keptRooms.push({card:room("u-candle")});
+ s.beginRoom(room("d-shadow"));
+ s.apply("NEXT_DIS",[],room("d-shadow"));
+ assert.equal(s.heroes[0].nextDis,0);
+ assert.equal(s.keptRooms.some(x=>x.card.id==="u-candle"),false);
+});
+
+test("Kept Gallery map may shift an observed trapdoor die by one",()=>{
+ const s=game(3025);
+ s.keptRooms.push({card:room("m-maps")});
+ s.beginRoom(room("u-fall"));
+ s._decisionHook=event=>{
+  if(event.context==="maps-adjust-trapdoor:u-fall"){
+   assert.equal(observeGame(s).observedRoomFace,2);
+   return {mode:"up"};
+  }
+  throw Error("Unexpected decision "+JSON.stringify(event));
+ };
+ s.roomRoll(2);
+ assert.equal(s.metrics.roomRollBands["u-fall:1"],1);
+ assert.equal(s.keptRooms.some(x=>x.card.id==="m-maps"),false);
+});

@@ -1307,7 +1307,8 @@ export class ExpeditionState {
     const decision=this._decisionHook?.({phase:"retained",
      roomId:"m-wax-bridge",context:"trap",face});
     if((decision?.mode||this.returnChoices?.["m-wax-bridge"])!=="save"){
-     this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=6;
+     // Wax Bridge substitutes the safe 3-4 result, never a 5-6 reward.
+     this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=3;
     }
    }
   }

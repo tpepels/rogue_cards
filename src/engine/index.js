@@ -77,7 +77,7 @@ export function observeGame(s){
   observedRoomFace:s._observedRoomRollFace??null,
   offeredSavedPath:s._pendingRoomSwap?{...s._pendingRoomSwap}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
-     choice:x.choice??null,item:x.item?.id??null})),
+     choice:x.choice??null,item:x.item?.id??null,spent:!!x.spent})),
   pactUsed:!!s.pactUsed,
    returnChoices:{...s.returnChoices},
    endingOptions:s.room?.stage==="FINAL"?{...s.vaultModifiers}:null,
