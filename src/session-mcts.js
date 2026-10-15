@@ -13,7 +13,7 @@
  */
 import {forkGameState} from "./engine/fork-state.js";
 import {observeGame} from "./engine/index.js";
-import {observeSession,sessionActions,submitDecision}
+import {observeSession,sessionActions,submitDecision,submitSpeculativeDecision}
  from "./engine/decision-session.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
@@ -172,7 +172,8 @@ export function searchDecision(session,{budget=100,seed=1,
  lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false,
  reuseEdgeActions=false,streamHistoryHash=false,
  reuseSelectionScratch=false,reuseEmptyReplaySwitches=false,directSettlements=false,
- fastMetricClones=false}={}){
+ fastMetricClones=false,speculativeTransitions=false,
+ checkpointEvery=32}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -195,6 +196,10 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("directSettlements must be boolean");
  if(typeof fastMetricClones!=="boolean")
   throw Error("fastMetricClones must be boolean");
+ if(typeof speculativeTransitions!=="boolean")
+  throw Error("speculativeTransitions must be boolean");
+ if(!Number.isInteger(checkpointEvery)||checkpointEvery<1||checkpointEvery>256)
+  throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -255,6 +260,12 @@ export function searchDecision(session,{budget=100,seed=1,
     }
    }
   }
+  // Checkpoints retain the determinized hidden piles and remaining dice.
+  // Reconstruct the last few completed canonical actions only if a
+  // printed effect actually suspends for a nested player decision.
+  let checkpoint=speculativeTransitions?
+   cloneSession(sim,!fastTransitions,fastPileClones,fastMetricClones):null;
+  let sinceCheckpoint=[];
   const originalRootWasPending=Boolean(sim.pendingNested);
   const chanceSwitchIndex=originalRootWasPending?
    sim.pendingNested.responses.length+1:null;
@@ -397,11 +408,44 @@ export function searchDecision(session,{budget=100,seed=1,
       callback:onObservedReplay}]:[]),
      {at:chanceSwitchIndex,callback:onReplay}
     ]:[];
-    submitDecision(sim,choice,{replaySwitches,transactional,
-     observeResult:!fastTransitions,recordHistory:!fastTransitions,
-     verifiedLegalActions:reuseLegalActions?actions:null,
-     fastPileClones,reuseEmptyReplaySwitches,directSettlements,
-     fastMetricClones});
+    const canSpeculate=speculativeTransitions&&transactional&&
+     !sim.pendingNested&&!replaySwitches.length;
+    if(canSpeculate){
+     submitSpeculativeDecision(sim,choice,{
+      verifiedLegalActions:reuseLegalActions?actions:null,
+      observeResult:!fastTransitions,recordHistory:!fastTransitions,
+      restore:()=>{
+       const recovered=cloneSession(checkpoint,!fastTransitions,
+        fastPileClones,fastMetricClones);
+       // All preceding speculative actions completed without a nested
+       // reaction. Replaying from the checkpoint is exact, including RNG.
+       for(const prior of sinceCheckpoint){
+        submitDecision(recovered,prior,{
+         transactional,observeResult:!fastTransitions,
+         recordHistory:!fastTransitions,
+         fastPileClones,reuseEmptyReplaySwitches,directSettlements,
+         fastMetricClones
+        });
+        if(recovered.pendingNested)
+         throw Error("Speculative MCTS checkpoint replay diverged");
+       }
+       Object.assign(sim,recovered);
+      }
+     });
+     sinceCheckpoint.push(choice);
+    }else{
+     submitDecision(sim,choice,{replaySwitches,transactional,
+      observeResult:!fastTransitions,recordHistory:!fastTransitions,
+      verifiedLegalActions:reuseLegalActions?actions:null,
+      fastPileClones,reuseEmptyReplaySwitches,directSettlements,
+      fastMetricClones});
+    }
+    if(speculativeTransitions&&(sim.pendingNested||!canSpeculate||
+       sinceCheckpoint.length>=checkpointEvery)){
+     checkpoint=cloneSession(sim,!fastTransitions,
+      fastPileClones,fastMetricClones);
+     sinceCheckpoint=[];
+    }
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
