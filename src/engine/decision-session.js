@@ -351,7 +351,7 @@ const sameAction=(a,b)=>a&&b&&
  */
 const EMPTY_REPLAY_SWITCHES=Object.freeze([]);
 const freeEquipmentActions=new Set(["equip","unequip","transfer"]);
-function safeDirectAction(session,action){
+function safeDirectAction(session,action,directSettlements=false){
  if(session.pendingNested||!action||typeof action!=="object")return false;
  const phase=session.phase;
  if((phase==="between-rooms"||phase==="explore")&&
@@ -367,6 +367,25 @@ function safeDirectAction(session,action){
  // this Hero's turn as spent and advances to the Monster response.
  if(phase==="combat"&&action.phase==="combat"&&
     action.kind==="pass")return true;
+ if(!directSettlements)return false;
+ // These two FIGHT transitions are pure canonical bookkeeping: no die,
+ // physical card cost, nested reaction, or conditional printed effect.
+ if(phase==="vault"&&action.phase==="vault"&&action.kind==="fight")
+  return true;
+ if(phase==="post-warden"&&action.phase==="post-warden"&&
+    action.kind==="fight")return true;
+ // Declining a regional corpse is safe only with no delayed reward,
+ // stolen Item, queued Monster, or tucked Item return. The guarded
+ // settlement then only clears deterministic combat/Room metadata.
+ if(phase==="corpse"&&action.phase==="corpse"&&
+    action.kind==="leave"){
+  const s=session.state;
+  return !!(s.monster&&s.monsterHP<=0&&s.room&&
+   s.room.stage!=="FINAL"&&!s.monsterQueue.length&&
+   !s.pendingReward&&!s.pendingFightHeal&&
+   !(s.stashedMonsterItems?.length)&&
+   !(s.tuckedRoomItems?.some(x=>x.roomId===s.room.id)));
+ }
  return false;
 }
 function beginDirectTransaction(session,action){
@@ -381,6 +400,33 @@ function beginDirectTransaction(session,action){
   hadActedMask:Object.hasOwn(s,"_actedCombatMask"),
   actor:s.actor
  };
+ const ending=action.phase==="vault"&&action.kind==="fight"||
+  action.phase==="post-warden"&&action.kind==="fight";
+ const corpse=action.phase==="corpse"&&action.kind==="leave";
+ // These snapshots only cover explicitly audited, non-suspending
+ // transitions. All unpredictable printed effects still fork/replay.
+ const settlement=ending||corpse?{
+  monster:s.monster,monsterHP:s.monsterHP,
+  monsterFirstAttackPending:s.monsterFirstAttackPending,
+  monsterAdv:s.monsterAdv,heroFirstAdv:s.heroFirstAdv,
+  monsterSkip:s.monsterSkip,
+  endingKind:s.endingKind,
+  pendingReward:s.pendingReward,pendingFightHeal:s.pendingFightHeal,
+  room:s.room,elberethAdv:s.elberethAdv,
+  metrics:{
+   battles:s.metrics.battles,kills:s.metrics.kills,
+   cleared:s.metrics.cleared,won:s.metrics.won,
+   escaped:s.metrics.escaped,
+   monsterVisits:{...s.metrics.monsterVisits}
+  },
+  progress:{...s.stageProgress},
+  heroes:corpse?s.heroes.map(h=>({
+   hero:h,poison:h.poison,immune:h.immune,used:new Set(h.used),
+   nextHitBlock:h.nextHitBlock,
+   ignoreDarknessOnce:h.ignoreDarknessOnce,
+   defDuration:h.defDuration,nextDefenseBonus:h.nextDefenseBonus
+  })):null
+ }:null;
  const indices=action.phase==="equipment"?
   [...new Set([action.heroIndex,action.toHeroIndex]
    .filter(i=>Number.isInteger(i)))]:[];
@@ -401,6 +447,35 @@ function beginDirectTransaction(session,action){
   if(meta.hadActedMask)s._actedCombatMask=meta.actedMask;
   else delete s._actedCombatMask;
   s.actor=meta.actor;
+  if(settlement){
+   s.monster=settlement.monster;
+   s.monsterHP=settlement.monsterHP;
+   s.monsterFirstAttackPending=settlement.monsterFirstAttackPending;
+   s.monsterAdv=settlement.monsterAdv;
+   s.heroFirstAdv=settlement.heroFirstAdv;
+   s.monsterSkip=settlement.monsterSkip;
+   s.endingKind=settlement.endingKind;
+   s.pendingReward=settlement.pendingReward;
+   s.pendingFightHeal=settlement.pendingFightHeal;
+   s.room=settlement.room;
+   s.elberethAdv=settlement.elberethAdv;
+   for(const [key,value] of Object.entries(settlement.metrics))
+    if(key==="monsterVisits"){
+     for(const k of Object.keys(s.metrics.monsterVisits))
+      delete s.metrics.monsterVisits[k];
+     Object.assign(s.metrics.monsterVisits,value);
+    }else s.metrics[key]=value;
+   Object.assign(s.stageProgress,settlement.progress);
+   for(const h of settlement.heroes||[]){
+    h.hero.poison=h.poison;h.hero.immune=h.immune;
+    h.hero.used.clear();
+    for(const item of h.used)h.hero.used.add(item);
+    h.hero.nextHitBlock=h.nextHitBlock;
+    h.hero.ignoreDarknessOnce=h.ignoreDarknessOnce;
+    h.hero.defDuration=h.defDuration;
+    h.hero.nextDefenseBonus=h.nextDefenseBonus;
+   }
+  }
   for(const {hero,inventory,slots} of touched){
    hero.inventory.splice(0,hero.inventory.length,...inventory);
    for(const key of Object.keys(hero.slots))delete hero.slots[key];
@@ -417,13 +492,15 @@ export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
  transactional=true,observeResult=true,recordHistory=true,
  verifiedLegalActions=null,fastPileClones=false,
- reuseEmptyReplaySwitches=false
+ reuseEmptyReplaySwitches=false,directSettlements=false
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
   throw Error("transactional, observeResult, recordHistory and fastPileClones must be boolean");
  if(typeof reuseEmptyReplaySwitches!=="boolean")
   throw Error("reuseEmptyReplaySwitches must be boolean");
+ if(typeof directSettlements!=="boolean")
+  throw Error("directSettlements must be boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -456,7 +533,8 @@ export function submitDecision(session,action,{
  // Trusted deterministic rules paths have a reversible, narrow write set.
  // Skipping their full-state fork is especially valuable in MCTS, where
  // many legal equipment moves are evaluated before the next Room.
- if(transactional&&!switches.length&&safeDirectAction(session,action)){
+ if(transactional&&!switches.length&&
+    safeDirectAction(session,action,directSettlements)){
   const rollback=beginDirectTransaction(session,action);
   try{return submitDecisionDirect(session,action,{
    observeResult,recordHistory,verifiedAction:verifiedRoot})}
