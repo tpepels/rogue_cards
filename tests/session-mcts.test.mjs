@@ -521,3 +521,55 @@ test("reused error-trace ring preserves complete original reproduction output",(
  assert.deepEqual(faster,legacy);
  assert.ok(faster.recentActions.length>=1);
 });
+
+test("immutable pile fast fork preserves printed identity, independent pile arrays and aliases",()=>{
+ const session=createDecisionSession({seed:8921,heroes:["warrior","witch"]});
+ const state=session.state;
+ // Preserve even unusual array aliasing if later mechanics share a pile.
+ state.savedPath=state.rooms.UPPER;
+ const old=forkGameState(state,{fastPiles:false});
+ const quick=forkGameState(state,{fastPiles:true});
+ assert.equal(old.deck.length,quick.deck.length);
+ assert.notEqual(quick.deck,state.deck);
+ assert.equal(old.deck[0],quick.deck[0]);
+ assert.equal(quick.rooms.UPPER,quick.savedPath);
+ assert.notEqual(quick.rooms.UPPER,state.rooms.UPPER);
+ for(const stage of ["UPPER","MIDDLE","DEEP"]){
+  assert.notEqual(quick.rooms[stage],state.rooms[stage]);
+  assert.notEqual(quick.monsters[stage],state.monsters[stage]);
+  assert.deepEqual(quick.rooms[stage],old.rooms[stage]);
+  assert.deepEqual(quick.monsters[stage],old.monsters[stage]);
+ }
+ assert.deepEqual(quick.metrics,old.metrics);
+ assert.equal(quick.rng.snapshot(),old.rng.snapshot());
+ const before=state.deck.length;
+ quick.deck.pop();
+ assert.equal(state.deck.length,before);
+});
+test("profile-driven pile cloning yields exactly the same full canonical MCTS",()=>{
+ const sources=[
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   budgets:[2,8],knowledge:"fair"},
+  {session:vault(),budgets:[2,4],knowledge:"oracle"}
+ ];
+ for(const {session,budgets,knowledge} of sources){
+  const original=JSON.stringify(observeSession(session));
+  const actualDice=session.state.rng.snapshot();
+  for(const treeMode of ["full","frontier"]){
+   for(const budget of budgets){
+    const options={budget,seed:84321,knowledge,treeMode,
+     maxSteps:4000,collectCoverage:false};
+    assert.deepEqual(
+     searchDecision(session,{...options,fastPileClones:true}),
+     searchDecision(session,{...options,fastPileClones:false}),
+     "Full terminal results, MCTS node visits and root actions must be identical"
+    );
+   }
+  }
+  assert.equal(JSON.stringify(observeSession(session)),original);
+  assert.equal(session.state.rng.snapshot(),actualDice);
+ }
+ const session=vault();
+ assert.throws(()=>searchDecision(session,{budget:2,fastPileClones:0}),
+  /fastPileClones must be boolean/);
+});
