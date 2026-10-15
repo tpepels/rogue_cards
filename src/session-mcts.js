@@ -110,7 +110,7 @@ const rootStats=(node,rootActions)=>{
  */
 export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
- strictTerminal=true,observedReplay=null}={}){
+ strictTerminal=true,observedReplay=null,collectCoverage=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -229,7 +229,7 @@ export function searchDecision(session,{budget=100,seed=1,
     equipmentStreak=progressionPhases.has(sim.phase)&&
      freeEquipmentKinds.has(choice.kind)?equipmentStreak+1:0;
     const edge=selected.edge;
-    record(actions,choice,sim.pendingNested?
+    if(collectCoverage)record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
     const from=sim.phase;
