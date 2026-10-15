@@ -9,8 +9,9 @@
  * submitDecision(), printed cards, or combat rules.
  *
  * After twelve uninterrupted free equipment actions at one safe boundary,
- * progress with the actual legal "continue" action. This is a documented
- * policy convention, not a newly invented printed turn rule.
+ * progress with the actual legal "continue" action. There is no need to
+ * launch an MCTS search whose output is unconditionally overridden.
+ * This is a documented policy convention, not a new printed turn rule.
  */
 import {sessionActions} from "./engine/decision-session.js";
 import {searchDecision} from "./session-mcts.js";
@@ -28,21 +29,25 @@ export function selectSessionPolicyAction(session,policy,{
 }={}){
  const legal=sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
- // Evaluate every legal alternative, including all equipment actions.
- const recommended=legal.length===1?legal[0]:searchDecision(session,{
-  budget:Math.max(budget,legal.length),seed,
-  maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay
- }).recommended;
- if(!recommended)throw Error("MCTS returned no legal recommendation");
  const progress=legal.find(a=>a.kind==="continue");
- // At the cap, progress deterministically after searching all legal
- // alternatives; this is a study policy, not a printed-game restriction.
+ // At the cap the study policy ALWAYS takes the real Continue action.
+ // MCTS cannot influence this result, and searchDecision does not mutate
+ // the session or advance its dice. Avoiding that discarded full-expedition
+ // search preserves the exact chosen action and future chance sequence.
  if(progress&&safePhases.has(session.phase)&&
   policy.consecutiveEquipment>=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS){
   policy.cycleBreaks++;
   policy.consecutiveEquipment=0;
   return progress;
  }
+ // For any decision that can affect play, search the complete legal
+ // action list, with the same budget and chance seed as before.
+ const recommended=legal.length===1?legal[0]:searchDecision(session,{
+  budget:Math.max(budget,legal.length),seed,
+  maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay,
+  collectCoverage:false
+ }).recommended;
+ if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
   policy.consecutiveEquipment++;
   policy.equipmentActions++;
