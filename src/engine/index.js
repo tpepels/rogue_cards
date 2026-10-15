@@ -75,6 +75,7 @@ export function observeGame(s){
   observedRoomReroll:s._pendingRoomReroll?
    {...s._pendingRoomReroll}:null,
   observedRoomFace:s._observedRoomRollFace??null,
+  observedOpposedDice:s._observedOpposedDice?{...s._observedOpposedDice}:null,
   offeredSavedPath:s._pendingRoomSwap?{...s._pendingRoomSwap}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null,spent:!!x.spent})),
