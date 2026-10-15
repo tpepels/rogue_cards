@@ -25,9 +25,12 @@ export function createSessionPolicy(){
 }
 
 export function selectSessionPolicyAction(session,policy,{
- budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null
+ budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
+ legalActions=null
 }={}){
- const legal=sessionActions(session);
+ // The caller often already enumerated the exact canonical decisions.
+ // Reuse that array instead of rebuilding equipment options a second time.
+ const legal=legalActions??sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
  const progress=legal.find(a=>a.kind==="continue");
  // At the cap the study policy ALWAYS takes the real Continue action.
@@ -45,7 +48,7 @@ export function selectSessionPolicyAction(session,policy,{
  const recommended=legal.length===1?legal[0]:searchDecision(session,{
   budget:Math.max(budget,legal.length),seed,
   maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay,
-  collectCoverage:false
+  rootActions:legal,collectCoverage:false
  }).recommended;
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
