@@ -332,6 +332,26 @@ class NeedReaction extends Error {
   this.event=event;this.actions=actions;this.observation=observation;
  }
 }
+// The same legal reaction enumerator is used for replay transactions and
+// speculative search. Never infer reactions from printed card heuristics.
+function canonicalReactionActions(state,event){
+ const args={phase:event.phase,heroIndex:event.heroIndex??0,
+  roomId:event.roomId??null,cost:event.cost??0,
+  context:event.context??null};
+ let actions=legalActions(state,args);
+ if(event.cardId)actions=actions.filter(x=>x.kind==="continue"||
+  x.kind==="item-trigger"&&x.cardId===event.cardId);
+ if(event.allowedModes)actions=actions.filter(x=>
+  event.allowedModes.includes(x.mode||x.kind));
+ if(actions.length===0)throw Error("No legal printed reaction: "+JSON.stringify({
+  event,roomId:state.room?.id,monsterId:state.monster?.id,
+  inventory:state.heroes[args.heroIndex]?.inventory.map(c=>c.id),
+  slots:Object.fromEntries(Object.entries(
+   state.heroes[args.heroIndex]?.slots||{}).map(([k,v])=>[k,v?.id])),
+  available:itemOptionsAtTrigger(state,args)
+ }));
+ return actions;
+}
 const sameAction=(a,b)=>a&&b&&
  Object.keys(a).length===Object.keys(b).length&&
  Object.keys(a).every(k=>a[k]===b[k]);
@@ -567,21 +587,7 @@ export function submitDecision(session,action,{
  };
  let position=0;
  fork.state._decisionHook=event=>{
-  const args={phase:event.phase,heroIndex:event.heroIndex??0,
-   roomId:event.roomId??null,cost:event.cost??0,
-   context:event.context??null};
-  let actions=legalActions(fork.state,args);
-  if(event.cardId)actions=actions.filter(x=>x.kind==="continue"||
-   x.kind==="item-trigger"&&x.cardId===event.cardId);
-  if(event.allowedModes)actions=actions.filter(x=>
-   event.allowedModes.includes(x.mode||x.kind));
-  if(actions.length===0)throw Error("No legal printed reaction: "+JSON.stringify({
-   event,roomId:fork.state.room?.id,monsterId:fork.state.monster?.id,
-   inventory:fork.state.heroes[args.heroIndex]?.inventory.map(c=>c.id),
-   slots:Object.fromEntries(Object.entries(
-    fork.state.heroes[args.heroIndex]?.slots||{}).map(([k,v])=>[k,v?.id])),
-   available:itemOptionsAtTrigger(fork.state,args)
-  }));
+  const actions=canonicalReactionActions(fork.state,event);
   if(position<responses.length){
    const requested=responses[position++];
    const selected=actions.find(a=>sameAction(a,requested));
@@ -621,5 +627,55 @@ export function submitDecision(session,action,{
   session.pendingNested={root,responses,
    trigger:e.event,actions:e.actions,observation:e.observation};
   return observeResult?observeSession(session):undefined;
+ }
+}
+
+/**
+ * Internal MCTS-only transition for a *disposable* hypothetical session.
+ * It executes the exact canonical phase machine with the same printed
+ * reaction hook as fork/replay, but defers copying until a reaction actually
+ * suspends. The caller MUST restore a preceding simulation checkpoint if
+ * that occurs. Do not use for a real/player-owned session: non-reaction
+ * rule exceptions intentionally propagate without transactional rollback.
+ */
+export function submitSpeculativeDecision(session,action,{
+ restore,verifiedLegalActions=null,observeResult=false,recordHistory=false
+}={}){
+ if(typeof restore!=="function")
+  throw Error("Speculative MCTS transition requires a rollback callback");
+ if(session.pendingNested)
+  throw Error("Nested responses must use canonical fork and replay");
+ if(session.phase==="terminal")throw Error("Expedition already ended");
+ const ticket=verifiedLegalActions?issuedLegalLists.get(verifiedLegalActions):null;
+ if(verifiedLegalActions&&(!ticket||ticket.session!==session||
+    ticket.state!==session.state||ticket.phase!==session.phase||
+    ticket.heroIndex!==session.heroIndex||
+    ticket.pendingNested!==session.pendingNested||
+    ticket.count!==session.actionCount||
+    !verifiedLegalActions.includes(action)))
+  throw Error("Stale or unissued canonical legal-action ticket");
+ const state=session.state;
+ if(state._decisionHook)
+  throw Error("Cannot speculate while a canonical decision hook is active");
+ state._decisionHook=event=>{
+  const actions=canonicalReactionActions(state,event);
+  throw new NeedReaction(event,actions,observeGame(state));
+ };
+ try{
+  return submitDecisionDirect(session,action,{
+   observeResult,recordHistory,verifiedAction:Boolean(ticket)});
+ }catch(error){
+  if(!(error instanceof NeedReaction))throw error;
+  // Roll back EVERY earlier printed effect and consumed die. The pending
+  // choice and public observation are from the identical canonical hook
+  // used by the ordinary full-fork transaction.
+  restore();
+  session.pendingNested={
+   root:action,responses:[],trigger:error.event,
+   actions:error.actions,observation:error.observation
+  };
+  return observeResult?observeSession(session):undefined;
+ }finally{
+  delete state._decisionHook;
  }
 }
