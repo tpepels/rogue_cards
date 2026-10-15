@@ -163,7 +163,7 @@ export function searchDecision(session,{budget=100,seed=1,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
- lazyColdEdges=true,reuseTraceSlots=true}={}){
+ lazyColdEdges=false,reuseTraceSlots=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
