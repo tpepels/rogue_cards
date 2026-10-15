@@ -477,7 +477,8 @@ test("rollout agent actually searches retained fate Room choices",()=>{
   assert.equal(r.unresolved,0);
   assert.equal(r.roundLimit,false);
   assert.ok(r.rolloutAudit?.roomBranches>0);
-  assert.equal(r.rolloutAudit.roomBranches+r.rolloutAudit.combatBranches,
+  assert.equal(r.rolloutAudit.roomBranches+r.rolloutAudit.combatBranches+
+   (r.rolloutAudit.otherDecisionBranches||0),
    r.rolloutAudit.terminalBranches+r.rolloutAudit.nonterminalBranches);
   if(r.plannerDecisions.fateRoomsPlanned>0){found=true;break;}
  }
