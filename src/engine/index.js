@@ -80,6 +80,8 @@ export function observeGame(s){
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null,spent:!!x.spent})),
   pactUsed:!!s.pactUsed,
+  tuckedRoomItems:(s.tuckedRoomItems||[]).map(x=>({roomId:x.roomId,itemId:x.item.id})),
+  reverseNextRoomStage:s.reverseNextRoomStage??null,
    returnChoices:{...s.returnChoices},
    endingOptions:s.room?.stage==="FINAL"?{...s.vaultModifiers}:null,
    ended:!s.alive()||s.metrics.won||!!s.metrics.escaped,
