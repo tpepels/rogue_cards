@@ -43,6 +43,18 @@ export function resolveRoomChoice(s,choice){
 }
 export function protectHero(s,h,damage){
  if(damage<=0)return damage;
+ if(s._trapDamageContext&&s._trapPrevention>0){
+  damage=Math.max(0,damage-s._trapPrevention);
+  s._trapPrevention=0;
+ }
+ if(s._resolvingWardenHit){
+  const chest=s.keptRooms.find(x=>x.card.id==="d-last-chest");
+  if(chest&&s.chooseEffect("last-chest-prevent-warden-hit",
+   ["save","use"],"use")==="use"){
+   s.keptRooms.splice(s.keptRooms.indexOf(chest),1);
+   damage=Math.max(0,damage-3);
+  }
+ }
  if(h.nextHitBlock>0){
   damage=Math.max(0,damage-h.nextHitBlock);
   h.nextHitBlock=0;
