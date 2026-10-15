@@ -987,7 +987,7 @@ export class ExpeditionState {
    const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
    const modes=[...(song?["song"]:[]),
     ...(this.discardable(1,"FIRE")?["discard-fire"]:[])];
-   if(!modes.length)throw Error("SILENCE requires FIRE or kept Treasure That Sings");
+   if(!modes.length)return; // No printed source: the Room option is illegal.
    const mode=this.chooseEffect("choir-silence-source",modes,modes[0]);
    if(mode==="song"){
     this.keptRooms.splice(this.keptRooms.indexOf(song),1);
