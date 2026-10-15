@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {monsterRespond} from "../src/engine/combat.js";
-import {mctsPublicStateHash} from "../src/session-mcts.js";
+import {searchDecision,mctsPublicStateHash} from "../src/session-mcts.js";
 import {chooseRoom,legalActions,observeGame,createDecisionSession,sessionActions,submitDecision} from "../src/engine/index.js";
 
 const room=id=>{const c=ROOMS.find(x=>x.id===id);assert.ok(c,id);return c;};
@@ -342,4 +342,34 @@ test("lethal Smuggler SQUEEZE never reveals or moves a subsequent Room",()=>{
  assert.equal(s.heroes[0].hp,0);
  assert.deepEqual(s.rooms.UPPER.map(x=>x.id),before);
  assert.equal(s.metrics.drawn,drawn);
+});
+
+test("frontier and full-tree Oracle both search the revised printed Fork",()=>{
+ const session=createDecisionSession({seed:1846,heroes:["warrior"]});
+ const deck=session.state.rooms.UPPER;
+ const index=deck.findIndex(r=>r.id==="u-fork");
+ assert.ok(index>=0);
+ session.state.beginRoom(deck.splice(index,1)[0]);
+ session.phase="room";
+ const fork=sessionActions(session).find(a=>a.kind==="room-choice"&&a.index===0);
+ assert.ok(fork);
+ const pending=submitDecision(session,fork);
+ assert.equal(pending.phase,"reaction");
+ assert.equal(pending.trigger.phase,"corridor");
+ const offered=pending.actions.map(a=>a.roomId);
+ const before=JSON.stringify(observeGame(session.state));
+ const rng=session.state.rng.snapshot();
+ const options={budget:2,seed:19010,knowledge:"fair",maxSteps:4000};
+ const full=searchDecision(session,{...options,treeMode:"full"});
+ const frontier=searchDecision(session,{...options,treeMode:"frontier"});
+ assert.equal(full.completed,2);
+ assert.equal(frontier.completed,2);
+ assert.equal(full.incomplete,0);
+ assert.equal(frontier.incomplete,0);
+ assert.equal(frontier.recommended.roomId,full.recommended.roomId);
+ assert.deepEqual(frontier.choices.map(c=>[c.action.roomId,c.visits,c.wins]),
+  full.choices.map(c=>[c.action.roomId,c.visits,c.wins]));
+ assert.ok(frontier.choices.every(c=>offered.includes(c.action.roomId)));
+ assert.equal(JSON.stringify(observeGame(session.state)),before);
+ assert.equal(session.state.rng.snapshot(),rng);
 });
