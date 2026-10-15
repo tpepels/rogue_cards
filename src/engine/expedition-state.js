@@ -73,6 +73,7 @@ export class ExpeditionState {
    this.rerollHistory=[];this.heroAbilityModes={};this.returnChoices={};this.elberethAttempts=0;
    this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
+   this.pactUsed=false;this.tuckedRoomItems=[];this.reverseNextRoomStage=null;
    this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
@@ -144,6 +145,10 @@ export class ExpeditionState {
   return face;
  }
  fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
+  if(this._trapDamageContext&&this._trapPrevention>0){
+   damage=Math.max(0,damage-this._trapPrevention);
+   this._trapPrevention=0;
+  }
   // Knotted Rope and kept Wax Bridge are genuine optional once-only
   // payments AFTER the fall damage is known. Neither can dismiss a Monster.
   // Choosing to save them remains legal, and the search can spend multiple
@@ -245,7 +250,11 @@ export class ExpeditionState {
    const decision=this._decisionHook?.({phase:"saved-reroll",
     heroIndex:this.heroes.indexOf(h),face:value});
    if(decision?.kind==="keep")return value;
-   h.kept.splice(i,1);return this.die(20);
+   h.kept.splice(i,1);
+   const bazaar=this.keptRooms.find(x=>x.card.id==="d-bazaar"&&
+    x.mode==="d20-reroll");
+   if(bazaar)this.keptRooms.splice(this.keptRooms.indexOf(bazaar),1);
+   return this.die(20);
   }
   return value;
  }
@@ -499,6 +508,13 @@ export class ExpeditionState {
    }
   }
   endRoom(){
+  for(const entry of [...this.tuckedRoomItems]){
+   if(entry.roomId!==this.room?.id)continue;
+   this.tuckedRoomItems.splice(this.tuckedRoomItems.indexOf(entry),1);
+   const h=this.chooseRecipient("return-mimic-tuck");
+   this.consumed.delete(entry.item);
+   this.add(h,entry.item);
+  }
   this.heroes.forEach(h=>{
    h.poison=false;h.immune=false;h.used.clear();
    h.nextHitBlock=0;h.ignoreDarknessOnce=false;
@@ -528,7 +544,12 @@ export class ExpeditionState {
    }
    if(monsterEntry(this,m))return;
   if(!this.monster){
-   this.monster=m;this.monsterHP=m.hp;this.banished=false;
+   this.monster=m;this.monsterHP=m.hp;
+   if(this.pendingMonsterOpeningDamage){
+    this.monsterHP=Math.max(0,this.monsterHP-this.pendingMonsterOpeningDamage);
+    this.pendingMonsterOpeningDamage=0;
+   }
+   this.banished=false;
    this.monsterFirstAttackPending=true;
    this.elberethAttempts=0;this.elberethSkipResponse=false;
    if(m.stage!=="FINAL"&&this.useRetainedPotion("laughter",m.id))
@@ -642,10 +663,46 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "DISCARD_OR_HURT":{
+   const cost=Number(v),canPay=this.discardable(cost);
+   const mode=canPay?this.chooseEffect("optional-item-payment:"+this.room?.id,
+    ["discard","lose-hp"],"discard"):"lose-hp";
+   if(mode==="discard")this.discard(cost);
+   else this.hurt(h,args[1]==="d6"?this.die():Number(args[1]));
+   return;
+  }
+  case "MIMIC_TUCK":{
+   if(!this.discardable())return;
+   const item=this.discard();
+   if(!item)return;
+   const i=this.discardPile.lastIndexOf(item);
+   if(i>=0)this.discardPile.splice(i,1);
+   this.metrics.spent=Math.max(0,this.metrics.spent-1);
+   this.tuckedRoomItems.push({roomId:this.room.id,item});
+   return;
+  }
+  case "RELIQUARY_OFFER":{
+   if(!this.discardable())throw Error("An Item is required for Reliquary OFFER");
+   const item=this.discard();
+   const i=this.discardPile.lastIndexOf(item);
+   if(i>=0)this.discardPile.splice(i,1);
+   this.keptRooms.push({card:this.room,item,mode:"trap-all"});
+   return;
+  }
+  case "REVERSE_NEXT_ROOM":this.reverseNextRoomStage=this.room.stage;return;
+  case "COST_CURSED":{
+   const cost=Number(v);
+   if(!this.discardable(cost,"CURSED"))throw Error("Missing CURSED Item");
+   this.discard(cost,{tag:"CURSED"});return;
+  }
+  case "KEEP_CROWN":{
+   this.keptRooms.push({card:this.room,mode:v});return;
+  }
   case "FORK_REVEAL":
    this.forkRevealed(Number(v),{
     random:args[1]==="RANDOM",
-    treasureOnly:args[1]==="TREASURE"
+    treasureOnly:args[1]==="TREASURE",
+    returnOnTop:args[1]==="TOP"
    });return;
   case "FORK_ORDER":this.peek(Number(v),true);return;
   case "CURE_OR_HEAL":if(h.poison)h.poison=false;else this.heal(h,n());return;
@@ -706,6 +763,14 @@ export class ExpeditionState {
   case "PEEK_SWAP":this.peek(n(),true);return;
   case "NEXT_ADV":h.nextAdv++;return;
   case "NEXT_DIS":{
+   if(card?.id==="d-shadow"){
+    const candle=this.keptRooms.find(x=>x.card.id==="u-candle");
+    if(candle&&this.chooseEffect("candle-cancel-lightless-hall",
+      ["save","use"],"use")==="use"){
+     this.keptRooms.splice(this.keptRooms.indexOf(candle),1);
+     return;
+    }
+   }
    h.nextDis++;
    if(["d-shadow","u-lamp"].includes(card?.id))h.nextDarknessDis++;
    return;
@@ -868,7 +933,10 @@ export class ExpeditionState {
   }
   case "SAVE_TRAP":this.trapGuard=true;return;
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
-  case "SAVE_D20_REROLL":h.kept.push("reroll");return;
+  case "SAVE_D20_REROLL":
+   h.kept.push("reroll");
+   this.keptRooms.push({card:this.room,mode:"d20-reroll"});
+   return;
   case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;
    if(this.room?.id==="d-crown")this.keptRooms.push({card:this.room});
    return;
@@ -918,16 +986,16 @@ export class ExpeditionState {
   case "CHOIR_SILENCE":{
    const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
    const modes=[...(song?["song"]:[]),
-    ...(this.has("torch")?["torch"]:[]),
     ...(this.discardable(1,"FIRE")?["discard-fire"]:[])];
-   if(!modes.length)return;
+   if(!modes.length)return; // No printed source: the Room option is illegal.
    const mode=this.chooseEffect("choir-silence-source",modes,modes[0]);
    if(mode==="song"){
     this.keptRooms.splice(this.keptRooms.indexOf(song),1);
     this.roomRoll(6);return;
    }
-   if(mode==="discard-fire")this.discard(1,{tag:"FIRE"});
-   this.draw(2);return;
+   this.discard(1,{tag:"FIRE"});
+   this.monsterSkip++;
+   return;
   }
   case "SEAL":return;
   case "WARDEN_FIGHT":return;
@@ -938,6 +1006,19 @@ export class ExpeditionState {
   * opposed check came from a Room, Monster negotiation or Vault.
   * An ATK/DEF roll must not silently spend a pending WIT boon.
   */
+ swapOpposedRoll(ours,theirs,context){
+  const mirror=this.keptRooms.find(x=>x.card.id==="d-mirror");
+  if(!mirror)return {ours,theirs};
+  this._observedOpposedDice={ours,theirs,context};
+  const choice=this.chooseEffect("mirror-exchange-opposed:"+context,
+   ["save","swap"],"save");
+  delete this._observedOpposedDice;
+  if(choice==="swap"){
+   this.keptRooms.splice(this.keptRooms.indexOf(mirror),1);
+   return {ours:theirs,theirs:ours};
+  }
+  return {ours,theirs};
+ }
  takeWitModifiers(h){
   const result={bonus:this.witBonus||0,dis:(h.nextWitDis||0)>0};
   this.witBonus=0;h.nextWitDis=0;return result;
@@ -1004,7 +1085,9 @@ export class ExpeditionState {
   // Wand of Undoing can misfire for the final HP during a Room check.
   // Its dead owner has no legal Crown of Rehearsals trigger.
   if(h.hp<=0)return;
-  const monsterRoll=roll();
+  let monsterRoll=roll();
+  ({ours:d,theirs:monsterRoll}=this.swapOpposedRoll(d,monsterRoll,
+   "room-check"));
   let ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
   if(!ok){
    const crown=h.inventory.find(x=>x.id==="crown-relic");
@@ -1025,6 +1108,7 @@ export class ExpeditionState {
   else if(code==="DRAW2")this.draw(2);
   else if(code==="HEAL2")this.heal(h,2);
   else if(code==="HURT2")this.hurt(h,2);
+  else if(code==="HURT2_DEF_DIS"){this.hurt(h,2);h.nextDefenseDis=(h.nextDefenseDis||0)+1;}
   else if(code==="HURTd6")this.hurt(h,this.die());
   else throw Error("Unknown check consequence "+code);
  }
@@ -1051,7 +1135,7 @@ export class ExpeditionState {
   }
   return this.forcedBehavior;
  }
- forkRevealed(count,{random=false,treasureOnly=false}={}){
+ forkRevealed(count,{random=false,treasureOnly=false,returnOnTop=false}={}){
   const stage=this.room.stage,pile=this.rooms[stage];
   const offered=pile.splice(0,Math.min(count,pile.length));
   if(!offered.length)return;
@@ -1068,22 +1152,24 @@ export class ExpeditionState {
    delete this._offeredRoomChoices;
    if(!chosen)throw Error("Illegal corridor Room selection");
   }else chosen=candidates[0];
-  const bottom=offered.filter(x=>x!==chosen);
-  pile.push(...bottom);
-  pile.unshift(chosen);
+  const other=offered.filter(x=>x!==chosen);
+  if(returnOnTop)pile.unshift(chosen,...other);
+  else{pile.push(...other);pile.unshift(chosen);}
   // Every shown card stays in its actual physical pile exactly once;
   // unrevealed cards remain in their original sampled order.
-  this.peekedRoomIds[stage]=[chosen.id];
-  this.publicBottomRoomIds??=Object.fromEntries(
-   stageNames.map(stage=>[stage,[]]));
-  this.publicBottomRoomIds[stage].push(...bottom.map(x=>x.id));
+  this.peekedRoomIds[stage]=[chosen.id,...(returnOnTop?other.map(x=>x.id):[])];
+  if(!returnOnTop){
+   this.publicBottomRoomIds??=Object.fromEntries(
+    stageNames.map(stage=>[stage,[]]));
+   this.publicBottomRoomIds[stage].push(...other.map(x=>x.id));
+  }
  }
  forkRooms(mode){
    const pile=this.rooms[this.room.stage],count=mode==="u-echoes"?3:2;
    const offered=pile.splice(0,Math.min(count,pile.length));if(!offered.length)return;
    if(mode==="u-echoes"&&offered.length===3){
-    const discarded=offered.splice(this.die(3)-1,1)[0];
-    this.discardedRoomIds.add(discarded.id);
+    // The random third echo is returned face down and remains unknown.
+    pile.push(offered.splice(this.die(3)-1,1)[0]);
    }
    if(mode==="m-maps"&&this.discardable()&&pile.length&&
     this.chooseEffect("cartographer-extra-map",["save","trade"],"trade")==="trade"){
@@ -1109,23 +1195,26 @@ export class ExpeditionState {
     if(!chosen)throw Error("Illegal chosen corridor Room");
    }
    const other=offered.filter(x=>x!==chosen);
-   if(mode==="u-mossy")pile.unshift(...other);
-   else if(mode==="u-candle"){this.savedPath=other[0]||null;this.savedPathGrace=1;}
+   if(mode==="u-mossy"||mode==="u-candle")pile.unshift(...other);
    else if(mode==="d-whisper-junction")this.whisperRoom=other[0]||null;
-   else if(mode==="u-echoes")pile.push(...other);
-   else if(mode==="d-gilded"&&other.some(x=>x.v2.kind==="TREASURE"))this.draw();
+   else if(mode==="d-gilded"){
+    // Only GAMBLE actually discards the other Room.
+    if(other.some(x=>x.v2.kind==="TREASURE"))this.draw();
+    for(const card of other)this.discardedRoomIds.add(card.id);
+   }else{
+    // Printed corridors return the unchosen revealed route to the bottom.
+    pile.push(...other);
+    this.publicBottomRoomIds??=Object.fromEntries(
+     stageNames.map(stage=>[stage,[]]));
+    this.publicBottomRoomIds[this.room.stage].push(...other.map(card=>card.id));
+   }
    if(mode==="m-ladder")this.nextLadder=true;
-   // Non-returning alternatives are now publicly known NOT to be in the
-   // hidden pile. The chosen next Room is revealed and remains public.
-   const returned=["u-mossy","u-candle","d-whisper-junction","u-echoes"]
-    .includes(mode);
-   if(!returned)for(const card of other)this.discardedRoomIds.add(card.id);
    const shown=new Set(offered.map(card=>card.id));
    const remainder=(this.peekedRoomIds[this.room.stage]||[])
     .filter(id=>!shown.has(id)&&!this.discardedRoomIds.has(id));
    this.peekedRoomIds[this.room.stage]=[
-    chosen.id,...(mode==="u-mossy"?other.map(card=>card.id):[]),
-    ...remainder
+    chosen.id,...(["u-mossy","u-candle"].includes(mode)?
+     other.map(card=>card.id):[]),...remainder
    ];
    pile.unshift(chosen);
   }
@@ -1144,19 +1233,47 @@ export class ExpeditionState {
   // Lantern Shrine says discard BEFORE a later Room d6. The decision
   // must be taken before even a hypothetical die face is observed.
   const lamp=this.keptRooms.findIndex(x=>x.card.id==="u-lantern-shrine");
-  const lampChoice=lamp>=0&&this._decisionHook?
-   this.chooseEffect("lantern-shrine-before-roll",
-    ["save","use"],"use")==="use":null;
+  // The saved Shrine is a decision BEFORE the die is revealed. The
+  // scripted agent may select a policy, but cannot inspect a future face.
+  const lampChoice=lamp>=0&&this.chooseEffect("lantern-shrine-before-roll",
+   ["save","use"],"use")==="use";
   let face=typeof forced==="number"?forced:this.die();
+  if(this.reverseNextRoomStage===this.room.stage&&this.room.id!=="d-mirror"){
+   this.reverseNextRoomStage=null;
+   face=7-face;
+  }
    if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
     const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
    }
-   if(lamp>=0&&(lampChoice??face<=4)){
+   if(this.room.id==="vault"&&this.vaultModifiers.omenAdjust){
+    const modes=[...(face>1?["down"]:[]),"keep",...(face<6?["up"]:[])];
+    this._observedRoomRollFace=face;
+    const mode=this.chooseEffect("witness-omen-adjust",modes,"keep");
+    delete this._observedRoomRollFace;
+    face+=mode==="up"?1:mode==="down"?-1:0;
+   }
+   if(lampChoice){
     face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);
    }
   const risk=forced&&typeof forced==="object"?forced.risk:null;
   const firstSpent=this.lastSpent;
-  if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
+  if(risk==="2"&&this.room.id==="m-treasure"){
+   const payer=this.chooseActor();
+   this._observedRoomRollFace=face;
+   const mode=payer.hp>2?this.chooseEffect("treasure-reroll-after-reveal",
+    ["keep","reroll"],"keep"):"keep";
+   delete this._observedRoomRollFace;
+   if(mode==="reroll"){
+    this.hurt(payer,2);
+    if(!this.alive())return false;
+    const second=this.die();
+    this._pendingRoomReroll={first:face,new:second,roomId:this.room.id};
+    const chosen=this.chooseEffect("treasure-choose-room-die",
+     ["first","new"],"new");
+    delete this._pendingRoomReroll;
+    face=chosen==="first"?face:second;
+   }
+  }else if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
     face=this.pushLuck(face,{onOne:true});
    }else if(risk){
    const canPay=risk==="item"?this.discardable():this.actor.hp>0;
@@ -1184,6 +1301,14 @@ export class ExpeditionState {
      return true;
     });
    }
+  }
+  if(this.room.id==="u-merchant"&&this.has("goblin-pet")){
+   const second=this.die();
+   this._pendingRoomReroll={first:face,new:second,roomId:this.room.id};
+   const chosen=this.chooseEffect("merchant-goblin-choose-room-die",
+    ["first","new"],"first");
+   delete this._pendingRoomReroll;
+   face=chosen==="new"?second:face;
   }
   if(this.room.id==="u-nest"&&
      this.heroes.some(h=>h.hp>0&&this.equipped(h,"dog")))face=6;
@@ -1248,6 +1373,31 @@ export class ExpeditionState {
    }
   }
   this.pendingRoomFace=null;
+  const hourglass=this.keptRooms.find(x=>x.card.id==="m-hourglass"&&x.choice===1);
+  if(hourglass){
+   this._observedRoomRollFace=face;
+   const reverse=this.chooseEffect("hourglass-reverse-room-die",
+    ["save","reverse"],"save")==="reverse";
+   delete this._observedRoomRollFace;
+   if(reverse){
+    this.keptRooms.splice(this.keptRooms.indexOf(hourglass),1);
+    face=7-face;
+   }
+  }
+  // Gallery of Cracked Maps allows one revealed trapdoor die shift. Its
+  // kept map is consumed only if the player takes the adjustment.
+  const map=this.keptRooms.find(x=>x.card.id==="m-maps");
+  if(map&&["u-fall","m-ladder","d-bridge"].includes(this.room.id)){
+   const directions=["save",...(face>1?["down"]:[]),...(face<6?["up"]:[])];
+   this._observedRoomRollFace=face;
+   const move=this.chooseEffect("maps-adjust-trapdoor:"+this.room.id,
+    directions,"save");
+   delete this._observedRoomRollFace;
+   if(move!=="save"){
+    this.keptRooms.splice(this.keptRooms.indexOf(map),1);
+    face+=move==="up"?1:-1;
+   }
+  }
   // Spend saved links only when their linked encounters occur.
   if(this.room.id==="d-bridge"&&face<=2){
    const wax=this.keptRooms.find(x=>x.card.id==="m-wax-bridge");
@@ -1255,17 +1405,18 @@ export class ExpeditionState {
     const decision=this._decisionHook?.({phase:"retained",
      roomId:"m-wax-bridge",context:"trap",face});
     if((decision?.mode||this.returnChoices?.["m-wax-bridge"])!=="save"){
-     this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=6;
+     // Wax Bridge substitutes the safe 3-4 result, never a 5-6 reward.
+     this.keptRooms.splice(this.keptRooms.indexOf(wax),1);face=3;
     }
    }
   }
   if(this.room.id==="d-mouth"){
    const judge=this.keptRooms.find(x=>x.card.id==="u-puppet");
-   if(judge){
+   if(judge&&!judge.spent){
     const decision=this._decisionHook?.({phase:"retained",
      roomId:"u-puppet",context:"talking-door",face});
     if((decision?.mode||this.returnChoices?.["u-puppet"])!=="save"){
-     this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;
+     judge.spent=true;face=6;
     }
    }
   }
@@ -1274,14 +1425,32 @@ export class ExpeditionState {
   this.metrics.roomRollBands[roomKey]=(this.metrics.roomRollBands[roomKey]||0)+1;
   // A kept Reliquary can ignore one printed trap, then must be discarded.
   const traps={"u-gate":[0],"u-fall":[0,1],"u-mimic":[0],"m-vault":[0],
-   "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0]};
-  if(this.trapGuard&&traps[this.room.id]?.includes(band)){
-   this.trapGuard=false;return;
+   "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0],
+   "d-reliquary":[0]};
+  const damagingTrap=traps[this.room.id]?.includes(band)&&
+   ops.some(op=>op.startsWith("HURT:")||op.startsWith("TRAPDOOR:"));
+  if(damagingTrap){
+   const relic=this.keptRooms.find(x=>x.card.id==="d-reliquary");
+   if(relic&&this.chooseEffect("reliquary-prevent-trap:"+this.room.id,
+    ["save","use"],"use")==="use"){
+    this.keptRooms.splice(this.keptRooms.indexOf(relic),1);
+    if(relic.item)this.discardPile.push(relic.item);
+    this._trapPrevention=relic.mode==="trap-all"?Infinity:3;
+   }
+   if(this.trapGuard){
+    this.trapGuard=false;
+    this._trapPrevention=Math.max(this._trapPrevention||0,3);
+   }
   }
   this.metrics.cardCounts[this.room.id]=(this.metrics.cardCounts[this.room.id]||0)+1;
-  for(const op of ops){
-   if(!this.alive())break;
-   const [name,...args]=op.split(":");this.apply(name,args,this.room);
+  this._trapDamageContext=!!damagingTrap;
+  try{
+   for(const op of ops){
+    if(!this.alive())break;
+    const [name,...args]=op.split(":");this.apply(name,args,this.room);
+   }
+  }finally{
+   this._trapDamageContext=false;this._trapPrevention=0;
   }
  }
 }

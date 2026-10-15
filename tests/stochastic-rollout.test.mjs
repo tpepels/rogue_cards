@@ -234,7 +234,7 @@ test("retrieving an Item from the Bottomless Well does not remove a new deck car
   deckSeed:456,blueprint:prepared});
  assert.equal(fork.deck.length,s.deck.length);
 });
-test("fair Room rollouts preserve revealed corridor choice and exclude discarded paths",()=>{
+test("fair Room rollouts preserve revealed corridor choices and returned paths",()=>{
  const s=roomState("fair");
  const forkRoom=ROOMS.find(r=>r.id==="u-fork");
  assert.ok(forkRoom?.v2.special?.corridor);
@@ -244,10 +244,11 @@ test("fair Room rollouts preserve revealed corridor choice and exclude discarded
  s.beginRoom(forkRoom);
  const firstCount=s.rooms.UPPER.length;
  s.apply("ROOM_SPECIAL",["0"],forkRoom);
- assert.equal(s.rooms.UPPER.length,firstCount-1);
+ assert.equal(s.rooms.UPPER.length,firstCount);
  const chosen=s.rooms.UPPER[0].id;
  assert.equal(s.peekedRoomIds.UPPER[0],chosen);
- assert.ok(s.discardedRoomIds.size>0);
+ assert.equal(s.discardedRoomIds.size,0);
+ assert.ok(s.publicBottomRoomIds.UPPER.length>0);
  const prepared=prepareRolloutDecks(s,"fair");
  const excluded=new Set([...s.discardedRoomIds]);
  for(const seed of [1,2,3,4,5]){
@@ -476,7 +477,8 @@ test("rollout agent actually searches retained fate Room choices",()=>{
   assert.equal(r.unresolved,0);
   assert.equal(r.roundLimit,false);
   assert.ok(r.rolloutAudit?.roomBranches>0);
-  assert.equal(r.rolloutAudit.roomBranches+r.rolloutAudit.combatBranches,
+  assert.equal(r.rolloutAudit.roomBranches+r.rolloutAudit.combatBranches+
+   (r.rolloutAudit.otherDecisionBranches||0),
    r.rolloutAudit.terminalBranches+r.rolloutAudit.nonterminalBranches);
   if(r.plannerDecisions.fateRoomsPlanned>0){found=true;break;}
  }

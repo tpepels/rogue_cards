@@ -392,7 +392,9 @@ test("revealed corridor branches stop at a real player decision instead of scrip
  const next=r.actions[1],discarded=r.actions[0].roomId;
  submitDecision(session,next);
  assert.equal(s.rooms.UPPER[0].id,next.roomId);
- assert.ok(s.discardedRoomIds.has(discarded));
+ assert.ok(!s.discardedRoomIds.has(discarded));
+ assert.ok(s.publicBottomRoomIds.UPPER.includes(discarded));
+ assert.ok(s.rooms.UPPER.some(x=>x.id===discarded));
  assert.equal(session.pendingNested,null);
 });
 test("forking remaining RNG states yields the same results without consuming source dice",()=>{
@@ -778,4 +780,32 @@ test("silent Room reaction replay preserves actual dice and interrupts atomicall
  assert.deepEqual(observeSession(fast),observeSession(legacy));
  assert.equal(fast.state.rng.snapshot(),legacy.state.rng.snapshot());
  assert.deepEqual(fast.state.metrics,legacy.state.metrics);
+});
+
+test("transactional combat PASS preserves canonical state, dice and rollback-safe actor identity",()=>{
+ const make=()=>{
+  const session=createDecisionSession({seed:70166,heroes:["warrior","witch"]});
+  const enemy=MONSTERS.find(m=>m.id==="rat");
+  assert.ok(enemy);
+  session.state.monster=enemy;session.state.monsterHP=enemy.hp;
+  session.phase="combat";session.heroIndex=1;
+  return session;
+ };
+ const fast=make(),legacy=make();
+ const action=sessionActions(fast).find(x=>
+  x.phase==="combat"&&x.kind==="pass");
+ assert.ok(action,"PASS must be an actual printed legal combat decision");
+ const originalActor=fast.state.actor;
+ const future=fast.state.rng.snapshot();
+ const a=submitDecision(fast,action,{transactional:true});
+ const b=submitDecision(legacy,sessionActions(legacy).find(x=>
+  x.kind==="pass"),{transactional:false});
+ assert.deepEqual(a,b);
+ assert.deepEqual(observeSession(fast),observeSession(legacy));
+ assert.deepEqual(fast.state.metrics,legacy.state.metrics);
+ assert.equal(fast.state.rng.snapshot(),future);
+ assert.equal(fast.state.rng.snapshot(),legacy.state.rng.snapshot());
+ assert.equal(fast.state.actor.card.id,legacy.state.actor.card.id);
+ assert.notStrictEqual(fast.state.actor,originalActor,
+  "The canonical acting Hero should be updated by PASS");
 });

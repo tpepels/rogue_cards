@@ -44,7 +44,11 @@ test("every Room choice and outcome can execute without fallback parsing",()=>{
  for(const room of all){
   for(let choice=0;choice<2;choice++){
    const s=new ExpeditionState({seed:room.id.length*31+choice,heroes:["warrior","priest"],strategy:"magic"});
-   s.beginRoom(room);for(let n=0;n<8;n++)s.add(s.heroes[0],OBJECTS.find(o=>o.id==="key"));
+   s.beginRoom(room);
+   for(let n=0;n<8;n++)s.add(s.heroes[0],OBJECTS.find(o=>o.id==="key"));
+   // Crown OFFER requires a CURSED Item; test the executable legal branch.
+   if(room.id==="d-crown"&&choice===1)
+    s.add(s.heroes[0],OBJECTS.find(o=>o.v2.tags?.includes("CURSED")));
    assert.doesNotThrow(()=>ROOM_EFFECTS[room.id].choices[choice].forEach(op=>{
     const [name,...args]=op.split(":");s.apply(name,args,room);
    }),room.id+" choice "+choice);

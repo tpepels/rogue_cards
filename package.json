@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Physical-first d20/d6 Rogue Cards print-and-play tabletop game",
   "scripts": {
-    "test": "node --test tests/tabletop.test.mjs tests/decks.test.mjs tests/legacy-baseline-guard.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs tests/warden-balance.test.mjs tests/card-interactions.test.mjs tests/card-balance.test.mjs tests/balance-adjustments.test.mjs tests/item-contracts.test.mjs tests/game-verification.test.mjs tests/post-hp-study.test.mjs tests/study-decisions.test.mjs tests/planner.test.mjs tests/card-copy.test.mjs tests/human-card-usability.test.mjs tests/ashwood-staff.test.mjs tests/item-opportunities.test.mjs tests/hero-item-balance.test.mjs tests/local-validation.test.mjs tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs tests/rollout-budget-study.test.mjs tests/room-memory.test.mjs tests/room-fates.test.mjs tests/rogue-v4.test.mjs tests/deck-validation.test.mjs tests/engine-api.test.mjs tests/expedition-throughput.test.mjs tests/v4-coherence.test.mjs tests/retained-paths.test.mjs tests/card-layouts.test.mjs tests/decision-api.test.mjs tests/action-search-phases.test.mjs tests/decision-session.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/session-counterfactual.test.mjs",
+    "test": "node --test tests/tabletop.test.mjs tests/decks.test.mjs tests/legacy-baseline-guard.test.mjs tests/card-audit.test.mjs tests/expedition-full.test.mjs tests/balance-report.test.mjs tests/balance-experiments.test.mjs tests/warden-balance.test.mjs tests/card-interactions.test.mjs tests/card-balance.test.mjs tests/balance-adjustments.test.mjs tests/item-contracts.test.mjs tests/game-verification.test.mjs tests/post-hp-study.test.mjs tests/study-decisions.test.mjs tests/planner.test.mjs tests/card-copy.test.mjs tests/human-card-usability.test.mjs tests/ashwood-staff.test.mjs tests/item-opportunities.test.mjs tests/hero-item-balance.test.mjs tests/local-validation.test.mjs tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs tests/rollout-budget-study.test.mjs tests/room-memory.test.mjs tests/room-fates.test.mjs tests/rogue-v4.test.mjs tests/deck-validation.test.mjs tests/engine-api.test.mjs tests/expedition-throughput.test.mjs tests/v4-coherence.test.mjs tests/retained-paths.test.mjs tests/card-layouts.test.mjs tests/decision-api.test.mjs tests/action-search-phases.test.mjs tests/decision-session.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs tests/session-counterfactual.test.mjs tests/mcts-agent-strength.test.mjs",
     "test:visual": "playwright test",
     "test:legacy-baseline": "node --test tests/playtest.test.mjs",
     "test:baseline-guard": "node --test tests/legacy-baseline-guard.test.mjs",
@@ -37,7 +37,7 @@
     "study:hero-balance:report": "node scripts/report-hero-balance.mjs",
     "validate:local": "node scripts/validate-local.mjs",
     "agent:study": "node scripts/study-agent.mjs",
-    "test:rollout": "node --test tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs tests/action-search-phases.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/session-counterfactual.test.mjs",
+    "test:rollout": "node --test tests/research-agent.test.mjs tests/stochastic-rollout.test.mjs tests/action-search-phases.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs tests/session-counterfactual.test.mjs tests/mcts-agent-strength.test.mjs",
     "agent:budgets": "node scripts/study-rollout-budgets.mjs",
     "art:missing": "python3 scripts/generate-illustrations.py",
     "art:check": "python3 scripts/generate-illustrations.py --list",
@@ -49,7 +49,7 @@
     "bench:mcts-hashing": "node scripts/benchmark-mcts-transitions.mjs --mode hash",
     "bench:mcts-combined": "node scripts/benchmark-mcts-transitions.mjs --mode combined",
     "validate:deck": "node scripts/validate-deck.mjs",
-    "test:engine": "node --test tests/engine-api.test.mjs tests/stochastic-rollout.test.mjs tests/decision-api.test.mjs tests/action-search-phases.test.mjs tests/decision-session.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs",
+    "test:engine": "node --test tests/engine-api.test.mjs tests/stochastic-rollout.test.mjs tests/decision-api.test.mjs tests/action-search-phases.test.mjs tests/decision-session.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs",
     "bench:rollout-scenarios": "node scripts/benchmark-rollout-scenarios.mjs",
     "bench:expeditions": "node scripts/benchmark-expedition-throughput.mjs",
     "study:v4": "node scripts/study-v4-coherence.mjs",
@@ -59,13 +59,15 @@
     "layouts:check": "node scripts/build-card-layouts.mjs --check",
     "oracle:overnight": "node scripts/study-oracle-overnight.mjs",
     "layouts:init": "node scripts/initialize-card-placements.mjs",
-    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/session-counterfactual.test.mjs tests/migrate-session-balance.test.mjs",
+    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/new-card-engine-parity.test.mjs tests/session-counterfactual.test.mjs tests/migrate-session-balance.test.mjs tests/mcts-agent-strength.test.mjs",
     "oracle:mcts": "node scripts/run-session-mcts.mjs",
     "oracle:play": "node scripts/study-session-agent.mjs",
     "oracle:contrast": "node scripts/compare-session-actions.mjs",
     "audit:canonical": "node scripts/audit-canonical-session.mjs",
     "oracle:balance": "node scripts/study-session-balance.mjs",
-    "oracle:migrate-checkpoints": "node scripts/migrate-session-balance.mjs"
+    "oracle:migrate-checkpoints": "node scripts/migrate-session-balance.mjs",
+    "bench:mcts-frontier": "node scripts/benchmark-mcts-frontier.mjs",
+    "oracle:agent-strength": "node scripts/study-mcts-agent-strength.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"

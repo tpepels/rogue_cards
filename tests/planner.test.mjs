@@ -85,14 +85,15 @@ test("Wizard's first combat action forecasts the printed Wild Spark",()=>{
  const b=expectedAttack(s,h);
  assert.equal(b.skipChance,0);
 });
-test("planner accounts for a printed guaranteed d6 result",()=>{
+test("planner never converts a Rope's +/-1 adjustment into guaranteed treasure",()=>{
  const s=state(26);
  s.room=ROOMS.find(r=>r.id==="u-fall");
  assert.equal(fixedRoomFace(s,s.room),null);
  s.add(s.heroes[0],OBJECTS.find(c=>c.id==="rope"));
- assert.equal(fixedRoomFace(s,s.room),6);
+ assert.equal(fixedRoomFace(s,s.room),null);
  const p=planRoom(s,[true,true]);
- assert.equal(p.choice,0,"Knotted Rope guarantees the safe Room reward");
+ assert.ok(Number.isFinite(p.scores[0]));
+ assert.ok(Number.isFinite(p.scores[1]));
 });
 test("advanced planner is opt-in, reproducible and reports decisions",()=>{
  assert.ok(researchPolicies.includes("planner"));

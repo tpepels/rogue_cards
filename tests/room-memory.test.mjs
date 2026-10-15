@@ -17,7 +17,7 @@ test("expanded Room catalogue, memory cards and fate cards all have executable c
 test("a corridor reveals genuine alternatives and queues the chosen Room",()=>{
  const s=state();const original=s.rooms.UPPER.length;
  enter(s,"u-fork");
- assert.equal(s.rooms.UPPER.length,original-1);
+ assert.equal(s.rooms.UPPER.length,original);
  assert.ok(s.rooms.UPPER[0]);
  assert.equal(s.rooms.UPPER[0].type,"room");
 });

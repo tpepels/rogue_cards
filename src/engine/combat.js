@@ -36,6 +36,14 @@ export function blessBeforeD20(s,target){
  target.poison=false;return {bonus:0,adv:true};
 }
 function playerRoll(s,h,bonus,def,actorType="attack"){
+ if(actorType==="attack"&&s.monster){
+  const crown=s.keptRooms.find(x=>x.card.id==="d-crown");
+  if(crown&&s.chooseEffect("crown-unking-monster-def",
+   ["save","use"],"use")==="use"){
+   s.keptRooms.splice(s.keptRooms.indexOf(crown),1);
+   s.monsterDefenseDis=true;
+  }
+ }
  if(h.ignoreDarknessOnce&&h.nextDarknessDis>0){
   h.nextDis=Math.max(0,h.nextDis-1);
   h.nextDarknessDis=Math.max(0,h.nextDarknessDis-1);
@@ -83,9 +91,13 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  // Lethal Wand misfires and paid rerolls end the attempted attack before
  // any failed-d20 Crown prompt or attack damage is resolved.
  if(h.hp<=0)return {hit:false,critical:false,natural:null};
- const natural=s.pendingD20;const modified=natural+s.pendingD20Modifier;
- const defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv});
+ let natural=s.pendingD20;
+ let defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv,
+  dis:actorType==="attack"&&!!s.monsterDefenseDis});
+ s.monsterDefenseDis=false;
  h.nextDefenseAdv=false;
+ ({ours:natural,theirs:defense}=s.swapOpposedRoll(natural,defense,"attack"));
+ const modified=natural+s.pendingD20Modifier;
  let hit=natural===20||natural!==1&&modified+bonus+extraAtk>defense+def;
  if(!hit){
   s.noteOptions(itemOptions(s,h,"failed-d20"));
@@ -241,7 +253,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   defenseAdv=defenseAdv||h.nextDefenseAdv;hurtExtra+=h.damageVulnerability;
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
- const atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
+ let atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
  if(h.slots.armour){
   const bonus={mail:2,shield:1,"cursed-mail":3}[h.slots.armour.id]||0;
   if(bonus)s.notePassive(h.slots.armour,"defence",bonus);
@@ -275,6 +287,7 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  s.monsterAdv=false;s.monsterDis=false;
  if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
  if(h.hp<=0)return false;
+ ({ours:def,theirs:atk}=s.swapOpposedRoll(def,atk,"defense"));
  const hit=atk===20||atk!==1&&
   atk+s.monster.atk+bonus>def+s.stats(h).def-defPenalty+
    defenceBonus+(h.nextDefenseBonus||0);
@@ -311,7 +324,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   }
   }
  }
- const done=s.hurt(h,s.pendingDamage);
+ let done=0;
+ s._resolvingWardenHit=["warden","warden-fury"].includes(s.monster?.id);
+ try{done=s.hurt(h,s.pendingDamage);}
+ finally{s._resolvingWardenHit=false;}
  if(poison&&done>0&&!h.immune)h.poison=true;
  return done>0;
 }
@@ -331,11 +347,13 @@ export function monsterRespond(s,h){
    modes,"save");
   if(selection!=="save"){
    s.keptRooms.splice(s.keptRooms.indexOf(garden),1);
+   // The printed WIT penalty applies to both uses of PRESERVE,
+   // including the extra FIRE payment that cancels the response.
+   (h.hp>0?h:s.chooseActor()).nextWitDis++;
    if(selection==="cancel-with-fire"){
     s.discard(1,{tag:"FIRE"});return;
    }
    face=1;
-   (h.hp>0?h:s.chooseActor()).nextWitDis++;
   }
  }
  const whisper=(s.keptMonsterRewards||[]).find(entry=>

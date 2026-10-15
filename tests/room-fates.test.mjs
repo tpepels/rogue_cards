@@ -63,10 +63,13 @@ test("the Ferryman holds an actual Item until the Vault",()=>{
  assert.equal(s.keptRooms.length,0);
 });
 test("the hourglass and drowned banner modify the final encounter",()=>{
- const s=expedition();choose(s,"m-hourglass",0);choose(s,"m-drowned-banner",0);
+ const s=expedition();choose(s,"m-hourglass",0);
  vault(s);
  assert.equal(s.vaultModifiers.omen,"high");
- assert.equal(s.vaultModifiers.wardenDamage,3);
+ const raised=expedition();choose(raised,"m-drowned-banner",0);
+ raised.die=()=>3;
+ vault(raised);
+ assert.equal(raised.vaultModifiers.wardenDamage,3);
  const other=expedition();choose(other,"m-hourglass",1);choose(other,"m-drowned-banner",1);
  vault(other);
  assert.equal(other.vaultModifiers.omen,"low");

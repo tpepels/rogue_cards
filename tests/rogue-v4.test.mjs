@@ -96,13 +96,19 @@ test("the spared Hollow Knight may be retained until the Vault",()=>{
 });
 
 test("Ferryman sacrifice and Witness mercy unlock separate Vault alternatives",()=>{
- const s=new ExpeditionState({seed:41});
- s.beginRoom(room("m-ferryman-oath"));s.apply("ROOM_FATE",["0"],s.room);
- s.returnChoices["m-ferryman-oath"]="smuggle";
- s.beginRoom(room("d-last-witness"));s.apply("ROOM_FATE",["0"],s.room);
- s.beginRoom(VAULT);
- assert.equal(s.vaultModifiers.smuggleAvailable,true);
- assert.equal(s.vaultModifiers.bargainAvailable,true);
+ const ferryman=new ExpeditionState({seed:41});
+ ferryman.beginRoom(room("m-ferryman-oath"));
+ ferryman.apply("ROOM_FATE",["0"],ferryman.room);
+ ferryman.returnChoices["m-ferryman-oath"]="smuggle";
+ ferryman.beginRoom(VAULT);
+ assert.equal(ferryman.vaultModifiers.smuggleAvailable,true);
+ assert.equal(ferryman.vaultModifiers.bargainAvailable??false,false);
+ const witness=new ExpeditionState({seed:42});
+ witness.beginRoom(room("d-last-witness"));
+ witness.apply("ROOM_FATE",["0"],witness.room);
+ witness.beginRoom(VAULT);
+ assert.equal(witness.vaultModifiers.bargainAvailable,true);
+ assert.equal(witness.vaultModifiers.smuggleAvailable??false,false);
 });
 
 test("the new rules survive complete seeded expeditions",()=>{

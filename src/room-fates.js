@@ -42,6 +42,10 @@ export const FATE_ROOMS=Object.freeze(rows.map(([id,stage,title,art,kind,prompt,
  */
 export function fateChoiceLegal(s,roomId,choice){
  if(![0,1].includes(choice))return false;
+ const room=FATE_ROOMS.find(x=>x.id===roomId);
+ if(!room)return false;
+ if(s.pactUsed&&room.v2.choices[choice].label.includes("PACT"))
+  return false;
  if(choice===0&&["u-scribe-dust","u-bone-seed","m-ferryman-oath"].includes(roomId))
   return s.discardable(1);
  if(choice===1&&roomId==="d-sleeping-crown")
@@ -54,10 +58,21 @@ const mark=(s,choice,item=null)=>{
  s.fateChoices.push({id:s.room.id,title:s.room.title,choice:s.room.v2.choices[choice].label});
 };
 const burnItem=(s,tag=null)=>s.discard(1,{tag});
+// Tucked physical Items must not remain salvageable from the discard pile.
+const tuckItem=s=>{
+ const item=burnItem(s);
+ if(item){
+  const index=s.discardPile.lastIndexOf(item);
+  if(index>=0)s.discardPile.splice(index,1);
+ }
+ return item;
+};
 const take=(s,n=1)=>s.draw(n);
 const dead=(s,n)=>s.hurt(s.chooseRecipient("fate-damage"),n);
 // Returned tucked objects were already counted when first drawn from the deck.
 const returnTucked=(s,item)=>{if(!item)return;
+ const index=s.discardPile.lastIndexOf(item);
+ if(index>=0)s.discardPile.splice(index,1);
  const h=s.chooseRecipient("return-tucked-item");h.inventory.push(item);
  s.consumed.delete(item);s.equip(h,item);};
 const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n);
@@ -74,19 +89,22 @@ export function resolveFateChoice(s,choice){
  }
  let tucked=null;
  switch(id){
- case "u-cartographer":if(choice===1)take(s,2);break;
+ case "u-cartographer":if(choice===1)s.peek(3,true);break;
  case "u-hollow-knight":if(choice===1)take(s,2);break;
  case "u-scribe-dust":if(choice===0)burnItem(s);else take(s,2);break;
- case "u-bone-seed":if(choice===0)tucked=burnItem(s);else restore(s,3);break;
- case "m-ferryman-oath":if(choice===0)tucked=burnItem(s);else take(s,2);break;
- case "m-choir-nails":if(choice===1)take(s,2);break;
- case "m-hourglass":if(choice===1)take(s,2);break;
+ case "u-bone-seed":if(choice===0)tucked=tuckItem(s);else restore(s,3);break;
+ case "m-ferryman-oath":if(choice===0)tucked=tuckItem(s);else take(s,2);break;
+ case "m-choir-nails":if(choice===1)take(s,1);break;
+ case "m-hourglass":break;
  case "m-drowned-banner":if(choice===0)dead(s,2);else take(s,2);break;
  case "d-sleeping-crown":if(choice===1)burnItem(s,"MAGIC");break;
  case "d-last-witness":if(choice===0)dead(s,2);else take(s,2);break;
  default:throw Error("Unknown fate Room "+id);
  }
- if(s.alive())mark(s,choice,tucked);
+ if(s.alive()){
+  if(s.room.v2.choices[choice].label.includes("PACT"))s.pactUsed=true;
+  mark(s,choice,tucked);
+ }
 }
 function complete(s,entry){
  const i=s.keptRooms.indexOf(entry);
@@ -127,7 +145,11 @@ export function fateMonsterEntry(s,monster){
   complete(s,entry);
   if(entry.card.id==="u-hollow-knight")s.monsterAdv=true;
   else if(entry.choice===0)s.monsterDis=true;
-  else s.monsterAdv=true;
+  else{
+   s.monsterAdv=true;
+   // STEAL damages the revealed DEEP Monster before its first action.
+   s.pendingMonsterOpeningDamage=(s.pendingMonsterOpeningDamage||0)+3;
+  }
  }
  return dismissed;
 }
@@ -136,7 +158,7 @@ export function fateVaultEntry(s){
  const v=s.vaultModifiers;
  v.smuggleAvailable=!!s.keptRooms.find(x=>x.card.id==="d-gilded"&&x.choice===1);
  v.unthroneAvailable=false;v.bargainAvailable=false;v.wardenOpeningSkip=false;
- const crownRoom=s.keptRooms.some(x=>x.card.id==="d-crown");
+ const crownRoom=s.keptRooms.some(x=>x.card.id==="d-crown"&&x.mode==="6");
  const savedKnight=s.keptRooms.find(x=>x.card.id==="u-hollow-knight"&&x.choice===0);
  if(savedKnight){complete(s,savedKnight);v.wardenOpeningSkip=true;}
  for(const entry of [...s.keptRooms]){
@@ -149,6 +171,8 @@ export function fateVaultEntry(s){
   case "m-ferryman-oath":
    if(c===0){
     if(s.returnChoices?.["m-ferryman-oath"]==="smuggle"){
+     // The physically tucked Item is sacrificed, not lost from the deck.
+     if(entry.item)s.discardPile.push(entry.item);
      v.smuggleAvailable=true;
     }else{returnTucked(s,entry.item);restore(s,3);}
    }
@@ -156,8 +180,16 @@ export function fateVaultEntry(s){
    break;
   case "m-hourglass":v.omen=c===0?"high":"low";break;
   case "m-drowned-banner":
-   if(c===0)v.wardenDamage+=3;
-   else v.wardenFirstAdv=true;
+   if(c===0){
+    const face=s.die();
+    if(face<=2)for(const hero of s.living())s.hurt(hero,1);
+    else if(face<=4)v.wardenDamage+=3;
+    else{
+     v.wardenDamage+=s.die();
+     const defender=s.chooseRecipient("drowned-banner-next-def-dis");
+     defender.nextDefenseDis=(defender.nextDefenseDis||0)+1;
+    }
+   }else v.wardenFirstAdv=true;
    break;
   case "d-sleeping-crown":
    if(c===0){v.heroFirstAdv=true;v.sealCostDelta++;
@@ -165,7 +197,7 @@ export function fateVaultEntry(s){
    else v.sealCostDelta--;
    break;
   case "d-last-witness":
-   if(c===0){restore(s,3);v.bargainAvailable=true;
+   if(c===0){v.omenAdjust=true;v.bargainAvailable=true;
     s.endingMemory="The witness escapes with the Amulet.";}
    else{dead(s,2);s.endingMemory="The witness remains lost beneath the dungeon.";}
    break;

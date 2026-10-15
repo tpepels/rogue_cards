@@ -10,6 +10,7 @@
 import {ExpeditionState} from "./expedition-state.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {fateChoiceLegal} from "../room-fates.js";
+import {completePrintedRoomChoice} from "../room-memory-engine.js";
 import {itemOptions} from "../item-access.js";
 import {sealCost} from "./vault.js";
 import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
@@ -74,9 +75,15 @@ export function observeGame(s){
   telegraphedWardenBehavior:s.telegraphedWardenBehavior??null,
   observedRoomReroll:s._pendingRoomReroll?
    {...s._pendingRoomReroll}:null,
+  observedRoomFace:s._observedRoomRollFace??null,
+  observedOpposedDice:s._observedOpposedDice?{...s._observedOpposedDice}:null,
   offeredSavedPath:s._pendingRoomSwap?{...s._pendingRoomSwap}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
-     choice:x.choice??null,item:x.item?.id??null})),
+     choice:x.choice??null,mode:x.mode??null,
+     item:x.item?.id??null,spent:!!x.spent})),
+  pactUsed:!!s.pactUsed,
+  tuckedRoomItems:(s.tuckedRoomItems||[]).map(x=>({roomId:x.roomId,itemId:x.item.id})),
+  reverseNextRoomStage:s.reverseNextRoomStage??null,
    returnChoices:{...s.returnChoices},
    endingOptions:s.room?.stage==="FINAL"?{...s.vaultModifiers}:null,
    ended:!s.alive()||s.metrics.won||!!s.metrics.escaped,
@@ -138,6 +145,14 @@ export function legalRoomChoices(s){
  const choices=ROOM_EFFECTS[s.room.id]?.choices;
  if(!choices)throw Error("Room has no executable choices: "+s.room.id);
  const affordable=(ops,index)=>{
+  if(s.pactUsed&&s.room.v2.choices[index]?.label.includes("PACT"))return false;
+  if(s.room.id==="u-puppet"&&index===1&&s.keptRooms.some(x=>
+    x.card.id==="u-hollow-knight"&&x.choice===0))return false;
+  if(ops.some(op=>op.startsWith("COST_CURSED:"))&&
+    !s.discardable(1,"CURSED"))return false;
+  if(ops.includes("RELIQUARY_OFFER")&&!s.discardable())return false;
+  if(ops.includes("CHOIR_SILENCE")&&!s.discardable(1,"FIRE")&&
+    !s.keptRooms.some(x=>x.card.id==="m-treasure"))return false;
   if(s.room.v2.fate&&!fateChoiceLegal(s,s.room.id,index))return false;
   // ROOM_SPECIAL delegates to retained/corridor handlers. Their real
   // printed upfront costs must be checked here, not deferred until an
@@ -174,11 +189,7 @@ export function chooseRoom(s,index,{observeResult=true,prevalidated=false}={}){
   const [operation,...args]=code.split(":");
   s.apply(operation,args,s.room);
  }
- // Loyal Hound's Beetle Caravan link gives a SCOUT after BARGAIN,
- // not a free 5-6 outcome or a modifier to STEAL.
- if(s.room.id==="m-beetle"&&index===0&&
-    s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog"))&&s.alive())
-  s.peek(1);
+ completePrintedRoomChoice(s,s.room,index);
  return observeResult?observeGame(s):undefined;
 }
 /** Legal combat options at the current state and timing, without AI scores. */
