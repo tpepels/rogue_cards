@@ -46,3 +46,31 @@ Use the reported `totalSpeedup`, paired per-seed runtimes, and exact `canonicalP
 ## Not a change to rules or balance policy
 
 UCT visit counts, selection, budgets, randomness, sampled hidden-deck fairness, and terminal victory criteria do not change. Existing experimental switches remain in the code. An unproven optimization is not automatically selected for canonical card-balance studies.
+
+## Profiling and lazy initial checkpoints
+
+An opt-in `lazyInitialCheckpoint` mode avoids cloning a second expedition
+state at the beginning of each MCTS trial. Before the first periodic
+checkpoint, a reaction reconstructs the initial trial from the same public
+boundary, deterministic hidden-deck sample and chance seed, then replays
+completed canonical decisions. All subsequent checkpoints and nested
+reactions use the existing canonical replay mechanism.
+
+`profileTransitions:true` adds a `transitionProfile` object with
+per-phase and total counts and inclusive milliseconds for trial copies,
+checkpoints, canonical forks, recovery copies, nested reactions and replayed
+decisions. Timings overlap: recovery includes replay, and speculative
+transition includes recovery. Profiling is disabled by default.
+
+Compare uninstrumented throughput first, then inspect an instrumented run:
+
+    npm run bench:mcts-settlements -- --optimization speculative --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --optimization speculative-lazy --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --mode expedition --optimization speculative-lazy --budget 8 --runs 8
+    npm run bench:mcts-settlements -- --optimization speculative-lazy --budget 16 --samples 11 --distinct-seeds --profile
+    npm run bench:mcts-settlements -- --mode expedition --optimization speculative-lazy --budget 8 --runs 4 --profile
+
+The original fixed-three-seed microbenchmark remains the default to preserve
+historical comparisons. Use `--distinct-seeds` to get unique initial seeds.
+Profiled wall times include instrumentation overhead and should not be
+compared with unprofiled timings. The new path remains disabled by default.

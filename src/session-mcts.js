@@ -173,7 +173,8 @@ export function searchDecision(session,{budget=100,seed=1,
  reuseEdgeActions=false,streamHistoryHash=false,
  reuseSelectionScratch=false,reuseEmptyReplaySwitches=false,directSettlements=false,
  fastMetricClones=false,speculativeTransitions=false,
- checkpointEvery=32}={}){
+ checkpointEvery=32,lazyInitialCheckpoint=false,
+ profileTransitions=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -198,11 +199,34 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("fastMetricClones must be boolean");
  if(typeof speculativeTransitions!=="boolean")
   throw Error("speculativeTransitions must be boolean");
+ if(typeof lazyInitialCheckpoint!=="boolean")
+  throw Error("lazyInitialCheckpoint must be boolean");
+ if(typeof profileTransitions!=="boolean")
+  throw Error("profileTransitions must be boolean");
  if(!Number.isInteger(checkpointEvery)||checkpointEvery<1||checkpointEvery>256)
   throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
+ // Opt-in counts and inclusive timers; normal searches allocate no profile.
+ const transitionProfile=profileTransitions?{totals:{},byPhase:{}}:null;
+ const mark=(kind,phase,elapsedMs=0)=>{
+  if(!transitionProfile)return;
+  const add=metrics=>{
+   const metric=metrics[kind]??(metrics[kind]={count:0,elapsedMs:0});
+   metric.count++;
+   metric.elapsedMs+=elapsedMs;
+  };
+  add(transitionProfile.totals);
+  add(transitionProfile.byPhase[phase]??={});
+ };
+ const profiledClone=(source,kind,phase)=>{
+  const started=transitionProfile?performance.now():0;
+  const copy=cloneSession(source,!fastTransitions,
+   fastPileClones,fastMetricClones);
+  if(transitionProfile)mark(kind,phase,performance.now()-started);
+  return copy;
+ };
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
   observedReplay.replayAt<1||
@@ -243,7 +267,7 @@ export function searchDecision(session,{budget=100,seed=1,
  for(let i=0;i<budget;i++){
   // Rollout histories are never read by game rules. Avoid copying the
   // original history only to discard it immediately afterward.
-  const sim=cloneSession(session,!fastTransitions,fastPileClones,fastMetricClones),s=sim.state;
+  const sim=profiledClone(session,"trialClone",session.phase),s=sim.state;
   const chanceSeed=mix(seed^Math.imul(i+1,0x9e3779b9)),
    deckSeed=mix(seed^Math.imul(i+1,0x85ebca6b));
   // Never change the already-observed die/Room revealed inside a pending
@@ -263,8 +287,27 @@ export function searchDecision(session,{budget=100,seed=1,
   // Checkpoints retain the determinized hidden piles and remaining dice.
   // Reconstruct the last few completed canonical actions only if a
   // printed effect actually suspends for a nested player decision.
-  let checkpoint=speculativeTransitions?
-   cloneSession(sim,!fastTransitions,fastPileClones,fastMetricClones):null;
+  // Lazy mode recreates the first checkpoint from exact sampled seeds
+  // only when a printed reaction actually requires a rollback.
+  let checkpoint=speculativeTransitions&&transactional&&
+   !lazyInitialCheckpoint?
+   profiledClone(sim,"initialCheckpointClone",sim.phase):null;
+  const rebuildInitialTrial=()=>{
+   const rebuilt=profiledClone(session,"initialRecoveryClone",session.phase);
+   if(!rebuilt.pendingNested){
+    rebuilt.state.rng=randomSource(chanceSeed);
+    if(knowledge==="fair"){
+     const drawn=sampleRolloutDecks(session.state,{
+      knowledge:"fair",blueprint,deckSeed});
+     rebuilt.state.deck=drawn.deck;
+     for(const stage of ["UPPER","MIDDLE","DEEP"]){
+      rebuilt.state.rooms[stage]=drawn.rooms[stage];
+      rebuilt.state.monsters[stage]=drawn.monsters[stage];
+     }
+    }
+   }
+   return rebuilt;
+  };
   let sinceCheckpoint=[];
   const originalRootWasPending=Boolean(sim.pendingNested);
   const chanceSwitchIndex=originalRootWasPending?
@@ -410,40 +453,54 @@ export function searchDecision(session,{budget=100,seed=1,
     ]:[];
     const canSpeculate=speculativeTransitions&&transactional&&
      !sim.pendingNested&&!replaySwitches.length;
+    const transitionStarted=transitionProfile?performance.now():0;
     if(canSpeculate){
+     let restored=false;
      submitSpeculativeDecision(sim,choice,{
       verifiedLegalActions:reuseLegalActions?actions:null,
       observeResult:!fastTransitions,recordHistory:!fastTransitions,
       restore:()=>{
-       const recovered=cloneSession(checkpoint,!fastTransitions,
-        fastPileClones,fastMetricClones);
-       // All preceding speculative actions completed without a nested
-       // reaction. Replaying from the checkpoint is exact, including RNG.
+       restored=true;
+       const recoveryStarted=transitionProfile?performance.now():0;
+       const recovered=checkpoint?
+        profiledClone(checkpoint,"recoveryClone",from):
+        rebuildInitialTrial();
+       // All preceding actions completed without a nested reaction.
+       // Replaying the exact canonical decisions restores RNG and piles.
        for(const prior of sinceCheckpoint){
+        const replayStarted=transitionProfile?performance.now():0;
         submitDecision(recovered,prior,{
          transactional,observeResult:!fastTransitions,
          recordHistory:!fastTransitions,
          fastPileClones,reuseEmptyReplaySwitches,directSettlements,
-         fastMetricClones
+         fastMetricClones,profileEvent:transitionProfile?mark:null
         });
+        if(transitionProfile)mark("replayedAction",from,
+         performance.now()-replayStarted);
         if(recovered.pendingNested)
          throw Error("Speculative MCTS checkpoint replay diverged");
        }
        Object.assign(sim,recovered);
+       if(transitionProfile)mark("checkpointRecovery",from,
+        performance.now()-recoveryStarted);
       }
      });
+     if(restored&&sim.pendingNested)mark("nestedRecovery",from);
      sinceCheckpoint.push(choice);
     }else{
      submitDecision(sim,choice,{replaySwitches,transactional,
       observeResult:!fastTransitions,recordHistory:!fastTransitions,
       verifiedLegalActions:reuseLegalActions?actions:null,
       fastPileClones,reuseEmptyReplaySwitches,directSettlements,
-      fastMetricClones});
+      fastMetricClones,profileEvent:transitionProfile?mark:null});
     }
-    if(speculativeTransitions&&(sim.pendingNested||!canSpeculate||
-       sinceCheckpoint.length>=checkpointEvery)){
-     checkpoint=cloneSession(sim,!fastTransitions,
-      fastPileClones,fastMetricClones);
+    if(transitionProfile)mark(canSpeculate?
+     "speculativeTransition":"canonicalTransition",from,
+     performance.now()-transitionStarted);
+    if(speculativeTransitions&&transactional&&
+       (sim.pendingNested||!canSpeculate||
+        sinceCheckpoint.length>=checkpointEvery)){
+     checkpoint=profiledClone(sim,"checkpointClone",sim.phase);
      sinceCheckpoint=[];
     }
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
@@ -529,6 +586,7 @@ export function searchDecision(session,{budget=100,seed=1,
    cardOpportunities,cardSelections},
   rootEveryActionTried:decisions.every(x=>x.visits>0),
   complete:incomplete===0,
+  ...(transitionProfile?{transitionProfile}:{}),
   limitations:[
    "Only currently wired pending action windows are searched",
    "Information-set UCT samples unknown cards without seeing future dice",

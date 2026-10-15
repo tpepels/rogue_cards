@@ -521,7 +521,7 @@ export function submitDecision(session,action,{
  transactional=true,observeResult=true,recordHistory=true,
  verifiedLegalActions=null,fastPileClones=false,
  reuseEmptyReplaySwitches=false,directSettlements=false,
- fastMetricClones=false
+ fastMetricClones=false,profileEvent=null
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
@@ -532,6 +532,8 @@ export function submitDecision(session,action,{
   throw Error("directSettlements must be boolean");
  if(typeof fastMetricClones!=="boolean")
   throw Error("fastMetricClones must be boolean");
+ if(profileEvent!==null&&typeof profileEvent!=="function")
+  throw Error("profileEvent must be a function");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -578,6 +580,7 @@ export function submitDecision(session,action,{
   if(!selected)throw Error("Illegal pending reaction "+JSON.stringify(action));
   root=waiting.root;responses=[...waiting.responses,selected];
  }else{root=action;responses=[];}
+ const forkStarted=profileEvent?performance.now():0;
  const fork={
   ...session,state:forkGameState(session.state,{fastPiles:fastPileClones,
    fastMetrics:fastMetricClones}),
@@ -585,6 +588,8 @@ export function submitDecision(session,action,{
   history:recordHistory?session.history.slice():session.history,
   pendingNested:null
  };
+ if(profileEvent)profileEvent("canonicalFork",session.phase,
+  performance.now()-forkStarted);
  let position=0;
  fork.state._decisionHook=event=>{
   const actions=canonicalReactionActions(fork.state,event);

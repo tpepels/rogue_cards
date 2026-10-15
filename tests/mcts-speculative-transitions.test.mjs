@@ -107,6 +107,12 @@ test("speculative MCTS matches all terminal trajectories, visits and choices",()
     });
     assert.deepEqual(optimized,legacy,
      "Checkpoint restoration changed a canonical seeded MCTS search");
+    const lazy=searchDecision(session,{
+     ...opts,speculativeTransitions:true,lazyInitialCheckpoint:true,
+     checkpointEvery
+    });
+    assert.deepEqual(lazy,legacy,
+     "Lazy checkpoint recovery changed canonical MCTS search");
     assert.equal(JSON.stringify(observeSession(session)),before);
     assert.equal(session.state.rng.snapshot(),dice);
    }
@@ -121,6 +127,10 @@ test("speculative search validates its isolated mode and checkpoint interval",()
   /checkpointEvery must be an integer/);
  assert.throws(()=>searchDecision(session,{budget:2,checkpointEvery:257}),
   /checkpointEvery must be an integer/);
+ assert.throws(()=>searchDecision(session,{budget:2,lazyInitialCheckpoint:1}),
+  /lazyInitialCheckpoint must be boolean/);
+ assert.throws(()=>searchDecision(session,{budget:2,profileTransitions:1}),
+  /profileTransitions must be boolean/);
  assert.throws(()=>submitSpeculativeDecision(session,
   sessionActions(session)[0],{}),
   /requires a rollback callback/);
@@ -166,4 +176,23 @@ test("checkpoint replay retains legacy observed transitions and no-transaction m
   ...options,transactional:false,speculativeTransitions:true
  }),noTransaction,
  "Speculation must not override an explicit non-transactional search");
+});
+
+test("optional transition profiling preserves all MCTS decisions",()=>{
+ const session=atRoom(1842,"u-fountain");
+ const opts={seed:20261018,budget:4,knowledge:"fair",treeMode:"full",
+  maxSteps:4000,collectCoverage:false};
+ const baseline=searchDecision(session,opts);
+ const measured=searchDecision(session,{...opts,profileTransitions:true});
+ const {transitionProfile:profile,...canonical}=measured;
+ assert.deepEqual(canonical,baseline);
+ assert.ok(profile.totals.trialClone.count>=opts.budget);
+ assert.ok(profile.totals.canonicalFork.count>0);
+ const lazy=searchDecision(session,{...opts,profileTransitions:true,
+  speculativeTransitions:true,lazyInitialCheckpoint:true,
+  checkpointEvery:32});
+ const {transitionProfile:lazyProfile,...lazyCanonical}=lazy;
+ assert.deepEqual(lazyCanonical,baseline);
+ assert.equal(lazyProfile.totals.initialCheckpointClone,undefined);
+ assert.ok(lazyProfile.totals.speculativeTransition.count>0);
 });
