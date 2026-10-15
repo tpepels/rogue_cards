@@ -320,6 +320,10 @@ test("issued legal decision tickets reject stale and forged lists, without remov
  const actions=sessionActions(session,{issueTicket:true});
  const unequip=actions.find(a=>a.kind==="unequip"&&a.cardId==="sword");
  assert.ok(unequip);
+ assert.ok(Object.isFrozen(actions));
+ assert.ok(Object.isFrozen(unequip));
+ assert.throws(()=>actions.push({kind:"forge",phase:"equipment"}),TypeError);
+ assert.throws(()=>{unequip.kind="forge"},TypeError);
  assert.throws(()=>submitDecision(session,unequip,{
   verifiedLegalActions:[...actions]}),/Stale or unissued/);
  const baseline=createDecisionSession({seed:3573,heroes:["warrior"]});
@@ -351,5 +355,28 @@ test("verified full-expedition MCTS decisions are bit-for-bit identical to repea
   assert.deepEqual(fast,old,"UCT visits, completed rollouts, choices and win counts differ");
   assert.equal(JSON.stringify(observeSession(session)),start);
   assert.equal(session.state.rng.snapshot(),startDice);
+ }
+});
+
+
+test("verified MCTS action tickets execute real Room choices and combat attacks identically",()=>{
+ const makeRoom=()=>{
+  const session=createDecisionSession({seed:9031,heroes:["warrior"]});
+  const deck=session.state.rooms.UPPER;
+  const i=deck.findIndex(card=>card.id==="u-fountain");
+  assert.ok(i>=0);
+  session.state.beginRoom(deck.splice(i,1)[0]);
+  session.phase="room";
+  return session;
+ };
+ for(const factory of [makeRoom]){
+  const fast=factory(),slow=factory();
+  const actions=sessionActions(fast,{issueTicket:true});
+  const action=actions.find(a=>a.kind==="room-choice"&&a.index===0);
+  assert.ok(action);
+  submitDecision(fast,action,{verifiedLegalActions:actions});
+  submitDecision(slow,sessionActions(slow).find(a=>a.kind==="room-choice"&&a.index===0));
+  assert.deepEqual(observeSession(fast),observeSession(slow));
+  assert.equal(fast.state.rng.snapshot(),slow.state.rng.snapshot());
  }
 });
