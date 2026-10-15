@@ -624,3 +624,103 @@ test("skipping Coffin Moth retains the legal Ring of the Mold King poison reacti
   a.phase==="on-poison"&&a.kind==="item-trigger");
  assert.ok(ring,"Skipping Moth leaves the independently legal Ring reaction");
 });
+
+
+const parity=(fast,reference)=>{
+ assert.deepEqual(observeSession(fast),observeSession(reference));
+ assert.equal(fast.state.rng.snapshot(),reference.state.rng.snapshot());
+ assert.equal(fast.actionCount,reference.actionCount);
+ assert.deepEqual(fast.history,reference.history);
+};
+const pairedAction=(fast,reference,match)=>{
+ const a=sessionActions(fast).find(match);
+ const b=sessionActions(reference).find(match);
+ assert.ok(a&&b,"Expected same legal canonical action");
+ assert.deepEqual(a,b);
+ const resultFast=submitDecision(fast,a);
+ const resultReference=submitDecision(reference,b,{transactional:false});
+ assert.deepEqual(resultFast,resultReference);
+ parity(fast,reference);
+};
+test("transactional equipment changes match the full fork and preserve all physical aliases",()=>{
+ const fast=createDecisionSession({seed:59321,heroes:["warrior","witch"]});
+ const reference=createDecisionSession({seed:59321,heroes:["warrior","witch"]});
+ const sword=fast.state.heroes[0].inventory.find(c=>c.id==="sword");
+ assert.ok(sword,"Warrior needs original starting Sword");
+ assert.strictEqual(fast.state.heroes[0].slots.weapon,sword);
+ pairedAction(fast,reference,a=>a.kind==="unequip"&&a.cardId==="sword");
+ pairedAction(fast,reference,a=>a.kind==="equip"&&a.cardId==="sword");
+ pairedAction(fast,reference,a=>a.kind==="transfer"&&a.cardId==="sword"&&a.toHeroIndex===1);
+ const moved=fast.state.heroes[1].inventory.find(c=>c.id==="sword");
+ assert.strictEqual(moved,sword,"Transfer does not manufacture a different Sword");
+ pairedAction(fast,reference,a=>a.kind==="equip"&&a.cardId==="sword");
+ assert.strictEqual(fast.state.heroes[1].slots.weapon,sword);
+ pairedAction(fast,reference,a=>a.kind==="unequip"&&a.cardId==="sword");
+ pairedAction(fast,reference,a=>a.kind==="transfer"&&a.cardId==="sword"&&a.toHeroIndex===0);
+ assert.strictEqual(fast.state.heroes[0].inventory.find(c=>c.id==="sword"),sword);
+});
+
+test("transactional safe phase transitions are identical to fully copied canonical decisions",()=>{
+ const fast=createDecisionSession({seed:45321,heroes:["warrior","witch"]});
+ const reference=createDecisionSession({seed:45321,heroes:["warrior","witch"]});
+ pairedAction(fast,reference,a=>a.phase==="between-rooms"&&a.kind==="continue");
+ assert.equal(fast.phase,"explore");
+ pairedAction(fast,reference,a=>a.phase==="explore"&&a.kind==="continue");
+ assert.equal(fast.phase,"explore");
+ pairedAction(fast,reference,a=>a.phase==="explore"&&a.kind==="continue");
+ assert.equal(fast.phase,"room");
+ const rat=monster("rat");
+ for(const session of [fast,reference]){
+  session.state.monster=rat;session.state.monsterHP=rat.hp;
+  session.phase="parley";
+ }
+ parity(fast,reference);
+ pairedAction(fast,reference,a=>a.phase==="parley"&&a.kind==="fight");
+ assert.equal(fast.phase,"combat-hero");
+ pairedAction(fast,reference,a=>a.phase==="combat-hero"&&a.kind==="choose-hero-turn");
+ assert.equal(fast.phase,"combat");
+});
+
+test("transactional equipment rollback restores the precise original objects after partial failure",()=>{
+ const session=createDecisionSession({seed:6231,heroes:["warrior","witch"]});
+ const sword=session.state.heroes[0].inventory.find(c=>c.id==="sword");
+ const receiving=session.state.heroes[1].inventory;
+ const originalPush=receiving.push;
+ const action=sessionActions(session).find(a=>
+  a.kind==="transfer"&&a.cardId==="sword"&&a.toHeroIndex===1);
+ assert.ok(action);
+ const before=JSON.stringify(observeSession(session));
+ const rng=session.state.rng.snapshot();
+ const sourceArray=session.state.heroes[0].inventory;
+ receiving.push=function(...items){
+  Array.prototype.push.apply(this,items);
+  throw Error("injected error after actual inventory mutation");
+ };
+ try{
+  assert.throws(()=>submitDecision(session,action),/injected error/);
+ }finally{
+  if(Object.prototype.hasOwnProperty.call(receiving,"push"))delete receiving.push;
+  assert.strictEqual(receiving.push,originalPush);
+ }
+ assert.strictEqual(session.state.heroes[0].inventory,sourceArray);
+ assert.strictEqual(session.state.heroes[1].inventory,receiving);
+ assert.strictEqual(session.state.heroes[0].inventory.find(c=>c.id==="sword"),sword);
+ assert.equal(JSON.stringify(observeSession(session)),before);
+ assert.equal(session.state.rng.snapshot(),rng);
+ assert.equal(session.actionCount,0);
+ assert.deepEqual(session.history,[]);
+});
+
+test("transactional mode never bypasses canonical copy/replay for nested Room reactions",()=>{
+ const fast=createDecisionSession({seed:1842,heroes:["warrior"]});
+ const reference=createDecisionSession({seed:1842,heroes:["warrior"]});
+ for(const session of [fast,reference]){
+  session.state.beginRoom(room("u-fountain"));
+  session.phase="room";
+ }
+ pairedAction(fast,reference,a=>a.kind==="room-choice"&&a.index===0);
+ assert.equal(observeSession(fast).phase,"reaction");
+ assert.deepEqual(fast.state.heroes.map(h=>h.hp),
+  reference.state.heroes.map(h=>h.hp),"Interrupted rolls cannot leak HP changes");
+ pairedAction(fast,reference,a=>a.kind==="keep");
+});
