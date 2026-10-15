@@ -45,9 +45,10 @@ export function applyWardenChoice(s,kind){
   s.discard(amount,{tag:kind==="unthrone"?"MAGIC":null});
   const wit=s.takeWitModifiers(h);
   const natural=s.die(20);
-  const a=s.rerollIfKept(h,wit.dis?
+  let a=s.rerollIfKept(h,wit.dis?
    Math.min(natural,s.die(20)):natural);
-  const b=s.die(20);
+  let b=s.die(20);
+  ({ours:a,theirs:b}=s.swapOpposedRoll(a,b,"warden-negotiation"));
   if(a===20||a!==1&&a+h.card.wit+wit.bonus>b+6){
    s.metrics.won=true;
    s.endingKind=kind==="bargain"?"bargained_amulet":"unthroned_warden";
