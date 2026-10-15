@@ -163,7 +163,7 @@ export function searchDecision(session,{budget=100,seed=1,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
- fastPrivateCommit=true,compactTrace=true}={}){
+ fastPrivateCommit=true,compactTrace=true,cacheRootHash=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -177,8 +177,9 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("transactional, fastTransitions, reuseLegalActions and fastStateHash must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
- if(typeof fastPrivateCommit!=="boolean"||typeof compactTrace!=="boolean")
-  throw Error("fastPrivateCommit and compactTrace must be boolean");
+ if(typeof fastPrivateCommit!=="boolean"||typeof compactTrace!=="boolean"||
+    typeof cacheRootHash!=="boolean")
+  throw Error("fastPrivateCommit, compactTrace and cacheRootHash must be boolean");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
@@ -194,7 +195,10 @@ export function searchDecision(session,{budget=100,seed=1,
  // before sampling the unknown future at that reaction boundary.
  const blueprint=knowledge==="fair"&&!session.pendingNested?
   prepareRolloutDecks(session.state,"fair"):null;
- const tree=new Map(),rootKey="root:"+stateHash(session),rng=randomSource(seed);
+ // Resampling hidden piles never changes the current public observation.
+ // The same root position occurs in every rollout; hash it ONCE.
+ const rootHash=stateHash(session);
+ const tree=new Map(),rootKey="root:"+rootHash,rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0;
  const incompleteReasons={};
@@ -310,7 +314,8 @@ export function searchDecision(session,{budget=100,seed=1,
      // The history key is not used after entering a default rollout.
      selectedId=null;
     }else{
-     const key=historyKey+":"+stateHash(sim);
+     const key=historyKey+":"+
+      (cacheRootHash&&depth===0?rootHash:stateHash(sim));
      const {node,candidates}=nodeFor(tree,key,actions);
      const forcedCandidate=forced?
       candidates.find(c=>c.action.kind==="continue"):null;
@@ -423,7 +428,7 @@ export function searchDecision(session,{budget=100,seed=1,
  if(JSON.stringify(observeSession(session))!==original||
     session.state.rng.snapshot()!==actualRng)
   throw Error("MCTS mutated the actual player state or future dice");
- const root=tree.get(rootKey+":"+stateHash(session));
+ const root=tree.get(rootKey+":"+rootHash);
  const decisions=rootStats(root,rootActions).sort((a,b)=>
   b.visits-a.visits||((b.estimatedWinRate??0)-(a.estimatedWinRate??0)));
  // Select robust child (most visits), not an exploratory single lucky win.
