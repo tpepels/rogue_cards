@@ -161,7 +161,7 @@ const atom=(path,data)=>{const temporary=path+".tmp-"+process.pid;
 };
 const copySession=s=>({
  ...s,state:forkGameState(s.state),
- history:s.history.slice(),
+ history:[], // Not used by printed rules; source traces are recorded separately.
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
   ...s.pendingNested,root:{...s.pendingNested.root},
@@ -200,7 +200,7 @@ function oneJob(i,c){
     "reaction:"+session.pendingNested.trigger.phase:session.phase,
     action:chosen,roomId:session.state.room?.id,
     monsterId:session.state.monster?.id};
-   submitDecision(session,chosen);
+   submitDecision(session,chosen,{observeResult:false,recordHistory:false});
   }
   if(session.phase!=="terminal")
    throw Error("Actual source expedition exceeded step limit");
