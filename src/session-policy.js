@@ -4,8 +4,8 @@
  * The game permits free, reversible equipment changes at a safe boundary.
  * Because equip -> unequip -> equip can repeat indefinitely, no finite
  * game-step limit can guarantee termination for an unrestricted random
- * search policy. This policy still searches the COMPLETE legal action list
- * through real full-expedition MCTS, and never changes sessionActions(),
+ * search policy. On every non-forced decision it searches the COMPLETE
+ * legal action list through real full-expedition MCTS, and never changes sessionActions(),
  * submitDecision(), printed cards, or combat rules.
  *
  * After twelve uninterrupted free equipment actions at one safe boundary,
@@ -24,6 +24,15 @@ export function createSessionPolicy(){
  return {consecutiveEquipment:0,cycleBreaks:0,equipmentActions:0};
 }
 
+/** True only when the study has already committed to progress; MCTS
+ * cannot change the next action at this boundary.
+ */
+export function forcesEquipmentProgress(session,policy,legal){
+ return safePhases.has(session.phase)&&
+  policy.consecutiveEquipment>=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS&&
+  legal.some(a=>a.kind==="continue");
+}
+
 export function selectSessionPolicyAction(session,policy,{
  budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
  legalActions=null
@@ -37,8 +46,7 @@ export function selectSessionPolicyAction(session,policy,{
  // MCTS cannot influence this result, and searchDecision does not mutate
  // the session or advance its dice. Avoiding that discarded full-expedition
  // search preserves the exact chosen action and future chance sequence.
- if(progress&&safePhases.has(session.phase)&&
-  policy.consecutiveEquipment>=MAX_CONSECUTIVE_EQUIPMENT_ACTIONS){
+ if(progress&&forcesEquipmentProgress(session,policy,legal)){
   policy.cycleBreaks++;
   policy.consecutiveEquipment=0;
   return progress;
