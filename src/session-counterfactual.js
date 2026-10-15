@@ -36,14 +36,16 @@ const copySession=session=>({
   actions:session.pendingNested.actions.map(a=>({...a}))
  }:null
 });
+// sampleRolloutDecks returns new arrays on every call; this continuation
+// owns them exclusively, so no additional shallow copies are necessary.
 const matchDecks=(state,source,deckSeed,blueprint=null)=>{
  const sampled=sampleRolloutDecks(source,{
   knowledge:"fair",deckSeed,blueprint
  });
- state.deck=sampled.deck.slice();
+ state.deck=sampled.deck;
  for(const stage of stages){
-  state.rooms[stage]=sampled.rooms[stage].slice();
-  state.monsters[stage]=sampled.monsters[stage].slice();
+  state.rooms[stage]=sampled.rooms[stage];
+  state.monsters[stage]=sampled.monsters[stage];
  }
 };
 const logFactorials=[0];
