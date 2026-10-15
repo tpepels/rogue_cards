@@ -33,7 +33,27 @@ function clone(value,seen){
  }
  return out;
 }
-export function forkGameState(state){
+// The three hidden piles only contain immutable catalogue definitions or
+// frozen physical copies. Copy the array containers while reusing their
+// printed cards. Register each copied container in seen to preserve aliases.
+function copyImmutablePile(pile,seen){
+ if(seen.has(pile))return seen.get(pile);
+ const copied=pile.slice();
+ seen.set(pile,copied);
+ return copied;
+}
+function copyStagePiles(groups,seen){
+ if(seen.has(groups))return seen.get(groups);
+ const cloned=Object.create(Object.getPrototypeOf(groups));
+ seen.set(groups,cloned);
+ for(const stage of Object.keys(groups)){
+  const source=groups[stage];
+  cloned[stage]=Array.isArray(source)?
+   copyImmutablePile(source,seen):clone(source,seen);
+ }
+ return cloned;
+}
+export function forkGameState(state,{fastPiles=false}={}){
  if(!(state instanceof ExpeditionState)||typeof state.rng?.clone!=="function")
   throw Error("Only a clonable canonical ExpeditionState can be forked");
  // Fork the live state directly. Building and then recursively cloning
@@ -43,8 +63,12 @@ export function forkGameState(state){
  const seen=new WeakMap();
  seen.set(state,fork);
  for(const key of Object.keys(state)){
-  if(key!=="rng"&&key!=="_decisionHook")
-   fork[key]=clone(state[key],seen);
+  if(key==="rng"||key==="_decisionHook")continue;
+  const value=state[key];
+  fork[key]=fastPiles&&key==="deck"&&Array.isArray(value)?
+   copyImmutablePile(value,seen):
+   fastPiles&&(key==="rooms"||key==="monsters")&&value?
+    copyStagePiles(value,seen):clone(value,seen);
  }
  fork.rng=state.rng.clone();
  return fork;
