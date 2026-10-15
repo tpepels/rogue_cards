@@ -1082,6 +1082,7 @@ export class ExpeditionState {
   else if(code==="DRAW2")this.draw(2);
   else if(code==="HEAL2")this.heal(h,2);
   else if(code==="HURT2")this.hurt(h,2);
+  else if(code==="HURT2_DEF_DIS"){this.hurt(h,2);h.nextDefenseDis=(h.nextDefenseDis||0)+1;}
   else if(code==="HURTd6")this.hurt(h,this.die());
   else throw Error("Unknown check consequence "+code);
  }
