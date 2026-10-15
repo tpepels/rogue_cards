@@ -1256,7 +1256,23 @@ export class ExpeditionState {
    }
   const risk=forced&&typeof forced==="object"?forced.risk:null;
   const firstSpent=this.lastSpent;
-  if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
+  if(risk==="2"&&this.room.id==="m-treasure"){
+   const payer=this.chooseActor();
+   this._observedRoomRollFace=face;
+   const mode=payer.hp>2?this.chooseEffect("treasure-reroll-after-reveal",
+    ["keep","reroll"],"keep"):"keep";
+   delete this._observedRoomRollFace;
+   if(mode==="reroll"){
+    this.hurt(payer,2);
+    if(!this.alive())return false;
+    const second=this.die();
+    this._pendingRoomReroll={first:face,new:second,roomId:this.room.id};
+    const chosen=this.chooseEffect("treasure-choose-room-die",
+     ["first","new"],"new");
+    delete this._pendingRoomReroll;
+    face=chosen==="first"?face:second;
+   }
+  }else if(risk&&["u-fountain","d-last-chest"].includes(this.room.id)){
     face=this.pushLuck(face,{onOne:true});
    }else if(risk){
    const canPay=risk==="item"?this.discardable():this.actor.hp>0;
@@ -1284,6 +1300,14 @@ export class ExpeditionState {
      return true;
     });
    }
+  }
+  if(this.room.id==="u-merchant"&&this.has("goblin-pet")){
+   const second=this.die();
+   this._pendingRoomReroll={first:face,new:second,roomId:this.room.id};
+   const chosen=this.chooseEffect("merchant-goblin-choose-room-die",
+    ["first","new"],"first");
+   delete this._pendingRoomReroll;
+   face=chosen==="new"?second:face;
   }
   if(this.room.id==="u-nest"&&
      this.heroes.some(h=>h.hp>0&&this.equipped(h,"dog")))face=6;
