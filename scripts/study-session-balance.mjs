@@ -323,9 +323,10 @@ function summarize(c,completed,failed=[]){
    "No manipulation or artificially early card access is used",
    "Each matched pair comes from a distinct independent initial seed",
    "Future decisions use finite-budget MCTS, not solved optimal play",
-   "After twelve consecutive free equipment changes the MCTS-evaluated "+
-    "study policy takes the real continue action to prevent an infinite "+
-    "reversible loop. Printed game actions remain unchanged.",
+   "After twelve consecutive free equipment changes the study policy "+
+    "takes the real Continue action without MCTS on a result that would "+
+    "unconditionally be discarded. All other choices retain full MCTS. "+
+    "Printed game actions remain unchanged.",
    "Nested full-game MCTS rollouts advance via the real Continue action "+
     "after six consecutive reversible equipment moves; the physical rules "+
     "and full root legal-action set remain unchanged",
