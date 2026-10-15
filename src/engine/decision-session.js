@@ -318,14 +318,82 @@ const sameAction=(a,b)=>a&&b&&
  Object.keys(a).length===Object.keys(b).length&&
  Object.keys(a).every(k=>a[k]===b[k]);
 
+/** Transaction journal for the strictly non-suspending rules paths.
+ *
+ * A safe choice is still executed through submitDecisionDirect(), including
+ * full canonical legality checks and printed action dispatch. Instead of
+ * deep-copying the entire expedition, snapshot only the touched state:
+ * phase metadata, the append-only history, and equipped/owned cards for
+ * physical equipment operations. Any exception restores those exact
+ * original objects and arrays, so a rejected transaction is atomic.
+ *
+ * All other actions - including entering Rooms, rolling dice, activating
+ * Items, and continuing an existing nested reaction - retain the normal
+ * copy/replay fork. No speculation about whether printed effects trigger.
+ */
+const freeEquipmentActions=new Set(["equip","unequip","transfer"]);
+function safeDirectAction(session,action){
+ if(session.pendingNested||!action||typeof action!=="object")return false;
+ const phase=session.phase;
+ if((phase==="between-rooms"||phase==="explore")&&
+    action.phase==="equipment"&&freeEquipmentActions.has(action.kind))
+  return true;
+ if(phase==="explore"&&action.phase==="explore"&&
+    action.kind==="continue")return true;
+ if(phase==="combat-hero"&&action.phase==="combat-hero"&&
+    action.kind==="choose-hero-turn")return true;
+ if(phase==="parley"&&action.phase==="parley"&&
+    action.kind==="fight")return true;
+ return false;
+}
+function beginDirectTransaction(session,action){
+ const s=session.state;
+ const meta={
+  phase:session.phase,heroIndex:session.heroIndex,
+  returnRoomId:session.returnRoomId,
+  monsterRound:session.monsterRound,
+  actionCount:session.actionCount,
+  historyLength:session.history.length,
+  actedMask:s._actedCombatMask,
+  hadActedMask:Object.hasOwn(s,"_actedCombatMask")
+ };
+ const indices=action.phase==="equipment"?
+  [...new Set([action.heroIndex,action.toHeroIndex]
+   .filter(i=>Number.isInteger(i)))]:[];
+ const touched=indices.map(i=>{
+  const hero=s.heroes[i];
+  // The existing canonical legality validator will reject any invalid
+  // Hero or stale action, before mutating game state.
+  return hero?{hero,inventory:hero.inventory.slice(),
+   slots:{...hero.slots}}:null;
+ }).filter(Boolean);
+ return ()=>{
+  session.phase=meta.phase;
+  session.heroIndex=meta.heroIndex;
+  session.returnRoomId=meta.returnRoomId;
+  session.monsterRound=meta.monsterRound;
+  session.actionCount=meta.actionCount;
+  session.history.length=meta.historyLength;
+  if(meta.hadActedMask)s._actedCombatMask=meta.actedMask;
+  else delete s._actedCombatMask;
+  for(const {hero,inventory,slots} of touched){
+   hero.inventory.splice(0,hero.inventory.length,...inventory);
+   for(const key of Object.keys(hero.slots))delete hero.slots[key];
+   Object.assign(hero.slots,slots);
+  }
+ };
+}
 /** Re-execute one pending canonical rules call on an isolated exact-RNG
  * fork. A nested trigger suspends the entire transaction. On selection,
  * replay the SAME dice/printed effects and commit once, when complete.
  * No used Item, HP, die or deck mutation escapes an interrupted call.
  */
 export function submitDecision(session,action,{
- afterReactionReplay=null,replayAt=null,replaySwitches=[]
+ afterReactionReplay=null,replayAt=null,replaySwitches=[],
+ transactional=true
 }={}){
+ if(typeof transactional!=="boolean")
+  throw Error("transactional must be a boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -339,6 +407,14 @@ export function submitDecision(session,action,{
   at:replayAt,callback:afterReactionReplay
  });
  if(session.phase==="terminal")throw Error("Expedition already ended");
+ // Trusted deterministic rules paths have a reversible, narrow write set.
+ // Skipping their full-state fork is especially valuable in MCTS, where
+ // many legal equipment moves are evaluated before the next Room.
+ if(transactional&&!switches.length&&safeDirectAction(session,action)){
+  const rollback=beginDirectTransaction(session,action);
+  try{return submitDecisionDirect(session,action)}
+  catch(error){rollback();throw error}
+ }
  const waiting=session.pendingNested;
  let root,responses;
  if(waiting){
@@ -388,7 +464,7 @@ export function submitDecision(session,action,{
   throw new NeedReaction(event,actions,observeGame(fork.state));
  };
  try{
-  submitDecisionDirect(fork,root);
+  const committedObservation=submitDecisionDirect(fork,root);
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
   // Preserve the canonical game-state object identity across accepted
@@ -398,7 +474,10 @@ export function submitDecision(session,action,{
   Object.assign(real,fork.state);
   fork.state=real;
   Object.assign(session,fork,{pendingNested:null});
-  return observeSession(session);
+  // submitDecisionDirect already produced this canonical observation
+  // after all printed effects settled; enumerating actions again here
+  // was duplicate work on every committed decision.
+  return committedObservation;
  }catch(e){
   if(!(e instanceof NeedReaction))throw e;
   session.pendingNested={root,responses,
