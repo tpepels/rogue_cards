@@ -16,7 +16,11 @@ export function resolveRoomChoice(s,choice){
   if(id==="d-gilded"&&choice===1){
    s.keptRooms.push({card:s.room,choice:1});s.forkRooms("plain");return;
   }
-  if(id==="u-smuggler"&&choice===0){s.hurt(h,1);if(s.alive())s.draw();}
+  if(id==="u-smuggler"&&choice===0){
+   s.hurt(h,1);
+   if(!s.alive())return; // Lethal SQUEEZE cannot reveal further Routes.
+   s.draw();
+  }
   if(id==="u-mossy"&&choice===0)s.heal(h,1);
   // Rolled corridor outcomes already specify whether and how to enter a
   // revealed Room. Do not add an unprinted second fork afterwards.
