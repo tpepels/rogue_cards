@@ -56,11 +56,19 @@ const cloneSession=s=>({
   actions:s.pendingNested.actions.map(a=>({...a}))
  }:null
 });
-// A public tree key must describe the exact same information as
-// observeSession(), but observeSession() also enumerates every legal action.
-// MCTS already has those actions. Avoid doing that expensive work twice at
-// every node (especially at safe equipment boundaries).
-export const mctsPublicStateHash=s=>{
+// Preserve the EXACT JSON/FNV public-observation fingerprint, including
+// property ordering and nesting, without allocating and serializing an
+// extra enclosing object at every MCTS node. Normal phase/hero prefixes
+// are reusable, but game-state JSON is recalculated on every decision:
+// cached state snapshots would become stale after mutable rules effects.
+const hashPart=(initial,chunk)=>{
+ let h=initial;
+ for(let i=0;i<chunk.length;i++)
+  h=Math.imul(h^chunk.charCodeAt(i),16777619);
+ return h>>>0;
+};
+const phaseHashPrefixes=new Map();
+export const mctsLegacyPublicStateHash=s=>{
  const nested=s.pendingNested;
  return hash(JSON.stringify({
   phase:nested?"reaction":s.phase,
@@ -68,6 +76,25 @@ export const mctsPublicStateHash=s=>{
   heroIndex:nested?null:s.heroIndex??null,
   game:nested?nested.observation:observeGame(s.state)
  }));
+};
+export const mctsPublicStateHash=s=>{
+ const nested=s.pendingNested;
+ let initial;
+ if(nested){
+  initial=hash('{"phase":"reaction","trigger":'+
+   JSON.stringify(nested.trigger??null)+',"heroIndex":null,"game":');
+ }else{
+  const key=s.phase+"|"+(s.heroIndex??null);
+  initial=phaseHashPrefixes.get(key);
+  if(initial===undefined){
+   initial=hash('{"phase":'+JSON.stringify(s.phase)+
+    ',"trigger":null,"heroIndex":'+JSON.stringify(s.heroIndex??null)+
+    ',"game":');
+   phaseHashPrefixes.set(key,initial);
+  }
+ }
+ const game=nested?nested.observation:observeGame(s.state);
+ return hashPart(hashPart(initial,JSON.stringify(game)),"}");
 };
 function nodeFor(tree,key,actions){
  let node=tree.get(key);
@@ -133,7 +160,7 @@ export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
- reuseLegalActions=true}={}){
+ reuseLegalActions=true,fastStateHash=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -143,8 +170,9 @@ export function searchDecision(session,{budget=100,seed=1,
  if(!Number.isFinite(exploration)||exploration<0)
   throw Error("Exploration coefficient must be nonnegative");
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
-    typeof reuseLegalActions!=="boolean")
-  throw Error("transactional, fastTransitions and reuseLegalActions must be boolean");
+    typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean")
+  throw Error("transactional, fastTransitions, reuseLegalActions and fastStateHash must be boolean");
+ const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
   observedReplay.replayAt<1||
@@ -159,7 +187,7 @@ export function searchDecision(session,{budget=100,seed=1,
  // before sampling the unknown future at that reaction boundary.
  const blueprint=knowledge==="fair"&&!session.pendingNested?
   prepareRolloutDecks(session.state,"fair"):null;
- const tree=new Map(),rootKey="root:"+mctsPublicStateHash(session),rng=randomSource(seed);
+ const tree=new Map(),rootKey="root:"+stateHash(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0;
  const incompleteReasons={};
@@ -250,7 +278,7 @@ export function searchDecision(session,{budget=100,seed=1,
      pendingTrigger:sim.pendingNested?.trigger??null,
      roomChoiceOperations:sim.state.room?.v2.choices??null
     });break}
-    const key=historyKey+":"+mctsPublicStateHash(sim);
+    const key=historyKey+":"+stateHash(sim);
     const {node,candidates}=nodeFor(tree,key,actions);
     // The printed rules allow reversible zero-time equipment changes.
     // Each root alternative is still evaluated. During sampled future
@@ -349,7 +377,7 @@ export function searchDecision(session,{budget=100,seed=1,
  if(JSON.stringify(observeSession(session))!==original||
     session.state.rng.snapshot()!==actualRng)
   throw Error("MCTS mutated the actual player state or future dice");
- const root=tree.get(rootKey+":"+mctsPublicStateHash(session));
+ const root=tree.get(rootKey+":"+stateHash(session));
  const decisions=rootStats(root,rootActions).sort((a,b)=>
   b.visits-a.visits||((b.estimatedWinRate??0)-(a.estimatedWinRate??0)));
  // Select robust child (most visits), not an exploratory single lucky win.
