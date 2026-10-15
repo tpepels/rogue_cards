@@ -100,7 +100,8 @@ function playOne({gameSeed,heroes,profile,config:c}){
    legalActions:legal
   });
   if(!chosen)throw Error("Canonical MCTS did not select a legal action");
-  submitDecision(session,chosen,{observeResult:false,recordHistory:false});
+  submitDecision(session,chosen,{observeResult:false,
+   recordHistory:false,preserveStateIdentity:false});
  }
  if(session.phase!=="terminal"||session.state.metrics.roundLimit||
     session.state.metrics.unresolved)
