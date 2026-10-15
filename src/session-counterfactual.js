@@ -27,7 +27,7 @@ const mix=value=>{
 const copySession=session=>({
  ...session,
  state:forkGameState(session.state),
- history:session.history.map(x=>({...x})),
+ history:session.history.slice(),
  remainingReturns:[...session.remainingReturns],
  pendingNested:session.pendingNested?{
   ...session.pendingNested,
