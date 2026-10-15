@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
+import {mctsPublicStateHash} from "../src/session-mcts.js";
 import {chooseRoom,legalActions,observeGame,createDecisionSession,sessionActions,submitDecision} from "../src/engine/index.js";
 
 const room=id=>{const c=ROOMS.find(x=>x.id===id);assert.ok(c,id);return c;};
@@ -236,4 +237,16 @@ test("Oracle session enumerator and transition honor the same global Pact limit"
  session.state.beginRoom(room("u-hollow-knight"));session.phase="room";
  const after=sessionActions(session).filter(x=>x.kind==="room-choice");
  assert.deepEqual(after.map(x=>x.index),[1]);
+});
+
+test("retained Room mode changes Oracle information-set key",()=>{
+ const first=createDecisionSession({seed:3061,heroes:["warrior"]});
+ const second=createDecisionSession({seed:3061,heroes:["warrior"]});
+ const crown=room("d-crown");
+ first.state.keptRooms.push({card:crown,mode:"5"});
+ second.state.keptRooms.push({card:crown,mode:"6"});
+ assert.equal(observeGame(first.state).keptRooms[0].mode,"5");
+ assert.equal(observeGame(second.state).keptRooms[0].mode,"6");
+ assert.notEqual(mctsPublicStateHash(first),mctsPublicStateHash(second),
+  "Search must distinguish the printed 5 and 6 Crown uses");
 });
