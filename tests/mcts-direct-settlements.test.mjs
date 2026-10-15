@@ -111,3 +111,21 @@ test("MCTS direct settlements retain exact seeded full and frontier trees",()=>{
   phase:"corpse",kind:"leave"
  },{directSettlements:0}),/directSettlements must be boolean/);
 });
+
+test("guarded corpse settlement forks and suspends when a delayed Item draw requires a Hero choice",()=>{
+ const fast=scenario("corpse",91427);
+ const reference=scenario("corpse",91427);
+ for(const session of [fast,reference])session.state.pendingReward=1;
+ const before=JSON.stringify(observeSession(fast)),dice=fast.state.rng.snapshot();
+ const x=submitDecision(fast,sessionActions(fast).find(a=>a.kind==="leave"),
+  {directSettlements:true});
+ const y=submitDecision(reference,sessionActions(reference).find(a=>a.kind==="leave"),
+  {directSettlements:false});
+ assert.deepEqual(x,y);
+ assert.equal(x.phase,"reaction");
+ assert.equal(JSON.stringify(observeSession(fast)),
+  JSON.stringify(observeSession(reference)));
+ assert.equal(fast.state.rng.snapshot(),dice);
+ assert.equal(reference.state.rng.snapshot(),dice);
+ assert.ok(before.length>0);
+});
