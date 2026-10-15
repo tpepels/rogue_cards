@@ -37,7 +37,7 @@ const actionKey=action=>JSON.stringify(Object.keys(action).sort()
  .map(key=>[key,action[key]]));
 const cloneSession=s=>({
  ...s,state:forkGameState(s.state),
- history:s.history.map(x=>({...x})),
+ history:s.history.slice(),
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
   ...s.pendingNested,
