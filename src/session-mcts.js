@@ -162,7 +162,8 @@ export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
- reuseLegalActions=true,fastStateHash=true,treeMode="full"}={}){
+ reuseLegalActions=true,fastStateHash=true,treeMode="full",
+ lazyColdEdges=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -172,8 +173,9 @@ export function searchDecision(session,{budget=100,seed=1,
  if(!Number.isFinite(exploration)||exploration<0)
   throw Error("Exploration coefficient must be nonnegative");
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
-    typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean")
-  throw Error("transactional, fastTransitions, reuseLegalActions and fastStateHash must be boolean");
+    typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean"||
+    typeof lazyColdEdges!=="boolean")
+  throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash and lazyColdEdges must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -301,16 +303,35 @@ export function searchDecision(session,{budget=100,seed=1,
      selectedId=null;
     }else{
      const key=historyKey+":"+stateHash(sim);
-     const {node,candidates}=nodeFor(tree,key,actions);
-     const forcedCandidate=forced?
-      candidates.find(c=>c.action.kind==="continue"):null;
-     const selected=forcedCandidate||
-      select(node,candidates,choiceRng,exploration);
-     choice=selected.action;
-     selectedId=selected.id;
-     progress=Boolean(forcedCandidate);
-     path.push({node,edge:selected.edge});
-     if(treeMode==="frontier"&&selected.edge.visits===0)
+     let node=tree.get(key),selectedEdge;
+     if(!node&&lazyColdEdges){
+      // On the first visit all actions are unvisited. The original
+      // nodeFor/select therefore draws uniformly from the legal list.
+      // Allocate only that chosen edge, and materialize the other zero-
+      // visit edges when the position is revisited. RNG and UCT stay exact.
+      node={visits:0,edges:new Map()};
+      tree.set(key,node);
+      const forcedChoice=forced?
+       actions.find(a=>a.kind==="continue"):null;
+      choice=forcedChoice||choiceRng.choose(actions);
+      selectedId=actionKey(choice);
+      selectedEdge={action:{...choice},visits:0,wins:0};
+      node.edges.set(selectedId,selectedEdge);
+      progress=Boolean(forcedChoice);
+     }else{
+      const found=nodeFor(tree,key,actions);
+      node=found.node;
+      const forcedCandidate=forced?
+       found.candidates.find(c=>c.action.kind==="continue"):null;
+      const selected=forcedCandidate||
+       select(node,found.candidates,choiceRng,exploration);
+      choice=selected.action;
+      selectedId=selected.id;
+      selectedEdge=selected.edge;
+      progress=Boolean(forcedCandidate);
+     }
+     path.push({node,edge:selectedEdge});
+     if(treeMode==="frontier"&&selectedEdge.visits===0)
       inRollout=true;
     }
     if(progress)rolloutEquipmentAdvances++;
