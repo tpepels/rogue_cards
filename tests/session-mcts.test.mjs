@@ -240,3 +240,23 @@ test("faster canonical game-state fork preserves RNG, physical-copy identity and
  fork.metrics.cardCounts.sentinel=923;
  assert.notEqual(original.metrics.cardCounts.sentinel,923);
 });
+
+
+test("full canonical MCTS outcomes, visits and decisions match transactional and legacy forks",()=>{
+ const samples=[
+  {session:createDecisionSession({seed:531,heroes:["warrior","witch"]}),
+   options:{seed:19315,budget:4,knowledge:"fair",maxSteps:4000}},
+  {session:vault(),
+   options:{seed:19316,budget:4,knowledge:"oracle",maxSteps:4000}}
+ ];
+ for(const {session,options} of samples){
+  const before=JSON.stringify(observeSession(session));
+  const rng=session.state.rng.snapshot();
+  const transactional=searchDecision(session,{...options,transactional:true});
+  const legacy=searchDecision(session,{...options,transactional:false});
+  assert.deepEqual(transactional,legacy,
+   "The two modes must search identical printed actions and rollouts");
+  assert.equal(JSON.stringify(observeSession(session)),before);
+  assert.equal(session.state.rng.snapshot(),rng);
+ }
+});
