@@ -444,12 +444,17 @@ export function monsterRespond(s,h){
   else if(band===2)s.living().forEach(x=>s.hurt(x,1));else hit({adv:true,damageBonus:2});break;
  default:throw Error("Unimplemented Monster behaviour "+m.id);
  }
- // Trigger poison-sensitive equipped Rings and Companions.
+ // Resolve poison-sensitive Item reactions in printed order. An earlier
+ // reaction (notably Coffin Moth) can CURE POISONED, defeat the Hero or
+ // otherwise invalidate a later Ring reaction. Recheck the real trigger
+ // before offering each Item, not only once before the loop.
  if(a.poison&&a.hp>0){
   s.noteOptions(itemOptions(s,a,"on-poison"));
   for(const card of [a.slots.companion,a.slots.ring]){
+   if(!a.poison||a.hp<=0)break;
    if(card&&["moth","ring-spores"].includes(card.id)&&
-    !a.used.has(card)&&wantsItem(s,a,card,"on-poison"))s.activate(a,card);
+    itemOptions(s,a,"on-poison").some(o=>o.card===card)&&
+    wantsItem(s,a,card,"on-poison"))s.activate(a,card);
   }
  }
 }
