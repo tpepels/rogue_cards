@@ -260,3 +260,34 @@ test("full canonical MCTS outcomes, visits and decisions match transactional and
   assert.equal(session.state.rng.snapshot(),rng);
  }
 });
+
+test("observation-free MCTS rollouts are exactly equivalent to legacy full observation paths",()=>{
+ const fixtures=[
+  {session:vault(),opts:{seed:66711,budget:3,knowledge:"oracle",maxSteps:4000}},
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   opts:{seed:66712,budget:3,knowledge:"fair",maxSteps:4000}}
+ ];
+ for(const {session,opts} of fixtures){
+  const original=JSON.stringify(observeSession(session));
+  const beforeDice=session.state.rng.snapshot();
+  const fast=searchDecision(session,{...opts,fastTransitions:true});
+  const previous=searchDecision(session,{...opts,fastTransitions:false});
+  assert.deepEqual(fast,previous,
+   "Skipping unused observation and action-history allocations must not change searches");
+  assert.equal(JSON.stringify(observeSession(session)),original);
+  assert.equal(session.state.rng.snapshot(),beforeDice);
+ }
+});
+
+test("pending printed reactions retain exactly the same MCTS outcomes without observations",()=>{
+ const session=createDecisionSession({seed:1842,heroes:["warrior"]});
+ session.state.beginRoom(ROOMS.find(r=>r.id==="u-fountain"));
+ session.phase="room";
+ const reaction=submitDecision(session,sessionActions(session)[0]);
+ assert.equal(reaction.phase,"reaction");
+ const opts={seed:66713,budget:2,knowledge:"fair",maxSteps:4000};
+ const fast=searchDecision(session,{...opts,fastTransitions:true});
+ const previous=searchDecision(session,{...opts,fastTransitions:false});
+ assert.deepEqual(fast,previous);
+ assert.equal(observeSession(session).phase,"reaction");
+});
