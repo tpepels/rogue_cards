@@ -78,7 +78,7 @@ const pairedInterval=(positive,negative,n)=>{
 };
 function playMatched(session,action,{
  knowledge,diceSeed,deckSeed,policySeed,futureBudget,
- maxSearchSteps,maxGameSteps,blueprint
+ maxSearchSteps,maxGameSteps,blueprint,privateCommit
 }){
  const sim=copySession(session);
  const wasPending=Boolean(sim.pendingNested);
@@ -95,7 +95,7 @@ function playMatched(session,action,{
  const initial=submitDecision(sim,action,{
   afterReactionReplay:wasPending?afterReplay:null,
   replayAt:switchIndex,recordHistory:false,
-  preserveStateIdentity:false
+  preserveStateIdentity:!privateCommit
  });
  // For nested root transactions, keep the chance switch fixed at the
  // first newly chosen reaction across all later replay attempts.
@@ -125,7 +125,7 @@ function playMatched(session,action,{
    afterReactionReplay:wasPending&&sim.pendingNested?afterReplay:null,
    replayAt:wasPending&&sim.pendingNested?switchIndex:null,
    observeResult:false,recordHistory:false,
-   preserveStateIdentity:false
+   preserveStateIdentity:!privateCommit
   });
   decisions++;
  }
@@ -150,8 +150,11 @@ function playMatched(session,action,{
 export function compareSessionActions(session,{
  trials=30,seed=1,knowledge="fair",futureBudget=2,
  maxSearchSteps=4000,maxGameSteps=7000,referenceIndex=0,
- resumeTrials=[],onTrial=null,actionIndices=null
+ resumeTrials=[],onTrial=null,actionIndices=null,
+ privateCommit=true
 }={}){
+ if(typeof privateCommit!=="boolean")
+  throw Error("privateCommit must be boolean");
  if(!Number.isSafeInteger(seed)||seed<0||seed>0xffffffff)
   throw Error("Seed must be a uint32 integer");
  for(const [key,n,max] of [
@@ -199,7 +202,7 @@ export function compareSessionActions(session,{
     try{
      result=playMatched(session,actions[i],{
       knowledge,diceSeed:chance,deckSeed:deck,policySeed:policy,
-      futureBudget,maxSearchSteps,maxGameSteps,blueprint
+      futureBudget,maxSearchSteps,maxGameSteps,blueprint,privateCommit
      });
     }catch(error){
      const failure=Error("Matched trial "+trial+", action "+i+" ("+
