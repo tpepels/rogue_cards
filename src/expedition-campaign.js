@@ -100,7 +100,7 @@ const chooseRoom=s=>{
      !s.keptRooms.some(x=>x.card.id==="m-treasure"))&&
    !(i===0&&["m-well","m-hungry-door"].includes(room.id)&&!s.discardable(1))&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
-    s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
+    s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0||s.keptRooms.some(x=>x.card.id==="m-treasure"));
  const ok0=choiceOK(0)&&(!room.v2.fate||fateChoiceLegal(s,room.id,0));
  const ok1=choiceOK(1)&&(!room.v2.fate||fateChoiceLegal(s,room.id,1));
  for(const i of [0,1])if(i===0?ok0:ok1){
