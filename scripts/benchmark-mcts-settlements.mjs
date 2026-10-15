@@ -34,9 +34,10 @@ if(!["settlements","metrics","combined","speculative",
  throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
- seed=number("--seed",20261016,0xffffffff);
+ seed=number("--seed",20261016,0xffffffff),
+ checkpointEvery=number("--checkpoint-every",32,256);
 const names=new Set(["--budget","--samples","--runs","--seed","--mode",
- "--optimization"]);
+ "--optimization","--checkpoint-every"]);
 const fastOptions={
  settlements:{directSettlements:true},
  metrics:{fastMetricClones:true},
@@ -50,6 +51,7 @@ const fastOptions={
   streamHistoryHash:true,reuseSelectionScratch:true
  }
 }[optimization];
+if(fastOptions.speculativeTransitions)fastOptions.checkpointEvery=checkpointEvery;
 for(let i=0;i<args.length;i+=2){
  if(!names.has(args[i])||args[i+1]===undefined)throw Error("Unknown option "+args[i]);
 }
@@ -159,7 +161,8 @@ const baselineTotal=sum(timings.baseline),optimizedTotal=sum(timings.fast);
 const rounded=value=>Number(value.toFixed(2));
 console.log(JSON.stringify({
  schema:"canonical-mcts-transaction-benchmark-v2",
- mode,optimization,budget,seed,samples:count,canonicalParity:true,
+ mode,optimization,budget,seed,samples:count,checkpointEvery,
+ canonicalParity:true,
  baselineMedianMs:rounded(old),
  optimizedMedianMs:rounded(current),
  speedup:rounded(old/current),
