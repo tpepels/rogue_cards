@@ -116,15 +116,17 @@ function nodeFor(tree,key,actions,reuseEdgeActions=false){
  });
  return {node,candidates,isNew};
 }
-function select(node,candidates,rng,c){
- const unseen=[];
+function select(node,candidates,rng,c,scratch=null){
+ const unseen=scratch?scratch.unseen:[];
+ if(scratch)unseen.length=0;
  for(const candidate of candidates)
   if(candidate.edge.visits===0)unseen.push(candidate);
  if(unseen.length)return rng.choose(unseen);
  // Preserve identical UCT scores and the same single tie-breaking draw,
  // without allocating score objects or computing log(visits) per action.
  const logVisits=Math.log(Math.max(2,node.visits));
- const scores=new Array(candidates.length);
+ const scores=scratch?scratch.scores:new Array(candidates.length);
+ if(scratch)scores.length=candidates.length;
  let maximum=-Infinity;
  for(let i=0;i<candidates.length;i++){
   const e=candidates[i].edge;
@@ -132,7 +134,8 @@ function select(node,candidates,rng,c){
   scores[i]=score;
   if(score>maximum)maximum=score;
  }
- const tied=[];
+ const tied=scratch?scratch.tied:[];
+ if(scratch)tied.length=0;
  for(let i=0;i<candidates.length;i++)
   if(Math.abs(scores[i]-maximum)<1e-12)tied.push(candidates[i]);
  return rng.choose(tied);
@@ -165,7 +168,8 @@ export function searchDecision(session,{budget=100,seed=1,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
  lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false,
- reuseEdgeActions=false,streamHistoryHash=false}={}){
+ reuseEdgeActions=false,streamHistoryHash=false,
+ reuseSelectionScratch=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -179,8 +183,9 @@ export function searchDecision(session,{budget=100,seed=1,
     typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean"||
     typeof fastPileClones!=="boolean")
   throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash, lazyColdEdges, reuseTraceSlots and fastPileClones must be boolean");
- if(typeof reuseEdgeActions!=="boolean"||typeof streamHistoryHash!=="boolean")
-  throw Error("reuseEdgeActions and streamHistoryHash must be boolean");
+ if(typeof reuseEdgeActions!=="boolean"||typeof streamHistoryHash!=="boolean"||
+    typeof reuseSelectionScratch!=="boolean")
+  throw Error("reuseEdgeActions, streamHistoryHash and reuseSelectionScratch must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -217,6 +222,9 @@ export function searchDecision(session,{budget=100,seed=1,
  };
  // Last-120 error reproduction slots are reused across simulated turns
  // and trials. This buffer cannot influence selection or canonical dice.
+ // Reused only within this synchronous search; independent calls and
+ // worker threads never share UCT scratch storage.
+ const selectionScratch=reuseSelectionScratch?{unseen:[],scores:[],tied:[]}:null;
  const pooledTrace=new Array(120);
  for(let i=0;i<budget;i++){
   // Rollout histories are never read by game rules. Avoid copying the
@@ -333,7 +341,7 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):null;
       const selected=forcedCandidate||
-       select(node,found.candidates,choiceRng,exploration);
+       select(node,found.candidates,choiceRng,exploration,selectionScratch);
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
