@@ -17,15 +17,19 @@ export const MCTS_DIAGNOSTIC_COMPARISONS=Object.freeze([
  {id:"tree-16",baseline:"classic16",candidate:"frontier16",
   question:"Full vs frontier UCT at the same visit budget"},
  {id:"budget-full",baseline:"classic2",candidate:"classic16",
-  question:"Does a larger budget improve full-tree MCTS?"}
+  question:"Does a larger budget improve full-tree MCTS?"},
+ {id:"old-vs-deep",baseline:"classic2",candidate:"frontier16",
+  question:"Descriptive old-vs-deeper search comparison (budget and tree both differ)"}
 ]);
-const kindGroup=phase=>{
+const kindGroup=(phase,firstKind,secondKind)=>{
  if(!phase)return "unknown";
- if(phase==="room"||phase==="retained-entry"||phase.startsWith("reaction:"))
-  return "room-or-reaction";
+ if(["equip","unequip","transfer"].includes(firstKind)||
+    ["equip","unequip","transfer"].includes(secondKind))return "equipment";
+ if(phase.startsWith("reaction:"))return "printed-reaction";
+ if(phase==="room"||phase==="retained-entry")return "room-choice";
  if(phase.startsWith("combat")||phase==="monster-response"||
     phase==="corpse"||phase==="parley")return "combat-or-monster";
- if(["between-rooms","explore"].includes(phase))return "equipment-or-progress";
+ if(["between-rooms","explore"].includes(phase))return "progression";
  if(["vault","post-warden"].includes(phase))return "vault";
  return "other";
 };
@@ -42,7 +46,8 @@ export function firstPolicyDivergence(left=[],right=[]){
  for(let i=0;i<n;i++){
   const a=left[i],b=right[i];
   if(a.step!==b.step||a.actionFingerprint!==b.actionFingerprint){
-   return {step:i,phase:a.phase,category:kindGroup(a.phase),
+   return {step:i,phase:a.phase,category:kindGroup(a.phase,
+    a.action?.kind,b.action?.kind),
     roomId:a.roomId??null,monsterId:a.monsterId??null,
     heroHp:a.heroHp,
     baselineAction:a.action,candidateAction:b.action,
@@ -91,7 +96,7 @@ export function summarizeMctsDiagnostics(records,{maxExamples=12}={}){
    // There are two preplanned contrasts; do not treat p<0.05 on either
    // as confirmatory familywise evidence without adjustment.
    exploratoryBonferroniP:stats.exactMcNemarP===null?
-    null:Math.min(1,stats.exactMcNemarP*2)
+    null:Math.min(1,stats.exactMcNemarP*3)
   };
  }
  return comparisons;
