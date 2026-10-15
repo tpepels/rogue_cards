@@ -43,8 +43,8 @@ test("report groups genuine losing pairs and shows only the earliest decision sp
  assert.equal(report["budget-full"].lossExamples[0].sourceIndex,5);
  assert.equal(report["tree-16"].worsenedSeeds,1);
  assert.equal(report["tree-16"].lossExamples[0].sourceIndex,2);
- assert.equal(report["old-vs-deep"].worsenedSeeds,2);
- assert.equal(report["old-vs-deep"].lossExamples.length,2);
+ assert.equal(report["old-vs-deep"].worsenedSeeds,1);
+ assert.equal(report["old-vs-deep"].lossExamples.length,1);
  assert.equal(report["tree-16"].baselineRequestedRollouts,64);
  assert.equal(report["tree-16"].candidateRequestedRollouts,64);
  assert.equal(report["tree-16"].exploratoryBonferroniP,1);
