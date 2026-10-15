@@ -121,7 +121,7 @@ const rootStats=(node,rootActions)=>{
 export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
- rootActions=null}={}){
+ rootActions=null,transactional=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -130,6 +130,7 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Knowledge must be fair or oracle");
  if(!Number.isFinite(exploration)||exploration<0)
   throw Error("Exploration coefficient must be nonnegative");
+ if(typeof transactional!=="boolean")throw Error("transactional must be boolean");
  if(observedReplay!==null&&(
   !Number.isInteger(observedReplay.replayAt)||
   observedReplay.replayAt<1||
@@ -265,7 +266,7 @@ export function searchDecision(session,{budget=100,seed=1,
       callback:onObservedReplay}]:[]),
      {at:chanceSwitchIndex,callback:onReplay}
     ]:[];
-    submitDecision(sim,choice,{replaySwitches});
+    submitDecision(sim,choice,{replaySwitches,transactional});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     historyKey=mix(hash(historyKey+from+selected.id)).toString(16);
