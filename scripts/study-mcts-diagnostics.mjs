@@ -61,7 +61,7 @@ function parse(args){
  const high=integer("--high-budget",16,2,256);
  if(high<=low)throw Error("High search budget must exceed low budget");
  return {
-  runs:integer("--runs",24,1,100000),
+  runs:integer("--runs",36,1,100000),
   workers:integer("--workers",Math.min(6,availableParallelism()),1,16),
   hours:integer("--hours",2,1,72),
   seed:integer("--seed",20261016,1,0xffffffff),
@@ -132,7 +132,15 @@ export function playDiagnosticAgent({seed,heroes,budget,treeMode,config:c}){
   ending:session.state.endingKind,
   steps,searches,requestedRollouts,
   elapsedMs:Math.round(performance.now()-start),
-  equipmentCycleBreaks:policy.cycleBreaks,trace
+  equipmentCycleBreaks:policy.cycleBreaks,
+  terminalResources:{
+   heroHp:session.state.heroes.map(h=>h.hp),
+   inventories:session.state.heroes.map(h=>h.inventory.map(c=>c.id)),
+   clearedRooms:session.state.metrics.cleared,
+   totalDamage:session.state.metrics.damage,
+   kills:session.state.metrics.kills
+  },
+  trace
  };
 }
 export function oneDiagnosticSeed(i,c){
@@ -169,6 +177,17 @@ export function oneDiagnosticSeed(i,c){
 function report(c,revision,completed,errors=[]){
  const rows=[...completed.values()];
  const contrasts=summarizeMctsDiagnostics(rows);
+ const median=values=>values.length?
+  [...values].sort((a,b)=>a-b)[Math.floor(values.length/2)]:null;
+ const agentPerformance=Object.fromEntries(
+  ["classic2","classic16","frontier16"].map(id=>[id,{
+   wins:rows.reduce((n,r)=>n+r.agents[id].won,0),
+   completed:rows.length,
+   medianElapsedMs:median(rows.map(r=>r.agents[id].elapsedMs)),
+   requestedRollouts:rows.reduce((n,r)=>
+    n+r.agents[id].requestedRollouts,0)
+  }])
+ );
  const result={
   schema:1,revision,
   study:"canonical-3-arm-mcts-diagnostics",
@@ -176,7 +195,8 @@ function report(c,revision,completed,errors=[]){
    highBudget:c.highBudget,traceLimit:c.traceLimit,
    maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
    jobMinutes:c.jobMinutes,audit:c.audit},
-  completedSeeds:rows.length,plannedSeeds:c.runs,comparisons:contrasts,
+  completedSeeds:rows.length,plannedSeeds:c.runs,
+  agents:agentPerformance,comparisons:contrasts,
   errorCount:errors.length,errors,
   complete:rows.length===c.runs&&errors.length===0,
   limitations:[
