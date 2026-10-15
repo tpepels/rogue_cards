@@ -15,12 +15,11 @@ export function resolveRoomChoice(s,choice){
   }
   if(id==="u-smuggler"&&choice===0){s.hurt(h,1);if(s.alive())s.draw();}
   if(id==="u-mossy"&&choice===0)s.heal(h,1);
-  if(["m-ladder","d-whisper-junction"].includes(id)&&choice===1){
-   s.roomRoll();return;
-  }
-  if(choice===1||id==="m-red-detour"&&choice===0)s.roomRoll();
-  if(id==="u-smuggler"&&choice===1)return;
-  s.forkRooms(choice===0?id:"plain");return;
+  // Rolled corridor outcomes already specify whether and how to enter a
+  // revealed Room. Do not add an unprinted second fork afterwards.
+  if(choice===1){s.roomRoll();return;}
+  // IGNORE on the Red Detour is an ordinary choice between two Rooms.
+  s.forkRooms(id==="m-red-detour"?"plain":id);return;
  }
  if(choice===1){if(id==="m-well")s.peek(1);else s.roomRoll();return;}
  switch(id){
@@ -30,11 +29,12 @@ export function resolveRoomChoice(s,choice){
   const item=s.discard();s.heal(h,3);keep(item);
  }else throw Error("Bottomless Well OFFER requires an Item");
  break;
- case "m-clock":case "u-rat-favor":s.draw();keep();break;
+ case "m-clock":s.draw(2);keep();break;
+ case "u-rat-favor":s.draw(2);if(s.alive())s.discard();keep();break;
  case "u-leech-pool":s.heal(h,3);keep();break;
  case "m-hungry-door":
   if(!s.discardable())throw Error("Hungry Door requires 1 Item");
-  s.discard(1);s.draw(2);keep();break;
+  s.discard(1);if(s.alive())s.draw(3);keep();break;
  default:throw Error("Unimplemented Room choice "+id);
  }
 }
@@ -96,8 +96,13 @@ export function roomEntry(s){
     // telegraph. The d6 outcomes that KEEP a bell resolve on the
     // next Monster, not automatically on Vault entry.
     if(entry.mode){s.keptRooms.push(entry);continue;}
-    s.hurt(s.chooseRecipient("last-bell-vault-debt"),2);
-    if(s.alive())s.telegraphWarden({mayReroll:true});
+    // SAVE is optional: an unaffordable Bell debt never costs HP.
+    const payer=[...s.living()].sort((a,b)=>b.hp-a.hp)[0];
+    if(payer?.hp>2&&s.chooseEffect("last-bell-vault-payment",
+      ["skip","pay"],"pay")==="pay"){
+      s.hurt(payer,2);
+      if(s.alive())s.telegraphWarden({mayReroll:true});
+    }
    }
   }
  }

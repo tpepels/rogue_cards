@@ -645,7 +645,8 @@ export class ExpeditionState {
   case "FORK_REVEAL":
    this.forkRevealed(Number(v),{
     random:args[1]==="RANDOM",
-    treasureOnly:args[1]==="TREASURE"
+    treasureOnly:args[1]==="TREASURE",
+    returnOnTop:args[1]==="TOP"
    });return;
   case "FORK_ORDER":this.peek(Number(v),true);return;
   case "CURE_OR_HEAL":if(h.poison)h.poison=false;else this.heal(h,n());return;
@@ -1051,7 +1052,7 @@ export class ExpeditionState {
   }
   return this.forcedBehavior;
  }
- forkRevealed(count,{random=false,treasureOnly=false}={}){
+ forkRevealed(count,{random=false,treasureOnly=false,returnOnTop=false}={}){
   const stage=this.room.stage,pile=this.rooms[stage];
   const offered=pile.splice(0,Math.min(count,pile.length));
   if(!offered.length)return;
@@ -1068,22 +1069,24 @@ export class ExpeditionState {
    delete this._offeredRoomChoices;
    if(!chosen)throw Error("Illegal corridor Room selection");
   }else chosen=candidates[0];
-  const bottom=offered.filter(x=>x!==chosen);
-  pile.push(...bottom);
-  pile.unshift(chosen);
+  const other=offered.filter(x=>x!==chosen);
+  if(returnOnTop)pile.unshift(chosen,...other);
+  else{pile.push(...other);pile.unshift(chosen);}
   // Every shown card stays in its actual physical pile exactly once;
   // unrevealed cards remain in their original sampled order.
-  this.peekedRoomIds[stage]=[chosen.id];
-  this.publicBottomRoomIds??=Object.fromEntries(
-   stageNames.map(stage=>[stage,[]]));
-  this.publicBottomRoomIds[stage].push(...bottom.map(x=>x.id));
+  this.peekedRoomIds[stage]=[chosen.id,...(returnOnTop?other.map(x=>x.id):[])];
+  if(!returnOnTop){
+   this.publicBottomRoomIds??=Object.fromEntries(
+    stageNames.map(stage=>[stage,[]]));
+   this.publicBottomRoomIds[stage].push(...other.map(x=>x.id));
+  }
  }
  forkRooms(mode){
    const pile=this.rooms[this.room.stage],count=mode==="u-echoes"?3:2;
    const offered=pile.splice(0,Math.min(count,pile.length));if(!offered.length)return;
    if(mode==="u-echoes"&&offered.length===3){
-    const discarded=offered.splice(this.die(3)-1,1)[0];
-    this.discardedRoomIds.add(discarded.id);
+    // The random third echo is returned face down and remains unknown.
+    pile.push(offered.splice(this.die(3)-1,1)[0]);
    }
    if(mode==="m-maps"&&this.discardable()&&pile.length&&
     this.chooseEffect("cartographer-extra-map",["save","trade"],"trade")==="trade"){
@@ -1109,23 +1112,26 @@ export class ExpeditionState {
     if(!chosen)throw Error("Illegal chosen corridor Room");
    }
    const other=offered.filter(x=>x!==chosen);
-   if(mode==="u-mossy")pile.unshift(...other);
-   else if(mode==="u-candle"){this.savedPath=other[0]||null;this.savedPathGrace=1;}
+   if(mode==="u-mossy"||mode==="u-candle")pile.unshift(...other);
    else if(mode==="d-whisper-junction")this.whisperRoom=other[0]||null;
-   else if(mode==="u-echoes")pile.push(...other);
-   else if(mode==="d-gilded"&&other.some(x=>x.v2.kind==="TREASURE"))this.draw();
+   else if(mode==="d-gilded"){
+    // Only GAMBLE actually discards the other Room.
+    if(other.some(x=>x.v2.kind==="TREASURE"))this.draw();
+    for(const card of other)this.discardedRoomIds.add(card.id);
+   }else{
+    // Printed corridors return the unchosen revealed route to the bottom.
+    pile.push(...other);
+    this.publicBottomRoomIds??=Object.fromEntries(
+     stageNames.map(stage=>[stage,[]]));
+    this.publicBottomRoomIds[this.room.stage].push(...other.map(card=>card.id));
+   }
    if(mode==="m-ladder")this.nextLadder=true;
-   // Non-returning alternatives are now publicly known NOT to be in the
-   // hidden pile. The chosen next Room is revealed and remains public.
-   const returned=["u-mossy","u-candle","d-whisper-junction","u-echoes"]
-    .includes(mode);
-   if(!returned)for(const card of other)this.discardedRoomIds.add(card.id);
    const shown=new Set(offered.map(card=>card.id));
    const remainder=(this.peekedRoomIds[this.room.stage]||[])
     .filter(id=>!shown.has(id)&&!this.discardedRoomIds.has(id));
    this.peekedRoomIds[this.room.stage]=[
-    chosen.id,...(mode==="u-mossy"?other.map(card=>card.id):[]),
-    ...remainder
+    chosen.id,...(["u-mossy","u-candle"].includes(mode)?
+     other.map(card=>card.id):[]),...remainder
    ];
    pile.unshift(chosen);
   }
