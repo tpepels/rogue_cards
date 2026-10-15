@@ -99,11 +99,11 @@ export function observeGame(s){
 }
 
 // A UI can select an ability's reliable or risky branch before its trigger.
-export function setHeroAbilityMode(s,heroId,mode){
+export function setHeroAbilityMode(s,heroId,mode,{observeResult=true}={}){
  if(!["steady","risk"].includes(mode)||!s.heroes.some(h=>h.card.id===heroId))
   throw Error("Invalid Hero ability choice");
  s.heroAbilityModes[heroId]=mode;
- return observeGame(s);
+ return observeResult?observeGame(s):undefined;
 }
 // Kept Rooms explicitly offer a second decision when their trigger occurs.
 export function setReturnChoice(s,roomId,choice){
@@ -161,7 +161,7 @@ export function legalRoomChoices(s){
   .filter(i=>i!==null);
 }
 /** Resolve exactly one printed choice through the canonical effect engine. */
-export function chooseRoom(s,index){
+export function chooseRoom(s,index,{observeResult=true}={}){
  if(!legalRoomChoices(s).includes(index))
   throw Error("Illegal Room choice "+index);
  s.metrics.roomChoices[s.room.id+":"+index]=
@@ -179,7 +179,7 @@ export function chooseRoom(s,index){
  if(s.room.id==="m-beetle"&&index===0&&
     s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog"))&&s.alive())
   s.peek(1);
- return observeGame(s);
+ return observeResult?observeGame(s):undefined;
 }
 /** Legal combat options at the current state and timing, without AI scores. */
 export function legalCombatActions(s,heroIndex){
@@ -197,7 +197,7 @@ export function legalCombatActions(s,heroIndex){
 /** Apply a Hero's chosen attack or Item using the exact simulation rules.
  * Monster response is a *separate* UI-controlled transition.
  */
-export function takeCombatAction(s,action){
+export function takeCombatAction(s,action,{observeResult=true}={}){
  if(!action||!Number.isInteger(action.heroIndex))
   throw Error("Combat action requires a Hero index");
  const legal=legalCombatActions(s,action.heroIndex);
@@ -221,19 +221,19 @@ export function takeCombatAction(s,action){
   if(!executeItemOption(s,hero,option))
    throw Error("Combat Item was not activated");
  }
- return observeGame(s);
+ return observeResult?observeGame(s):undefined;
 }
-export function takeMonsterResponse(s,heroIndex){
+export function takeMonsterResponse(s,heroIndex,{observeResult=true}={}){
  const hero=s.heroes[heroIndex];
  if(!hero||!s.monster||s.monsterHP<=0)
   throw Error("No active Monster response");
  monsterRespond(s,hero);
- return observeGame(s);
+ return observeResult?observeGame(s):undefined;
 }
 /** End an already-resolved Room, including corridor progress accounting.
  * The surrounding game flow decides when to prompt for this action.
  */
-export function finishCurrentRoom(s){
+export function finishCurrentRoom(s,{observeResult=true}={}){
  if(!s.room||s.room.stage==="FINAL")
   throw Error("No regional Room to finish");
  if(s.monster&&s.monsterHP>0||s.monsterQueue.length)
@@ -244,7 +244,7 @@ export function finishCurrentRoom(s){
  }
  s.endRoom();
  s.room=null;
- return observeGame(s);
+ return observeResult?observeGame(s):undefined;
 }
 export function createGame(options={}){
  // Do not allow experiment-only policy parameters to leak into the
@@ -454,7 +454,7 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
  * refusal to apply those actions here is preferable to simulating a
  * different rule path. Researchers use full-effect campaign continuations.
  */
-export function applyAction(s,action){
+export function applyAction(s,action,{observeResult=true}={}){
  if(!action||typeof action!=="object"||typeof action.phase!=="string")
   throw Error("Action requires a phase");
  const legal=legalActions(s,{phase:action.phase,
@@ -463,7 +463,7 @@ export function applyAction(s,action){
   Object.keys(candidate).every(key=>candidate[key]===action[key]));
  if(!selected)throw Error("Illegal action "+JSON.stringify(action));
  if(action.phase==="room"){
-  if(selected.kind==="room-choice")return chooseRoom(s,selected.index);
+  if(selected.kind==="room-choice")return chooseRoom(s,selected.index,{observeResult});
   const h=s.heroes[selected.heroIndex],
    item=h.inventory.find(c=>c.id===selected.cardId);
   if(!item)throw Error("Missing printed Shrine replacement Item");
@@ -472,23 +472,23 @@ export function applyAction(s,action){
    else if(!s.recharge())throw Error("No exhausted Wand to recharge");
    return true;
   });
-  return observeGame(s);
+  return observeResult?observeGame(s):undefined;
  }
- if(action.phase==="combat")return takeCombatAction(s,selected);
+ if(action.phase==="combat")return takeCombatAction(s,selected,{observeResult});
  if(action.kind==="hero-mode")return setHeroAbilityMode(
-  s,s.heroes[action.heroIndex].card.id,action.mode);
+  s,s.heroes[action.heroIndex].card.id,action.mode,{observeResult});
  if(action.kind==="return"){
   // Store the chosen branch until the canonical retained-Room handler
   // resolves its existing printed trigger, not a fabricated new effect.
-  s.returnChoices[action.roomId]=action.mode;return observeGame(s);
+  s.returnChoices[action.roomId]=action.mode;return observeResult?observeGame(s):undefined;
  }
  if(action.kind==="equip"){
   const h=s.heroes[action.heroIndex],c=h.inventory[action.index];
-  h.slots[action.slot]=c;return observeGame(s);
+  h.slots[action.slot]=c;return observeResult?observeGame(s):undefined;
  }
  if(action.kind==="unequip"){
   delete s.heroes[action.heroIndex].slots[action.slot];
-  return observeGame(s);
+  return observeResult?observeGame(s):undefined;
  }
  if(action.kind==="transfer"){
   const from=s.heroes[action.heroIndex],to=s.heroes[action.toHeroIndex];
@@ -498,7 +498,7 @@ export function applyAction(s,action){
    if(item===card)delete from.slots[slot];
   // Transfer is not a new acquisition; no double counting or hidden auto-equip.
   to.inventory.push(card);
-  return observeGame(s);
+  return observeResult?observeGame(s):undefined;
  }
  if(action.kind==="item-trigger"){
   const h=s.heroes[action.heroIndex],o=itemOptions(s,h,action.phase)[action.index];
@@ -518,14 +518,14 @@ export function applyAction(s,action){
    JSON.stringify({cardId:o.card.id,mode:o.mode,phase:action.phase,
     roomId:s.room?.id,monsterId:s.monster?.id,
     physicalCopy:o.card._physicalCopy}));
-  return observeGame(s);
+  return observeResult?observeGame(s):undefined;
  }
  if(action.kind==="use-eye"){
   const [reward]=s.keptMonsterRewards.splice(action.index,1);
   if(!reward||reward.monsterId!=="eye")
    throw Error("Selected Eye must be physically retained");
-  s.peek(2,true);return observeGame(s);
+  s.peek(2,true);return observeResult?observeGame(s):undefined;
  }
- if(action.kind==="continue")return observeGame(s);
+ if(action.kind==="continue")return observeResult?observeGame(s):undefined;
  throw Error("Multi-stage "+action.phase+" requires a campaign continuation; no substitute rules");
 }
