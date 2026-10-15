@@ -6,6 +6,7 @@ import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {ROOMS,MONSTERS,WARDEN,VAULT}
  from "../src/tabletop-data.js";
 import {searchDecision} from "../src/session-mcts.js";
+import {forkGameState} from "../src/engine/fork-state.js";
 
 function scenario(kind,seed=83192){
  const session=createDecisionSession({seed,heroes:["warrior","witch"]}),s=session.state;
@@ -131,4 +132,48 @@ test("guarded corpse settlement forks and suspends when a delayed Item draw requ
  assert.equal(fast.state.rng.snapshot(),dice);
  assert.equal(reference.state.rng.snapshot(),dice);
  assert.ok(before.length>0);
+});
+
+test("fast metrics cloning preserves counter maps, uncommon nesting and all mutable aliases",()=>{
+ const source=createDecisionSession({seed:1872,heroes:["warrior"]}).state;
+ source.metrics.itemUses.coin=4;
+ source.metrics.experimentalNested={sub:{value:7},list:[{value:2}]};
+ source.metrics.alias=source.metrics.objectDraws;
+ source.extraMetricsAlias=source.metrics.objectDraws;
+ const original=forkGameState(source);
+ const optimized=forkGameState(source,{fastMetrics:true});
+ assert.deepEqual(optimized.metrics,original.metrics);
+ assert.deepEqual(optimized.metrics.experimentalNested,
+  original.metrics.experimentalNested);
+ assert.notStrictEqual(optimized.metrics,source.metrics);
+ assert.notStrictEqual(optimized.metrics.itemUses,source.metrics.itemUses);
+ assert.strictEqual(optimized.metrics.alias,optimized.metrics.objectDraws);
+ assert.strictEqual(optimized.extraMetricsAlias,optimized.metrics.objectDraws);
+ optimized.metrics.itemUses.coin=19;
+ optimized.metrics.experimentalNested.sub.value=8;
+ assert.equal(source.metrics.itemUses.coin,4);
+ assert.equal(source.metrics.experimentalNested.sub.value,7);
+ assert.equal(source.rng.snapshot(),optimized.rng.snapshot());
+});
+test("optimized telemetry cloning exactly preserves seeded MCTS search results",()=>{
+ const cases=[
+  {session:createDecisionSession({seed:3573,heroes:["warrior"]}),
+   opts:{seed:92713,knowledge:"fair",budget:8,treeMode:"full"}},
+  {session:createDecisionSession({seed:7292,heroes:["warrior","witch"]}),
+   opts:{seed:92714,knowledge:"fair",budget:4,treeMode:"frontier"}},
+  {session:scenario("corpse"),opts:{
+   seed:92715,knowledge:"oracle",budget:4,treeMode:"full"}}
+ ];
+ for(const {session,opts} of cases){
+  const actual=JSON.stringify(observeSession(session));
+  const rng=session.state.rng.snapshot();
+  const args={...opts,collectCoverage:false,maxSteps:4000};
+  assert.deepEqual(searchDecision(session,{...args,fastMetricClones:true}),
+   searchDecision(session,{...args,fastMetricClones:false}));
+  assert.equal(JSON.stringify(observeSession(session)),actual);
+  assert.equal(session.state.rng.snapshot(),rng);
+ }
+ assert.throws(()=>searchDecision(scenario("corpse"),{
+  budget:2,fastMetricClones:"yes"
+ }),/fastMetricClones must be boolean/);
 });
