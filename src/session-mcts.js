@@ -17,6 +17,8 @@ import {observeSession,sessionActions,submitDecision}
  from "./engine/decision-session.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
+// sampleRolloutDecks allocates fresh arrays for each call. These are owned
+// by the current hypothetical game and can be assigned without copying.
 
 export const MAX_ROLLOUT_EQUIPMENT_ACTIONS=6;
 const freeEquipmentKinds=new Set(["equip","unequip","transfer"]);
@@ -220,10 +222,10 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(session.state,{
      knowledge:"fair",blueprint,deckSeed});
-    s.deck=drawn.deck.slice();
+    s.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     s.rooms[stage]=drawn.rooms[stage].slice();
-     s.monsters[stage]=drawn.monsters[stage].slice();
+     s.rooms[stage]=drawn.rooms[stage];
+     s.monsters[stage]=drawn.monsters[stage];
     }
    }
   }
@@ -238,10 +240,10 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(eventState,{
      knowledge:"fair",deckSeed:observedReplay.deckSeed});
-    eventState.deck=drawn.deck.slice();
+    eventState.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     eventState.rooms[stage]=drawn.rooms[stage].slice();
-     eventState.monsters[stage]=drawn.monsters[stage].slice();
+     eventState.rooms[stage]=drawn.rooms[stage];
+     eventState.monsters[stage]=drawn.monsters[stage];
     }
    }
    eventState.rng=randomSource(observedReplay.diceSeed);
@@ -251,10 +253,10 @@ export function searchDecision(session,{budget=100,seed=1,
    if(knowledge==="fair"){
     const drawn=sampleRolloutDecks(eventState,{
      knowledge:"fair",deckSeed});
-    eventState.deck=drawn.deck.slice();
+    eventState.deck=drawn.deck;
     for(const stage of ["UPPER","MIDDLE","DEEP"]){
-     eventState.rooms[stage]=drawn.rooms[stage].slice();
-     eventState.monsters[stage]=drawn.monsters[stage].slice();
+     eventState.rooms[stage]=drawn.rooms[stage];
+     eventState.monsters[stage]=drawn.monsters[stage];
     }
    }
    eventState.rng=randomSource(chanceSeed);
