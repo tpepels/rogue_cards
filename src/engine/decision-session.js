@@ -425,7 +425,7 @@ export function submitDecision(session,action,{
  const fork={
   ...session,state:forkGameState(session.state),
   remainingReturns:[...session.remainingReturns],
-  history:session.history.map(x=>({...x})),
+  history:session.history.slice(),
   pendingNested:null
  };
  let position=0;
