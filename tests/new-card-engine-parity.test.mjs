@@ -265,3 +265,30 @@ test("canonical Bazaar choice resolves Beetle Caravan's printed retained reward"
   "Kept BARGAIN must grant exactly one additional Item in the Oracle");
  assert.equal(s.keptRooms.filter(x=>x.card.id==="m-beetle").length,0);
 });
+
+test("tucked Items never remain salvageable and return as the same physical copy",()=>{
+ for(const [i,id] of ["m-well","u-bone-seed","m-ferryman-oath"].entries()){
+  const s=game(3100+i);
+  s.beginRoom(room(id));chooseRoom(s,0);
+  const retained=s.keptRooms.find(x=>x.card.id===id);
+  assert.ok(retained?.item,id+" must tuck a physical Item");
+  const item=retained.item;
+  assert.ok(!s.discardPile.includes(item),id+" was incorrectly salvageable");
+  assert.ok(s.heroes.every(h=>!h.inventory.includes(item)),id+" remained carried");
+  s.beginRoom(id==="m-ferryman-oath"?VAULT:room("d-shadow"));
+  assert.ok(s.heroes.some(h=>h.inventory.includes(item)),
+   id+" did not return the same physical copy");
+  assert.ok(!s.discardPile.includes(item),id+" duplicated its physical copy");
+ }
+});
+
+test("sacrificed Ferryman Item goes to discard and cannot also be equipped",()=>{
+ const s=game(3104);
+ s.beginRoom(room("m-ferryman-oath"));chooseRoom(s,0);
+ const item=s.keptRooms.find(x=>x.card.id==="m-ferryman-oath").item;
+ s.returnChoices["m-ferryman-oath"]="smuggle";
+ s.beginRoom(VAULT);
+ assert.equal(s.vaultModifiers.smuggleAvailable,true);
+ assert.ok(s.discardPile.includes(item));
+ assert.ok(s.heroes.every(h=>!h.inventory.includes(item)));
+});
