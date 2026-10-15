@@ -43,13 +43,17 @@ export function selectSessionPolicyAction(session,policy,{
  const optimizationKeys=new Set([
   "reuseEmptyReplaySwitches","reuseEdgeActions",
   "streamHistoryHash","reuseSelectionScratch",
-  "directSettlements","fastMetricClones","speculativeTransitions"
+  "directSettlements","fastMetricClones","speculativeTransitions",
+  "checkpointEvery"
  ]);
  if(mctsOptimizations!==null&&(
     !mctsOptimizations||typeof mctsOptimizations!=="object"||
     Array.isArray(mctsOptimizations)||
     Object.entries(mctsOptimizations).some(([key,value])=>
-     !optimizationKeys.has(key)||typeof value!=="boolean")))
+     !optimizationKeys.has(key)||
+     (key==="checkpointEvery"?
+      !Number.isInteger(value)||value<1||value>256:
+      typeof value!=="boolean"))))
   throw Error("Invalid performance-only MCTS optimization flags");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
