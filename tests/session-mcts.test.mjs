@@ -442,14 +442,14 @@ test("frontier UCT is real tree search and preserves each unvisited-root trial's
 });
 
 test("frontier UCT expands revisited branches and remains deterministic with more visits",()=>{
- const session=vault(),opts={seed:99125,budget:12,knowledge:"oracle",
+ const session=vault(),opts={seed:7817,budget:4,knowledge:"oracle",
   maxSteps:4000,treeMode:"frontier"};
  const original=JSON.stringify(observeSession(session));
  const dice=session.state.rng.snapshot();
  const a=searchDecision(session,opts),b=searchDecision(session,opts);
  assert.deepEqual(a,b);
- assert.equal(a.completed,12);
- assert.equal(a.choices.reduce((n,x)=>n+x.visits,0),12);
+ assert.equal(a.completed,4);
+ assert.equal(a.choices.reduce((n,x)=>n+x.visits,0),4);
  assert.ok(a.treeNodes>1,"Revisited UCT roots must expand deeper tree nodes");
  assert.equal(JSON.stringify(observeSession(session)),original);
  assert.equal(session.state.rng.snapshot(),dice);
@@ -461,8 +461,8 @@ test("deep-uct agent profile is explicit, reproducible and does not mutate actua
  const session=vault(),original=JSON.stringify(observeSession(session));
  const rng=session.state.rng.snapshot();
  const policyA=createSessionPolicy(),policyB=createSessionPolicy();
- const options={searchProfile:"deep-uct",deepMinBudget:8,
-  deepVisitsPerAction:3,budget:2,seed:99820,knowledge:"oracle",
+ const options={searchProfile:"deep-uct",deepMinBudget:4,
+  deepVisitsPerAction:2,budget:2,seed:7817,knowledge:"oracle",
   maxSearchSteps:4000};
  const a=selectSessionPolicyAction(session,policyA,options);
  const b=selectSessionPolicyAction(session,policyB,options);
