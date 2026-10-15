@@ -28,6 +28,9 @@ function number(name,def,max){
 }
 const mode=arg("--mode","search");
 const optimization=arg("--optimization","settlements");
+const reference=arg("--reference","canonical");
+if(!["canonical","speculative"].includes(reference))
+ throw Error("Unknown --reference");
 if(!["search","expedition"].includes(mode))throw Error("Unknown --mode");
 if(!["settlements","metrics","combined","speculative",
      "speculative-frozen","speculative-lazy",
@@ -40,7 +43,7 @@ const budget=number("--budget",8,256),
 const profiling=args.includes("--profile");
 const distinctSeeds=args.includes("--distinct-seeds");
 const names=new Set(["--budget","--samples","--runs","--seed","--mode",
- "--optimization","--checkpoint-every"]);
+ "--optimization","--checkpoint-every","--reference"]);
 const fastOptions={
  settlements:{directSettlements:true},
  metrics:{fastMetricClones:true},
@@ -58,6 +61,10 @@ const fastOptions={
  }
 }[optimization];
 if(fastOptions.speculativeTransitions)fastOptions.checkpointEvery=checkpointEvery;
+if(reference==="speculative"&&!optimization.startsWith("speculative-lazy"))
+ throw Error("Speculative reference requires a lazy checkpoint candidate");
+const referenceOptions=reference==="speculative"?
+ {speculativeTransitions:true,checkpointEvery}:{};
 const pairsOfArgs=args.filter(x=>x!=="--profile"&&x!=="--distinct-seeds");
 for(let i=0;i<pairsOfArgs.length;i+=2){
  if(!names.has(pairsOfArgs[i])||pairsOfArgs[i+1]===undefined)
@@ -110,7 +117,7 @@ function search(fast,kind,gameSeed){
  const t=performance.now();
  const raw=searchDecision(session,{
   budget,seed,knowledge:"oracle",treeMode:"full",
-  ...(fast?fastOptions:{}),profileTransitions:profiling,
+  ...(fast?fastOptions:referenceOptions),profileTransitions:profiling,
   collectCoverage:false,maxSteps:4000
  });
  const timeMs=performance.now()-t;
@@ -135,7 +142,8 @@ function expedition(fast,gameSeed,heroes){
    seed:mix(gameSeed^Math.imul(i+1,0xc2b2ae35)),
    maxSearchSteps:4000,legalActions:legal,
    mctsOptimizations:{
-    ...(fast?fastOptions:{}),...(profiling?{profileTransitions:true}:{})
+    ...(fast?fastOptions:referenceOptions),
+    ...(profiling?{profileTransitions:true}:{})
    },
    onSearchProfile:profiling?x=>mergeProfile(profile,x):null
   });
@@ -143,7 +151,7 @@ function expedition(fast,gameSeed,heroes){
    ["leave","fight"].includes(chosen.kind))eligible++;
   actions.push(chosen);
   submitDecision(session,chosen,{observeResult:false,recordHistory:false,
-   ...(fast?fastOptions:{})});
+   ...(fast?fastOptions:referenceOptions)});
  }
  assert.equal(session.phase,"terminal","Canonical expedition unresolved");
  assert.ok(!session.state.metrics.roundLimit&&!session.state.metrics.unresolved);
@@ -198,7 +206,7 @@ const baselineTotal=sum(timings.baseline),optimizedTotal=sum(timings.fast);
 const rounded=value=>Number(value.toFixed(2));
 console.log(JSON.stringify({
  schema:"canonical-mcts-transaction-benchmark-v2",
- mode,optimization,budget,seed,samples:count,checkpointEvery,
+ mode,optimization,reference,budget,seed,samples:count,checkpointEvery,
  profiling,distinctSeeds,
  canonicalParity:true,
  baselineMedianMs:rounded(old),
