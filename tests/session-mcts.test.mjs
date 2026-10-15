@@ -7,6 +7,7 @@ import {createSessionPolicy,selectSessionPolicyAction,
  MAX_CONSECUTIVE_EQUIPMENT_ACTIONS} from "../src/session-policy.js";
 import {VAULT,ROOMS} from "../src/tabletop-data.js";
 import {submitDecision} from "../src/engine/decision-session.js";
+import {forkGameState} from "../src/engine/fork-state.js";
 
 function vault(){
  const session=createDecisionSession({seed:53210,heroes:["wizard"]}),s=session.state;
@@ -173,4 +174,29 @@ test("fast MCTS position hashing equals the full canonical public observation",(
  submitDecision(pending,sessionActions(pending)[0]);
  assert.ok(pending.pendingNested,"Expected a real nested reroll reaction");
  assert.equal(mctsPublicStateHash(pending),legacyKey(pending));
+});
+
+test("faster canonical game-state fork preserves RNG, physical-copy identity and mutable isolation",()=>{
+ const session=createDecisionSession({seed:8391,heroes:["warrior","witch"]});
+ const original=session.state;
+ const fork=forkGameState(original);
+ assert.notStrictEqual(fork,original);
+ assert.equal(fork.rng.snapshot(),original.rng.snapshot());
+ assert.notStrictEqual(fork.rng,original.rng);
+ assert.notStrictEqual(fork.heroes,original.heroes);
+ assert.notStrictEqual(fork.heroes[0],original.heroes[0]);
+ assert.strictEqual(fork.deck[0],original.deck[0],
+  "Immutable physical card copies are intentionally shared");
+ const equipped=Object.values(fork.heroes[0].slots).filter(Boolean);
+ for(const card of equipped)
+  assert.ok(fork.heroes[0].inventory.includes(card),
+   "Equipment slot must reference the exact owned physical copy");
+ const hp=original.heroes[0].hp;
+ fork.heroes[0].hp--;
+ assert.equal(original.heroes[0].hp,hp);
+ const originalRoll=original.rng.snapshot();
+ fork.rng.die(6);
+ assert.equal(original.rng.snapshot(),originalRoll);
+ fork.metrics.cardCounts.sentinel=923;
+ assert.notEqual(original.metrics.cardCounts.sentinel,923);
 });
