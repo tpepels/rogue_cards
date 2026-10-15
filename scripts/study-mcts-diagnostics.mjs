@@ -59,7 +59,8 @@ function parse(args){
  };
  const low=integer("--low-budget",2,1,256);
  const high=integer("--high-budget",16,2,256);
- if(high<=low)throw Error("High search budget must exceed low budget");
+ if(low!==2||high!==16)
+  throw Error("This controlled diagnostic is fixed to budgets 2 and 16");
  return {
   runs:integer("--runs",36,1,100000),
   workers:integer("--workers",Math.min(6,availableParallelism()),1,16),
@@ -147,10 +148,16 @@ export function oneDiagnosticSeed(i,c){
  const heroes=parties[i%parties.length];
  const gameSeed=mix(c.seed^Math.imul(i+1,0x85ebca6b))||1;
  const agents={};
- for(const [id,budget,treeMode] of [
+ // Rotate execution order to avoid systematically favoring a particular
+ // agent in elapsed-time comparisons through JIT warming or thermal drift.
+ const lineup=[
   ["classic2",c.lowBudget,"full"],
   ["classic16",c.highBudget,"full"],
   ["frontier16",c.highBudget,"frontier"]
+ ];
+ const offset=i%lineup.length;
+ for(const [id,budget,treeMode] of [
+  ...lineup.slice(offset),...lineup.slice(0,offset)
  ]){
   try{
    agents[id]=playDiagnosticAgent({
