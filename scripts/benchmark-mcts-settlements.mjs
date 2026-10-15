@@ -45,7 +45,10 @@ function source(kind,seed){
  const session=createDecisionSession({seed,heroes:["warrior","witch"]});
  const s=session.state;
  if(kind==="corpse"){
-  s.beginRoom(ROOMS.find(r=>r.id==="u-nest"));
+  const pile=s.rooms.UPPER;
+  const position=pile.findIndex(r=>r.id==="u-nest");
+  assert.ok(position>=0,"Missing physical printed Room");
+  s.beginRoom(pile.splice(position,1)[0]);
   s.monster=MONSTERS.find(m=>m.id==="rat");s.monsterHP=0;
   session.phase="corpse";
  }else if(kind==="vault"){
