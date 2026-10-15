@@ -161,8 +161,8 @@ export function legalRoomChoices(s){
   .filter(i=>i!==null);
 }
 /** Resolve exactly one printed choice through the canonical effect engine. */
-export function chooseRoom(s,index,{observeResult=true}={}){
- if(!legalRoomChoices(s).includes(index))
+export function chooseRoom(s,index,{observeResult=true,prevalidated=false}={}){
+ if(!prevalidated&&!legalRoomChoices(s).includes(index))
   throw Error("Illegal Room choice "+index);
  s.metrics.roomChoices[s.room.id+":"+index]=
   (s.metrics.roomChoices[s.room.id+":"+index]||0)+1;
@@ -197,11 +197,11 @@ export function legalCombatActions(s,heroIndex){
 /** Apply a Hero's chosen attack or Item using the exact simulation rules.
  * Monster response is a *separate* UI-controlled transition.
  */
-export function takeCombatAction(s,action,{observeResult=true}={}){
+export function takeCombatAction(s,action,{observeResult=true,prevalidated=false}={}){
  if(!action||!Number.isInteger(action.heroIndex))
   throw Error("Combat action requires a Hero index");
- const legal=legalCombatActions(s,action.heroIndex);
- const candidate=legal.find(a=>a.kind===action.kind&&
+ const candidate=prevalidated?action:legalCombatActions(s,action.heroIndex)
+  .find(a=>a.kind===action.kind&&
   (a.kind==="attack"||a.kind==="pass"||
       a.kind==="elbereth"&&a.mode===action.mode||
       a.kind==="item"&&a.optionIndex===action.optionIndex));
@@ -454,16 +454,16 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
  * refusal to apply those actions here is preferable to simulating a
  * different rule path. Researchers use full-effect campaign continuations.
  */
-export function applyAction(s,action,{observeResult=true}={}){
+export function applyAction(s,action,{observeResult=true,prevalidated=false}={}){
  if(!action||typeof action!=="object"||typeof action.phase!=="string")
   throw Error("Action requires a phase");
- const legal=legalActions(s,{phase:action.phase,
-  heroIndex:action.heroIndex??0,roomId:action.roomId??null});
- const selected=legal.find(candidate=>
+ const selected=prevalidated?action:legalActions(s,{phase:action.phase,
+  heroIndex:action.heroIndex??0,roomId:action.roomId??null})
+  .find(candidate=>
   Object.keys(candidate).every(key=>candidate[key]===action[key]));
  if(!selected)throw Error("Illegal action "+JSON.stringify(action));
  if(action.phase==="room"){
-  if(selected.kind==="room-choice")return chooseRoom(s,selected.index,{observeResult});
+  if(selected.kind==="room-choice")return chooseRoom(s,selected.index,{observeResult,prevalidated});
   const h=s.heroes[selected.heroIndex],
    item=h.inventory.find(c=>c.id===selected.cardId);
   if(!item)throw Error("Missing printed Shrine replacement Item");
@@ -474,7 +474,7 @@ export function applyAction(s,action,{observeResult=true}={}){
   });
   return observeResult?observeGame(s):undefined;
  }
- if(action.phase==="combat")return takeCombatAction(s,selected,{observeResult});
+ if(action.phase==="combat")return takeCombatAction(s,selected,{observeResult,prevalidated});
  if(action.kind==="hero-mode")return setHeroAbilityMode(
   s,s.heroes[action.heroIndex].card.id,action.mode,{observeResult});
  if(action.kind==="return"){
