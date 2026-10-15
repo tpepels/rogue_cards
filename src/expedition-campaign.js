@@ -93,6 +93,11 @@ const chooseRoom=s=>{
    !(s.pactUsed&&room.v2.choices[i]?.label.includes("PACT"))&&
    !(room.id==="u-puppet"&&i===1&&s.keptRooms.some(x=>
      x.card.id==="u-hollow-knight"&&x.choice===0))&&
+   !(choices[i].some(op=>op.startsWith("COST_CURSED:"))&&
+     !s.discardable(1,"CURSED"))&&
+   !(choices[i].includes("RELIQUARY_OFFER")&&!s.discardable())&&
+   !(choices[i].includes("CHOIR_SILENCE")&&!s.discardable(1,"FIRE")&&
+     !s.keptRooms.some(x=>x.card.id==="m-treasure"))&&
    !(i===0&&["m-well","m-hungry-door"].includes(room.id)&&!s.discardable(1))&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
     s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
@@ -279,7 +284,8 @@ function actRoom(s,{prepared=false,choiceOverride=null}={}){
  }
  if(s.alive()&&["m-beetle","m-treasure"].includes(room.id)&&
     (room.id==="m-beetle"||n===1))
-  s.keptRooms.push({card:room,choice:n});
+  if(!s.keptRooms.some(x=>x.card.id===room.id))
+   s.keptRooms.push({card:room,choice:n});
  if(room.id==="d-bazaar"&&s.alive()){
   const beetle=s.keptRooms.find(x=>x.card.id==="m-beetle");
   if(beetle){

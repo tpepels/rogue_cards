@@ -73,7 +73,7 @@ export class ExpeditionState {
    this.rerollHistory=[];this.heroAbilityModes={};this.returnChoices={};this.elberethAttempts=0;
    this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
-   this.pactUsed=false;
+   this.pactUsed=false;this.tuckedRoomItems=[];this.reverseNextRoomStage=null;
    this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
@@ -500,6 +500,13 @@ export class ExpeditionState {
    }
   }
   endRoom(){
+  for(const entry of [...this.tuckedRoomItems]){
+   if(entry.roomId!==this.room?.id)continue;
+   this.tuckedRoomItems.splice(this.tuckedRoomItems.indexOf(entry),1);
+   const h=this.chooseRecipient("return-mimic-tuck");
+   this.consumed.delete(entry.item);
+   this.add(h,entry.item);
+  }
   this.heroes.forEach(h=>{
    h.poison=false;h.immune=false;h.used.clear();
    h.nextHitBlock=0;h.ignoreDarknessOnce=false;
@@ -648,6 +655,41 @@ export class ExpeditionState {
   case "POISON_IMMUNE":h.immune=true;return;
   case "DRAW":this.draw(n());if(card?.type==="room")this.thiefReward();return;
   case "SALVAGE":this.salvage();return;
+  case "DISCARD_OR_HURT":{
+   const cost=Number(v),canPay=this.discardable(cost);
+   const mode=canPay?this.chooseEffect("optional-item-payment:"+this.room?.id,
+    ["discard","lose-hp"],"discard"):"lose-hp";
+   if(mode==="discard")this.discard(cost);
+   else this.hurt(h,args[1]==="d6"?this.die():Number(args[1]));
+   return;
+  }
+  case "MIMIC_TUCK":{
+   if(!this.discardable())return;
+   const item=this.discard();
+   if(!item)return;
+   const i=this.discardPile.lastIndexOf(item);
+   if(i>=0)this.discardPile.splice(i,1);
+   this.metrics.spent=Math.max(0,this.metrics.spent-1);
+   this.tuckedRoomItems.push({roomId:this.room.id,item});
+   return;
+  }
+  case "RELIQUARY_OFFER":{
+   if(!this.discardable())throw Error("An Item is required for Reliquary OFFER");
+   const item=this.discard();
+   const i=this.discardPile.lastIndexOf(item);
+   if(i>=0)this.discardPile.splice(i,1);
+   this.keptRooms.push({card:this.room,item,mode:"trap-all"});
+   return;
+  }
+  case "REVERSE_NEXT_ROOM":this.reverseNextRoomStage=this.room.stage;return;
+  case "COST_CURSED":{
+   const cost=Number(v);
+   if(!this.discardable(cost,"CURSED"))throw Error("Missing CURSED Item");
+   this.discard(cost,{tag:"CURSED"});return;
+  }
+  case "KEEP_CROWN":{
+   this.keptRooms.push({card:this.room,mode:v});return;
+  }
   case "FORK_REVEAL":
    this.forkRevealed(Number(v),{
     random:args[1]==="RANDOM",
@@ -933,16 +975,16 @@ export class ExpeditionState {
   case "CHOIR_SILENCE":{
    const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
    const modes=[...(song?["song"]:[]),
-    ...(this.has("torch")?["torch"]:[]),
     ...(this.discardable(1,"FIRE")?["discard-fire"]:[])];
-   if(!modes.length)return;
+   if(!modes.length)throw Error("SILENCE requires FIRE or kept Treasure That Sings");
    const mode=this.chooseEffect("choir-silence-source",modes,modes[0]);
    if(mode==="song"){
     this.keptRooms.splice(this.keptRooms.indexOf(song),1);
     this.roomRoll(6);return;
    }
-   if(mode==="discard-fire")this.discard(1,{tag:"FIRE"});
-   this.draw(2);return;
+   this.discard(1,{tag:"FIRE"});
+   this.monsterSkip++;
+   return;
   }
   case "SEAL":return;
   case "WARDEN_FIGHT":return;
@@ -1168,6 +1210,10 @@ export class ExpeditionState {
    this.chooseEffect("lantern-shrine-before-roll",
     ["save","use"],"use")==="use":null;
   let face=typeof forced==="number"?forced:this.die();
+  if(this.reverseNextRoomStage===this.room.stage&&this.room.id!=="d-mirror"){
+   this.reverseNextRoomStage=null;
+   face=7-face;
+  }
    if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
     const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
    }

@@ -147,7 +147,7 @@ export function fateVaultEntry(s){
  const v=s.vaultModifiers;
  v.smuggleAvailable=!!s.keptRooms.find(x=>x.card.id==="d-gilded"&&x.choice===1);
  v.unthroneAvailable=false;v.bargainAvailable=false;v.wardenOpeningSkip=false;
- const crownRoom=s.keptRooms.some(x=>x.card.id==="d-crown");
+ const crownRoom=s.keptRooms.some(x=>x.card.id==="d-crown"&&x.mode==="6");
  const savedKnight=s.keptRooms.find(x=>x.card.id==="u-hollow-knight"&&x.choice===0);
  if(savedKnight){complete(s,savedKnight);v.wardenOpeningSkip=true;}
  for(const entry of [...s.keptRooms]){
