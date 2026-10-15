@@ -202,7 +202,14 @@ export function searchDecision(session,{budget=100,seed=1,
   };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null,equipmentStreak=0;
-  const reproductionTrace=[];
+  // Keep the last 120 actions with constant-time recording. Error
+  // reports still reconstruct the exact same chronological action trace.
+  const reproductionTrace=new Array(120);
+  let traceCount=0,traceCursor=0;
+  const recentActions=()=>traceCount<120?
+   reproductionTrace.slice(0,traceCount):
+   [...reproductionTrace.slice(traceCursor),
+    ...reproductionTrace.slice(0,traceCursor)];
   try{
    while(sim.phase!=="terminal"&&depth<maxSteps){
     const actions=sessionActions(sim);
@@ -233,12 +240,13 @@ export function searchDecision(session,{budget=100,seed=1,
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     path.push({node,edge});
     const from=sim.phase;
-    reproductionTrace.push({depth,phase:from,
+    reproductionTrace[traceCursor]={depth,phase:from,
      pending:sim.pendingNested?.trigger??null,
      roomId:sim.state.room?.id??null,
      monsterId:sim.state.monster?.id??null,
-     heroHP:sim.state.heroes.map(h=>h.hp),action:choice});
-    if(reproductionTrace.length>120)reproductionTrace.shift();
+     heroHP:sim.state.heroes.map(h=>h.hp),action:choice};
+    if(++traceCursor===120)traceCursor=0;
+    if(traceCount<120)traceCount++;
     const replayObserved=originalRootWasPending&&!observedRootResolved&&
      Boolean(sim.pendingNested);
     const replaySwitches=replayObserved?[
@@ -272,7 +280,7 @@ export function searchDecision(session,{budget=100,seed=1,
      failingRoomId:sim.state.room?.id??null,
      failingMonsterId:sim.state.monster?.id??null,
      heroHP:sim.state.heroes.map(h=>h.hp),
-     observedReplay,recentActions:reproductionTrace.slice(-120)};
+     observedReplay,recentActions:recentActions()};
     throw failure;
    }
   }
@@ -296,7 +304,7 @@ export function searchDecision(session,{budget=100,seed=1,
      failingRoomId:sim.state.room?.id??null,
      failingMonsterId:sim.state.monster?.id??null,
      heroHP:sim.state.heroes.map(h=>h.hp),
-     reason:error,observedReplay,recentActions:reproductionTrace.slice(-120)};
+     reason:error,observedReplay,recentActions:recentActions()};
     throw failure;
    }
    continue;
