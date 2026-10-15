@@ -110,7 +110,8 @@ const rootStats=(node,rootActions)=>{
  */
 export function searchDecision(session,{budget=100,seed=1,
  knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
- strictTerminal=true,observedReplay=null,collectCoverage=true}={}){
+ strictTerminal=true,observedReplay=null,collectCoverage=true,
+ rootActions=null}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -125,7 +126,7 @@ export function searchDecision(session,{budget=100,seed=1,
   !Number.isInteger(observedReplay.diceSeed)||
   !Number.isInteger(observedReplay.deckSeed)))
   throw Error("Invalid prior observed chance replay");
- const rootActions=sessionActions(session);
+ rootActions=rootActions??sessionActions(session);
  if(!rootActions.length)throw Error("No pending player choice to search");
  const original=JSON.stringify(observeSession(session));
  const actualRng=session.state.rng.snapshot();
