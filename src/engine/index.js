@@ -10,6 +10,7 @@
 import {ExpeditionState} from "./expedition-state.js";
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {fateChoiceLegal} from "../room-fates.js";
+import {completePrintedRoomChoice} from "../room-memory-engine.js";
 import {itemOptions} from "../item-access.js";
 import {sealCost} from "./vault.js";
 import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
@@ -188,11 +189,7 @@ export function chooseRoom(s,index,{observeResult=true,prevalidated=false}={}){
   const [operation,...args]=code.split(":");
   s.apply(operation,args,s.room);
  }
- // Loyal Hound's Beetle Caravan link gives a SCOUT after BARGAIN,
- // not a free 5-6 outcome or a modifier to STEAL.
- if(s.room.id==="m-beetle"&&index===0&&
-    s.heroes.some(h=>h.hp>0&&s.equipped(h,"dog"))&&s.alive())
-  s.peek(1);
+ completePrintedRoomChoice(s,s.room,index);
  return observeResult?observeGame(s):undefined;
 }
 /** Legal combat options at the current state and timing, without AI scores. */
