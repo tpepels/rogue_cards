@@ -878,3 +878,25 @@ test("a failed Vault direct transaction rolls back monster and visit metrics",()
  assert.equal(session.state.metrics.battles,0);
  assert.equal(session.state.monster,null);
 });
+
+
+test("failed post-Warden direct FIGHT restores the complete deterministic write set",()=>{
+ const session=createDecisionSession({seed:7731,heroes:["warrior"]});
+ session.state.beginRoom(VAULT);session.phase="post-warden";
+ session.state.monster=WARDEN;session.state.monsterHP=8;
+ const action=sessionActions(session).find(a=>a.kind==="fight");
+ assert.ok(action);
+ const before=JSON.stringify(observeSession(session));
+ const dice=session.state.rng.snapshot();
+ const oldPush=session.history.push;
+ session.history.push=()=>{throw Error("post-Warden commit failure")};
+ try{
+  assert.throws(()=>submitDecision(session,action),/post-Warden commit failure/);
+ }finally{session.history.push=oldPush}
+ assert.equal(JSON.stringify(observeSession(session)),before);
+ assert.equal(session.state.rng.snapshot(),dice);
+ assert.equal(session.state.monster.id,"warden");
+ assert.equal(session.state.monsterHP,8);
+ assert.equal(session.state.metrics.monsterVisits["warden-fury"],undefined);
+ assert.equal(session.state.metrics.battles,0);
+});
