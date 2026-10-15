@@ -68,8 +68,19 @@ const canonical=session=>{
  if(phase==="terminal")return [];
  throw Error("Unknown session phase "+phase);
 };
-export const sessionActions=session=>
- session.pendingNested?session.pendingNested.actions:canonical(session);
+// Search may reuse an already-enumerated, same-boundary legal action list.
+// An issued list is tied to this exact session object and committed step;
+// external callers without a ticket retain full canonical revalidation.
+const issuedLegalLists=new WeakMap();
+export const sessionActions=(session,{issueTicket=false}={})=>{
+ const list=session.pendingNested?session.pendingNested.actions:canonical(session);
+ if(issueTicket)issuedLegalLists.set(list,{
+  session,state:session.state,phase:session.phase,
+  heroIndex:session.heroIndex,pendingNested:session.pendingNested,
+  count:session.actionCount
+ });
+ return list;
+};
 export function observeSession(session){
  if(session.pendingNested)return {
   phase:"reaction",parentPhase:session.phase,
@@ -232,10 +243,10 @@ export function createDecisionSession(options={}){
 /** The controller is the ONLY place that accepts a player's choice in the
  * new pausable API. Unexpected actions are rejected BEFORE mutating state.
  */
-function submitDecisionDirect(session,action,{observeResult=true,recordHistory=true}={}){
+function submitDecisionDirect(session,action,{observeResult=true,recordHistory=true,
+ verifiedAction=false}={}){
  if(session.phase==="terminal")throw Error("Expedition already ended");
- const actions=canonical(session);
- const selected=actions.find(x=>
+ const selected=verifiedAction?action:canonical(session).find(x=>
   Object.keys(x).every(k=>x[k]===action?.[k])&&
   Object.keys(action||{}).every(k=>x[k]===action[k]));
  if(!selected)throw Error("Illegal pending decision "+JSON.stringify(action));
@@ -249,11 +260,11 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
     if(next<0)session.phase="room";
     else session.heroIndex=next;
    }
-  }else applyAction(s,selected,{observeResult:false});
+  }else applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
  }else if(phase==="retained-entry"){
-  applyAction(s,selected,{observeResult:false});queuedReturn(session);
+  applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});queuedReturn(session);
  }else if(phase==="room"){
-  applyAction(s,selected,{observeResult:false});
+  applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
  }else if(phase==="parley"){
   if(selected.kind==="parley"&&resolveParley(s)){
@@ -264,7 +275,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
  }else if(phase==="combat-hero"){
   session.heroIndex=selected.heroIndex;session.phase="combat";
  }else if(phase==="combat"){
-  applyAction(s,selected,{observeResult:false});
+  applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
   s._actedCombatMask|=1<<selected.heroIndex;
   afterAttack(session);
  }else if(phase==="monster-response"){
@@ -390,7 +401,8 @@ function beginDirectTransaction(session,action){
  */
 export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
- transactional=true,observeResult=true,recordHistory=true
+ transactional=true,observeResult=true,recordHistory=true,
+ verifiedLegalActions=null
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean")
@@ -408,12 +420,24 @@ export function submitDecision(session,action,{
   at:replayAt,callback:afterReactionReplay
  });
  if(session.phase==="terminal")throw Error("Expedition already ended");
+ const ticket=verifiedLegalActions?issuedLegalLists.get(verifiedLegalActions):null;
+ if(verifiedLegalActions&&(!ticket||ticket.session!==session||
+    ticket.state!==session.state||ticket.phase!==session.phase||
+    ticket.heroIndex!==session.heroIndex||
+    ticket.pendingNested!==session.pendingNested||
+    ticket.count!==session.actionCount||
+    !verifiedLegalActions.includes(action)))
+  throw Error("Stale or unissued canonical legal-action ticket");
+ // Revalidate nested responses against their current printed trigger.
+ // Only a just-issued root choice can skip repeated enumeration safely.
+ const verifiedRoot=Boolean(ticket&&!session.pendingNested);
  // Trusted deterministic rules paths have a reversible, narrow write set.
  // Skipping their full-state fork is especially valuable in MCTS, where
  // many legal equipment moves are evaluated before the next Room.
  if(transactional&&!switches.length&&safeDirectAction(session,action)){
   const rollback=beginDirectTransaction(session,action);
-  try{return submitDecisionDirect(session,action,{observeResult,recordHistory})}
+  try{return submitDecisionDirect(session,action,{
+   observeResult,recordHistory,verifiedAction:verifiedRoot})}
   catch(error){rollback();throw error}
  }
  const waiting=session.pendingNested;
@@ -465,7 +489,8 @@ export function submitDecision(session,action,{
   throw new NeedReaction(event,actions,observeGame(fork.state));
  };
  try{
-  const committedObservation=submitDecisionDirect(fork,root,{observeResult,recordHistory});
+  const committedObservation=submitDecisionDirect(fork,root,{
+   observeResult,recordHistory,verifiedAction:verifiedRoot});
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
   // Preserve the canonical game-state object identity across accepted
