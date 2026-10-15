@@ -175,7 +175,7 @@ export function searchDecision(session,{budget=100,seed=1,
  fastMetricClones=false,speculativeTransitions=false,
  checkpointEvery=32,lazyInitialCheckpoint=false,
  profileTransitions=false,canonicalReactionPhases=false,
- deferReactionCheckpoints=false}={}){
+ deferReactionCheckpoints=false,onDemandCheckpoints=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -208,6 +208,8 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("canonicalReactionPhases must be boolean");
  if(typeof deferReactionCheckpoints!=="boolean")
   throw Error("deferReactionCheckpoints must be boolean");
+ if(typeof onDemandCheckpoints!=="boolean")
+  throw Error("onDemandCheckpoints must be boolean");
  if(!Number.isInteger(checkpointEvery)||checkpointEvery<1||checkpointEvery>256)
   throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
@@ -295,7 +297,7 @@ export function searchDecision(session,{budget=100,seed=1,
   // Lazy mode recreates the first checkpoint from exact sampled seeds
   // only when a printed reaction actually requires a rollback.
   let checkpoint=speculativeTransitions&&transactional&&
-   !lazyInitialCheckpoint?
+   !lazyInitialCheckpoint&&!onDemandCheckpoints?
    profiledClone(sim,"initialCheckpointClone",sim.phase):null;
   const rebuildInitialTrial=()=>{
    const rebuilt=profiledClone(session,"initialRecoveryClone",session.phase);
@@ -465,6 +467,12 @@ export function searchDecision(session,{budget=100,seed=1,
      !canonicalReactionPhase&&!sim.pendingNested&&!replaySwitches.length;
     if(transitionProfile&&speculativeTransitions&&canonicalReactionPhase)
      mark("canonicalReactionPhase",from);
+    // The current decision has been selected, but has not changed any
+    // game state or dice. Take a checkpoint only before speculative work.
+    if(onDemandCheckpoints&&canSpeculate&&!checkpoint){
+     checkpoint=profiledClone(sim,"onDemandCheckpointClone",from);
+     sinceCheckpoint=[];
+    }
     const transitionStarted=transitionProfile?performance.now():0;
     if(canSpeculate){
      let restored=false;
@@ -513,7 +521,15 @@ export function searchDecision(session,{budget=100,seed=1,
     // canonical fork/replay handles every intervening response; checkpoint
     // again after the reaction finishes. Terminal copies are also unused.
     // Historical behavior remains the default for paired comparison.
-    if(speculativeTransitions&&transactional&&
+    if(onDemandCheckpoints){
+     // Canonical decisions cannot need rollback from the speculative
+     // prefix. Interval boundaries invalidate the checkpoint until the
+     // next speculative action; pending reactions require no snapshot.
+     if(!canSpeculate||sinceCheckpoint.length>=checkpointEvery){
+      checkpoint=null;
+      sinceCheckpoint=[];
+     }
+    }else if(speculativeTransitions&&transactional&&
        (!deferReactionCheckpoints||
         (sim.phase!=="terminal"&&!sim.pendingNested))&&
        (sim.pendingNested||!canSpeculate||

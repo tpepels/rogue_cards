@@ -29,14 +29,14 @@ function number(name,def,max){
 const mode=arg("--mode","search");
 const optimization=arg("--optimization","settlements");
 const reference=arg("--reference","canonical");
-if(!["canonical","speculative"].includes(reference))
+if(!["canonical","speculative","selective-deferred"].includes(reference))
  throw Error("Unknown --reference");
 if(!["search","expedition"].includes(mode))throw Error("Unknown --mode");
 if(!["settlements","metrics","combined","speculative",
      "speculative-frozen","speculative-lazy",
      "speculative-lazy-frozen","speculative-selective",
      "speculative-selective-deferred","speculative-selective-lazy-deferred",
-     "everything"].includes(optimization))
+     "speculative-selective-demand","everything"].includes(optimization))
  throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
@@ -62,6 +62,9 @@ const fastOptions={
  "speculative-selective-lazy-deferred":{speculativeTransitions:true,
   canonicalReactionPhases:true,deferReactionCheckpoints:true,
   lazyInitialCheckpoint:true},
+ "speculative-selective-demand":{speculativeTransitions:true,
+  canonicalReactionPhases:true,deferReactionCheckpoints:true,
+  onDemandCheckpoints:true},
  everything:{
   speculativeTransitions:true,
   directSettlements:true,fastMetricClones:true,
@@ -70,10 +73,16 @@ const fastOptions={
  }
 }[optimization];
 if(fastOptions.speculativeTransitions)fastOptions.checkpointEvery=checkpointEvery;
-if(reference==="speculative"&&!optimization.startsWith("speculative-"))
+if(reference!=="canonical"&&!optimization.startsWith("speculative-"))
  throw Error("Speculative reference requires a speculative candidate");
+if(reference==="selective-deferred"&&
+   optimization!=="speculative-selective-demand")
+ throw Error("Selective-deferred reference requires the on-demand candidate");
 const referenceOptions=reference==="speculative"?
- {speculativeTransitions:true,checkpointEvery}:{};
+ {speculativeTransitions:true,checkpointEvery}:
+ reference==="selective-deferred"?
+ {speculativeTransitions:true,canonicalReactionPhases:true,
+  deferReactionCheckpoints:true,checkpointEvery}:{};
 const pairsOfArgs=args.filter(x=>x!=="--profile"&&x!=="--distinct-seeds");
 for(let i=0;i<pairsOfArgs.length;i+=2){
  if(!names.has(pairsOfArgs[i])||pairsOfArgs[i+1]===undefined)

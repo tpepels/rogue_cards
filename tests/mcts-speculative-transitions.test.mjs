@@ -135,6 +135,8 @@ test("speculative search validates its isolated mode and checkpoint interval",()
   /canonicalReactionPhases must be boolean/);
  assert.throws(()=>searchDecision(session,{budget:2,deferReactionCheckpoints:1}),
   /deferReactionCheckpoints must be boolean/);
+ assert.throws(()=>searchDecision(session,{budget:2,onDemandCheckpoints:1}),
+  /onDemandCheckpoints must be boolean/);
  assert.throws(()=>submitSpeculativeDecision(session,
   sessionActions(session)[0],{}),
   /requires a rollback callback/);
@@ -242,4 +244,64 @@ test("canonical reaction-phase routing preserves complete MCTS search trees",()=
    }
   }
  }
+});
+
+test("on-demand checkpoints preserve exact sampled UCT search and every reaction",()=>{
+ const fixtures=[
+  {create:()=>atRoom(1842,"u-fountain"),seed:20261018},
+  {create:()=>atRoom(3573,"u-passage"),seed:20261019},
+  {create:()=>atCombat(3192,["wizard"]),seed:20261020},
+  {create:()=>createDecisionSession({seed:7292,
+   heroes:["warrior","witch"]}),seed:20261021}
+ ];
+ for(const fixture of fixtures){
+  for(const treeMode of ["full","frontier"]){
+   const session=fixture.create();
+   const before=JSON.stringify(observeSession(session));
+   const dice=session.state.rng.snapshot();
+   const options={seed:fixture.seed,budget:4,knowledge:"fair",
+    treeMode,maxSteps:4000,collectCoverage:true};
+   const canonical=searchDecision(session,options);
+   for(const checkpointEvery of [1,8,32]){
+    const selective=searchDecision(session,{
+     ...options,speculativeTransitions:true,
+     canonicalReactionPhases:true,deferReactionCheckpoints:true,
+     checkpointEvery
+    });
+    const profiled=searchDecision(session,{
+     ...options,speculativeTransitions:true,
+     canonicalReactionPhases:true,deferReactionCheckpoints:true,
+     checkpointEvery,onDemandCheckpoints:true,profileTransitions:true
+    });
+    const {transitionProfile,...result}=profiled;
+    assert.deepEqual(result,canonical,"On-demand search diverged from canonical");
+    assert.deepEqual(result,selective,"On-demand search changed UCT");
+    assert.equal(transitionProfile.totals.initialCheckpointClone,undefined);
+    assert.equal(transitionProfile.totals.checkpointClone,undefined);
+    assert.equal(transitionProfile.totals.initialRecoveryClone,undefined);
+    assert.equal(JSON.stringify(observeSession(session)),before);
+    assert.equal(session.state.rng.snapshot(),dice);
+   }
+  }
+ }
+});
+
+test("on-demand checkpoints preserve pending printed reactions and nontransactional mode",()=>{
+ const session=atRoom(1842,"u-fountain");
+ const first=sessionActions(session).find(a=>a.kind==="room-choice"&&a.index===0);
+ assert.ok(first);
+ submitDecision(session,first);
+ assert.ok(session.pendingNested,"Expected a printed Room reaction");
+ const options={seed:20261018,budget:3,knowledge:"fair",
+  maxSteps:4000,collectCoverage:true};
+ const canonical=searchDecision(session,options);
+ assert.deepEqual(searchDecision(session,{
+  ...options,speculativeTransitions:true,canonicalReactionPhases:true,
+  deferReactionCheckpoints:true,onDemandCheckpoints:true
+ }),canonical);
+ const noTransaction=searchDecision(session,{...options,transactional:false});
+ assert.deepEqual(searchDecision(session,{
+  ...options,transactional:false,speculativeTransitions:true,
+  onDemandCheckpoints:true
+ }),noTransaction);
 });

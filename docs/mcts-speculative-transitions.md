@@ -109,3 +109,25 @@ An optional diagnostic profile:
 These performance switches remain disabled by default. The original
 speculation, lazy checkpoint, frozen actions and other prior experimental
 flags are preserved.
+
+## On-demand checkpoint experiment
+
+`onDemandCheckpoints:true` creates a checkpoint immediately BEFORE an
+actual speculative decision, not following every canonical transaction,
+pending reaction or terminal state. A canonically executed decision
+invalidates the checkpoint and prior speculative prefix; an interval
+boundary also invalidates it so the NEXT speculative action gets a fresh
+snapshot. This does not use lazy seed reconstruction, and all nested
+reactions use the original canonical semantics.
+
+Benchmark against the previous selective-deferred mode using paired seeds:
+
+    npm run bench:mcts-settlements -- --reference selective-deferred --optimization speculative-selective-demand --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --reference selective-deferred --optimization speculative-selective-demand --mode expedition --budget 8 --runs 8
+
+Analyze remaining checkpoint and reaction costs with:
+
+    npm run bench:mcts-settlements -- --reference selective-deferred --optimization speculative-selective-demand --budget 16 --samples 11 --distinct-seeds --profile
+
+Every benchmark verifies full canonical search/expedition parity before
+reporting speedup. The flag remains disabled unless proven faster.
