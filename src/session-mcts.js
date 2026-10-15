@@ -163,7 +163,7 @@ export function searchDecision(session,{budget=100,seed=1,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
- lazyColdEdges=true}={}){
+ lazyColdEdges=true,reuseTraceSlots=true}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -174,8 +174,8 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Exploration coefficient must be nonnegative");
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
     typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean"||
-    typeof lazyColdEdges!=="boolean")
-  throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash and lazyColdEdges must be boolean");
+    typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean")
+  throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash, lazyColdEdges and reuseTraceSlots must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -210,6 +210,9 @@ export function searchDecision(session,{budget=100,seed=1,
   increment(actionSelections,selected.kind);
   if(selected.cardId)increment(cardSelections,selected.cardId);
  };
+ // Last-120 error reproduction slots are reused across simulated turns
+ // and trials. This buffer cannot influence selection or canonical dice.
+ const pooledTrace=new Array(120);
  for(let i=0;i<budget;i++){
   // Rollout histories are never read by game rules. Avoid copying the
   // original history only to discard it immediately afterward.
@@ -270,7 +273,7 @@ export function searchDecision(session,{budget=100,seed=1,
   let inRollout=false;
   // Keep the last 120 actions with constant-time recording. Error
   // reports still reconstruct the exact same chronological action trace.
-  const reproductionTrace=new Array(120);
+  const reproductionTrace=reuseTraceSlots?pooledTrace:new Array(120);
   let traceCount=0,traceCursor=0;
   const recentActions=()=>traceCount<120?
    reproductionTrace.slice(0,traceCount):
@@ -340,11 +343,28 @@ export function searchDecision(session,{budget=100,seed=1,
     if(collectCoverage)record(actions,choice,sim.pendingNested?
      "reaction:"+sim.pendingNested.trigger.phase:sim.phase);
     const from=sim.phase;
-    reproductionTrace[traceCursor]={depth,phase:from,
-     pending:sim.pendingNested?.trigger??null,
-     roomId:sim.state.room?.id??null,
-     monsterId:sim.state.monster?.id??null,
-     heroHP:sim.state.heroes.map(h=>h.hp),action:choice};
+    if(reuseTraceSlots){
+     let entry=reproductionTrace[traceCursor];
+     if(!entry){
+      entry={depth:0,phase:null,pending:null,roomId:null,
+       monsterId:null,heroHP:[],action:null};
+      reproductionTrace[traceCursor]=entry;
+     }
+     entry.depth=depth;
+     entry.phase=from;
+     entry.pending=sim.pendingNested?.trigger??null;
+     entry.roomId=sim.state.room?.id??null;
+     entry.monsterId=sim.state.monster?.id??null;
+     entry.heroHP.length=0;
+     for(const hero of sim.state.heroes)entry.heroHP.push(hero.hp);
+     entry.action=choice;
+    }else{
+     reproductionTrace[traceCursor]={depth,phase:from,
+      pending:sim.pendingNested?.trigger??null,
+      roomId:sim.state.room?.id??null,
+      monsterId:sim.state.monster?.id??null,
+      heroHP:sim.state.heroes.map(h=>h.hp),action:choice};
+    }
     if(++traceCursor===120)traceCursor=0;
     if(traceCount<120)traceCount++;
     const replayObserved=originalRootWasPending&&!observedRootResolved&&
