@@ -58,10 +58,21 @@ const mark=(s,choice,item=null)=>{
  s.fateChoices.push({id:s.room.id,title:s.room.title,choice:s.room.v2.choices[choice].label});
 };
 const burnItem=(s,tag=null)=>s.discard(1,{tag});
+// Tucked physical Items must not remain salvageable from the discard pile.
+const tuckItem=s=>{
+ const item=burnItem(s);
+ if(item){
+  const index=s.discardPile.lastIndexOf(item);
+  if(index>=0)s.discardPile.splice(index,1);
+ }
+ return item;
+};
 const take=(s,n=1)=>s.draw(n);
 const dead=(s,n)=>s.hurt(s.chooseRecipient("fate-damage"),n);
 // Returned tucked objects were already counted when first drawn from the deck.
 const returnTucked=(s,item)=>{if(!item)return;
+ const index=s.discardPile.lastIndexOf(item);
+ if(index>=0)s.discardPile.splice(index,1);
  const h=s.chooseRecipient("return-tucked-item");h.inventory.push(item);
  s.consumed.delete(item);s.equip(h,item);};
 const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n);
@@ -81,8 +92,8 @@ export function resolveFateChoice(s,choice){
  case "u-cartographer":if(choice===1)s.peek(3,true);break;
  case "u-hollow-knight":if(choice===1)take(s,2);break;
  case "u-scribe-dust":if(choice===0)burnItem(s);else take(s,2);break;
- case "u-bone-seed":if(choice===0)tucked=burnItem(s);else restore(s,3);break;
- case "m-ferryman-oath":if(choice===0)tucked=burnItem(s);else take(s,2);break;
+ case "u-bone-seed":if(choice===0)tucked=tuckItem(s);else restore(s,3);break;
+ case "m-ferryman-oath":if(choice===0)tucked=tuckItem(s);else take(s,2);break;
  case "m-choir-nails":if(choice===1)take(s,1);break;
  case "m-hourglass":break;
  case "m-drowned-banner":if(choice===0)dead(s,2);else take(s,2);break;
@@ -160,6 +171,8 @@ export function fateVaultEntry(s){
   case "m-ferryman-oath":
    if(c===0){
     if(s.returnChoices?.["m-ferryman-oath"]==="smuggle"){
+     // The physically tucked Item is sacrificed, not lost from the deck.
+     if(entry.item)s.discardPile.push(entry.item);
      v.smuggleAvailable=true;
     }else{returnTucked(s,entry.item);restore(s,3);}
    }
