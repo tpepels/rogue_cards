@@ -26,8 +26,8 @@ function param(name,defaultValue,min,max){
 }
 const modeIndex=argv.indexOf("--mode");
 const mode=modeIndex<0?"transitions":argv[modeIndex+1];
-if(!["transitions","legality","hash","combined","private","trace","private-all"].includes(mode))
- throw Error("Invalid --mode: transitions, legality, hash, combined, private, trace or private-all");
+if(!["transitions","legality","hash","combined","private","trace","private-all","root-hash","v3"].includes(mode))
+ throw Error("Invalid --mode: transitions, legality, hash, combined, private, trace, private-all, root-hash or v3");
 const budget=param("--budget",3,1,32);
 const samples=param("--samples",3,1,20);
 const seed=param("--seed",7817,1,0xffffffff);
@@ -42,8 +42,9 @@ function run(optimized){
   fastTransitions:mode==="transitions"?optimized:true,
   reuseLegalActions:["legality","combined"].includes(mode)?optimized:true,
   fastStateHash:["hash","combined"].includes(mode)?optimized:true,
-  fastPrivateCommit:["private","private-all"].includes(mode)?optimized:true,
-  compactTrace:["trace","private-all"].includes(mode)?optimized:true
+  fastPrivateCommit:["private","private-all","v3"].includes(mode)?optimized:true,
+  compactTrace:["trace","private-all","v3"].includes(mode)?optimized:true,
+  cacheRootHash:["root-hash","v3"].includes(mode)?optimized:true
  });
  assert.equal(result.incomplete,0);
  assert.equal(JSON.stringify(observeSession(session)),startingObservation);
