@@ -35,8 +35,15 @@ export function forcesEquipmentProgress(session,policy,legal){
 
 export function selectSessionPolicyAction(session,policy,{
  budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
- legalActions=null
+ legalActions=null,searchProfile="classic",deepMinBudget=16,
+ deepVisitsPerAction=4
 }={}){
+ if(!["classic","deep-uct"].includes(searchProfile))
+  throw Error("Unknown searchProfile "+searchProfile);
+ if(!Number.isInteger(deepMinBudget)||deepMinBudget<2||
+    deepMinBudget>100000||!Number.isInteger(deepVisitsPerAction)||
+    deepVisitsPerAction<1||deepVisitsPerAction>1000)
+  throw Error("Invalid deep UCT budget parameters");
  // The caller often already enumerated the exact canonical decisions.
  // Reuse that array instead of rebuilding equipment options a second time.
  const legal=legalActions??sessionActions(session);
@@ -53,10 +60,16 @@ export function selectSessionPolicyAction(session,policy,{
  }
  // For any decision that can affect play, search the complete legal
  // action list, with the same budget and chance seed as before.
+ // Experimental deeper UCT is a DIFFERENT policy, never the implicit
+ // default for existing statistical/checkpointed Oracle studies.
+ const searchBudget=searchProfile==="deep-uct"?
+  Math.max(budget,deepMinBudget,legal.length*deepVisitsPerAction):
+  Math.max(budget,legal.length);
  const recommended=legal.length===1?legal[0]:searchDecision(session,{
-  budget:Math.max(budget,legal.length),seed,
+  budget:searchBudget,seed,
   maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay,
-  rootActions:legal,collectCoverage:false
+  rootActions:legal,collectCoverage:false,
+  treeMode:searchProfile==="deep-uct"?"frontier":"full"
  }).recommended;
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
