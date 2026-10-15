@@ -1,12 +1,12 @@
 # Migrating a slow Oracle study to an optimized revision
 
 The canonical room study started on revision
-\`6940e50fd0f8fd848a0b58f534bd9478312b9e83\`. Its independent
-\`checkpoints/000118.json\`-style files are completed full-game MCTS source
+`6940e50fd0f8fd848a0b58f534bd9478312b9e83`. Its independent
+`checkpoints/000118.json`-style files are completed full-game MCTS source
 results. They cannot be resumed under a different Git revision simply by
-editing \`manifest.json\`.
+editing `manifest.json`.
 
-The migration script, \`scripts/migrate-session-balance.mjs\`, uses the
+The migration script, `scripts/migrate-session-balance.mjs`, uses the
 optimized study worker to **fully replay every completed old seed** with
 identical study settings. It deep-compares *all returned fields*: wins,
 selection of paired Room and action alternatives, progression decisions,
@@ -25,7 +25,7 @@ completed source seeds costs real CPU time; it is NOT a zero-cost resume.
 2. In the main checkout, fetch the changes and create a **new pinned**
    worktree for the migration commit:
 
-   \`\`\`bash
+   ```bash
    cd ~/Projects/rogue_cards
    git fetch origin
    git worktree add --detach ../rogue_cards_oracle_migrated TARGET_COMMIT
@@ -33,33 +33,33 @@ completed source seeds costs real CPU time; it is NOT a zero-cost resume.
    npm run test:session
    npm run validate:deck
    npm run audit:canonical -- --runs 36 --seed 20261014 --max-steps 3000 --out results/canonical-audit-migrated
-   \`\`\`
+   ```
 
 3. Verify and import the old checkpoints. This **uses seven workers** and
    can take significant time for hundreds of completed sources:
 
-   \`\`\`bash
+   ```bash
    npm run oracle:migrate-checkpoints -- --from ../rogue_cards_oracle_v3/results/session-balance-rooms-11 --to results/session-balance-rooms-migrated --audit results/canonical-audit-migrated/summary.json --workers 7
-   \`\`\`
+   ```
 
    The old source manifest and both revision-matched PASS audits must
    exist. The destination must not exist. The tool stages its verification
-   in \`results/session-balance-rooms-migrated.migration-in-progress\`.
+   in `results/session-balance-rooms-migrated.migration-in-progress`.
    Interrupting verification is safe; run **the same migration command**
    again to continue. It never publishes a resumable study unless every
    old completed seed has been verified.
 
-4. Only after the tool prints \`SUCCESS\`, resume the original experimental
+4. Only after the tool prints `SUCCESS`, resume the original experimental
    design under the optimized revision:
 
-   \`\`\`bash
+   ```bash
    npm run oracle:balance -- --resume --focus room --runs 7200 --workers 7 --hours 10 --seed 20261014 --navigate-budget 2 --future-budget 2 --min-eligible 60 --audit results/canonical-audit-migrated/summary.json --out results/session-balance-rooms-migrated
-   \`\`\`
+   ```
 
 The new manifest contains the optimized revision and target audit path;
 the original records are byte-preserved. Audit trail:
-\`migration-provenance.json\`, plus a source/target SHA-256 receipt under
-\`verified/\` for every migrated checkpoint.
+`migration-provenance.json`, plus a source/target SHA-256 receipt under
+`verified/` for every migrated checkpoint.
 
 ## Stop conditions and invariants
 
@@ -71,7 +71,7 @@ the original records are byte-preserved. Audit trail:
   they do not influence seed identity or the experiment.
 - If a replay returns a different outcome **or any different field**, the
   migration does **not** publish mixed results. A
-  \`failure-XXXXXX.json\` in the staging directory identifies differences.
+  `failure-XXXXXX.json` in the staging directory identifies differences.
   Debug the discrepancy before choosing a new migration destination.
 - Source files must not change while being verified. The tool hashes the
   entire original snapshot and checks it again before publication.
