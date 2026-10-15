@@ -200,7 +200,8 @@ function oneJob(i,c){
     "reaction:"+session.pendingNested.trigger.phase:session.phase,
     action:chosen,roomId:session.state.room?.id,
     monsterId:session.state.monster?.id};
-   submitDecision(session,chosen,{observeResult:false,recordHistory:false});
+   submitDecision(session,chosen,{observeResult:false,
+     recordHistory:false,preserveStateIdentity:false});
   }
   if(session.phase!=="terminal")
    throw Error("Actual source expedition exceeded step limit");
