@@ -457,10 +457,11 @@ export function submitDecision(session,action,{
   !x||!Number.isInteger(x.at)||x.at<1||
   typeof x.callback!=="function"))
   throw Error("Invalid multi-stage replay switches");
- const switches=[...replaySwitches];
- if(afterReactionReplay)switches.push({
-  at:replayAt,callback:afterReactionReplay
- });
+ // Most search decisions have no replay switches. Do not allocate a
+ // throwaway array for every single simulated game action.
+ const switches=afterReactionReplay?
+  [...replaySwitches,{at:replayAt,callback:afterReactionReplay}]:
+  replaySwitches;
  if(session.phase==="terminal")throw Error("Expedition already ended");
  const ticket=verifiedLegalActions?issuedLegalLists.get(verifiedLegalActions):null;
  if(verifiedLegalActions&&(!ticket||ticket.session!==session||
@@ -485,7 +486,8 @@ export function submitDecision(session,action,{
  const waiting=session.pendingNested;
  let root,responses;
  if(waiting){
-  const selected=waiting.actions.find(a=>sameAction(a,action));
+  const selected=ticket&&session.pendingNested?action:
+   waiting.actions.find(a=>sameAction(a,action));
   if(!selected)throw Error("Illegal pending reaction "+JSON.stringify(action));
   root=waiting.root;responses=[...waiting.responses,selected];
  }else{root=action;responses=[];}
