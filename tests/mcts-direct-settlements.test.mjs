@@ -10,7 +10,7 @@ import {searchDecision} from "../src/session-mcts.js";
 function scenario(kind,seed=83192){
  const session=createDecisionSession({seed,heroes:["warrior","witch"]}),s=session.state;
  if(kind==="corpse"){
-  s.beginRoom(ROOMS.find(r=>r.id==="u-nest"),{deferEntry:true});
+  s.beginRoom(ROOMS.find(r=>r.id==="u-nest"));
   s.monster=MONSTERS.find(m=>m.id==="rat");
   s.monsterHP=0;
   s.heroes[0].poison=true;
@@ -19,10 +19,10 @@ function scenario(kind,seed=83192){
   s.heroes[0].nextDefenseBonus=2;
   session.phase="corpse";
  }else if(kind==="vault"){
-  s.beginRoom(VAULT,{deferEntry:true});
+  s.beginRoom(VAULT);
   session.phase="vault";
  }else if(kind==="post-warden"){
-  s.beginRoom(VAULT,{deferEntry:true});
+  s.beginRoom(VAULT);
   s.monster=WARDEN;s.monsterHP=10;
   session.phase="post-warden";
  }else throw Error("Unknown setup");
