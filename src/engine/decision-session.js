@@ -366,6 +366,9 @@ function safeDirectAction(session,action){
  // this Hero's turn as spent and advances to the Monster response.
  if(phase==="combat"&&action.phase==="combat"&&
     action.kind==="pass")return true;
+ // Vault FIGHT choices make no chance draws or nested decisions.
+ if((phase==="vault"||phase==="post-warden")&&
+    action.phase===phase&&action.kind==="fight")return true;
  return false;
 }
 function beginDirectTransaction(session,action){
@@ -380,6 +383,17 @@ function beginDirectTransaction(session,action){
   hadActedMask:Object.hasOwn(s,"_actedCombatMask"),
   actor:s.actor
  };
+ const vaultFight=action.kind==="fight"&&
+  (session.phase==="vault"||session.phase==="post-warden");
+ const stateBefore=vaultFight?Object.fromEntries([
+  "monster","monsterHP","monsterFirstAttackPending","monsterAdv",
+  "heroFirstAdv","monsterSkip","endingKind"
+ ].map(key=>[key,{had:Object.hasOwn(s,key),value:s[key]}])):null;
+ const metricsBefore=vaultFight?{
+  battles:s.metrics.battles,won:s.metrics.won,
+  warden:s.metrics.monsterVisits.warden,
+  fury:s.metrics.monsterVisits["warden-fury"]
+ }:null;
  const indices=action.phase==="equipment"?
   [...new Set([action.heroIndex,action.toHeroIndex]
    .filter(i=>Number.isInteger(i)))]:[];
@@ -400,6 +414,19 @@ function beginDirectTransaction(session,action){
   if(meta.hadActedMask)s._actedCombatMask=meta.actedMask;
   else delete s._actedCombatMask;
   s.actor=meta.actor;
+  if(stateBefore){
+   for(const [key,{had,value}] of Object.entries(stateBefore)){
+    if(had)s[key]=value;else delete s[key];
+   }
+   s.metrics.battles=metricsBefore.battles;
+   s.metrics.won=metricsBefore.won;
+   if(metricsBefore.warden===undefined)
+    delete s.metrics.monsterVisits.warden;
+   else s.metrics.monsterVisits.warden=metricsBefore.warden;
+   if(metricsBefore.fury===undefined)
+    delete s.metrics.monsterVisits["warden-fury"];
+   else s.metrics.monsterVisits["warden-fury"]=metricsBefore.fury;
+  }
   for(const {hero,inventory,slots} of touched){
    hero.inventory.splice(0,hero.inventory.length,...inventory);
    for(const key of Object.keys(hero.slots))delete hero.slots[key];
@@ -415,11 +442,13 @@ function beginDirectTransaction(session,action){
 export function submitDecision(session,action,{
  afterReactionReplay=null,replayAt=null,replaySwitches=[],
  transactional=true,observeResult=true,recordHistory=true,
- verifiedLegalActions=null
+ verifiedLegalActions=null,preserveStateIdentity=true
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
-    typeof recordHistory!=="boolean")
-  throw Error("transactional, observeResult and recordHistory must be boolean");
+    typeof recordHistory!=="boolean"||
+    typeof preserveStateIdentity!=="boolean")
+  throw Error("transactional, observeResult, recordHistory and "+
+   "preserveStateIdentity must be boolean");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
   throw Error("Reaction replay observer must be a function");
  if(replayAt!==null&&(!Number.isInteger(replayAt)||replayAt<1))
@@ -508,10 +537,13 @@ export function submitDecision(session,action,{
   delete fork.state._decisionHook;
   // Preserve the canonical game-state object identity across accepted
   // decisions. Forked Hero/Item aliases remain consistent *within* it.
-  const real=session.state;
-  for(const key of Object.keys(real))if(!(key in fork.state))delete real[key];
-  Object.assign(real,fork.state);
-  fork.state=real;
+  if(preserveStateIdentity){
+   const real=session.state;
+   for(const key of Object.keys(real))if(!(key in fork.state))delete real[key];
+   Object.assign(real,fork.state);
+   fork.state=real;
+  }
+  // Internal simulations own the entire state and need not copy it back.
   Object.assign(session,fork,{pendingNested:null});
   // submitDecisionDirect already produced this canonical observation
   // after all printed effects settled; enumerating actions again here
