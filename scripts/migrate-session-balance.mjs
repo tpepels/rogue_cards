@@ -4,7 +4,7 @@
  *
  * Replay every completed source under THIS revision, with the exact
  * original experiment settings and all real canonical MCTS decisions.
- * Only a bit-for-bit-equivalent JSON result is imported. No old checkpoints
+ * Only a field-for-field equivalent JSON result is imported. No old checkpoints
  * are rewritten; original provenance is retained in a separate report.
  *
  * Verification is itself resumable. The destination is published only
@@ -288,7 +288,7 @@ async function migrate(argv){
      });
      worker.on("error",fail);
      worker.on("exit",code=>{
-      if(code!==0&&!stopped)fail(Error("Verifier exited "+code));
+      if(!stopped)fail(Error("Verifier exited unexpectedly with code "+code));
      });
      dispatch(worker);
     }
