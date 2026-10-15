@@ -136,14 +136,29 @@ for(let i=0;i<count;i++){
  if(mode==="expedition")
   console.error("Verified canonical expedition "+(i+1)+"/"+runs);
 }
-const median=xs=>[...xs].sort((a,b)=>a-b)[Math.floor(xs.length/2)];
+// Even-sized samples require the mean of the two middle observations;
+ // selecting the upper middle alone misreports two-expedition studies.
+const median=xs=>{
+ const sorted=[...xs].sort((a,b)=>a-b),middle=Math.floor(sorted.length/2);
+ return sorted.length%2?sorted[middle]:
+  (sorted[middle-1]+sorted[middle])/2;
+};
+const sum=xs=>xs.reduce((total,value)=>total+value,0);
 const old=median(timings.baseline),current=median(timings.fast);
+const baselineTotal=sum(timings.baseline),optimizedTotal=sum(timings.fast);
+const rounded=value=>Number(value.toFixed(2));
 console.log(JSON.stringify({
  schema:"canonical-direct-settlements-benchmark-v1",
  mode,optimization,budget,seed,samples:count,canonicalParity:true,
- baselineMedianMs:Number(old.toFixed(2)),
- optimizedMedianMs:Number(current.toFixed(2)),
- speedup:Number((old/current).toFixed(2)),
+ baselineMedianMs:rounded(old),
+ optimizedMedianMs:rounded(current),
+ speedup:rounded(old/current),
+ // For paired heterogeneous source games the total elapsed time is more
+ // representative of throughput than comparing separately sorted medians.
+ baselineTotalMs:rounded(baselineTotal),
+ optimizedTotalMs:rounded(optimizedTotal),
+ totalSpeedup:rounded(baselineTotal/optimizedTotal),
+ pairedFasterCount:pairs.filter(x=>x.fastMs<x.baselineMs).length,
  totalEligibleSettlementDecisions:
   mode==="expedition"?pairs.reduce((n,p)=>n+p.eligibleSettlements,0):null,
  perSeed:pairs,
