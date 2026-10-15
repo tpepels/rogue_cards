@@ -95,7 +95,7 @@ export function selectSessionPolicyAction(session,policy,{
  });
  if(onSearchProfile&&found?.transitionProfile)
   onSearchProfile(found.transitionProfile);
- const recommended=found?.recommended??legal[0];
+ const recommended=found?found.recommended:legal[0];
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
   policy.consecutiveEquipment++;
