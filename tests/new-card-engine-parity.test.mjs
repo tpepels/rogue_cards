@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
+import {monsterRespond} from "../src/engine/combat.js";
 import {mctsPublicStateHash} from "../src/session-mcts.js";
 import {chooseRoom,legalActions,observeGame,createDecisionSession,sessionActions,submitDecision} from "../src/engine/index.js";
 
@@ -291,4 +292,54 @@ test("sacrificed Ferryman Item goes to discard and cannot also be equipped",()=>
  assert.equal(s.vaultModifiers.smuggleAvailable,true);
  assert.ok(s.discardPile.includes(item));
  assert.ok(s.heroes.every(h=>!h.inventory.includes(item)));
+});
+
+test("Fungal Garden FIRE cancellation still applies printed WIT disadvantage",()=>{
+ const s=game(3130),h=s.heroes[0];
+ const fire=s.deck.find(x=>x.v2.tags?.includes("FIRE"));
+ assert.ok(fire);
+ s.deck.splice(s.deck.indexOf(fire),1);
+ s.noteDeckRemoval(fire);s.add(h,fire);
+ s.beginRoom(room("m-fungus"));
+ s.keptRooms.push({card:room("m-fungus")});
+ const monster=MONSTERS.find(x=>x.id==="mold");
+ s.monster=monster;s.monsterHP=monster.hp;
+ s.forcedBehavior=4;
+ const original=s.chooseEffect.bind(s);
+ s.chooseEffect=(ctx,modes,legacy)=>ctx.startsWith("fungal-garden-revealed-behavior:")?
+  "cancel-with-fire":original(ctx,modes,legacy);
+ monsterRespond(s,h);
+ assert.equal(h.nextWitDis,1);
+ assert.equal(s.monsterHP,monster.hp);
+ assert.equal(s.keptRooms.some(x=>x.card.id==="m-fungus"),false);
+});
+
+test("Lantern Shrine choice happens before any future Room die",()=>{
+ const s=game(3131);
+ s.beginRoom(room("u-fountain"));
+ s.keptRooms.push({card:room("u-lantern-shrine")});
+ let sawChoice=false,rolled=false;
+ s._decisionHook=event=>{
+  if(event.context==="lantern-shrine-before-roll"){
+   assert.equal(rolled,false,"The die must not be seen before spending Shrine");
+   sawChoice=true;return {mode:"save"};
+  }
+  throw Error("Unexpected decision "+JSON.stringify(event));
+ };
+ s.die=()=>{rolled=true;return 2};
+ s.roomRoll();
+ assert.equal(sawChoice,true);
+ assert.equal(rolled,true);
+ assert.ok(s.keptRooms.some(x=>x.card.id==="u-lantern-shrine"));
+});
+
+test("lethal Smuggler SQUEEZE never reveals or moves a subsequent Room",()=>{
+ const s=game(3132);
+ s.beginRoom(room("u-smuggler"));
+ s.heroes[0].hp=1;
+ const before=s.rooms.UPPER.map(x=>x.id),drawn=s.metrics.drawn;
+ chooseRoom(s,0);
+ assert.equal(s.heroes[0].hp,0);
+ assert.deepEqual(s.rooms.UPPER.map(x=>x.id),before);
+ assert.equal(s.metrics.drawn,drawn);
 });
