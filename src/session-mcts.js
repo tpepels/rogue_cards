@@ -48,9 +48,9 @@ export const mctsActionKey=action=>{
  return JSON.stringify(ordered.map(key=>[key,action[key]]));
 };
 const actionKey=mctsActionKey;
-const cloneSession=s=>({
+const cloneSession=(s,recordHistory=true)=>({
  ...s,state:forkGameState(s.state),
- history:s.history.slice(),
+ history:recordHistory?s.history.slice():[],
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
   ...s.pendingNested,
@@ -209,10 +209,9 @@ export function searchDecision(session,{budget=100,seed=1,
   if(selected.cardId)increment(cardSelections,selected.cardId);
  };
  for(let i=0;i<budget;i++){
-  const sim=cloneSession(session),s=sim.state;
-  // Search never reads the display-only action history; keep the real
-  // canonical action count and all state-dependent rules unchanged.
-  if(fastTransitions)sim.history=[];
+  // Rollout histories are never read by game rules. Avoid copying the
+  // original history only to discard it immediately afterward.
+  const sim=cloneSession(session,!fastTransitions),s=sim.state;
   const chanceSeed=mix(seed^Math.imul(i+1,0x9e3779b9)),
    deckSeed=mix(seed^Math.imul(i+1,0x85ebca6b));
   // Never change the already-observed die/Room revealed inside a pending
