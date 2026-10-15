@@ -94,7 +94,8 @@ function playMatched(session,action,{
  };
  const initial=submitDecision(sim,action,{
   afterReactionReplay:wasPending?afterReplay:null,
-  replayAt:switchIndex,recordHistory:false
+  replayAt:switchIndex,recordHistory:false,
+  preserveStateIdentity:false
  });
  // For nested root transactions, keep the chance switch fixed at the
  // first newly chosen reaction across all later replay attempts.
@@ -123,7 +124,8 @@ function playMatched(session,action,{
   submitDecision(sim,chosen,{
    afterReactionReplay:wasPending&&sim.pendingNested?afterReplay:null,
    replayAt:wasPending&&sim.pendingNested?switchIndex:null,
-   observeResult:false,recordHistory:false
+   observeResult:false,recordHistory:false,
+   preserveStateIdentity:false
   });
   decisions++;
  }
