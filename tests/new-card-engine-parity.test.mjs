@@ -250,3 +250,18 @@ test("retained Room mode changes Oracle information-set key",()=>{
  assert.notEqual(mctsPublicStateHash(first),mctsPublicStateHash(second),
   "Search must distinguish the printed 5 and 6 Crown uses");
 });
+
+test("canonical Bazaar choice resolves Beetle Caravan's printed retained reward",()=>{
+ const s=game(3071);
+ s.draw(6); // Ensure the printed Bazaar payment is affordable.
+ s.beginRoom(room("m-beetle"));
+ s.die=()=>6;
+ chooseRoom(s,0);
+ assert.equal(s.keptRooms.filter(x=>x.card.id==="m-beetle").length,1);
+ s.beginRoom(room("d-bazaar"));
+ const before=s.metrics.drawn;
+ chooseRoom(s,1); // The printed Bazaar choice draws 2 Items.
+ assert.equal(s.metrics.drawn-before,3,
+  "Kept BARGAIN must grant exactly one additional Item in the Oracle");
+ assert.equal(s.keptRooms.filter(x=>x.card.id==="m-beetle").length,0);
+});
