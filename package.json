@@ -59,12 +59,13 @@
     "layouts:check": "node scripts/build-card-layouts.mjs --check",
     "oracle:overnight": "node scripts/study-oracle-overnight.mjs",
     "layouts:init": "node scripts/initialize-card-placements.mjs",
-    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/session-counterfactual.test.mjs",
+    "test:session": "node --test tests/decision-session.test.mjs tests/decision-api.test.mjs tests/engine-api.test.mjs tests/session-mcts.test.mjs tests/session-agent.test.mjs tests/physical-card-identity.test.mjs tests/revised-card-contracts.test.mjs tests/canonical-effect-sweep.test.mjs tests/session-counterfactual.test.mjs tests/migrate-session-balance.test.mjs",
     "oracle:mcts": "node scripts/run-session-mcts.mjs",
     "oracle:play": "node scripts/study-session-agent.mjs",
     "oracle:contrast": "node scripts/compare-session-actions.mjs",
     "audit:canonical": "node scripts/audit-canonical-session.mjs",
-    "oracle:balance": "node scripts/study-session-balance.mjs"
+    "oracle:balance": "node scripts/study-session-balance.mjs",
+    "oracle:migrate-checkpoints": "node scripts/migrate-session-balance.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
