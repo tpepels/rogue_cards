@@ -48,8 +48,8 @@ export const mctsActionKey=action=>{
  return JSON.stringify(ordered.map(key=>[key,action[key]]));
 };
 const actionKey=mctsActionKey;
-const cloneSession=(s,recordHistory=true)=>({
- ...s,state:forkGameState(s.state),
+const cloneSession=(s,recordHistory=true,fastPileClones=false)=>({
+ ...s,state:forkGameState(s.state,{fastPiles:fastPileClones}),
  history:recordHistory?s.history.slice():[],
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
@@ -163,7 +163,7 @@ export function searchDecision(session,{budget=100,seed=1,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
- lazyColdEdges=false,reuseTraceSlots=false}={}){
+ lazyColdEdges=false,reuseTraceSlots=false,fastPileClones=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -174,8 +174,9 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Exploration coefficient must be nonnegative");
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
     typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean"||
-    typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean")
-  throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash, lazyColdEdges and reuseTraceSlots must be boolean");
+    typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean"||
+    typeof fastPileClones!=="boolean")
+  throw Error("transactional, fastTransitions, reuseLegalActions, fastStateHash, lazyColdEdges, reuseTraceSlots and fastPileClones must be boolean");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
  const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
@@ -216,7 +217,7 @@ export function searchDecision(session,{budget=100,seed=1,
  for(let i=0;i<budget;i++){
   // Rollout histories are never read by game rules. Avoid copying the
   // original history only to discard it immediately afterward.
-  const sim=cloneSession(session,!fastTransitions),s=sim.state;
+  const sim=cloneSession(session,!fastTransitions,fastPileClones),s=sim.state;
   const chanceSeed=mix(seed^Math.imul(i+1,0x9e3779b9)),
    deckSeed=mix(seed^Math.imul(i+1,0x85ebca6b));
   // Never change the already-observed die/Room revealed inside a pending
@@ -376,7 +377,8 @@ export function searchDecision(session,{budget=100,seed=1,
     ]:[];
     submitDecision(sim,choice,{replaySwitches,transactional,
      observeResult:!fastTransitions,recordHistory:!fastTransitions,
-     verifiedLegalActions:reuseLegalActions?actions:null});
+     verifiedLegalActions:reuseLegalActions?actions:null,
+     fastPileClones});
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
