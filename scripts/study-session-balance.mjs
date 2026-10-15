@@ -161,7 +161,7 @@ const atom=(path,data)=>{const temporary=path+".tmp-"+process.pid;
 };
 const copySession=s=>({
  ...s,state:forkGameState(s.state),
- history:s.history.map(x=>({...x})),
+ history:s.history.slice(),
  remainingReturns:[...s.remainingReturns],
  pendingNested:s.pendingNested?{
   ...s.pendingNested,root:{...s.pendingNested.root},
