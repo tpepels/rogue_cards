@@ -199,3 +199,23 @@ test("Kept Gallery map may shift an observed trapdoor die by one",()=>{
  assert.equal(s.metrics.roomRollBands["u-fall:1"],1);
  assert.equal(s.keptRooms.some(x=>x.card.id==="m-maps"),false);
 });
+
+test("Judge BRIBE is illegal after the Hollow Knight was SPARED",()=>{
+ const s=game(3031);
+ s.keptRooms.push({card:room("u-hollow-knight"),choice:0});
+ s.beginRoom(room("u-puppet"));
+ assert.deepEqual(legalActions(s,{phase:"room"}).filter(x=>x.kind==="room-choice")
+  .map(x=>x.index),[0]);
+});
+
+test("Judge acquittal turns sideways at Talking Door and cannot be used twice",()=>{
+ const s=game(3032),judge={card:room("u-puppet")};
+ s.keptRooms.push(judge);
+ s.beginRoom(room("d-mouth"));
+ s.roomRoll(2);
+ assert.equal(s.metrics.roomRollBands["d-mouth:3"],1);
+ assert.equal(judge.spent,true);
+ assert.equal(observeGame(s).keptRooms.find(x=>x.id==="u-puppet")?.spent,true);
+ s.roomRoll(2);
+ assert.equal(s.metrics.roomRollBands["d-mouth:0"],1);
+});

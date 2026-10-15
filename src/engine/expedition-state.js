@@ -1314,11 +1314,11 @@ export class ExpeditionState {
   }
   if(this.room.id==="d-mouth"){
    const judge=this.keptRooms.find(x=>x.card.id==="u-puppet");
-   if(judge){
+   if(judge&&!judge.spent){
     const decision=this._decisionHook?.({phase:"retained",
      roomId:"u-puppet",context:"talking-door",face});
     if((decision?.mode||this.returnChoices?.["u-puppet"])!=="save"){
-     this.keptRooms.splice(this.keptRooms.indexOf(judge),1);face=6;
+     judge.spent=true;face=6;
     }
    }
   }
