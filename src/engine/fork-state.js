@@ -53,7 +53,41 @@ function copyStagePiles(groups,seen){
  }
  return cloned;
 }
-export function forkGameState(state,{fastPiles=false}={}){
+/** Clone telemetry counters without individually dispatching every scalar
+ * value through the recursive generic cloner. The fast case applies only
+ * to flat ordinary objects with primitive values; complex/nested values
+ * fall back to the original recursive path. Register aliases in seen.
+ */
+function cloneMetrics(metrics,seen){
+ if(seen.has(metrics))return seen.get(metrics);
+ const copy=Object.create(Object.getPrototypeOf(metrics));
+ seen.set(metrics,copy);
+ for(const key of Object.keys(metrics)){
+  const value=metrics[key];
+  if(!value||typeof value!=="object"){
+   copy[key]=value;
+   continue;
+  }
+  const prior=seen.get(value);
+  if(prior){copy[key]=prior;continue;}
+  if(Object.getPrototypeOf(value)===Object.prototype||
+     Object.getPrototypeOf(value)===null){
+   let flat=true;
+   for(const child of Object.values(value))
+    if(child!==null&&typeof child==="object"){flat=false;break;}
+   if(flat){
+    const cloned=Object.assign(
+     Object.create(Object.getPrototypeOf(value)),value);
+    seen.set(value,cloned);
+    copy[key]=cloned;
+    continue;
+   }
+  }
+  copy[key]=clone(value,seen);
+ }
+ return copy;
+}
+export function forkGameState(state,{fastPiles=false,fastMetrics=false}={}){
  if(!(state instanceof ExpeditionState)||typeof state.rng?.clone!=="function")
   throw Error("Only a clonable canonical ExpeditionState can be forked");
  // Fork the live state directly. Building and then recursively cloning
@@ -65,7 +99,9 @@ export function forkGameState(state,{fastPiles=false}={}){
  for(const key of Object.keys(state)){
   if(key==="rng"||key==="_decisionHook")continue;
   const value=state[key];
-  fork[key]=fastPiles&&key==="deck"&&Array.isArray(value)?
+  fork[key]=fastMetrics&&key==="metrics"&&value?
+   cloneMetrics(value,seen):
+   fastPiles&&key==="deck"&&Array.isArray(value)?
    copyImmutablePile(value,seen):
    fastPiles&&(key==="rooms"||key==="monsters")&&value?
     copyStagePiles(value,seen):clone(value,seen);
