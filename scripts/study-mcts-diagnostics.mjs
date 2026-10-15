@@ -14,6 +14,7 @@ import {readFileSync,writeFileSync,existsSync,mkdirSync,renameSync,readdirSync}
 import {resolve,join} from "node:path";
 import {pathToFileURL} from "node:url";
 import {execFileSync} from "node:child_process";
+import {performance} from "node:perf_hooks";
 import {HEROES} from "../src/tabletop-data.js";
 import {createDecisionSession,sessionActions,submitDecision}
  from "../src/engine/decision-session.js";
