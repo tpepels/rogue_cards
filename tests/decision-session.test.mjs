@@ -589,7 +589,7 @@ test("Coffin Moth curing poison invalidates the next Ring of the Mold King react
   a.kind==="item-trigger"&&a.cardId==="moth"&&a.phase==="on-poison");
  assert.ok(moth,"The still-poisoned Hero has a real Coffin Moth choice");
  assert.doesNotThrow(()=>submitDecision(session,moth));
- assert.equal(hero.poison,false);
+ assert.equal(state.heroes[0].poison,false);
  assert.notEqual(observeSession(session).phase,"reaction");
  assert.equal(state.metrics.objectActivations.moth,1);
  assert.equal(state.metrics.objectActivations["ring-spores"]||0,0);
@@ -619,7 +619,7 @@ test("skipping Coffin Moth retains the legal Ring of the Mold King poison reacti
  const skipMoth=sessionActions(session).find(a=>a.kind==="continue");
  assert.ok(skipMoth);
  submitDecision(session,skipMoth);
- assert.equal(hero.poison,true);
+ assert.equal(state.heroes[0].poison,true);
  const ring=sessionActions(session).find(a=>a.cardId==="ring-spores"&&
   a.phase==="on-poison"&&a.kind==="item-trigger");
  assert.ok(ring,"Skipping Moth leaves the independently legal Ring reaction");
