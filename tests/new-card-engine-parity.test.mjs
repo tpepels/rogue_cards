@@ -1,0 +1,138 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {ROOMS,MONSTERS,VAULT} from "../src/tabletop-data.js";
+import {ExpeditionState} from "../src/engine/expedition-state.js";
+import {chooseRoom,legalActions,observeGame} from "../src/engine/index.js";
+
+const room=id=>{const c=ROOMS.find(x=>x.id===id);assert.ok(c,id);return c;};
+const game=seed=>new ExpeditionState({seed,heroes:["warrior"]});
+const stageCards=(stage,except)=>ROOMS.filter(x=>x.stage===stage&&x.id!==except).slice(0,4);
+
+test("printed corridors preserve all unchosen physical Rooms except GAMBLE",()=>{
+ for(const id of ["u-fork","u-echoes","u-mossy","u-smuggler","u-candle",
+  "m-maps","m-ladder","m-red-detour"]){
+  const s=game(3001),r=room(id);
+  const input=stageCards(r.stage,id);
+  s.rooms[r.stage]=[...input];s.beginRoom(r);
+  chooseRoom(s,0);
+  assert.equal(s.rooms[r.stage].length,input.length,id+" lost a Room");
+  assert.deepEqual([...s.rooms[r.stage]].map(x=>x.id).sort(),
+   input.map(x=>x.id).sort(),id+" changed physical identities");
+  assert.equal(s.discardedRoomIds.size,0,id+" silently discarded a Room");
+ }
+ const s=game(3002),r=room("d-gilded");
+ s.rooms.DEEP=stageCards("DEEP",r.id);
+ s.beginRoom(r);
+ const original=s.rooms.DEEP.length;
+ chooseRoom(s,0);
+ assert.equal(s.rooms.DEEP.length,original-1,"GAMBLE must really discard one");
+});
+
+test("Candle roll 3-4 leaves the other revealed Room immediately on top",()=>{
+ const s=game(3003),r=room("u-candle");
+ const cards=stageCards("UPPER",r.id);
+ s.rooms.UPPER=[...cards];s.beginRoom(r);
+ s.die=()=>3;
+ chooseRoom(s,1);
+ assert.deepEqual(s.rooms.UPPER.slice(0,2),cards.slice(0,2));
+ assert.equal(s.discardedRoomIds.size,0);
+});
+
+test("IGNORE at Red Detour does not roll an unprinted die",()=>{
+ const s=game(3004),r=room("m-red-detour");
+ s.rooms.MIDDLE=stageCards("MIDDLE",r.id);s.beginRoom(r);
+ s.die=()=>{throw Error("IGNORE must not roll")};
+ chooseRoom(s,0);
+ assert.equal(s.rooms.MIDDLE.length,4);
+});
+
+test("new Pact Room upfront rewards use the printed Item quantities",()=>{
+ for(const [id,gain] of [["m-clock",2],["u-rat-favor",1],["m-hungry-door",2]]){
+  const s=game(3005),r=room(id);
+  s.beginRoom(r);
+  const before=s.heroes[0].inventory.length;
+  chooseRoom(s,0);
+  assert.equal(s.heroes[0].inventory.length-before,gain,id);
+  assert.equal(s.pactUsed,true,id+" must consume the expedition Pact");
+ }
+});
+
+test("only one Pact remains legal across both special and Fate Rooms",()=>{
+ const s=game(3006);
+ s.beginRoom(room("m-clock"));chooseRoom(s,0);
+ s.beginRoom(room("u-rat-favor"));
+ assert.deepEqual(legalActions(s,{phase:"room"}).filter(x=>x.kind==="room-choice")
+  .map(x=>x.index),[1]);
+ s.beginRoom(room("u-hollow-knight"));
+ assert.deepEqual(legalActions(s,{phase:"room"}).filter(x=>x.kind==="room-choice")
+  .map(x=>x.index),[1]);
+ assert.equal(observeGame(s).pactUsed,true);
+});
+
+test("Cartographer BURN reveals and orders three Rooms, not free Items",()=>{
+ const s=game(3007);s.beginRoom(room("u-cartographer"));
+ const deckBefore=s.deck.length,peekCalls=[];
+ s.peek=(n,order)=>{peekCalls.push([n,order]);};
+ chooseRoom(s,1);
+ assert.deepEqual(peekCalls,[[3,true]]);
+ assert.equal(s.deck.length,deckBefore);
+});
+
+test("Choir STEAL draws one Item and deals three opening Monster damage",()=>{
+ const s=game(3008);s.beginRoom(room("m-choir-nails"));
+ const deckBefore=s.deck.length;chooseRoom(s,1);
+ assert.equal(s.deck.length,deckBefore-1);
+ s.beginRoom(room("d-shadow"));
+ const monster=MONSTERS.find(m=>m.id==="wraith");
+ s.monsters.DEEP=[monster];s.drawMonster();
+ assert.equal(s.monster.id,"wraith");
+ assert.equal(s.monsterHP,monster.hp-3);
+ assert.equal(s.monsterAdv,true);
+});
+
+test("Hourglass BREAK grants no Items and may reverse a later Room result",()=>{
+ const s=game(3009);s.beginRoom(room("m-hourglass"));
+ const deckBefore=s.deck.length;chooseRoom(s,1);
+ assert.equal(s.deck.length,deckBefore);
+ s.beginRoom(room("u-shrine"));
+ s._decisionHook=event=>{
+  if(event.context==="hourglass-reverse-room-die")return {mode:"reverse"};
+  throw Error("Unexpected decision "+JSON.stringify(event));
+ };
+ s.die=()=>3;
+ s.roomRoll(1);
+ assert.ok(!s.keptRooms.some(x=>x.card.id==="m-hourglass"));
+ assert.equal(s.metrics.roomRollBands["u-shrine:2"],1);
+});
+
+test("Drowned Banner rolls its actual Vault d6 and grants DEF DIS on 5-6",()=>{
+ const s=game(3010);s.beginRoom(room("m-drowned-banner"));
+ chooseRoom(s,0);
+ const faces=[6,4];s.die=()=>faces.shift()??3;
+ s.beginRoom(VAULT);
+ assert.equal(s.vaultModifiers.wardenDamage,4);
+ assert.equal(s.heroes[0].nextDefenseDis,1);
+});
+
+test("Witness FREE modifies the Vault OMEN by one without granting HP",()=>{
+ const s=game(3011);s.beginRoom(room("d-last-witness"));
+ chooseRoom(s,0);
+ const original=s.heroes[0].hp;
+ s.beginRoom(VAULT);
+ assert.equal(s.heroes[0].hp,original);
+ assert.equal(s.vaultModifiers.omenAdjust,true);
+ s._decisionHook=event=>{
+  if(event.context==="witness-omen-adjust")return {mode:"up"};
+  throw Error("Unexpected decision "+JSON.stringify(event));
+ };
+ s.roomRoll(4);
+ assert.equal(s.metrics.roomRollBands["vault:2"],1);
+});
+
+test("Last Bell's optional 2 HP Vault payment is not forced when unaffordable",()=>{
+ const s=game(3012);s.heroes[0].hp=1;
+ s.keptRooms.push({card:room("d-last-bell")});
+ s.beginRoom(VAULT);
+ assert.equal(s.heroes[0].hp,1);
+ assert.equal(s.telegraphedWardenBehavior??null,null);
+});
