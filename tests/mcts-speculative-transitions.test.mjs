@@ -125,3 +125,27 @@ test("speculative search validates its isolated mode and checkpoint interval",()
   sessionActions(session)[0],{}),
   /requires a rollback callback/);
 });
+
+test("non-reaction rule failures also restore the exact checkpoint",()=>{
+ const session=atRoom(4112,"u-nest");
+ session.state.monster=MONSTERS.find(x=>x.id==="rat");
+ session.state.monsterHP=0;
+ session.phase="corpse";
+ const originalEnd=session.state.endRoom;
+ session.state.endRoom=function(){
+  originalEnd.call(this);
+  throw Error("injected failure after canonical room cleanup");
+ };
+ const before=JSON.stringify(observeSession(session));
+ const dice=session.state.rng.snapshot();
+ const rollback=checkpointRestorer(session);
+ const action=sessionActions(session).find(x=>x.kind==="leave");
+ assert.ok(action);
+ assert.throws(()=>submitSpeculativeDecision(session,action,{
+  restore:rollback,observeResult:false,recordHistory:false
+ }),/injected failure/);
+ assert.equal(JSON.stringify(observeSession(session)),before);
+ assert.equal(session.state.rng.snapshot(),dice);
+ assert.equal(session.phase,"corpse");
+ assert.equal(session.actionCount,0);
+});
