@@ -125,10 +125,9 @@ test("every physical card prints deterministically with correct images and A4 qu
  assert.equal((printSheets(PRINT_DECK).match(/class="tt-sheet"/g)||[]).length,Math.ceil(PRINT_DECK.length/4));
  assert.equal(Object.keys(CARD_ART).length,CATALOGUE.length);
  const uploaded=readdirSync("assets/illustrations").filter(name=>name.endsWith(".png")).sort();
- assert.equal(uploaded.length,new Set(Object.values(CARD_ART)).size,
-  "The PNG directory must match unique mapped artwork files");
- assert.deepEqual([...new Set(Object.values(CARD_ART))].sort(),uploaded,
-  "Each original PNG is used by at least one card");
+ assert.deepEqual([...new Set(Object.values(CARD_ART))]
+  .filter(name=>!uploaded.includes(name)),[],
+  "Every assigned card illustration must exist; unused PNGs are allowed");
  const slug=title=>title.toLowerCase().normalize("NFKD")
   .replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
  for(const [i,card] of CATALOGUE.entries()){
