@@ -281,7 +281,10 @@ test("observation-free MCTS rollouts are exactly equivalent to legacy full obser
 
 test("pending printed reactions retain exactly the same MCTS outcomes without observations",()=>{
  const session=createDecisionSession({seed:1842,heroes:["warrior"]});
- session.state.beginRoom(ROOMS.find(r=>r.id==="u-fountain"));
+ const deck=session.state.rooms.UPPER;
+ const index=deck.findIndex(r=>r.id==="u-fountain");
+ assert.ok(index>=0,"Fountain must be an actual unvisited Room");
+ session.state.beginRoom(deck.splice(index,1)[0]);
  session.phase="room";
  const reaction=submitDecision(session,sessionActions(session)[0]);
  assert.equal(reaction.phase,"reaction");
