@@ -27,7 +27,7 @@ const mix=value=>{
 const copySession=session=>({
  ...session,
  state:forkGameState(session.state),
- history:session.history.slice(),
+ history:[], // Display-only history is not a rules or search input.
  remainingReturns:[...session.remainingReturns],
  pendingNested:session.pendingNested?{
   ...session.pendingNested,
@@ -92,7 +92,7 @@ function playMatched(session,action,{
  };
  const initial=submitDecision(sim,action,{
   afterReactionReplay:wasPending?afterReplay:null,
-  replayAt:switchIndex
+  replayAt:switchIndex,recordHistory:false
  });
  // For nested root transactions, keep the chance switch fixed at the
  // first newly chosen reaction across all later replay attempts.
@@ -120,7 +120,8 @@ function playMatched(session,action,{
   if(recentActions.length>40)recentActions.shift();
   submitDecision(sim,chosen,{
    afterReactionReplay:wasPending&&sim.pendingNested?afterReplay:null,
-   replayAt:wasPending&&sim.pendingNested?switchIndex:null
+   replayAt:wasPending&&sim.pendingNested?switchIndex:null,
+   observeResult:false,recordHistory:false
   });
   decisions++;
  }
