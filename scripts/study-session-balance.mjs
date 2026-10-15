@@ -192,7 +192,8 @@ function oneJob(i,c){
    const chosen=selectSessionPolicyAction(session,policy,{
     knowledge:"fair",budget:c.navigateBudget,
     maxSearchSteps:c.maxSearchSteps,
-    seed:mix(gameSeed^Math.imul(step+1,0xc2b2ae35))
+    seed:mix(gameSeed^Math.imul(step+1,0xc2b2ae35)),
+    legalActions:actions
    });
    if(!chosen)throw Error("MCTS produced no navigation action");
    last={step,phase:session.pendingNested?
