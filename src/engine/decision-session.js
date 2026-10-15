@@ -665,7 +665,13 @@ export function submitSpeculativeDecision(session,action,{
   return submitDecisionDirect(session,action,{
    observeResult,recordHistory,verifiedAction:Boolean(ticket)});
  }catch(error){
-  if(!(error instanceof NeedReaction))throw error;
+  // This path is only for search-owned disposable simulations; nonetheless,
+  // restore the checkpoint on ordinary rule errors as well, so their
+  // reproduction state matches the original canonical transaction.
+  if(!(error instanceof NeedReaction)){
+   restore();
+   throw error;
+  }
   // Roll back EVERY earlier printed effect and consumed die. The pending
   // choice and public observation are from the identical canonical hook
   // used by the ordinary full-fork transaction.
