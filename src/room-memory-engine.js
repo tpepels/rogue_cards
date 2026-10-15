@@ -3,6 +3,9 @@ import {resolveFateChoice,fateStageEntry,fateMonsterEntry,fateVaultEntry} from "
 export function resolveRoomChoice(s,choice){
  if(s.room.v2.fate)return resolveFateChoice(s,choice);
  const id=s.room.id,h=s.actor||s.chooseRecipient("retained-room-choice");
+ const pact=!!s.room.v2.choices[choice]?.label.includes("PACT");
+ if(pact&&s.pactUsed)throw Error("Only one Pact per expedition");
+ if(pact)s.pactUsed=true;
  const keep=(item=null)=>s.keptRooms.push({card:s.room,item});
  if(id==="d-last-bell"){
   if(choice===0)s.roomRoll();

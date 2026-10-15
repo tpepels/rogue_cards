@@ -73,6 +73,7 @@ export class ExpeditionState {
    this.rerollHistory=[];this.heroAbilityModes={};this.returnChoices={};this.elberethAttempts=0;
    this.elberethSkipResponse=false;this.endingKind=null;this.endingEpilogue=[];
    this.fateChoices=[];this.fateDeepEntered=false;this.endingMemory=null;
+   this.pactUsed=false;
    this.vaultModifiers={sealCostDelta:0,wardenDamage:0,wardenFirstAdv:false,heroFirstAdv:false,omen:"normal"};
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
@@ -528,7 +529,12 @@ export class ExpeditionState {
    }
    if(monsterEntry(this,m))return;
   if(!this.monster){
-   this.monster=m;this.monsterHP=m.hp;this.banished=false;
+   this.monster=m;this.monsterHP=m.hp;
+   if(this.pendingMonsterOpeningDamage){
+    this.monsterHP=Math.max(0,this.monsterHP-this.pendingMonsterOpeningDamage);
+    this.pendingMonsterOpeningDamage=0;
+   }
+   this.banished=false;
    this.monsterFirstAttackPending=true;
    this.elberethAttempts=0;this.elberethSkipResponse=false;
    if(m.stage!=="FINAL"&&this.useRetainedPotion("laughter",m.id))
@@ -1157,6 +1163,11 @@ export class ExpeditionState {
    if(this.room.id==="vault"&&this.vaultModifiers.omen!=="normal"){
     const second=this.die();face=this.vaultModifiers.omen==="high"?Math.max(face,second):Math.min(face,second);
    }
+   if(this.room.id==="vault"&&this.vaultModifiers.omenAdjust){
+    const modes=[...(face>1?["down"]:[]),"keep",...(face<6?["up"]:[])];
+    const mode=this.chooseEffect("witness-omen-adjust",modes,"keep");
+    face+=mode==="up"?1:mode==="down"?-1:0;
+   }
    if(lamp>=0&&(lampChoice??face<=4)){
     face=Math.min(6,face+2);this.keptRooms.splice(lamp,1);
    }
@@ -1254,6 +1265,12 @@ export class ExpeditionState {
    }
   }
   this.pendingRoomFace=null;
+  const hourglass=this.keptRooms.find(x=>x.card.id==="m-hourglass"&&x.choice===1);
+  if(hourglass&&this.chooseEffect("hourglass-reverse-room-die",
+    ["save","reverse"],"save")==="reverse"){
+   this.keptRooms.splice(this.keptRooms.indexOf(hourglass),1);
+   face=7-face;
+  }
   // Spend saved links only when their linked encounters occur.
   if(this.room.id==="d-bridge"&&face<=2){
    const wax=this.keptRooms.find(x=>x.card.id==="m-wax-bridge");

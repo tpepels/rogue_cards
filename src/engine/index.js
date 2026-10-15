@@ -77,6 +77,7 @@ export function observeGame(s){
   offeredSavedPath:s._pendingRoomSwap?{...s._pendingRoomSwap}:null,
   keptRooms:s.keptRooms.map(x=>({id:x.card.id,
      choice:x.choice??null,item:x.item?.id??null})),
+  pactUsed:!!s.pactUsed,
    returnChoices:{...s.returnChoices},
    endingOptions:s.room?.stage==="FINAL"?{...s.vaultModifiers}:null,
    ended:!s.alive()||s.metrics.won||!!s.metrics.escaped,
@@ -138,6 +139,7 @@ export function legalRoomChoices(s){
  const choices=ROOM_EFFECTS[s.room.id]?.choices;
  if(!choices)throw Error("Room has no executable choices: "+s.room.id);
  const affordable=(ops,index)=>{
+  if(s.pactUsed&&s.room.v2.choices[index]?.label.includes("PACT"))return false;
   if(s.room.v2.fate&&!fateChoiceLegal(s,s.room.id,index))return false;
   // ROOM_SPECIAL delegates to retained/corridor handlers. Their real
   // printed upfront costs must be checked here, not deferred until an

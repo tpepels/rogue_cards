@@ -90,6 +90,7 @@ const chooseRoom=s=>{
  const affordable=ops=>s.discardable(cost(ops))&&(
   !ops.includes("CLEANSE_COST")||s.partyCount("CURSED")>0);
  const choiceOK=i=>affordable(choices[i])&&
+   !(s.pactUsed&&room.v2.choices[i]?.label.includes("PACT"))&&
    !(i===0&&["m-well","m-hungry-door"].includes(room.id)&&!s.discardable(1))&&(
    !choices[i].some(op=>op==="FUNGUS_BURN"||op==="CHOIR_SILENCE"||op==="BOOKCASE_FIRE_OR_SCROLL")||
     s.has("torch")||s.has("lantern-heart")||s.partyCount("FIRE")>0||s.partyCount("MAGIC")>0);
