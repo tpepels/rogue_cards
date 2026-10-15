@@ -145,6 +145,10 @@ export class ExpeditionState {
   return face;
  }
  fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
+  if(this._trapDamageContext&&this._trapPrevention>0){
+   damage=Math.max(0,damage-this._trapPrevention);
+   this._trapPrevention=0;
+  }
   // Knotted Rope and kept Wax Bridge are genuine optional once-only
   // payments AFTER the fall damage is known. Neither can dismiss a Monster.
   // Choosing to save them remains legal, and the search can spend multiple
@@ -246,7 +250,11 @@ export class ExpeditionState {
    const decision=this._decisionHook?.({phase:"saved-reroll",
     heroIndex:this.heroes.indexOf(h),face:value});
    if(decision?.kind==="keep")return value;
-   h.kept.splice(i,1);return this.die(20);
+   h.kept.splice(i,1);
+   const bazaar=this.keptRooms.find(x=>x.card.id==="d-bazaar"&&
+    x.mode==="d20-reroll");
+   if(bazaar)this.keptRooms.splice(this.keptRooms.indexOf(bazaar),1);
+   return this.die(20);
   }
   return value;
  }
@@ -925,7 +933,10 @@ export class ExpeditionState {
   }
   case "SAVE_TRAP":this.trapGuard=true;return;
   case "SAVE_ATTACK_ADV":h.nextAdv++;return;
-  case "SAVE_D20_REROLL":h.kept.push("reroll");return;
+  case "SAVE_D20_REROLL":
+   h.kept.push("reroll");
+   this.keptRooms.push({card:this.room,mode:"d20-reroll"});
+   return;
   case "SAVE_DEF":h.nextDefenseBonus+=n();h.defDuration=2;
    if(this.room?.id==="d-crown")this.keptRooms.push({card:this.room});
    return;
@@ -995,6 +1006,19 @@ export class ExpeditionState {
   * opposed check came from a Room, Monster negotiation or Vault.
   * An ATK/DEF roll must not silently spend a pending WIT boon.
   */
+ swapOpposedRoll(ours,theirs,context){
+  const mirror=this.keptRooms.find(x=>x.card.id==="d-mirror");
+  if(!mirror)return {ours,theirs};
+  this._observedOpposedDice={ours,theirs,context};
+  const choice=this.chooseEffect("mirror-exchange-opposed:"+context,
+   ["save","swap"],"save");
+  delete this._observedOpposedDice;
+  if(choice==="swap"){
+   this.keptRooms.splice(this.keptRooms.indexOf(mirror),1);
+   return {ours:theirs,theirs:ours};
+  }
+  return {ours,theirs};
+ }
  takeWitModifiers(h){
   const result={bonus:this.witBonus||0,dis:(h.nextWitDis||0)>0};
   this.witBonus=0;h.nextWitDis=0;return result;
@@ -1061,7 +1085,9 @@ export class ExpeditionState {
   // Wand of Undoing can misfire for the final HP during a Room check.
   // Its dead owner has no legal Crown of Rehearsals trigger.
   if(h.hp<=0)return;
-  const monsterRoll=roll();
+  let monsterRoll=roll();
+  ({ours:d,theirs:monsterRoll}=this.swapOpposedRoll(d,monsterRoll,
+   "room-check"));
   let ok=d===20||(d!==1&&d+stat+blessBonus>monsterRoll+dc);
   if(!ok){
    const crown=h.inventory.find(x=>x.id==="crown-relic");
@@ -1374,14 +1400,32 @@ export class ExpeditionState {
   this.metrics.roomRollBands[roomKey]=(this.metrics.roomRollBands[roomKey]||0)+1;
   // A kept Reliquary can ignore one printed trap, then must be discarded.
   const traps={"u-gate":[0],"u-fall":[0,1],"u-mimic":[0],"m-vault":[0],
-   "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0]};
-  if(this.trapGuard&&traps[this.room.id]?.includes(band)){
-   this.trapGuard=false;return;
+   "m-bridge":[0],"d-bridge":[0,1],"d-last-chest":[0],"d-shadow":[0],
+   "d-reliquary":[0]};
+  const damagingTrap=traps[this.room.id]?.includes(band)&&
+   ops.some(op=>op.startsWith("HURT:")||op.startsWith("TRAPDOOR:"));
+  if(damagingTrap){
+   const relic=this.keptRooms.find(x=>x.card.id==="d-reliquary");
+   if(relic&&this.chooseEffect("reliquary-prevent-trap:"+this.room.id,
+    ["save","use"],"use")==="use"){
+    this.keptRooms.splice(this.keptRooms.indexOf(relic),1);
+    if(relic.item)this.discardPile.push(relic.item);
+    this._trapPrevention=relic.mode==="trap-all"?Infinity:3;
+   }
+   if(this.trapGuard){
+    this.trapGuard=false;
+    this._trapPrevention=Math.max(this._trapPrevention||0,3);
+   }
   }
   this.metrics.cardCounts[this.room.id]=(this.metrics.cardCounts[this.room.id]||0)+1;
-  for(const op of ops){
-   if(!this.alive())break;
-   const [name,...args]=op.split(":");this.apply(name,args,this.room);
+  this._trapDamageContext=!!damagingTrap;
+  try{
+   for(const op of ops){
+    if(!this.alive())break;
+    const [name,...args]=op.split(":");this.apply(name,args,this.room);
+   }
+  }finally{
+   this._trapDamageContext=false;this._trapPrevention=0;
   }
  }
 }
