@@ -89,3 +89,31 @@ test("restricted subset is a real pair from the canonical root action list",()=>
   trials:1,actionIndices:[0,0]}),/actionIndices/);
  assert.equal(JSON.stringify(observeSession(session)),before);
 });
+
+test("optimized MCTS preserves both matched canonical continuations",()=>{
+ const session=affordableVault();
+ const before=JSON.stringify(observeSession(session));
+ const dice=session.state.rng.snapshot();
+ const options={trials:2,seed:47210,knowledge:"oracle",
+  futureBudget:2,maxSearchSteps:1200};
+ const standard=compareSessionActions(session,options);
+ const optimized=compareSessionActions(session,{
+  ...options,mctsOptimizations:{
+   speculativeTransitions:true,canonicalReactionPhases:true,
+   deferReactionCheckpoints:true
+  }
+ });
+ assert.deepEqual(optimized.actions,standard.actions);
+ assert.deepEqual(optimized.sourceObservation,standard.sourceObservation);
+ assert.equal(optimized.canonicalTerminalContinuations,true);
+ assert.equal(optimized.allFutureChoicesViaMCTS,true);
+ assert.deepEqual(optimized.mctsOptimizations,{
+  speculativeTransitions:true,canonicalReactionPhases:true,
+  deferReactionCheckpoints:true
+ });
+ assert.equal(JSON.stringify(observeSession(session)),before);
+ assert.equal(session.state.rng.snapshot(),dice);
+ assert.throws(()=>compareSessionActions(session,{
+  ...options,mctsOptimizations:[]
+ }),/mctsOptimizations/);
+});

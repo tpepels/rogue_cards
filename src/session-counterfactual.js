@@ -78,7 +78,7 @@ const pairedInterval=(positive,negative,n)=>{
 };
 function playMatched(session,action,{
  knowledge,diceSeed,deckSeed,policySeed,futureBudget,
- maxSearchSteps,maxGameSteps,blueprint
+ maxSearchSteps,maxGameSteps,blueprint,mctsOptimizations
 }){
  const sim=copySession(session);
  const wasPending=Boolean(sim.pendingNested);
@@ -112,7 +112,7 @@ function playMatched(session,action,{
    seed:mix(policySeed^Math.imul(decisions+1,0x85ebca6b)),
    observedReplay:wasPending&&sim.pendingNested?
     {replayAt:switchIndex,diceSeed,deckSeed}:null,
-   legalActions:legal
+   legalActions:legal,mctsOptimizations
   });
   if(searchIsNeeded)searches++;
   actionKinds[chosen.kind]=(actionKinds[chosen.kind]||0)+1;
@@ -148,7 +148,8 @@ function playMatched(session,action,{
 export function compareSessionActions(session,{
  trials=30,seed=1,knowledge="fair",futureBudget=2,
  maxSearchSteps=4000,maxGameSteps=7000,referenceIndex=0,
- resumeTrials=[],onTrial=null,actionIndices=null
+ resumeTrials=[],onTrial=null,actionIndices=null,
+ mctsOptimizations=null
 }={}){
  if(!Number.isSafeInteger(seed)||seed<0||seed>0xffffffff)
   throw Error("Seed must be a uint32 integer");
@@ -162,6 +163,10 @@ export function compareSessionActions(session,{
  }
  if(!["fair","oracle"].includes(knowledge))
   throw Error("Knowledge must be fair or oracle");
+ if(mctsOptimizations!==null&&
+    (!mctsOptimizations||typeof mctsOptimizations!=="object"||
+     Array.isArray(mctsOptimizations)))
+  throw Error("mctsOptimizations must be an object or null");
  if(!Array.isArray(resumeTrials)||resumeTrials.length>trials)
   throw Error("Invalid resumed paired trial count");
  if(onTrial!==null&&typeof onTrial!=="function")
@@ -197,7 +202,8 @@ export function compareSessionActions(session,{
     try{
      result=playMatched(session,actions[i],{
       knowledge,diceSeed:chance,deckSeed:deck,policySeed:policy,
-      futureBudget,maxSearchSteps,maxGameSteps,blueprint
+      futureBudget,maxSearchSteps,maxGameSteps,blueprint,
+      mctsOptimizations
      });
     }catch(error){
      const failure=Error("Matched trial "+trial+", action "+i+" ("+
@@ -263,6 +269,7 @@ export function compareSessionActions(session,{
   sourceObservation:observeSession(session),
   knowledge,seed,trials,referenceIndex,futureBudget,maxSearchSteps,
   maxGameSteps,actionIndices,actions:table,
+  ...(mctsOptimizations?{mctsOptimizations:{...mctsOptimizations}}:{}),
   exactPairedSeeds:true,canonicalTerminalContinuations:true,
   allFutureChoicesViaMCTS:true,
   reversibleEquipmentPolicy:{maxConsecutiveEquipmentActions:

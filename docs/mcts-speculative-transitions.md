@@ -131,3 +131,25 @@ Analyze remaining checkpoint and reaction costs with:
 
 Every benchmark verifies full canonical search/expedition parity before
 reporting speedup. The flag remains disabled unless proven faster.
+
+## Faster canonical balance studies
+
+The independent-seed `oracle:balance` runner accepts an explicit
+`--mcts-mode selective-deferred` setting. It forwards previously
+parity-verified `speculativeTransitions`, `canonicalReactionPhases`
+and `deferReactionCheckpoints` to BOTH navigation and complete matched
+counterfactual continuations. Search policy and all game rules are unchanged.
+
+The selected mode is recorded in manifest, pilot output and result summary,
+and mismatched resumptions are rejected. Historical default is
+`canonical`; the newer unverified on-demand checkpoint mode is excluded.
+
+First run the canonical audit at the current Git revision:
+
+    npm run audit:canonical -- --runs 36 --seed 20261015 --out results/canonical-audit-balance-20261015
+
+Then run a real-workload pilot on independent Room states:
+
+    npm run oracle:balance -- --focus room --runs 7200 --workers 7 --hours 10 --navigate-budget 2 --future-budget 2 --mcts-mode selective-deferred --audit results/canonical-audit-balance-20261015/summary.json --out results/balance-room-20261015 --benchmark --benchmark-runs 18 --benchmark-minutes 15
+
+Never mix checkpoint files across revisions, MCTS modes or search budgets.

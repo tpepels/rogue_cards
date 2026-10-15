@@ -112,7 +112,7 @@ const params=()=>{const vals={},flags=new Set();
   "--out","--future-budget","--navigate-budget","--max-search-steps",
   "--max-game-steps","--min-eligible","--focus","--audit",
   "--benchmark-runs","--benchmark-minutes","--job-minutes",
-  "--repro-index"]);
+  "--repro-index","--mcts-mode"]);
  for(let i=2;i<process.argv.length;i++){
   const key=process.argv[i];
   if(key==="--resume"||key==="--dry-run"||key==="--benchmark"){
@@ -132,6 +132,9 @@ const params=()=>{const vals={},flags=new Set();
  const focus=vals["--focus"]||"all";
  if(focus!=="all"&&!cardFocus.includes(focus))
   throw Error("Unknown --focus "+focus);
+ const mctsMode=vals["--mcts-mode"]||"canonical";
+ if(!["canonical","selective-deferred"].includes(mctsMode))
+  throw Error("Unknown --mcts-mode "+mctsMode);
  return {runs:number("--runs",7200,1,100000),
   seed:number("--seed",20261014,1,0xffffffff),
   workers:number("--workers",Math.min(7,availableParallelism()),1,16),
@@ -146,7 +149,7 @@ const params=()=>{const vals={},flags=new Set();
   jobMinutes:number("--job-minutes",30,1,240),
   reproIndex:vals["--repro-index"]===undefined?null:
    number("--repro-index",0,0,100000),
-  focus,auditFile:resolve(vals["--audit"]||
+  mctsMode,focus,auditFile:resolve(vals["--audit"]||
    "results/canonical-audit-01/summary.json"),
   out:resolve(vals["--out"]||"results/session-balance-01"),
   resume:flags.has("--resume"),dryRun:flags.has("--dry-run"),
@@ -176,6 +179,11 @@ function oneJob(i,c){
  const session=createDecisionSession({seed:gameSeed,heroes});
  let step=0,last=null,eligible=0,reservoir=null;
  const policy=createSessionPolicy();
+ const mctsOptimizations=c.mctsMode==="selective-deferred"?{
+  speculativeTransitions:true,
+  canonicalReactionPhases:true,
+  deferReactionCheckpoints:true
+ }:null;
  try{
   for(;step<c.maxGameSteps&&session.phase!=="terminal";step++){
    const actions=sessionActions(session);
@@ -193,7 +201,7 @@ function oneJob(i,c){
     knowledge:"fair",budget:c.navigateBudget,
     maxSearchSteps:c.maxSearchSteps,
     seed:mix(gameSeed^Math.imul(step+1,0xc2b2ae35)),
-    legalActions:actions
+    legalActions:actions,mctsOptimizations
    });
    if(!chosen)throw Error("MCTS produced no navigation action");
    last={step,phase:session.pendingNested?
@@ -214,7 +222,7 @@ function oneJob(i,c){
    trials:1,seed:mix(gameSeed^sourceStep^0x29ab),
    actionIndices:selected.indices,futureBudget:c.futureBudget,
    maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
-   knowledge:"fair"
+   knowledge:"fair",mctsOptimizations
   });
   const [before,after]=paired.actions;
   return {i,heroes,gameSeed,step:sourceStep,focus:targetFocus,kind:"paired",
@@ -303,6 +311,7 @@ function summarize(c,completed,failed=[]){
   theoreticalAllCardCoverage:theoreticalCoverage(c),
   commit:git(),design:{
    runs:c.runs,seed:c.seed,focus:c.focus,knowledge:"fair",
+   mctsMode:c.mctsMode,
    futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
    maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
    minEligible:c.minEligible
@@ -345,6 +354,7 @@ const saveReport=(c,done,failed=[])=>{
  writeFileSync(join(c.out,"summary.md"),[
   "# Local state-matched canonical MCTS balance audit","",
   "Git revision: "+s.commit,
+  "MCTS execution mode: "+s.design.mctsMode,
   "Independent completed source seeds: "+s.completedSourceSeeds+"/"+c.runs,
   "Source states with paired comparison: "+s.pairedSourceSeeds,
   "Hero party setups visited: "+
@@ -486,7 +496,7 @@ async function runBenchmark(c,revision){
    gitRevision:revision,fullyMatchingRealWorkload:true,
    theoreticalAllCardCoverage:theoreticalCoverage(c),
    options:{runs:c.runs,seed:c.seed,workers:c.workers,hours:c.hours,
-    jobMinutes:c.jobMinutes,
+    jobMinutes:c.jobMinutes,mctsMode:c.mctsMode,
     futureBudget:c.futureBudget,navigateBudget:c.navigateBudget,
     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
     focus:c.focus},
@@ -578,6 +588,7 @@ if(!isMainThread){
     "benchmarkMinutes","reproIndex","workers","hours"].includes(k)))};
  console.error(JSON.stringify({revision,plannedIndependentSources:c.runs,
   parties:parties.length,workers:c.workers,focus:c.focus,
+  mctsMode:c.mctsMode,
   hourCap:c.hours,minimumEligible:c.minEligible,
   theoreticalAllCardCoverage:theoreticalCoverage(c),design},null,2));
  if(c.reproIndex!==null){
