@@ -174,7 +174,8 @@ export function searchDecision(session,{budget=100,seed=1,
  reuseSelectionScratch=false,reuseEmptyReplaySwitches=false,directSettlements=false,
  fastMetricClones=false,speculativeTransitions=false,
  checkpointEvery=32,lazyInitialCheckpoint=false,
- profileTransitions=false}={}){
+ profileTransitions=false,canonicalReactionPhases=false,
+ deferReactionCheckpoints=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -203,6 +204,10 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("lazyInitialCheckpoint must be boolean");
  if(typeof profileTransitions!=="boolean")
   throw Error("profileTransitions must be boolean");
+ if(typeof canonicalReactionPhases!=="boolean")
+  throw Error("canonicalReactionPhases must be boolean");
+ if(typeof deferReactionCheckpoints!=="boolean")
+  throw Error("deferReactionCheckpoints must be boolean");
  if(!Number.isInteger(checkpointEvery)||checkpointEvery<1||checkpointEvery>256)
   throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
@@ -451,8 +456,15 @@ export function searchDecision(session,{budget=100,seed=1,
       callback:onObservedReplay}]:[]),
      {at:chanceSwitchIndex,callback:onReplay}
     ]:[];
+    // Profiling found that Room decisions frequently request nested
+    // reactions. For those phases the canonical transaction avoids
+    // speculative checkpoint recovery and replay of earlier decisions.
+    const canonicalReactionPhase=canonicalReactionPhases&&
+     (from==="room"||from==="retained-entry");
     const canSpeculate=speculativeTransitions&&transactional&&
-     !sim.pendingNested&&!replaySwitches.length;
+     !canonicalReactionPhase&&!sim.pendingNested&&!replaySwitches.length;
+    if(transitionProfile&&speculativeTransitions&&canonicalReactionPhase)
+     mark("canonicalReactionPhase",from);
     const transitionStarted=transitionProfile?performance.now():0;
     if(canSpeculate){
      let restored=false;
@@ -497,7 +509,13 @@ export function searchDecision(session,{budget=100,seed=1,
     if(transitionProfile)mark(canSpeculate?
      "speculativeTransition":"canonicalTransition",from,
      performance.now()-transitionStarted);
+    // No speculative decisions run while a reaction is pending. The
+    // canonical fork/replay handles every intervening response; checkpoint
+    // again after the reaction finishes. Terminal copies are also unused.
+    // Historical behavior remains the default for paired comparison.
     if(speculativeTransitions&&transactional&&
+       (!deferReactionCheckpoints||
+        (sim.phase!=="terminal"&&!sim.pendingNested))&&
        (sim.pendingNested||!canSpeculate||
         sinceCheckpoint.length>=checkpointEvery)){
      checkpoint=profiledClone(sim,"checkpointClone",sim.phase);

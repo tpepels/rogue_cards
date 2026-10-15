@@ -34,7 +34,9 @@ if(!["canonical","speculative"].includes(reference))
 if(!["search","expedition"].includes(mode))throw Error("Unknown --mode");
 if(!["settlements","metrics","combined","speculative",
      "speculative-frozen","speculative-lazy",
-     "speculative-lazy-frozen","everything"].includes(optimization))
+     "speculative-lazy-frozen","speculative-selective",
+     "speculative-selective-deferred","speculative-selective-lazy-deferred",
+     "everything"].includes(optimization))
  throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
@@ -53,6 +55,13 @@ const fastOptions={
  "speculative-lazy":{speculativeTransitions:true,lazyInitialCheckpoint:true},
  "speculative-lazy-frozen":{speculativeTransitions:true,
   lazyInitialCheckpoint:true,reuseEdgeActions:true},
+ "speculative-selective":{speculativeTransitions:true,
+  canonicalReactionPhases:true},
+ "speculative-selective-deferred":{speculativeTransitions:true,
+  canonicalReactionPhases:true,deferReactionCheckpoints:true},
+ "speculative-selective-lazy-deferred":{speculativeTransitions:true,
+  canonicalReactionPhases:true,deferReactionCheckpoints:true,
+  lazyInitialCheckpoint:true},
  everything:{
   speculativeTransitions:true,
   directSettlements:true,fastMetricClones:true,
@@ -61,8 +70,8 @@ const fastOptions={
  }
 }[optimization];
 if(fastOptions.speculativeTransitions)fastOptions.checkpointEvery=checkpointEvery;
-if(reference==="speculative"&&!optimization.startsWith("speculative-lazy"))
- throw Error("Speculative reference requires a lazy checkpoint candidate");
+if(reference==="speculative"&&!optimization.startsWith("speculative-"))
+ throw Error("Speculative reference requires a speculative candidate");
 const referenceOptions=reference==="speculative"?
  {speculativeTransitions:true,checkpointEvery}:{};
 const pairsOfArgs=args.filter(x=>x!=="--profile"&&x!=="--distinct-seeds");

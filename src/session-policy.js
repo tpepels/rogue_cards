@@ -44,7 +44,8 @@ export function selectSessionPolicyAction(session,policy,{
   "reuseEmptyReplaySwitches","reuseEdgeActions",
   "streamHistoryHash","reuseSelectionScratch",
   "directSettlements","fastMetricClones","speculativeTransitions",
-  "checkpointEvery","lazyInitialCheckpoint","profileTransitions"
+  "checkpointEvery","lazyInitialCheckpoint","profileTransitions",
+  "canonicalReactionPhases","deferReactionCheckpoints"
  ]);
  if(mctsOptimizations!==null&&(
     !mctsOptimizations||typeof mctsOptimizations!=="object"||

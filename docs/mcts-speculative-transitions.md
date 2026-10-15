@@ -81,3 +81,31 @@ The original fixed-three-seed microbenchmark remains the default to preserve
 historical comparisons. Use `--distinct-seeds` to get unique initial seeds.
 Profiled wall times include instrumentation overhead and should not be
 compared with unprofiled timings. The new path remains disabled by default.
+
+## Selective canonical reaction routing (experimental)
+
+An 11-search profile showed 585 speculative Room transitions resulting in
+585 nested recoveries and 7,059 replayed actions. The experimental
+`canonicalReactionPhases:true` flag routes `room` and `retained-entry`
+decisions through the existing canonical transaction instead. All other
+phases can continue using speculative transitions. It changes no rules,
+legal actions, dice, hidden information sampling or search policy.
+
+The independently selectable `deferReactionCheckpoints:true` flag skips
+checkpoint copies while an unresolved nested reaction is pending, and in
+terminal states. Canonical fork/replay still handles every nested response;
+a checkpoint is taken when the reaction resolves, before speculation resumes.
+
+Paired eager-speculation versus selective variants:
+
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-selective --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-selective-deferred --budget 16 --samples 33 --distinct-seeds
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-selective-deferred --mode expedition --budget 8 --runs 8
+
+An optional diagnostic profile:
+
+    npm run bench:mcts-settlements -- --reference speculative --optimization speculative-selective-deferred --budget 16 --samples 11 --distinct-seeds --profile
+
+These performance switches remain disabled by default. The original
+speculation, lazy checkpoint, frozen actions and other prior experimental
+flags are preserved.

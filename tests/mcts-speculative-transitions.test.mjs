@@ -131,6 +131,10 @@ test("speculative search validates its isolated mode and checkpoint interval",()
   /lazyInitialCheckpoint must be boolean/);
  assert.throws(()=>searchDecision(session,{budget:2,profileTransitions:1}),
   /profileTransitions must be boolean/);
+ assert.throws(()=>searchDecision(session,{budget:2,canonicalReactionPhases:1}),
+  /canonicalReactionPhases must be boolean/);
+ assert.throws(()=>searchDecision(session,{budget:2,deferReactionCheckpoints:1}),
+  /deferReactionCheckpoints must be boolean/);
  assert.throws(()=>submitSpeculativeDecision(session,
   sessionActions(session)[0],{}),
   /requires a rollback callback/);
@@ -195,4 +199,47 @@ test("optional transition profiling preserves all MCTS decisions",()=>{
  assert.deepEqual(lazyCanonical,baseline);
  assert.equal(lazyProfile.totals.initialCheckpointClone,undefined);
  assert.ok(lazyProfile.totals.speculativeTransition.count>0);
+});
+
+test("canonical reaction-phase routing preserves complete MCTS search trees",()=>{
+ const fixtures=[
+  {create:()=>atRoom(1842,"u-fountain"),seed:20261018},
+  {create:()=>atRoom(3573,"u-passage"),seed:20261019},
+  {create:()=>atCombat(3192,["wizard"]),seed:20261020},
+  {create:()=>createDecisionSession({seed:7292,
+   heroes:["warrior","witch"]}),seed:20261021}
+ ];
+ for(const fixture of fixtures){
+  for(const treeMode of ["full","frontier"]){
+   const session=fixture.create();
+   const options={seed:fixture.seed,budget:4,
+    knowledge:"fair",treeMode,maxSteps:4000,collectCoverage:true};
+   const before=JSON.stringify(observeSession(session));
+   const dice=session.state.rng.snapshot();
+   const canonical=searchDecision(session,options);
+   for(const flags of [
+    {canonicalReactionPhases:true},
+    {canonicalReactionPhases:true,deferReactionCheckpoints:true},
+    {canonicalReactionPhases:true,deferReactionCheckpoints:true,
+     lazyInitialCheckpoint:true}
+   ]){
+    const report=searchDecision(session,{
+     ...options,speculativeTransitions:true,profileTransitions:true,
+     checkpointEvery:8,...flags
+    });
+    const {transitionProfile,...result}=report;
+    assert.deepEqual(result,canonical,
+     "Canonical reaction-phase routing changed a complete search tree");
+    assert.ok(transitionProfile.totals.trialClone.count>=options.budget);
+    assert.equal(transitionProfile.byPhase.room?.nestedRecovery?.count??0,0);
+    assert.equal(transitionProfile.byPhase["retained-entry"]?.
+     nestedRecovery?.count??0,0);
+    if(flags.deferReactionCheckpoints)
+     assert.equal(transitionProfile.byPhase.terminal?.
+      checkpointClone?.count??0,0);
+    assert.equal(JSON.stringify(observeSession(session)),before);
+    assert.equal(session.state.rng.snapshot(),dice);
+   }
+  }
+ }
 });
