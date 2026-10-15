@@ -6,7 +6,7 @@
  *   full16 vs frontier16 (tree algorithm, equal rollout allocation);
  *   classic2 vs full16 (search budget, same tree algorithm).
  */
-import {pairedAgentStatistics} from "../scripts/study-mcts-agent-strength.mjs";
+import {pairedAgentStatistics} from "./mcts-paired-statistics.js";
 
 export const MCTS_DIAGNOSTIC_ARMS=Object.freeze([
  {id:"classic2",budget:2,treeMode:"full"},
