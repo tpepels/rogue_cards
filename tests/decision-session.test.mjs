@@ -392,7 +392,9 @@ test("revealed corridor branches stop at a real player decision instead of scrip
  const next=r.actions[1],discarded=r.actions[0].roomId;
  submitDecision(session,next);
  assert.equal(s.rooms.UPPER[0].id,next.roomId);
- assert.ok(s.discardedRoomIds.has(discarded));
+ assert.ok(!s.discardedRoomIds.has(discarded));
+ assert.ok(s.publicBottomRoomIds.UPPER.includes(discarded));
+ assert.ok(s.rooms.UPPER.some(x=>x.id===discarded));
  assert.equal(session.pendingNested,null);
 });
 test("forking remaining RNG states yields the same results without consuming source dice",()=>{
