@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {evaluateBalanceTargets,auditCardAndItemUse} from "../src/experiment-targets.js";
 import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS,FIXED_CARDS} from "../src/decks.js";
+import {HEROES} from "../src/tabletop-data.js";
 const spec=JSON.parse(readFileSync(new URL(
  "../config/everything-goes-targets.v1.json",import.meta.url),"utf8"));
 const twoChoice=spec.metrics.find(x=>x.id==="room_option_usefulness");
@@ -51,7 +52,7 @@ test("unambiguous bad win rate triggers intervention only with statistical power
  assert.equal(vault.status,"ON_TARGET");
 });
 test("solo spread is stratified and depends on per-Hero coverage",()=>{
- const heroes=["warrior","knight","priest","wizard","rogue","ranger","bard","alchemist"];
+ const heroes=HEROES.map(h=>h.id);
  const population=heroes.flatMap((h,k)=>Array.from({length:80},(_,i)=>
   organic(k*80+i,[h],i<40)));
  const result=evaluateBalanceTargets(spec,population,{complete:true});
