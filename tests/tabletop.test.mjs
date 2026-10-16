@@ -82,6 +82,10 @@ test("Monsters have distinctive four-band responses, weaknesses and defined nego
   assert.equal(m.behavior.length,4,m.id);
   assert.ok(m.behavior.every(x=>x.length>4));
   assert.ok(m.v2.weakness&&m.v2.parley&&m.v2.remains);
+  if(m.stage!=="FINAL"){
+   assert.ok(m.v2.defeat&&m.v2.defeatOps?.length,m.id);
+   assert.match(cardMarkup(m),/DEFEAT/);
+  }
   assert.ok(m.hp>0&&m.atk>=0&&m.def>=0);
   const html=cardMarkup(m);
   assert.match(html,/tt-layout-v2-monster/);
