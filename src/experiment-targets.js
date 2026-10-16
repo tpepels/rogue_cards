@@ -241,7 +241,8 @@ export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
    requiresFocusedTriggerTest:v.triggered<targets.itemAudit.minActualLegalOpportunitiesForUseJudgment}]));
  return {schema:"everything-goes-item-reachability-audit-v1",
   catalog:{rooms:rooms.length,monsters:monsters.length,items:items.length,
-   combined:rooms.length+monsters.length+items.length,
+   fixed:fixed.length,
+   combined:rooms.length+monsters.length+items.length+fixed.length,
    intended:targets.itemAudit.catalogue},
   items,rooms,monsters,itemPairs,
   flags:{
