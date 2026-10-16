@@ -59,7 +59,7 @@ jobs:
           for(let i=0;i<3;i++){
             const name=join(dir,'raw',String(i).padStart(6,'0')+'.json.gz');
             const data=JSON.parse(gunzipSync(fs.readFileSync(name)).toString());
-            if(!data.events.length||data.events.length!==data.result.actions)
+            if(!data.events.length||data.events.length!==data.result.forcedDecisions+data.result.searchedDecisions)
               throw Error('Incomplete decision tape '+i);
             if(!data.events.some(e=>e.dice.length))
               throw Error('No actual dice for job '+i);
