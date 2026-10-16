@@ -151,7 +151,8 @@ function work(job,c){
   gameMode:"everything-goes",extraObjectId:job.extraObjectId,
   budget:c.budget,knowledge:c.knowledge,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
-  traceLimit:0,retainSearches:false,onDecision:recorder.handler});
+  traceLimit:0,retainSearches:false,equipmentProgressCap:12,
+  onDecision:recorder.handler});
  const events=recorder.finish(),m=result.metrics;
  if(!result.resolved||result.actions!==events.length)
   throw Error("Inconsistent completed-decision event count");
@@ -195,6 +196,7 @@ function work(job,c){
   ending:result.ending,actions:result.actions,
   searchedDecisions:result.searchedDecisions,
   forcedDecisions:result.forcedDecisions,
+  equipmentProgressBreaks:result.equipmentProgressBreaks,
   encounterStarts:m.encounterStarts,combatStarts:m.combatStarts,
   kills:m.kills,rooms:m.cleared,drawn:m.drawn,
   hpLoss:m.damage,
@@ -315,7 +317,7 @@ function createReport(c,done,expected){
    "A player MCTS decision is a policy observation, NOT a random assignment to alternative choices.",
    "Item pairing changes which extra physical Item the first Hero starts with; it does not measure an Item's exact intrinsic power.",
    "Unseen card effects and underpowered subgroups must stay explicitly unknown.",
-   "The policy is full-session UCT; it is not proof of optimal human play.",
+   "The policy is full-session UCT with a stated 12-consecutive-equipment-action progress cap; it is not proof of optimal human play.",
    "A single simulation seed pair can diverge after deck or Item intervention; seeds are matched, not forced identical post-intervention."
   ]
  };
@@ -336,6 +338,7 @@ function save(c,done,expected){
   index:r.i,group:r.group,itemId:r.itemId,sample:r.sample,arm:r.arm,
   seed:r.seed,heroes:r.heroes.join("+"),win:Number(r.won),
   ending:r.ending,actions:r.actions,rooms:r.rooms,
+  equipmentProgressBreaks:r.equipmentProgressBreaks,
   encounters:r.encounterStarts,combats:r.combatStarts,kills:r.kills,
   drawn:r.drawn,hpLoss:r.hpLoss,dice:r.dice,
   searchMs:r.searchMs,transitionMs:r.transitionMs,
