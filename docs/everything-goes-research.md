@@ -16,7 +16,7 @@ commit locally generated illustration PNGs and their `src/print-expansion.js`
 mappings before starting. The experiment refuses dirty source, because
 otherwise two resumed batches could silently use different game rules.
 
-The wrapper runs `test:experiment` and `test:everything`, then launches:
+The wrapper runs `test:experiment` and `test:everything`, then checks the full telemetry pipeline with **four completed real-game MCTS smoke sessions**. Only after these pass does it launch:
 
 - **3,600 organic Everything Goes expeditions** - exactly 100 for each of
   the 8 solo Heroes and 28 two-Hero combinations.
