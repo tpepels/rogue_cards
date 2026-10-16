@@ -19,12 +19,14 @@ export function playSessionWithMCTS({
  seed,heroes=["warrior"],gameMode="original",knowledge="fair",
  budget=2,maxSearchSteps=4000,maxGameSteps=7000,
  strictTerminal=true,traceLimit=120,extraObjectId=null,
- onDecision=null,retainSearches=true
+ onDecision=null,retainSearches=true,equipmentProgressCap=0
 }={}){
  if(!Number.isSafeInteger(seed)||seed<0)throw Error("Expected a nonnegative game seed");
  if(onDecision!==null&&typeof onDecision!=="function")throw Error("onDecision must be a function");
  if(!Number.isInteger(maxGameSteps)||maxGameSteps<1)
   throw Error("Invalid maxGameSteps");
+ if(!Number.isInteger(equipmentProgressCap)||equipmentProgressCap<0)
+  throw Error("Invalid equipmentProgressCap");
  if(!Number.isInteger(traceLimit)||traceLimit<0)
   throw Error("Invalid traceLimit");
  const session=createDecisionSession({seed,heroes,gameMode,extraObjectId});
@@ -32,6 +34,7 @@ export function playSessionWithMCTS({
   availableCardActions={},chosenCardActions={};
  const trace=[],searches=[];
  let searchedDecisions=0,forcedDecisions=0;
+ let consecutiveEquipment=0,equipmentProgressBreaks=0;
  for(let step=0;step<maxGameSteps&&session.phase!=="terminal";step++){
   const actions=sessionActions(session);
   if(!actions.length)throw Error("No legal action at phase "+session.phase);
@@ -44,7 +47,14 @@ export function playSessionWithMCTS({
   }
   let chosen,diagnostic=null;
   const started=onDecision?performance.now():0;
-  if(actions.length===1){
+  const cycleBreak=equipmentProgressCap>0&&
+   (phase==="between-rooms"||phase==="explore")&&
+   consecutiveEquipment>=equipmentProgressCap&&
+   actions.some(a=>a.kind==="continue");
+  if(cycleBreak){
+   chosen=actions.find(a=>a.kind==="continue");
+   forcedDecisions++;equipmentProgressBreaks++;
+  }else if(actions.length===1){
    chosen=actions[0];forcedDecisions++;
   }else{
    // Independent search seeds at *each actual decision* - not a scripted
@@ -68,6 +78,10 @@ export function playSessionWithMCTS({
     choices:diagnostic.choices
    });
   }
+  if((phase==="between-rooms"||phase==="explore")&&
+     ["equip","unequip","transfer"].includes(chosen.kind))
+   consecutiveEquipment++;
+  else consecutiveEquipment=0;
   count(chosenCounts,phase+":"+chosen.kind);
   if(chosen.cardId)count(chosenCardActions,chosen.cardId+":"+chosen.kind);
   if(trace.length<traceLimit)trace.push({
@@ -77,12 +91,12 @@ export function playSessionWithMCTS({
   });
   const selectedAt=onDecision?performance.now():0;
   if(onDecision)onDecision({moment:"before",step,phase,session,
-   actions,chosen,diagnostic,searchMs:selectedAt-started});
+   actions,chosen,diagnostic,cycleBreak,searchMs:selectedAt-started});
   let dice=[];
   submitDecision(session,chosen,onDecision?{
    onCommittedDice:rolls=>{dice=rolls;}}:{});
   if(onDecision)onDecision({moment:"after",step,phase,session,
-   actions,chosen,diagnostic,dice,
+   actions,chosen,diagnostic,cycleBreak,dice,
    searchMs:selectedAt-started,transitionMs:performance.now()-selectedAt});
  }
  if(session.phase!=="terminal")
@@ -97,7 +111,7 @@ export function playSessionWithMCTS({
   seed,heroes,knowledge,budget,extraObjectId,won:!!s.metrics.won,
   ending:s.endingKind,
   resolved:true,actions:session.actionCount,
-  searchedDecisions,forcedDecisions,metrics:cloneMetrics(s),
+  searchedDecisions,forcedDecisions,equipmentProgressBreaks,metrics:cloneMetrics(s),
   decisionCounts,chosenCounts,choiceCoverage,
   availableCardActions,chosenCardActions,trace,searches,
   knownLimitations:[
