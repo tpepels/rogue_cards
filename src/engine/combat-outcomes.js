@@ -8,10 +8,9 @@ export function consumeCorpse(s,m){
  const h=s.chooseRecipient("eat-monster-remains");if(!h)return;
  s.setActor(h);s.metrics.corpses++;
  const roll=s.die();
- if(m.v2?.genericRemains){
-  if(roll<=2)s.hurt(h,2);
-  else if(roll<=4)s.heal(h,2);
-  else s.draw();
+ if(m.v2?.genericRemains==="EAT"){
+  const op=m.v2.remainsOps[roll<=2?0:roll<=4?1:2];
+  const [kind,...args]=op.split(":");s.apply(kind,args,m);
   return;
  }
  if(roll<=2){
@@ -39,6 +38,11 @@ export function resolveSpecialRemains(s,m,kind){
  if(!m||s.monster!==m||s.monsterHP>0)
   throw Error("Cannot resolve remains before defeating Monster");
  const h=s.chooseRecipient("monster-remains:"+m.id);
+ if(m.v2?.genericRemains==="SEARCH"&&kind==="search"){
+  const face=s.die();const op=m.v2.remainsOps[face<=2?0:face<=4?1:2];
+  const [operation,...args]=op.split(":");s.setActor(h);
+  s.apply(operation,args,m);return;
+ }
  if(m.id==="goblin"&&kind==="search"){
   const face=s.die();
   if(face<=2)s.hurt(h,1);

@@ -330,14 +330,18 @@ const ROWS=[
   ]
  ]
 ];
+const REMAINS={"drain-leech":["EAT","POISON","HEAL:2","HEAL:d6"],"keyhole-mimic":["SEARCH","HURT:2","DRAW:1","DRAW:2"],"dust-skeleton":["SEARCH","HURT:2","PEEK:1","DRAW:1"],"lantern-moth":["EAT","POISON","CURE","NEXT_ADV"],"wax-golem":["SEARCH","HURT:2","HEAL:2","DRAW:1"],"drowned-jailer":["SEARCH","HURT:2","DRAW:1","DRAW:2"],"ropebound-hound":["EAT","HURT:2","HEAL:2","PEEK:2"],"bell-beetle":["EAT","POISON","CURE","DRAW:1"],"ash-penitent":["SEARCH","HURT:d6","CURE","HEAL:d6"],"vault-parasite":["EAT","HURT:2","HEAL:2","DRAW:2"],"bone-cantor":["SEARCH","POISON","PEEK:2","DRAW:1"],"glass-revenant":["SEARCH","HURT:2","DEF_ADV","DRAW:2"]};
+const REMAINS_TEXT={"POISON":"become POISONED","HURT:2":"lose 2 HP","HURT:d6":"lose d6 HP","HEAL:2":"heal 2 HP","HEAL:d6":"heal d6 HP","DRAW:1":"draw 1 Item","DRAW:2":"draw 2 Items","PEEK:1":"peek next Room","PEEK:2":"peek next 2 Rooms","CURE":"remove POISONED","NEXT_ADV":"next Hero attack has ADV","DEF_ADV":"next Monster attack against you has DIS"};
 export const EXTRA_MONSTERS=Object.freeze(ROWS.map(([id,title,stage,hp,atk,def,behavior,behaviorOps,parleyMode,parleyCost,weaknessTag,weaknessFace,tags],i)=>{
  const weakness=`With a ${weaknessTag} Item, treat behaviour ${weaknessFace} as 1–2.`;
+ const [genericRemains,...remainsOps]=REMAINS[id];
+ const remains=genericRemains+": d6. 1–2: "+REMAINS_TEXT[remainsOps[0]]+"; 3–4: "+REMAINS_TEXT[remainsOps[1]]+"; 5–6: "+REMAINS_TEXT[remainsOps[2]]+".";
  const parley=parleyMode==="WIT"?
   `ESCAPE: opposed d20+WIT vs d20+${parleyCost}. Win: leave without reward; lose: fight.`:
   `OFFER: discard ${parleyCost} Item${parleyCost===1?"":"s"} to avoid this fight. No reward.`;
  return Object.freeze({id,title,stage,hp,atk,def,behavior,art:"expansion",copies:2,
   type:"monster",printOnly:true,rule:"",flavor:"",
   v2:{kind:"MONSTER",number:164+i,tags,weakness,weaknessTag,weaknessFace,
-   parley,parleyMode,parleyCost,behaviorOps,genericRemains:true,
-   remains:"EAT: d6: 1–2 lose 2 HP; 3–4 heal 2 HP; 5–6 draw 1 Item."}});
+   parley,parleyMode,parleyCost,behaviorOps,genericRemains,remainsOps,
+   remains}});
 }));
