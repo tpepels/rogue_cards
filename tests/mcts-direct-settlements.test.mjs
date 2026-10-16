@@ -67,6 +67,10 @@ test("both Warden FIGHT boundaries produce precisely identical full state",()=>{
 });
 test("guarded direct corpse settlement restores precise state after an exception",()=>{
  const session=scenario("corpse");
+ // A printed DEFEAT effect is rightly unsafe for the direct settlement path.
+ // Retain the direct rollback test with a deliberately reward-free card.
+ session.state.monster={...session.state.monster,
+  v2:{...session.state.monster.v2,defeatOps:[]}};
  const action=sessionActions(session).find(a=>a.kind==="leave");
  const before=observeSession(session),dice=session.state.rng.snapshot();
  const hero=session.state.heroes[0];
