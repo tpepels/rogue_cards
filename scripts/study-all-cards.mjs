@@ -12,6 +12,7 @@ import {resolve,join,dirname} from "node:path";
 import {execFileSync} from "node:child_process";
 import {ALL_CARD_ROSTER,getCard,cardKey,evaluateCardTrial,cardSummary}
  from "../src/all-card-study.js";
+import {loadNativeMcts} from "../src/native-mcts-node.js";
 const uint=(raw,name,min,max)=>{
  const n=Number(raw);
  if(!/^(0|[1-9][0-9]*)$/.test(String(raw))||
@@ -26,7 +27,7 @@ function parse(argv){
  const args={},flags=new Set();
  for(let i=0;i<argv.length;i++){
   const k=argv[i];
-  if(k==="--resume"||k==="--dry-run"){
+  if(k==="--resume"||k==="--dry-run"||k==="--native-hash"){
    if(flags.has(k))throw Error("Duplicate flag "+k);
    flags.add(k);continue;
   }
@@ -61,7 +62,7 @@ function parse(argv){
   minPaired:uint(args["--min-paired"]??60,"min-paired",2,100000),
   out:resolve(args["--out"]||"results/all-card-canonical-study"),
   audit:args["--audit"]?resolve(args["--audit"]):null,
-  focus,only,cards,
+  focus,only,cards,nativeHash:flags.has("--native-hash"),
   resume:flags.has("--resume"),dryRun:flags.has("--dry-run")
  };
 }
@@ -85,7 +86,9 @@ function report(c,rev,records,failures=[]){
  const totalPairs=result.reduce((n,g)=>n+g.compared,0);
  const summary={
   schema:"canonical-all-printed-cards-study-v1",
-  commit:rev,executionMode:"selective-deferred",knowledge:"fair",
+  commit:rev,executionMode:c.nativeHash?
+   "selective-deferred-native-hash":"selective-deferred",
+  knowledge:"fair",
   complete,selectedCards:c.cards.length,
   entirePrintedRoster:ALL_CARD_ROSTER.length,
   plannedJobs:c.cards.length*c.runsPerCard,
@@ -93,7 +96,8 @@ function report(c,rev,records,failures=[]){
   failures,design:{
    runsPerCard:c.runsPerCard,seed:c.seed,budget:c.budget,
    maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
-   minPaired:c.minPaired,focus:c.focus,only:c.only
+   minPaired:c.minPaired,focus:c.focus,only:c.only,
+   nativeHash:c.nativeHash
   },
   estimands:{
    room:"Effect of moving an existing stage Room to first draw versus natural randomized ordering",
@@ -119,7 +123,8 @@ function report(c,rev,records,failures=[]){
  const lines=[
   "# Canonical all-printed-card experiment","",
   "Git revision: "+rev,
-  "Execution: selective-deferred canonical MCTS; fair hidden information",
+  "Execution: selective-deferred"+(c.nativeHash?" + native state hash":"")+
+   " canonical MCTS; fair hidden information",
   "Source jobs: "+records.size+"/"+summary.plannedJobs,
   "Paired terminal source jobs: "+totalPairs,
   "Printed card IDs in the full roster: "+ALL_CARD_ROSTER.length,
@@ -161,6 +166,7 @@ function preflight(c,rev){
  });
 }
 if(!isMainThread){
+ if(workerData.config.nativeHash)loadNativeMcts({required:true});
  parentPort.on("message",m=>{
   if(m.type!=="job")return;
   try{
@@ -176,12 +182,14 @@ if(!isMainThread){
 }else if(process.argv[1]&&import.meta.url.endsWith(process.argv[1])){
  const c=parse(process.argv.slice(2)),rev=revision();
  if(!rev)throw Error("Git revision is required");
+ if(c.nativeHash)loadNativeMcts({required:true});
  if(c.resume&&c.dryRun)throw Error("Use --resume OR --dry-run");
  const design={schema:1,revision:rev,seed:c.seed,
   runsPerCard:c.runsPerCard,budget:c.budget,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
   minPaired:c.minPaired,selected:c.cards.map(cardKey),
-  mode:"selective-deferred",knowledge:"fair"};
+  mode:"selective-deferred",knowledge:"fair",
+  nativeHash:c.nativeHash};
  console.error(JSON.stringify({study:design,out:c.out,
   plannedFullExpeditions:c.cards.reduce((n,x)=>n+
    c.runsPerCard*(x.kind==="fixed"?1:2),0),
@@ -225,7 +233,7 @@ if(!isMainThread){
   const workers=Array.from({length:Math.min(c.workers,todo.length)},
    ()=>new Worker(new URL(import.meta.url),{workerData:{config:{
     seed:c.seed,budget:c.budget,maxSearchSteps:c.maxSearchSteps,
-    maxGameSteps:c.maxGameSteps
+    maxGameSteps:c.maxGameSteps,nativeHash:c.nativeHash
    }}}));
   const assigned=new Map();
   let at=0,closed=false;

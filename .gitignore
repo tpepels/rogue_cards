@@ -26,3 +26,6 @@ coverage/
 __pycache__/
 .pytest_cache/
 *.pyc
+
+# Locally compiled C++ N-API kernels
+native/build/

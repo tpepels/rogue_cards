@@ -96,7 +96,8 @@ export function runCanonicalCardExpedition(session,card,c,runSeed){
  const fast={
   speculativeTransitions:true,
   canonicalReactionPhases:true,
-  deferReactionCheckpoints:true
+  deferReactionCheckpoints:true,
+  ...(c.nativeHash?{nativeHash:true}:{})
  };
  for(;session.phase!=="terminal"&&decisions<c.maxGameSteps;decisions++){
   const legal=sessionActions(session);

@@ -65,6 +65,12 @@ const cloneSession=(s,recordHistory=true,fastPileClones=false,
 // extra enclosing object at every MCTS node. Normal phase/hero prefixes
 // are reusable, but game-state JSON is recalculated on every decision:
 // cached state snapshots would become stale after mutable rules effects.
+let nativeHashPart=null;
+/** Injection keeps browser session MCTS independent of Node native modules. */
+export function registerNativeMctsHash(fn){
+ if(typeof fn!=="function")throw Error("Native hashPart must be callable");
+ nativeHashPart=fn;
+}
 const hashPart=(initial,chunk)=>{
  let h=initial;
  for(let i=0;i<chunk.length;i++)
@@ -81,7 +87,7 @@ export const mctsLegacyPublicStateHash=s=>{
   game:nested?nested.observation:observeGame(s.state)
  }));
 };
-export const mctsPublicStateHash=s=>{
+export const mctsPublicStateHash=(s,useNative=false)=>{
  const nested=s.pendingNested;
  let initial;
  if(nested){
@@ -98,6 +104,14 @@ export const mctsPublicStateHash=s=>{
   }
  }
  const game=nested?nested.observation:observeGame(s.state);
+ if(useNative){
+  if(!nativeHashPart)
+   throw Error("Native MCTS hash unavailable; build and load native addon");
+  // Only one N-API call per observation; the closing brace is a single
+  // UTF-16 code unit and needs no native round-trip.
+  const h=nativeHashPart(initial,JSON.stringify(game));
+  return Math.imul(h^125,16777619)>>>0;
+ }
  return hashPart(hashPart(initial,JSON.stringify(game)),"}");
 };
 function nodeFor(tree,key,actions,reuseEdgeActions=false){
@@ -175,7 +189,8 @@ export function searchDecision(session,{budget=100,seed=1,
  fastMetricClones=false,speculativeTransitions=false,
  checkpointEvery=32,lazyInitialCheckpoint=false,
  profileTransitions=false,canonicalReactionPhases=false,
- deferReactionCheckpoints=false,onDemandCheckpoints=false}={}){
+ deferReactionCheckpoints=false,onDemandCheckpoints=false,
+ nativeHash=false}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -210,11 +225,17 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("deferReactionCheckpoints must be boolean");
  if(typeof onDemandCheckpoints!=="boolean")
   throw Error("onDemandCheckpoints must be boolean");
+ if(typeof nativeHash!=="boolean")
+  throw Error("nativeHash must be boolean");
+ if(nativeHash&&(!fastStateHash||!nativeHashPart))
+  throw Error("nativeHash requires fastStateHash and loaded native MCTS addon");
  if(!Number.isInteger(checkpointEvery)||checkpointEvery<1||checkpointEvery>256)
   throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
- const stateHash=fastStateHash?mctsPublicStateHash:mctsLegacyPublicStateHash;
+ const stateHash=fastStateHash?
+  (nativeHash?s=>mctsPublicStateHash(s,true):mctsPublicStateHash):
+  mctsLegacyPublicStateHash;
  // Opt-in counts and inclusive timers; normal searches allocate no profile.
  const transitionProfile=profileTransitions?{totals:{},byPhase:{}}:null;
  const mark=(kind,phase,elapsedMs=0)=>{

@@ -13,6 +13,7 @@ import {createDecisionSession,sessionActions,observeSession,submitDecision}
 import {createSessionPolicy,selectSessionPolicyAction}
  from "../src/session-policy.js";
 import {searchDecision} from "../src/session-mcts.js";
+import {loadNativeMcts} from "../src/native-mcts-node.js";
 import {ROOMS,MONSTERS,WARDEN,VAULT} from "../src/tabletop-data.js";
 
 const args=process.argv.slice(2);
@@ -36,7 +37,8 @@ if(!["settlements","metrics","combined","speculative",
      "speculative-frozen","speculative-lazy",
      "speculative-lazy-frozen","speculative-selective",
      "speculative-selective-deferred","speculative-selective-lazy-deferred",
-     "speculative-selective-demand","everything"].includes(optimization))
+     "speculative-selective-demand",
+     "speculative-selective-native-hash","everything"].includes(optimization))
  throw Error("Unknown --optimization");
 const budget=number("--budget",8,256),
  samples=number("--samples",11,50),runs=number("--runs",2,12),
@@ -65,6 +67,9 @@ const fastOptions={
  "speculative-selective-demand":{speculativeTransitions:true,
   canonicalReactionPhases:true,deferReactionCheckpoints:true,
   onDemandCheckpoints:true},
+ "speculative-selective-native-hash":{speculativeTransitions:true,
+  canonicalReactionPhases:true,deferReactionCheckpoints:true,
+  nativeHash:true},
  everything:{
   speculativeTransitions:true,
   directSettlements:true,fastMetricClones:true,
@@ -76,8 +81,10 @@ if(fastOptions.speculativeTransitions)fastOptions.checkpointEvery=checkpointEver
 if(reference!=="canonical"&&!optimization.startsWith("speculative-"))
  throw Error("Speculative reference requires a speculative candidate");
 if(reference==="selective-deferred"&&
-   optimization!=="speculative-selective-demand")
- throw Error("Selective-deferred reference requires the on-demand candidate");
+   !["speculative-selective-demand",
+     "speculative-selective-native-hash"].includes(optimization))
+ throw Error("Selective-deferred reference requires a selective optimization candidate");
+if(fastOptions.nativeHash)loadNativeMcts({required:true});
 const referenceOptions=reference==="speculative"?
  {speculativeTransitions:true,checkpointEvery}:
  reference==="selective-deferred"?

@@ -73,7 +73,9 @@
     "bench:mcts-settlements": "node scripts/benchmark-mcts-settlements.mjs",
     "oracle:agent-strength": "node scripts/study-mcts-agent-strength.mjs",
     "oracle:mcts-diagnostics": "node scripts/study-mcts-diagnostics.mjs",
-    "oracle:all-cards": "node scripts/study-all-cards.mjs"
+    "oracle:all-cards": "node scripts/study-all-cards.mjs",
+    "build:native-mcts": "node scripts/build-native-mcts.mjs",
+    "test:native-mcts": "node --test tests/mcts-native.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
