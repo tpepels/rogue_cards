@@ -15,9 +15,16 @@ on:
       - src/session-agent.js
       - src/engine/decision-session.js
       - src/engine/expedition-state.js
+      - src/engine/combat.js
+      - src/engine/combat-outcomes.js
+      - src/item-access.js
+      - src/odd-item-effects.js
+      - src/item-expansion.js
+      - src/print-expansion.js
+      - src/decks.js
+      - src/room-effect-model.js
       - src/engine/random.js
       - src/engine/parley.js
-      - src/engine/combat-outcomes.js
       - tests/experiment-telemetry.test.mjs
 
 jobs:
