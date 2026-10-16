@@ -1,3 +1,4 @@
+import {applyMonsterDefeat} from "../monster-defeats.js";
 /** Exact post-kill consequences shared by the scripted campaign and
  * player-controlled phase controller. Corpse eating is an optional
  * action, not an automatic consequence of winning a fight.
@@ -66,8 +67,8 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
   throw Error("Only a defeated active Monster may settle its reward");
  if(!s.banished){
   s.metrics.kills++;
-  // In Everything Goes, defeating (not avoiding) a regional Monster earns loot.
-  if(m.stage!=="FINAL"&&s.gameMode==="everything-goes"&&s.alive())s.draw();
+  // Apply only the reward actually printed on the defeated Monster.
+  if(m.stage!=="FINAL"&&s.alive())applyMonsterDefeat(s,m);
  }
  const stolen=s.stashedMonsterItems||[];
  if(stolen.length){
