@@ -122,7 +122,6 @@ function playerRoll(s,h,bonus,def){
 }
 export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
- offerGraveSalt(s,h);
  if(s.monsterFirstAttackPending){
   if(s.useRetainedPotion("foam","first-attack:"+m.id))h.nextAdv++;
   s.monsterFirstAttackPending=false;
@@ -139,6 +138,8 @@ export function playerAttack(s,h){
   return;
   }
  }
+ // A spell/hero ability that bypasses an ATK roll cannot waste Grave Salt.
+ offerGraveSalt(s,h);
  const ring=h.slots.ring;
  s.noteOptions(itemOptions(s,h,"on-attack"));
  if(ring?.id==="ring-ashes"&&!h.used.has(ring)&&
