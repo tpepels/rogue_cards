@@ -80,10 +80,16 @@ export function partiesForCard(card,index){
 // Moves a card already present in a real printed pile; never creates,
 // duplicates, discards, or silently adds a physical card.
 function swapTo(pile,id,atLast){
+ const dest=atLast?pile.length-1:0;
+ // Several Items and Monsters have different physical copies with the
+ // same printed id. Compare the card at the draw position by *identity
+ // of the design*, not the index of the first matching physical copy.
+ // Otherwise a repeated intervention swaps two real copies unnecessarily
+ // and mistakenly reports another eligible treatment.
+ if(pile[dest]?.id===id)
+  return {eligible:false,why:"already-at-draw-position"};
  const found=pile.findIndex(c=>c.id===id);
  if(found<0)return {eligible:false,why:"physical-copy-unavailable"};
- const dest=atLast?pile.length-1:0;
- if(found===dest)return {eligible:false,why:"already-at-draw-position"};
  [pile[found],pile[dest]]=[pile[dest],pile[found]];
  return {eligible:true,why:null};
 }

@@ -63,6 +63,30 @@ test("room, item and monster interventions only reorder existing physical cards"
  }
 });
 
+test("repeated physical Item copies at the next draw are never re-swapped",()=>{
+ const session=createDecisionSession({seed:20261016,heroes:["warrior","wizard"]});
+ const pile=session.state.deck;
+ const counts=new Map();
+ for(const card of pile)counts.set(card.id,(counts.get(card.id)||0)+1);
+ const id=[...counts].find(([,copies])=>copies>=2)?.[0];
+ assert.ok(id,"Physical Item pile must contain some repeated printed Item");
+ const target=ALL_CARD_ROSTER.find(c=>c.kind==="item"&&c.id===id);
+ assert.ok(target);
+ // Put a physical copy at the next draw while another copy with the
+ // same printed identity is earlier in the actual hidden pile.
+ const copyAt=pile.findLastIndex(c=>c.id===id);
+ const end=pile.length-1;
+ if(copyAt!==end)[pile[copyAt],pile[end]]=[pile[end],pile[copyAt]];
+ assert.equal(pile[end].id,id);
+ assert.ok(pile.findIndex(c=>c.id===id)<end,
+  "Fixture requires another physical copy preceding the draw copy");
+ const originals=[...pile];
+ const result=arrangePhysicalCard(session.state,target);
+ assert.deepEqual(result,{eligible:false,why:"already-at-draw-position"});
+ assert.ok(pile.every((card,i)=>card===originals[i]),
+  "No card moved, including copy identity and draw ordering");
+});
+
 test("Hero replacement preserves party size and never repeats a Hero",()=>{
  for(const hero of ALL_CARD_ROSTER.filter(c=>c.kind==="hero")){
   for(let i=0;i<35;i++){
