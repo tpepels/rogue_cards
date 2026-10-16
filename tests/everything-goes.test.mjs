@@ -105,7 +105,8 @@ test("Every regional Monster prints and executes its own DEFEAT reward",()=>{
   assert.deepEqual(monster.v2.defeatOps,ops);
   const html=cardMarkup(monster);
   assert.match(html,/DEFEAT/);
-  assert.ok(html.includes(text.replace(/&/g,"&amp;").replace(/</g,"&lt;")),monster.id);
+  const visible=html.replace(/<[^>]*>/g,"").replace(/&#39;/g,"'").replace(/&amp;/g,"&");
+  assert.ok(visible.includes(text),monster.id);
   const s=createGame({seed:20261016,gameMode:"everything-goes"});
   s.room=s.rooms[monster.stage][0];
   s.monster=monster;s.monsterHP=0;s.banished=false;
