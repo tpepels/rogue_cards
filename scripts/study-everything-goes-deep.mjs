@@ -428,6 +428,7 @@ function createReport(c,done,expected){
  const uniqueSeeds=new Set(survey.map(r=>r.seed)).size;
  const complete=total===expected&&rows.every((r,i)=>r.i===i);
  const targets=evaluateBalanceTargets(TARGETS,rows,{complete});
+ auditAllItemTiming();
  const itemAudit=auditCardAndItemUse(TARGETS,rawCover,byItem,{
   rooms:ALL_ROOMS,monsters:ALL_MONSTERS,items:ALL_OBJECTS,
   fixed:FIXED_CARDS,timings:ITEM_TIMING_ALL});
