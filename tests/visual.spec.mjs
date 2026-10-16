@@ -132,6 +132,11 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    return Math.min(x,y)>6?[{id:card.id,minOverlap:Math.min(x,y),x,y}]:[];
   });
   if(overlaps.length)console.log("ALL CARD OVERLAPS",JSON.stringify(overlaps));
+  const footerViolations=cards.filter(card=>card.notes.length===2).map(card=>({
+    id:card.id,
+    excess:card.notes[1].bottom-(card.cardBounds.bottom-6*96/25.4)
+  })).filter(x=>x.excess>0);
+  if(footerViolations.length)console.log("ALL CARD FOOTER VIOLATIONS",JSON.stringify(footerViolations));
   expect(cards).toHaveLength(139);
   for(const card of cards){
    expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
