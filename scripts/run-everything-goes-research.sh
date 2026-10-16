@@ -34,7 +34,7 @@ echo "Each and every real decision and committed die is saved; no truncated runs
 echo "Output: ${output}"
 node scripts/study-everything-goes-deep.mjs \
  "${resume[@]}" \
- --mode all --runs 720 --pairs-per-item 120 \
+ --mode all --runs 3600 --pairs-per-item 120 \
  --workers 6 --hours 72 --budget 2 --knowledge fair \
  --seed "${seed}" --max-game-steps 20000 \
  --max-search-steps 5000 --out "${output}"
