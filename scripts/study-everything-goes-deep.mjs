@@ -26,6 +26,7 @@ import {fileURLToPath} from "node:url";
 import {HEROES} from "../src/tabletop-data.js";
 import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS,FIXED_CARDS} from "../src/decks.js";
 import {ODD_ITEMS} from "../src/item-expansion.js";
+import {ITEM_TIMING_ALL,auditAllItemTiming} from "../src/item-access.js";
 import {playSessionWithMCTS} from "../src/session-agent.js";
 import {createDecisionRecorder,experimentSnapshot} from "../src/experiment-telemetry.js";
 import {evaluateBalanceTargets,auditCardAndItemUse} from "../src/experiment-targets.js";
