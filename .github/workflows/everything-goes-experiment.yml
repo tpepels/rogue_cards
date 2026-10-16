@@ -82,10 +82,36 @@ jobs:
             'targets.md','targets.json','item-audit.json'])
             if(!fs.statSync(join(dir,name)).size)throw Error('Empty output '+name);
           NODE
+      - name: Verify two-Hero-only Red String receives a usable paired party
+        run: |
+          node scripts/study-everything-goes-deep.mjs \
+            --mode pairs --runs 1 --pairs-per-item 1 \
+            --items odd-red-string --workers 2 \
+            --hours 1 --budget 1 --knowledge fair \
+            --max-game-steps 20000 --max-search-steps 5000 \
+            --seed 20261016 --out results/ci-red-string
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const base='results/ci-red-string/';
+          const manifest=JSON.parse(fs.readFileSync(base+'manifest.json'));
+          const summary=JSON.parse(fs.readFileSync(base+'summary.json'));
+          const matched=summary.matchedItems['odd-red-string'];
+          const checkpoints=fs.readdirSync(base+'checkpoints');
+          if(!summary.complete||checkpoints.length!==2||matched.pairs!==1||
+             matched.grantCompliance!==1)
+            throw Error('Red String paired runs incomplete');
+          for(const filename of checkpoints){
+            const data=JSON.parse(fs.readFileSync(base+'checkpoints/'+filename));
+            if(data.result.heroes.length!==2)
+              throw Error('Red String was tested with fewer than two Heroes');
+          }
+          NODE
       - name: Upload complete preflight records
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: everything-goes-preflight
-          path: results/ci-deep/
+          path: |
+            results/ci-deep/
+            results/ci-red-string/
           if-no-files-found: ignore
