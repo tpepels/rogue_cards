@@ -7,7 +7,8 @@
 import {blessBeforeD20} from "./combat.js";
 
 const bestWit=s=>[...s.living()].sort((a,b)=>b.card.wit-a.card.wit)[0];
-const rollD20=(s,{adv=false,dis=false}={})=>{
+const rollD20=(s,{adv=false,dis=false,hero=null}={})=>{
+ if(hero)return s.rollHeroD20(hero,{adv,dis});
  const a=s.die(20);
  return adv&&!dis?Math.max(a,s.die(20)):
   dis&&!adv?Math.min(a,s.die(20)):a;
@@ -28,7 +29,7 @@ export function resolveParley(s){
   if(m.v2.parleyMode==="ITEM")success=pay(m.v2.parleyCost);
   else{
    const wit=s.takeWitModifiers(h);
-   const heroDie=rollD20(s,{dis:!!h.poison||wit.dis});
+   const heroDie=rollD20(s,{dis:!!h.poison||wit.dis,hero:h});
    const other=s.die(20);
    success=heroDie===20||heroDie!==1&&
     heroDie+h.card.wit+wit.bonus>other+m.v2.parleyCost;
@@ -67,7 +68,8 @@ export function resolveParley(s){
   const wit=s.takeWitModifiers(h);
   const r=s.rerollIfKept(h,rollD20(s,{
    adv:boon.adv||rogueAdv,
-   dis:h.poison||h.slots.armour?.id==="mail"||rogueDis||wit.dis
+   dis:h.poison||h.slots.armour?.id==="mail"||rogueDis||wit.dis,
+   hero:h
   }));
   const opp=s.die(20);
   success=r===20||(r!==1&&

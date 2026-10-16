@@ -5,6 +5,7 @@ import {CATALOGUE} from '../src/tabletop-data.js';
 import {CARD_ART} from '../src/tabletop-view.js';
 import {PRINT_ONLY_CARDS,PRINT_ONLY_ART} from '../src/print-expansion.js';
 import {EXTRA_MONSTERS} from '../src/monster-expansion.js';
+import {ODD_ITEMS} from '../src/item-expansion.js';
 const cards=[
  ...CATALOGUE.map(card=>({
    key:card.type+":"+card.id,
@@ -21,6 +22,13 @@ const cards=[
  // Extra regional Monsters are printed cards, but show blank illustration
  // areas until generation creates the PNG and adds its mapping.
  ...EXTRA_MONSTERS.map(card=>({
+   key:card.type+":"+card.id,
+   title:card.title,
+   filename:PRINT_ONLY_ART[card.type+":"+card.id]??null,
+   mapping_source:"print-only",
+   number:card.v2.number
+ })),
+ ...ODD_ITEMS.map(card=>({
    key:card.type+":"+card.id,
    title:card.title,
    filename:PRINT_ONLY_ART[card.type+":"+card.id]??null,

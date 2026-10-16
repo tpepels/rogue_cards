@@ -6,17 +6,33 @@ import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS,PRINT_ONLY_ART} from "../src/print-exp
 import {PRESETS,ALL_ROOMS,ALL_OBJECTS,SELECTABLE,FIXED_CARDS,selectionForPreset,selectionSummary,physicalDeck,selectionGroups,cardKey} from "../src/decks.js";
 import {assetPath,cardMarkup,printSheets,CARD_ART} from "../src/tabletop-view.js";
 const region=["UPPER","MIDDLE","DEEP"];
-test("the 139-card legacy catalogue remains intact alongside 36 new printable designs",()=>{
+test("the 139-card legacy catalogue remains intact alongside 54 new printable designs",()=>{
  assert.equal(CATALOGUE.length,139);
  assert.equal(PRINT_ONLY_ROOMS.length,15);
  assert.equal(PRINT_ONLY_ITEMS.length,9);
  assert.equal(ALL_ROOMS.length,79);
- assert.equal(ALL_OBJECTS.length,61);
- assert.equal(SELECTABLE.length,79+61+24);
+ assert.equal(ALL_OBJECTS.length,79);
+ assert.equal(SELECTABLE.length,79+79+24);
  assert.equal(Object.keys(CARD_ART).length,139);
- assert.equal(Object.keys(PRINT_ONLY_ART).length,24);
- assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,175); // canonical plus 36 new identities
- assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,175);
+ // Illustration generation is incremental: the 24 earlier expansion PNGs
+ // are always mapped, but 12 Monsters and 18 odd Items are added only
+ // after their real artwork has been generated. Never require an exact
+ // mapping count during a partially or fully illustrated local checkout.
+ const baseArtKeys=new Set([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS].map(cardKey));
+ const optionalArtKeys=new Set(SELECTABLE.filter(c=>
+  c.v2?.number>=164&&c.v2.number<=193).map(cardKey));
+ assert.equal(baseArtKeys.size,24);
+ assert.equal(optionalArtKeys.size,30);
+ for(const key of baseArtKeys)assert.ok(PRINT_ONLY_ART[key],"Missing base artwork mapping: "+key);
+ for(const [key,filename] of Object.entries(PRINT_ONLY_ART)){
+  assert.ok(baseArtKeys.has(key)||optionalArtKeys.has(key),
+   "Unexpected print-only illustration mapping: "+key);
+  assert.match(filename,/^\d{3}_[a-z0-9_]+\.png$/,key);
+ }
+ assert.ok(Object.keys(PRINT_ONLY_ART).length>=24);
+ assert.ok(Object.keys(PRINT_ONLY_ART).length<=54);
+ assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,193); // original 139 plus 54
+ assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,193);
 });
 test("15 plain Rooms resolve immediately, never create persistent state or Pacts",()=>{
  for(const c of PRINT_ONLY_ROOMS){

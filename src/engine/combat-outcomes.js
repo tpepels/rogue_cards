@@ -85,5 +85,6 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
  if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
  s.pendingReward=0;s.pendingFightHeal=null;
+ for(const h of s.heroes){h.graveSalt=false;h.trickKnifeUsed=false;}
  s.monster=null;s.monsterHP=0;
 }

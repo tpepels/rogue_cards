@@ -4,9 +4,9 @@ The generator reads **every printable card design** from the JavaScript sources:
 
 - The original 139 engine cards from `src/tabletop-data.js`, with artwork in `CARD_ART` in `src/tabletop-view.js`.
 - The 24 additional Rooms and Items from `src/print-expansion.js`, whose PNGs and `PRINT_ONLY_ART` assignments are already present.
-- The twelve new Monsters from `src/monster-expansion.js`, whose artwork remains blank until generated.
+- The twelve new Monsters from `src/monster-expansion.js` and eighteen unusual Items from `src/item-expansion.js`; both groups remain blank until their own PNGs exist.
 
-The generator now includes **175 designs**. The first **163 PNGs already exist** (139 original cards and 24 expansion cards). The twelve new regional Monsters need images, assigned stable filenames numbered **164–175**, even if generated in a different order.
+The generator now includes **193 designs**. The first **163 PNGs already exist** (139 originals and 24 expansion cards). The twelve Monsters and eighteen unusual Items still need images, assigned stable filenames **164–193**, even if generated in a different order.
 
 ## Setup (once)
 
@@ -24,10 +24,10 @@ Export `GEMINI_API_KEY` in the current terminal. `GEMENI_API_KEY` is also suppor
 git pull --ff-only
 python3 scripts/generate-illustrations.py --dry-run
 # Expected before generating the new regional Monsters:
-# Catalogue: 175 cards; existing: 163; missing: 12.
+# Catalogue: 193 cards; existing: 163; missing: 30.
 ```
 
-The dry run lists the twelve new Monster filenames in print-catalogue order. It does not make API requests or update mappings.
+The dry run lists thirty new Monster and unusual Item filenames in print-catalogue order. It does not make API requests or update mappings.
 
 ## Generate gradually or all at once
 

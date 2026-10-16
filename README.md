@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**Complete 175-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**Four-page rules and deck recipes**](https://tpepels.github.io/rogue_cards/rules.html)
+[**Complete 193-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**Four-page rules and deck recipes**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
@@ -31,12 +31,34 @@ Use the [**interactive Dungeon Deck Builder**](https://tpepels.github.io/rogue_c
 | **Strange Paths** | 39 (13 per depth) | 6 | Standard exploration interspersed with occasional long-term bargains |
 | **Everything Goes** | 79 (29 UPPER / 27 MIDDLE / 23 DEEP) | 10 | All original and expansion Rooms and every unusual combination |
 
-The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rules.html) contains the core rules followed by the Classic and Strange card lists (with copies), Everything Goes setup, and custom-deck guidance. The [**full cards.html catalogue**](https://tpepels.github.io/rogue_cards/cards.html) displays all 175 cards and prints all physical copies without applying any deck preset.\n\nThe builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
+The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rules.html) contains the core rules followed by the Classic and Strange card lists (with copies), Everything Goes setup, and custom-deck guidance. The [**full cards.html catalogue**](https://tpepels.github.io/rogue_cards/cards.html) displays all 193 cards and prints all physical copies without applying any deck preset.\n\nThe builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
 
-**New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. Together with twelve new regional Monsters, they add **36 designs** to the 139 originals, for **175 printable card designs**. They do not introduce new Pacts, delayed debts or universal rules. The legacy 139-card catalogue is preserved for historical comparisons. Everything Goes sessions now include the fifteen extra Rooms, nine extra Objects and twelve new Monsters, with an explicit opt-in mode.
+**Everything Goes expansion:** 15 regional Rooms, 9 practical Tools/Equipment Items, 12 regional Monsters and **18 extra dice-manipulation, tactical and eccentric Items**. They add 54 designs to the 139 originals, for **193 printable card designs**. They do not introduce new Pacts, delayed debts or universal rules. The legacy 139-card catalogue is preserved for historical comparisons. Everything Goes sessions now include the fifteen extra Rooms, nine extra Objects and twelve new Monsters, with an explicit opt-in mode.
 
-**Artwork status:** all 139 original cards and the first 24 expansion designs have their own PNGs. The 12 newly added regional Monsters are deliberately blank until generated; missing Monster artwork is never replaced with another card's illustration.
+**Artwork status:** the 139 originals and first 24 expansion cards have PNGs. The 12 new Monsters and 18 odd Items (numbers 164-193) deliberately show blank illustrations until generated; no borrowed image is displayed.
 
+
+## Eighteen additional odd Items
+
+Everything Goes also includes the eighteen Items in `src/item-expansion.js`.
+Their printed triggers are implemented by `src/odd-item-effects.js`.
+Tools offer **optional dice reactions**: Loaded Coin (+/-1 d6), Crooked
+Die (opposite d6 face), Witchbones (3 or 4), Chaos Idol (two forced rerolls),
+Bent Mirror (replace your d20), Lucky Thread (ADV before your d20),
+and Hooked Chain (one -1 per Room). Jinx Powder rolls two Monster
+behaviour dice and uses the lower. Trick Knife modifies one attack d20 per
+fight; Grave Salt gives +2 ATK/+2 DEF against a CURSED Monster until that
+fight ends. Fever Candle, Thorn Tonic, Sun Charm and Bone Dice help sustain
+a 36-Room run. Mad Compass can reorder two revealed future Rooms; Moon Lens
+prerolls this Room's d6 before choosing. Echo Bell grants one extra use
+of a currently kept Room trophy, and Red String shares the first Hero's
+next d20 result with the other Hero's next d20 roll. No new general
+rulebook-level dice procedure or universal battle reward is introduced.
+
+The base original catalogue and its historical simulation remain unchanged.
+Test the new Items with `npm run test:everything` and use
+`python3 scripts/generate-illustrations.py --dry-run` before paying
+for art generation (artwork numbers 176-193).
 
 ## Everything Goes - extended expedition (2026-10-16)
 
@@ -68,7 +90,7 @@ checks all canonical card mappings and the referenced PNG files.
 
 The [Gemini illustration generator](docs/illustration-generator.md) reads the
 original `CATALOGUE` / `CARD_ART`, 24 additional Rooms and Items from
-`src/print-expansion.js` and 12 new Monsters from `src/monster-expansion.js`.
+`src/print-expansion.js` and 12 new Monsters from `src/monster-expansion.js` and 18 odd Items from `src/item-expansion.js`.
 The expansion art mapping is `PRINT_ONLY_ART`; no CSV is involved.
 It uses the preceding illustration as the only style reference, sends only
 the card name and `scripts/illustration-style.txt`, and writes missing PNGs
@@ -81,7 +103,7 @@ npm run art:missing               # generate all remaining missing images
 ```
 
 The original 139 cards and the first 24 expansion cards already have PNGs.
-`art:check` lists the twelve remaining Monster images (175 total designs);
+`art:check` lists 30 missing Monster and odd-Item images (193 total designs);
 generation adds their `PRINT_ONLY_ART` mappings, not original `CARD_ART` entries. After reviewing the results, commit the new PNGs and the corresponding
 art map. The script uses Gemini 3.1 Flash Image at 1K; it is run locally,
 not by CI.

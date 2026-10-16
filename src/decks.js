@@ -2,9 +2,10 @@
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN_CARDS} from "./tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "./print-expansion.js";
 import {EXTRA_MONSTERS} from "./monster-expansion.js";
+import {ODD_ITEMS} from "./item-expansion.js";
 export const ALL_ROOMS=Object.freeze([...ROOMS,...PRINT_ONLY_ROOMS]);
 export const ALL_MONSTERS=Object.freeze([...MONSTERS,...EXTRA_MONSTERS]);
-export const ALL_OBJECTS=Object.freeze([...OBJECTS,...PRINT_ONLY_ITEMS]);
+export const ALL_OBJECTS=Object.freeze([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS]);
 export const SELECTABLE=Object.freeze([...ALL_ROOMS,...ALL_MONSTERS,...ALL_OBJECTS]);
 export const FIXED_CARDS=Object.freeze([...HEROES,VAULT,...WARDEN_CARDS]);
 export const cardKey=c=>c.type+":"+c.id;
