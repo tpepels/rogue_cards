@@ -21,6 +21,22 @@ seed=20261016
 npm run test:experiment
 npm run test:everything
 
+# Before launching thousands of expensive simulations, execute complete
+# canonical sessions with the exact same event and checkpoint pipeline.
+smoke="results/everything-goes-smoke-${short}"
+if [[ ! -f "${smoke}/validation.json" ]] ||
+   ! grep -q '"decisionReady": true' "${smoke}/validation.json"; then
+ smoke_resume=()
+ if [[ -d "${smoke}" ]]; then smoke_resume+=(--resume); fi
+ echo "Preflight: four actual Everything Goes MCTS expeditions."
+ node scripts/study-everything-goes-deep.mjs \
+  "${smoke_resume[@]}" \
+  --mode survey --runs 4 --pairs-per-item 120 \
+  --workers 2 --hours 3 --budget 2 --knowledge fair \
+  --seed 20261016 --max-game-steps 20000 \
+  --max-search-steps 5000 --out "${smoke}"
+fi
+
 resume=()
 if [[ -d "${output}" ]]; then
  resume+=(--resume)
