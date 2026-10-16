@@ -251,7 +251,7 @@ function work(job,c){
  return summary;
 }
 function coverage(rows){
- const fields=["roomChoices","roomRollBands","objectDraws",
+ const fields=["roomChoices","roomOptionAvailable","roomRollBands","objectDraws",
   "objectAcquisitions","objectRoomExposures",
   "objectEquippedRoomExposures","itemOpportunities","itemUses",
   "itemResults","itemPassiveEffects","objectRollBands",
