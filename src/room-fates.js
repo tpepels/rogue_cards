@@ -22,7 +22,7 @@ const rows=[
   [["TURN","Keep this Room. At Vault, roll OMEN twice and take the higher result; discard this Room."],
    ["BREAK","Keep sideways. Discard to reverse a Room d6 (1↔6, 2↔5, 3↔4). If kept until Vault, discard and use the lower of 2 OMEN rolls."]]],
  ["m-drowned-banner","MIDDLE","The Drowned Banner","altar","SHRINE","A lost army's colours drip black. PACT: one per expedition. Keep sideways after use.",
-  [["RAISE · PACT","Lose 2 HP; keep Room. Vault d6: 1–2 each Hero loses 1 HP; 3–4 Warden loses 3 HP; 5–6 Warden loses d6 HP, next DEF DIS."],
+  [["RAISE · PACT","Lose 2 HP; keep Room. Vault d6: 1–2 each Hero loses 1 HP; 3–4 Warden loses 3 HP; 5–6 Warden loses d6 HP; next Warden attack against a chosen Hero gains ADV."],
    ["BURN","Draw 2 Items; keep this Room. At Vault discard it; Warden's first attack has ADV."]]],
  ["d-sleeping-crown","DEEP","The Sleeping Crown","bones","TREASURE","UNTHRONE: After Phase I, discard 1 MAGIC Item. Opposed d20+WIT vs d20+6: win the Amulet; fail, Warden's next attack has ADV.",
   [["WEAR","Keep this Room. Your first Vault attack has ADV; SEAL costs 1 extra MAGIC Item. With kept Crown of the Unking, unlock UNTHRONE."],
