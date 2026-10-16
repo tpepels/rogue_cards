@@ -14,7 +14,7 @@ const tools=[
   "At Talking Door, discard for ADV on CONFESS. A key cannot guarantee the contents are safe.",["u-gate","u-mimic","m-vault","d-mouth","d-last-chest"],"Old locks fear it.",3],
  ["rope","Knotted Rope","stairs","TOOL",["TOOL"],
   "ONCE PER ROOM: Turn sideways to adjust a bridge/trapdoor d6 by ±1 (within 1–6) or prevent 3 falling damage. Straighten next Room.",null,
-  "At Flooded Chamber, turn sideways instead to cancel first water-caused DEF DIS. Never generates treasure.",["u-fall","m-flood","m-bridge","d-bridge"],"The knots count the dead.",3],
+  "At Flooded Chamber, turn sideways to cancel water-caused ADV on the first Monster attack. Never generates treasure.",["u-fall","m-flood","m-bridge","d-bridge"],"The knots count the dead.",3],
  ["torch","Pitch Torch","wind","TOOL",["FIRE","TOOL"],
   "Carried: counts as FIRE. ONCE PER ROOM, turn sideways to cancel darkness DIS or peek at next Room while in darkness.",null,
   "DISCARD: cure POISONED, or skip a PLANT Monster's next response. At Lamp-Eater, feed it to peek next 2 Rooms.",["u-lamp","u-bookcase","m-crypt","m-fungus","d-shadow","d-choir"],"Smells like bacon.",3],
@@ -58,7 +58,7 @@ const equipment=[
   [["1–2","No protection."],["3–4","Reduce damage by 2."],["5–6","Cancel all damage."]],
   "Turn sideways after rolling; straighten in the next Room.",["d-shadow","m-crypt"],"A ward drawn by a fool.",2],
  ["cursed-mail","Burial Mail","bones","EQUIPMENT",["METAL","CURSED","ARMOUR"],
-  "CURSED ARMOUR: +3 DEF. If you roll a natural 1 on DEF, lose 2 HP.",null,
+  "CURSED ARMOUR: +3 DEF. If a Monster rolls a natural 20 to attack you, lose 2 extra HP.",null,
   "Cannot remove until cleansed in a SHRINE Room.",["u-shrine","m-altar","d-crown"],"Someone is still inside.",1]
 ];
 const companions=[
@@ -81,8 +81,8 @@ const companions=[
 ];
 const relics=[
  ["mirror","Mirror Shard of Yesterday","eye","RELIC",["MAGIC","KNOWLEDGE"],
-  "ONCE PER ROOM, before an opposed d20 defence, roll d6.",
-  [["1–2","The mirror lies: take +2 damage if hit."],["3–4","Gain ADV on that DEF roll."],["5–6","Reflect: the attack misses; deal 2 damage back."]],
+  "ONCE PER ROOM, when a Monster attacks you, before its attack roll, roll d6.",
+  [["1–2","The mirror lies: take +2 damage if hit."],["3–4","The Monster has DIS on this attack."],["5–6","Reflect: the attack misses; deal 2 damage back."]],
   "At Mirror of Regrets, choose 5–6. Against Floating Eye, reflect its next Gaze.",["d-mirror","d-oracle"],"Your reflection arrives late.",1],
  ["skull","Very Helpful Skull","bones","RELIC",["BONE","MAGIC","BARGAIN"],
   "ONCE PER ROOM, ask about the next Room and roll d6.",
