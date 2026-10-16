@@ -15,8 +15,8 @@ test("the 139-card engine catalogue stays unchanged; only printed expansion grow
  assert.equal(SELECTABLE.length,79+61+12);
  assert.equal(Object.keys(CARD_ART).length,139);
  assert.equal(Object.keys(PRINT_ONLY_ART).length,24);
- assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,163); // canonical plus 24 genuinely new identities
- assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,163);
+ assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,175); // canonical plus 24 genuinely new identities
+ assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,175);
 });
 test("15 plain Rooms resolve immediately, never create persistent state or Pacts",()=>{
  for(const c of PRINT_ONLY_ROOMS){

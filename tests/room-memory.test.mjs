@@ -11,7 +11,7 @@ test("expanded Room catalogue, memory cards and fate cards all have executable c
  assert.equal(ROOMS.filter(c=>c.v2.special).length,22);
  assert.equal(ROOMS.filter(c=>c.v2.special?.corridor).length,10);
  assert.equal(ROOMS.filter(c=>c.v2.fate).length,10);
- assert.equal(verifyRoomCoverage().rooms,ROOMS.length+1);
+ assert.equal(verifyRoomCoverage().rooms,ROOMS.length+16);
  assert.equal(new Set(ROOMS.map(c=>c.id)).size,ROOMS.length);
 });
 test("a corridor reveals genuine alternatives and queues the chosen Room",()=>{

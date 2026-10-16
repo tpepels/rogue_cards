@@ -188,7 +188,7 @@ export class ExpeditionState {
   const order=["UPPER","MIDDLE","DEEP","FINAL"];
   const from=order.indexOf(this.room?.stage),to=order.indexOf(destination);
   if(from<0||to<=from)throw Error("Trapdoor must descend to a deeper stage");
-  for(let i=from;i<to;i++)if(order[i]!=="FINAL")this.stageProgress[order[i]]=3;
+  for(let i=from;i<to;i++)if(order[i]!=="FINAL")this.stageProgress[order[i]]=this.roomGoal;
   this.pendingTrapLanding={stage:destination,damage,monster};
   this.trapdoorHistory.push({from:this.room.stage,to:destination,damage,monster,treasure});
   if(treasure)this.draw(treasure);

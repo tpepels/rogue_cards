@@ -100,7 +100,7 @@ test("human-first core rules and printed deck appendix teach the expedition",()=
  for(const phrase of ["What you need","Your quest","Set up the dungeon",
   "Explore a Room","When a Monster appears","Making rolls","The Amulet Vault",
   "ATK","DEF","WIT","ADV","DIS","PARLEY","POISONED","ELBERETH",
-  "OVERCHARGE","REROLL","TRAPDOOR","3 UPPER, 3 MIDDLE and 3 DEEP Rooms",
+  "OVERCHARGE","REROLL","TRAPDOOR","12 UPPER, 12 MIDDLE and 12 DEEP non-Corridor Rooms",
   "After each Hero turn","Never roll HP dice","Phase II"]){
   assert.ok(html.includes(phrase),"Rulebook is missing "+phrase);
  }
@@ -174,7 +174,7 @@ test("learn-to-play tutorial uses the canonical physical cards and is linked fro
   assert.ok(CATALOGUE.some(c=>c.type===type&&c.id===id),type+":"+id);
   assert.ok(page.includes('"'+id+'"')||page.includes("'"+id+"'"),"Tutorial reference: "+id);
  }
- assert.match(page,/3 UPPER.*3 MIDDLE.*3 DEEP/s);
+ assert.match(page,/12 UPPER.*12 MIDDLE.*12 DEEP/s);
  assert.match(page,/one action in combat/i);
  assert.match(page,/tut-scroll/);
  assert.match(readFileSync("src/tabletop-app.js","utf8"),/tutorial\.html/);

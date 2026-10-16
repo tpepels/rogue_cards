@@ -63,7 +63,7 @@ test("Extra Monsters receive legal Parley actions and EAT on defeat",()=>{
 test("Print expansion healing and equipment can affect the canonical state",()=>{
  const s=createGame({seed:16,gameMode:"everything-goes"}),h=s.heroes[0];
  const helm=PRINT_ONLY_ITEMS.find(x=>x.id==="ex-buckler");
- s.add(h,helm);
+ s.add(h,helm);h.slots.armour=helm;
  assert.equal(s.stats(h).def,h.card.def+2);
  assert.ok(enterNextRoom(s).room);
 });
