@@ -105,5 +105,17 @@ export const PRINT_ONLY_ART=Object.freeze({
  "item:ex-spear":"160_short_spear.png",
  "item:ex-jerkin":"161_leather_jerkin.png",
  "item:ex-helm":"162_iron_helm.png",
- "item:ex-buckler":"163_wooden_buckler.png"
+ "item:ex-buckler":"163_wooden_buckler.png",
+ "monster:drain-leech":"164_drain_leech.png",
+ "monster:keyhole-mimic":"165_keyhole_mimic.png",
+ "monster:dust-skeleton":"166_dust_skeleton.png",
+ "monster:lantern-moth":"167_lantern_moth.png",
+ "monster:wax-golem":"168_wax_golem.png",
+ "monster:drowned-jailer":"169_drowned_jailer.png",
+ "monster:ropebound-hound":"170_ropebound_hound.png",
+ "monster:bell-beetle":"171_bell_beetle.png",
+ "monster:ash-penitent":"172_ash_penitent.png",
+ "monster:vault-parasite":"173_vault_parasite.png",
+ "monster:bone-cantor":"174_bone_cantor.png",
+ "monster:glass-revenant":"175_glass_revenant.png"
 });
