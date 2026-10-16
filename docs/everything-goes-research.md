@@ -52,6 +52,26 @@ The full protocol can be expensive. CPU workers can be reduced using the
 direct script's `--workers` option; worker count and walltime do not
 change the experiment signature. The wrapper itself fixes six workers.
 
+## Pre-registered balance criteria
+
+Targets are **locked before the large simulation** in
+[`everything-goes-targets.md`](everything-goes-targets.md), with exact
+numbers and evidence gates in
+[`config/everything-goes-targets.v1.json`](../config/everything-goes-targets.v1.json).
+The target file's SHA-256 is included in the experiment design and
+manifest; the runner will refuse an incompatible resume.
+
+Outputs now also include `targets.md` / `targets.json` with all ten
+target-to-result comparisons, plus `item-audit.csv` /
+`item-audit.json` covering all 79 Items, as well as the rest of the
+193-design printed catalogue. Unselected Item-supply target #7 stays
+`UNSET`; physical minutes are `NOT_MEASURED_IN_SIMULATION`.
+
+The red-string matched experiment uses **two-Hero parties**, because
+it cannot activate in a solo party. Other new Item interventions use
+solo Heroes. Neither starting-gift intervention contaminates the
+organic 3,600-run balance survey.
+
 ## Exact outputs
 
 The automatically revision-pinned folder is
@@ -67,6 +87,8 @@ The automatically revision-pinned folder is
 | `paired-item-effects.csv` | Pair-level difference between extra odd Item and extra Dry Rations for each matched Hero+seed, including win, Rooms, fights, total HP damage, Items drawn, actions, search work, etc. |
 | `coverage.json` | All engine metrics combined, complete card universes, non-encountered designs and gaps |
 | `summary.json` | Structured means, 95% confidence intervals, Hero/party breakdown, all Monster/Item/Room aggregates, matched outcomes and explicit interpretation limits |
+| `targets.md`, `targets.json` | Pre-registered user-defined targets versus observed values with status and required evidence |
+| `item-audit.csv`, `item-audit.json` | Every Item acquired/offered/used/activated, underexposure and focused execution-test gaps |
 | `summary.md` | Human-readable overview, all 24 Monsters, 79 Items and 79 Rooms, plus decisions and unobserved designs |
 | `validation.json` | Checkpoints present, full completion, source pinning, no acceptance of truncated runs, gaps and decision readiness |
 
