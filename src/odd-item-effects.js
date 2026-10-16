@@ -10,6 +10,10 @@ const spend=(s,h,card,context,perform)=>s.directItem(h,card,context,()=>{
 const decision=(s,context,modes)=>s.chooseEffect(context,modes,"save");
 const offer=(s,h,card,context,alternatives)=>{
  if(!card||h.hp<=0)return "save";
+ // This is a REAL timing window: record opportunity even if the Hero
+ // declines to spend the card. Acquisitions and uses alone are biased.
+ if(alternatives.length)
+  s.noteOptions([{card,mode:context,phase:"odd-item"}]);
  return decision(s,"odd-item:"+card.id+":"+context,["save",...alternatives]);
 };
 
