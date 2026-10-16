@@ -159,11 +159,28 @@ test("shared baseline exposes card-specific evidence and refuses mismatches",()=
   result:{
    won:1,escaped:0,decisions:110,searches:30,
    coverage:{rooms:[a.id],itemDraws:{[b.id]:2},
-    monsterVisits:{[monster.id]:3}}
+    monsterVisits:{[monster.id]:3},
+    itemUses:{[b.id]:4},
+    itemPassives:{[b.id]:2},
+    monsterBehaviorBands:{
+     [monster.id+":1-2"]:3,[monster.id+":3-4"]:2
+    }}
   }};
  assert.equal(sharedControlForCard(source,a,1,config).exposure,1);
  assert.equal(sharedControlForCard(source,b,1,config).exposure,2);
  assert.equal(sharedControlForCard(source,monster,1,config).exposure,3);
+ assert.equal(sharedControlForCard(source,monster,1,config).monsterBehaviors,5);
+ assert.equal(sharedControlForCard(source,b,1,config).itemUses,4);
+ assert.equal(sharedControlForCard(source,b,1,config).itemPassives,2);
+ assert.equal(sharedControlForCard(source,a,1,config).itemUses,null);
+ assert.equal(sharedControlForCard(source,a,1,config).monsterBehaviors,null);
+ const absent=ALL_CARD_ROSTER.find(c=>c.kind==="item"&&c.id!==b.id);
+ assert.equal(sharedControlForCard(source,absent,1,config).itemUses,0);
+ assert.equal(sharedControlForCard(source,absent,1,config).itemPassives,0);
+ assert.throws(()=>sharedControlForCard({
+  ...source,result:{...source.result,
+   coverage:{rooms:[a.id],itemDraws:{},monsterVisits:{}}}
+ },b,1,config),/missing canonical coverage/);
  const fixed=ALL_CARD_ROSTER.find(c=>c.kind==="fixed"&&c.id==="vault");
  const vaultSource={...source,result:{...source.result,
   coverage:{...source.result.coverage,vaultEntered:true}}};

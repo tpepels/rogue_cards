@@ -162,6 +162,14 @@ export function runCanonicalCardExpedition(session,card,c,runSeed,
    rooms:[...s.seenRooms],
    itemDraws:{...s.metrics.objectDraws},
    monsterVisits:{...s.metrics.monsterVisits},
+   // Save every Item and Monster counter, not only encounter counts.
+   // These are terminal telemetry snapshots; copying numeric values
+   // avoids retaining mutable metrics or inventing missing Item uses.
+   itemUses:Object.fromEntries(Object.entries(s.metrics.itemUses).map(
+    ([id,entry])=>[id,entry.total])),
+   itemPassives:Object.fromEntries(Object.entries(
+    s.metrics.itemPassiveEffects).map(([id,entry])=>[id,entry.triggers])),
+   monsterBehaviorBands:{...s.metrics.monsterBehaviorBands},
    vaultEntered:Boolean(s.metrics.vaultEntered)
   }}:{}),
   itemUses:card?.kind==="item"?
@@ -195,10 +203,22 @@ export function sharedControlForCard(baseline,card,index,c){
  const reference=partiesForCard(card,index).reference;
  if(!baseline||baseline.key!==key||baseline.seed!==seed||
    JSON.stringify(baseline.reference)!==JSON.stringify(reference)||
-   !baseline.result?.coverage)
+   !baseline.result?.coverage||
+   !baseline.result.coverage.itemUses||
+   !baseline.result.coverage.itemPassives||
+   !baseline.result.coverage.monsterBehaviorBands)
   throw Error("Shared baseline mismatch or missing canonical coverage: "+key);
  const {coverage,...common}=baseline.result;
- return {...common,exposure:
+ // runCanonicalCardExpedition(null) records null for card-specific
+ // telemetry. A cached control must reproduce the exact numerical
+ // counters returned by a direct card-specific full expedition.
+ return {...common,
+  itemUses:card.kind==="item"?(coverage.itemUses[card.id]||0):null,
+  itemPassives:card.kind==="item"?(coverage.itemPassives[card.id]||0):null,
+  monsterBehaviors:card.kind==="monster"?
+   Object.entries(coverage.monsterBehaviorBands).reduce((count,[k,v])=>
+    count+(k.startsWith(card.id+":")?v:0),0):null,
+  exposure:
   card.kind==="room"?Number(coverage.rooms.includes(card.id)):
   card.kind==="item"?(coverage.itemDraws[card.id]||0):
   card.kind==="monster"?(coverage.monsterVisits[card.id]||0):
