@@ -135,13 +135,25 @@ class IllustrationGeneratorTests(unittest.TestCase):
         self.assertEqual(len({c["key"] for c in expansion}), 36)
         new_monsters = [c for c in expansion if c["key"].startswith("monster:")]
         self.assertEqual(len(new_monsters), 12)
-        self.assertEqual(len([c for c in expansion if not c["filename"]]), 12)
         self.assertEqual([c["number"] for c in new_monsters], list(range(164, 176)))
+        # Generated cards gradually acquire mappings; CI must remain valid
+        # when the user has completed any subset (or all) of the images.
+        for card in new_monsters:
+            if card["filename"] is not None:
+                self.assertEqual(
+                    card["filename"],
+                    f"{card['number']:03d}_{module.slug(card['title'])}.png",
+                )
         self.assertEqual(module.mapping_target(expansion[0])[1], "PRINT_ONLY_ART")
         self.assertEqual(module.mapping_target(new_monsters[0])[1], "PRINT_ONLY_ART")
 
     def test_new_monster_illustrations_get_stable_164_to_175_numbers(self):
         cards = module.get_catalogue()
+        # Recreate the initial 163-art state, even after some Monsters have
+        # been illustrated in the real repository.
+        cards = [dict(c, filename=None) if c["key"].startswith("monster:")
+                 and c["mapping_source"] == "print-only" else dict(c)
+                 for c in cards]
         with tempfile.TemporaryDirectory() as tmp:
             art_dir = Path(tmp)
             for card in cards:
