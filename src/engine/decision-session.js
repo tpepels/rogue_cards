@@ -526,7 +526,7 @@ export function submitDecision(session,action,{
  transactional=true,observeResult=true,recordHistory=true,
  verifiedLegalActions=null,fastPileClones=false,
  reuseEmptyReplaySwitches=false,directSettlements=false,
- fastMetricClones=false,profileEvent=null
+ fastMetricClones=false,profileEvent=null,onCommittedDice=null
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
@@ -537,6 +537,8 @@ export function submitDecision(session,action,{
   throw Error("directSettlements must be boolean");
  if(typeof fastMetricClones!=="boolean")
   throw Error("fastMetricClones must be boolean");
+ if(onCommittedDice!==null&&typeof onCommittedDice!=="function")
+  throw Error("onCommittedDice must be a function");
  if(profileEvent!==null&&typeof profileEvent!=="function")
   throw Error("profileEvent must be a function");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
@@ -574,9 +576,12 @@ export function submitDecision(session,action,{
  if(transactional&&!switches.length&&
     safeDirectAction(session,action,directSettlements)){
   const rollback=beginDirectTransaction(session,action);
-  try{return submitDecisionDirect(session,action,{
-   observeResult,recordHistory,verifiedAction:verifiedRoot})}
-  catch(error){rollback();throw error}
+  try{
+   const result=submitDecisionDirect(session,action,{
+    observeResult,recordHistory,verifiedAction:verifiedRoot});
+   if(onCommittedDice)onCommittedDice([]);
+   return result;
+  }catch(error){rollback();throw error}
  }
  const waiting=session.pendingNested;
  let root,responses;
@@ -595,6 +600,18 @@ export function submitDecision(session,action,{
  };
  if(profileEvent)profileEvent("canonicalFork",session.phase,
   performance.now()-forkStarted);
+ // Trace ONLY actual committed dice, never hypothetical MCTS draws.
+ // Nested choices replay the same root action; pending replays are not
+ // emitted, and the RNG is restored before the real state is updated.
+ const diceTape=onCommittedDice?[]:null;
+ const originalDie=fork.state.rng.die;
+ if(diceTape)fork.state.rng.die=sides=>{
+  const face=originalDie(sides);
+  diceTape.push({sides,face,roomId:fork.state.room?.id??null,
+   monsterId:fork.state.monster?.id??null,
+   stage:fork.state.room?.stage??null});
+  return face;
+ };
  let position=0;
  fork.state._decisionHook=event=>{
   const actions=canonicalReactionActions(fork.state,event);
@@ -621,6 +638,7 @@ export function submitDecision(session,action,{
    observeResult,recordHistory,verifiedAction:verifiedRoot});
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
+  if(diceTape)fork.state.rng.die=originalDie;
   // Preserve the canonical game-state object identity across accepted
   // decisions. Forked Hero/Item aliases remain consistent *within* it.
   const real=session.state;
@@ -628,6 +646,7 @@ export function submitDecision(session,action,{
   Object.assign(real,fork.state);
   fork.state=real;
   Object.assign(session,fork,{pendingNested:null});
+  if(diceTape)onCommittedDice(diceTape);
   // submitDecisionDirect already produced this canonical observation
   // after all printed effects settled; enumerating actions again here
   // was duplicate work on every committed decision.
