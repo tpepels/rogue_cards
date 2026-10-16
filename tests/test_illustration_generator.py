@@ -112,6 +112,18 @@ class IllustrationGeneratorTests(unittest.TestCase):
         self.assertIn('"item:ex-bandages":"110_antidote.png"', updated)
         self.assertEqual(updated.count('"room:ex-u-guard-cell"'), 1)
 
+    def test_missing_monster_mapping_is_appended_only_after_generation(self):
+        source = (
+            'export const PRINT_ONLY_ART=Object.freeze({\n'
+            ' "item:ex-buckler":"163_wooden_buckler.png"\n'
+            '});\n'
+        )
+        mapped = module.add_mapping(source, "monster:drain-leech",
+                                    "164_drain_leech.png", None, "PRINT_ONLY_ART")
+        self.assertIn('"item:ex-buckler":"163_wooden_buckler.png",', mapped)
+        self.assertIn('"monster:drain-leech":"164_drain_leech.png"', mapped)
+        self.assertEqual(mapped.count('"monster:drain-leech"'), 1)
+
     def test_physical_catalogue_covers_print_only_cards(self):
         cards = module.get_catalogue()
         self.assertEqual(len(cards), 175)

@@ -77,9 +77,10 @@ export const PRINT_ONLY_ROOMS=Object.freeze(R.map((row,i)=>{
 export const PRINT_ONLY_ITEMS=Object.freeze(O.map((row,i)=>Object.freeze({...item(...row),v2:{...item(...row).v2,number:155+i}})));
 export const PRINT_ONLY_CARDS=Object.freeze([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS]);
 
-// Temporary borrowed filenames are kept ONLY for the illustration generator,
-// which replaces each with its own 140+ image when complete. The renderer leaves
-// a blank paper illustration area while a card's own artwork is still missing.
+// Dedicated artwork for the 24 added Rooms and Items (numbers 140-163).
+// The twelve new regional Monsters (164-175) acquire individual entries here
+// only after the illustration generator has successfully saved their PNGs.
+// Until then, their printable card faces deliberately show a blank image area.
 export const PRINT_ONLY_ART=Object.freeze({
  "room:ex-u-guard-cell":"140_empty_guard_cell.png",
  "room:ex-u-slick-passage":"141_slick_passage.png",

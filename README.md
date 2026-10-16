@@ -35,7 +35,7 @@ The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rul
 
 **New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. Together with twelve new regional Monsters, they add **36 designs** to the 139 originals, for **175 printable card designs**. They do not introduce new Pacts, delayed debts or universal rules. The legacy 139-card catalogue is preserved for historical comparisons. Everything Goes sessions now include the fifteen extra Rooms, nine extra Objects and twelve new Monsters, with an explicit opt-in mode.
 
-**Artwork status:** the 36 extra cards deliberately have blank illustration areas until their own artwork is generated. Their old borrowed-art names remain in `PRINT_ONLY_ART` only so the generator can identify missing art; those placeholders are not displayed on the website or printed.
+**Artwork status:** all 139 original cards and the first 24 expansion designs have their own PNGs. The 12 newly added regional Monsters are deliberately blank until generated; missing Monster artwork is never replaced with another card's illustration.
 
 
 ## Everything Goes - extended expedition (2026-10-16)
