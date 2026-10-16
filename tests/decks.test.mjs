@@ -6,7 +6,7 @@ import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS,PRINT_ONLY_ART} from "../src/print-exp
 import {PRESETS,ALL_ROOMS,ALL_OBJECTS,SELECTABLE,FIXED_CARDS,selectionForPreset,selectionSummary,physicalDeck,selectionGroups,cardKey} from "../src/decks.js";
 import {assetPath,cardMarkup,printSheets,CARD_ART} from "../src/tabletop-view.js";
 const region=["UPPER","MIDDLE","DEEP"];
-test("the 139-card legacy catalogue remains intact alongside 36 new printable designs",()=>{
+test("the 139-card legacy catalogue remains intact alongside 54 new printable designs",()=>{
  assert.equal(CATALOGUE.length,139);
  assert.equal(PRINT_ONLY_ROOMS.length,15);
  assert.equal(PRINT_ONLY_ITEMS.length,9);

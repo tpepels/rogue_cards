@@ -78,8 +78,8 @@ export const PRINT_ONLY_ITEMS=Object.freeze(O.map((row,i)=>Object.freeze({...ite
 export const PRINT_ONLY_CARDS=Object.freeze([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS]);
 
 // Dedicated artwork for the 24 added Rooms and Items (numbers 140-163).
-// The twelve new regional Monsters (164-175) acquire individual entries here
-// only after the illustration generator has successfully saved their PNGs.
+// The new regional Monsters (164-175) and unusual Items (176-193) acquire
+// individual entries here only after their PNGs have been saved successfully.
 // Until then, their printable card faces deliberately show a blank image area.
 export const PRINT_ONLY_ART=Object.freeze({
  "room:ex-u-guard-cell":"140_empty_guard_cell.png",
