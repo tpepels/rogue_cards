@@ -65,6 +65,19 @@ test("core rules and two deck appendix pages print as four A4 sheets without cli
   width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,
   clipY:el.scrollHeight-el.clientHeight,clipX:el.scrollWidth-el.clientWidth
  })));
+ const coreDimensions=await page.locator(".sheet").nth(1).evaluate(pageEl=>({
+  pageHeight:pageEl.getBoundingClientRect().height,
+  columns:[...pageEl.querySelector(".cols").children].map((column,index)=>({
+   index,height:column.getBoundingClientRect().height,
+   bottom:column.getBoundingClientRect().bottom-pageEl.getBoundingClientRect().top,
+   sections:[...column.querySelectorAll("section")].map(section=>({
+    title:section.querySelector("h2")?.textContent,
+    bottom:section.getBoundingClientRect().bottom-pageEl.getBoundingClientRect().top,
+    height:section.getBoundingClientRect().height
+   }))
+  }))
+ }));
+ console.log("PRINT CORE LAYOUT",JSON.stringify(coreDimensions));
  for(const [i,size] of sizes.entries()){
   expect(size.width,"A4 page width "+i).toBeLessThanOrEqual(192*96/25.4+2);
   expect(size.height,"A4 page height "+i).toBeLessThanOrEqual(279*96/25.4+2);
