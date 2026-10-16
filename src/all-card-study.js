@@ -111,7 +111,11 @@ export function runCanonicalCardExpedition(session,card,c,runSeed,
   ...(c.nativeHash?{nativeHash:true}:{})
  };
  for(;session.phase!=="terminal"&&decisions<c.maxGameSteps;decisions++){
-  const legal=sessionActions(session);
+  // Issue a canonical legal-action ticket once per live decision.
+  // The engine can then verify the selected action without rebuilding the
+  // same full equipment + Room + Hero legal list on commit. This is the
+  // existing production decision API, not a reduced legal-action set.
+  const legal=sessionActions(session,{issueTicket:c.issuedActions!==false});
   if(!legal.length)throw Error("Nonterminal source has zero legal decisions");
   const requiresSearch=legal.length>1;
   const chosen=selectSessionPolicyAction(session,policy,{
@@ -121,7 +125,8 @@ export function runCanonicalCardExpedition(session,card,c,runSeed,
    mctsOptimizations:fast
   });
   if(requiresSearch)searches++;
-  submitDecision(session,chosen,{observeResult:false,recordHistory:false});
+  submitDecision(session,chosen,{observeResult:false,recordHistory:false,
+   ...(c.issuedActions===false?{}:{verifiedLegalActions:legal})});
  }
  if(session.phase!=="terminal")throw Error("Canonical expedition exceeded decision cap");
  const s=session.state;

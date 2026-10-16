@@ -11,7 +11,7 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync,renameSync,readdirSync}
 import {resolve,join,dirname} from "node:path";
 import {execFileSync} from "node:child_process";
 import {ALL_CARD_ROSTER,getCard,cardKey,evaluateCardTrial,cardSummary,
- sharedControlKey,evaluateSharedControl}
+ sharedControlKey,evaluateSharedControl,sharedControlForCard}
  from "../src/all-card-study.js";
 import {loadNativeMcts} from "../src/native-mcts-node.js";
 const uint=(raw,name,min,max)=>{
@@ -81,6 +81,13 @@ const save=(file,payload)=>{
 };
 const checkpointName=(card,index)=>
  card.kind+"-"+card.id+"--"+String(index).padStart(6,"0")+".json";
+// Baselines are resumable just like treated trials. The full revision and
+// policy are pinned by manifest.json; each record verifies its seed/party.
+const referenceFile=(out,key)=>{
+ if(!/^\d{6}:[a-z0-9-]+(?:,[a-z0-9-]+)?$/.test(key))
+  throw Error("Invalid shared reference key "+key);
+ return join(out,"references",key.replace(":","--").replace(",","_")+".json");
+};
 const pct=n=>(n*100).toFixed(2)+"%";
 function report(c,rev,records,failures=[]){
  const result=cardSummary([...records.values()],c.minPaired);
@@ -174,20 +181,22 @@ function preflight(c,rev){
 if(!isMainThread){
  if(workerData.config.nativeHash)loadNativeMcts({required:true});
  parentPort.on("message",m=>{
-  if(m.type!=="batch")return;
   let current=null;
   try{
-   const first=m.cards[0];
-   // One full reference session for exactly matching seed/party/policy.
-   // The printed engine and the future MCTS choice policy are unchanged.
-   const baseline=evaluateSharedControl(
-    getCard(first.kind,first.cardId),m.index,workerData.config);
+   if(m.type==="reference"){
+    const card=getCard(m.card.kind,m.card.cardId);
+    if(!card)throw Error("Unknown reference card");
+    const baseline=evaluateSharedControl(card,m.index,workerData.config);
+    parentPort.postMessage({type:"reference-done",baseline});
+    return;
+   }
+   if(m.type!=="batch")throw Error("Unknown work type "+m.type);
    for(const entry of m.cards){
     current=entry;
     const card=getCard(entry.kind,entry.cardId);
     if(!card)throw Error("Unknown printed card "+entry.kind+":"+entry.cardId);
     const result=evaluateCardTrial(card,m.index,workerData.config,
-     baseline);
+     m.baseline);
     parentPort.postMessage({type:"result",result});
    }
    parentPort.postMessage({type:"batch-done",index:m.index});
@@ -201,7 +210,7 @@ if(!isMainThread){
  if(!rev)throw Error("Git revision is required");
  if(c.nativeHash)loadNativeMcts({required:true});
  if(c.resume&&c.dryRun)throw Error("Use --resume OR --dry-run");
- const design={schema:2,revision:rev,seed:c.seed,
+ const design={schema:3,revision:rev,seed:c.seed,
   runsPerCard:c.runsPerCard,budget:c.budget,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
   minPaired:c.minPaired,selected:c.cards.map(cardKey),
@@ -218,6 +227,7 @@ if(!isMainThread){
    throw Error("Output directory is missing");
   if(!c.resume){
    mkdirSync(join(c.out,"checkpoints"),{recursive:true});
+   mkdirSync(join(c.out,"references"),{recursive:true});
    save(join(c.out,"manifest.json"),design);
   }else{
    const old=JSON.parse(readFileSync(join(c.out,"manifest.json"),"utf8"));
@@ -237,116 +247,194 @@ if(!isMainThread){
    if(complete.has(key))throw Error("Duplicate checkpoint "+key);
    complete.set(key,row);
   }
-  const todo=[];
-  let referenceBatches=0,treatedJobs=0;
-  // Keep every sample index independent. Within an index, group only
-  // genuinely identical control parties and independent source RNG seeds.
-  // Short chunks checkpoint every treated card, preserving all completed
-  // work even if a later treatment fails or a worker is terminated.
+
+  // Build one reference task per unique (trial index, party), independently
+  // of the number of card chunks. Save completed references on disk so
+  // interrupted studies do not redo costly full-game MCTS controls.
+  const cachedReferences=new Map();
+  const missingReferences=new Map();
+  const referenceJobs=[];
+  const readyBatches=[];
+  let remainingCards=0,remainingBatches=0,cachedReferenceGroups=0;
+  const controlConfig={
+   seed:c.seed,budget:c.budget,maxSearchSteps:c.maxSearchSteps,
+   maxGameSteps:c.maxGameSteps,nativeHash:c.nativeHash
+  };
   for(let i=0;i<c.runsPerCard;i++){
    const groups=new Map();
    for(const card of c.cards){
     if(complete.has(cardKey(card)+"#"+i))continue;
-    const reference=sharedControlKey(card,i,c);
-    if(!groups.has(reference))groups.set(reference,[]);
-    groups.get(reference).push({kind:card.kind,cardId:card.id});
-    treatedJobs++;
+    const key=sharedControlKey(card,i,c);
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push({kind:card.kind,cardId:card.id});
+    remainingCards++;
    }
-   for(const [reference,cards] of groups)
+   for(const [key,cards] of groups){
+    const chunks=[];
     for(let j=0;j<cards.length;j+=c.batchSize){
-     const chunk=cards.slice(j,j+c.batchSize);
-     referenceBatches++;
-     todo.push({type:"batch",reference,index:i,cards:chunk});
+     chunks.push({type:"batch",reference:key,index:i,
+      cards:cards.slice(j,j+c.batchSize)});
+     remainingBatches++;
     }
+    let baseline=cachedReferences.get(key);
+    if(!baseline&&existsSync(referenceFile(c.out,key))){
+     baseline=JSON.parse(readFileSync(referenceFile(c.out,key),"utf8"));
+     cachedReferences.set(key,baseline);
+     cachedReferenceGroups++;
+    }
+    if(baseline){
+     // Validate all cached controls against a real printed card before
+     // giving the worker any data. A mismatched manifest fails closed.
+     const first=getCard(cards[0].kind,cards[0].cardId);
+     sharedControlForCard(baseline,first,i,controlConfig);
+     for(const batch of chunks)readyBatches.push({...batch,baseline});
+    }else{
+     if(missingReferences.has(key))
+      throw Error("Duplicate shared reference group "+key);
+     missingReferences.set(key,chunks);
+     referenceJobs.push({type:"reference",reference:key,index:i,
+      card:cards[0]});
+    }
+   }
   }
   report(c,rev,complete);
   console.error(JSON.stringify({
-   remainingCardJobs:treatedJobs,
-   sharedReferenceBatches:referenceBatches,
-   fullExpeditionsUpperBound:treatedJobs+referenceBatches,
-   separateReferenceUpperBound:treatedJobs*2,
-   note:"Estimated expedition count, NOT a measured speedup"
+   remainingCardJobs:remainingCards,
+   referenceGroupsToCompute:referenceJobs.length,
+   referenceGroupsReused:cachedReferenceGroups,
+   treatmentBatches:remainingBatches,
+   fullExpeditionsUpperBound:remainingCards+referenceJobs.length,
+   note:"Structural work count only; all saved results are canonical"
   }));
-  const workers=Array.from({length:Math.min(c.workers,todo.length)},
-   ()=>new Worker(new URL(import.meta.url),{workerData:{config:{
-    seed:c.seed,budget:c.budget,maxSearchSteps:c.maxSearchSteps,
-    maxGameSteps:c.maxGameSteps,nativeHash:c.nativeHash
-   }}}));
+  const workers=Array.from({
+   length:Math.min(c.workers,referenceJobs.length+remainingBatches)
+  },()=>new Worker(new URL(import.meta.url),{
+   workerData:{config:controlConfig}
+  }));
   const assigned=new Map();
-  let at=0,closed=false;
+  let referenceCursor=0,batchCursor=0,closed=false;
   const deadline=Date.now()+c.hours*3600000;
   const saveTimer=setInterval(()=>{
    const stats=report(c,rev,complete,errors);
    console.error("All-card checkpoints: "+stats.completedJobs+"/"+
-    stats.plannedJobs+"; paired="+stats.pairedJobs);
+    stats.plannedJobs+"; paired="+stats.pairedJobs+
+    "; pending references="+missingReferences.size);
   },60000);
   let watchdog=null;
   try{
    await new Promise((done,reject)=>{
-    const queueNext=worker=>{
-     if(closed||Date.now()>=deadline||at>=todo.length){
-      if(!assigned.size)done();return;
+    const fail=error=>{
+     if(closed)return;
+     closed=true;reject(error);
+    };
+    // Feed all seven cores with independent treatments as soon as the
+    // corresponding control is ready. Avoid binding many treatments to
+    // one worker and leaving the others waiting on a long card.
+    const schedule=()=>{
+     if(closed)return;
+     const timedOut=Date.now()>=deadline;
+     if(!timedOut)for(const worker of workers){
+      if(assigned.has(worker))continue;
+      let job=null;
+      if(batchCursor<readyBatches.length)
+       job=readyBatches[batchCursor++];
+      else if(referenceCursor<referenceJobs.length)
+       job=referenceJobs[referenceCursor++];
+      if(job){
+       assigned.set(worker,{job,started:Date.now(),progress:0});
+       worker.postMessage(job);
+      }
      }
-     const job=todo[at++];
-     assigned.set(worker,{job,started:Date.now(),progress:0});
-     worker.postMessage(job);
+     if(assigned.size===0&&(timedOut||
+      (batchCursor===readyBatches.length&&
+       referenceCursor===referenceJobs.length&&
+       missingReferences.size===0)))done();
     };
     watchdog=setInterval(()=>{
      if(closed)return;
-     for(const [worker,entry] of assigned){
+     for(const entry of assigned.values()){
       if(Date.now()-entry.started<=c.jobMinutes*60000)continue;
-      closed=true;
-      reject(Error("Card trial timed out in batch "+entry.job.reference+
+      fail(Error("Canonical all-card job timed out: "+
+       entry.job.type+" "+entry.job.reference+
        " index "+entry.job.index+" card "+entry.progress));
       return;
      }
+     schedule();
     },10000);
-    if(!workers.length)done();
     for(const worker of workers){
      worker.on("message",message=>{
       if(closed)return;
       const entry=assigned.get(worker);
-      if(!entry){closed=true;reject(Error("Unsolicited worker reply"));return;}
+      if(!entry){
+       fail(Error("Unsolicited canonical worker reply"));return;
+      }
       if(message.type==="failed"){
        errors.push(message);
-       closed=true;reject(Error("Canonical card trial failed: "+
+       fail(Error("Canonical all-card job failed: "+
         JSON.stringify(message)));return;
       }
+      if(message.type==="reference-done"){
+       if(entry.job.type!=="reference"||
+        message.baseline?.key!==entry.job.reference){
+        fail(Error("Mismatched canonical reference checkpoint"));return;
+       }
+       try{
+        const card=getCard(entry.job.card.kind,entry.job.card.cardId);
+        sharedControlForCard(message.baseline,card,
+         entry.job.index,controlConfig);
+        save(referenceFile(c.out,entry.job.reference),message.baseline);
+       }catch(error){fail(error);return;}
+       const waiting=missingReferences.get(entry.job.reference);
+       if(!waiting){
+        fail(Error("No batches waiting for reference"));return;
+       }
+       cachedReferences.set(entry.job.reference,message.baseline);
+       missingReferences.delete(entry.job.reference);
+       for(const batch of waiting)readyBatches.push({
+        ...batch,baseline:message.baseline
+       });
+       assigned.delete(worker);
+       schedule();
+       return;
+      }
       if(message.type==="result"){
+       if(entry.job.type!=="batch"){
+        fail(Error("Treatment result for reference job"));return;
+       }
        const expected=entry.job.cards[entry.progress];
        const result=message.result;
        if(!expected||!result||
         result.card!==expected.kind+":"+expected.cardId||
         result.index!==entry.job.index){
-        closed=true;reject(Error("Mismatched canonical batch checkpoint"));return;
+        fail(Error("Mismatched canonical card checkpoint"));return;
        }
-       save(join(c.out,"checkpoints",checkpointName(
-        getCard(expected.kind,expected.cardId),result.index)),result);
+       try{
+        save(join(c.out,"checkpoints",checkpointName(
+         getCard(expected.kind,expected.cardId),result.index)),result);
+       }catch(error){fail(error);return;}
        complete.set(result.card+"#"+result.index,result);
        entry.progress++;
        entry.started=Date.now();
        return;
       }
       if(message.type!=="batch-done"||
+       entry.job.type!=="batch"||
        message.index!==entry.job.index||
        entry.progress!==entry.job.cards.length){
-       closed=true;reject(Error("Incomplete or unexpected batch completion"));return;
+       fail(Error("Unexpected or incomplete canonical worker batch"));return;
       }
-      assigned.delete(worker);queueNext(worker);
-      if(!assigned.size&&(at>=todo.length||Date.now()>=deadline))
-       done();
+      assigned.delete(worker);
+      schedule();
      });
-     worker.on("error",err=>{
-      if(!closed){closed=true;reject(err);}
-     });
+     worker.on("error",fail);
      worker.on("exit",code=>{
-      if(code!==0&&!closed){closed=true;
-       reject(Error("Card worker terminated with "+code));}
+      if(code!==0)fail(Error("Canonical worker exited with "+code));
      });
-     queueNext(worker);
     }
+    schedule();
    });
   }finally{
+   closed=true;
    clearInterval(saveTimer);
    if(watchdog!==null)clearInterval(watchdog);
    await Promise.all(workers.map(w=>w.terminate()));

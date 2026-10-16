@@ -58,15 +58,23 @@ Resume **the same revision and all experimental settings** after a time cap:
 
 The queue interleaves sample indices across all printed cards. Cards sharing
 the exact same initial seed, Hero party, MCTS policy and rules reuse a single
-complete **canonical** reference expedition within a bounded batch. Every
-individual card still receives its own fully played canonical intervention;
-no outcome is inferred from a simplified simulation. Fixed Vault/Warden
-observations can also reuse these already-completed reference expeditions.
+complete **canonical** reference expedition across all worker batches.
+Reference outcomes are written atomically to `references/` and reused after
+interruption; only one worker computes each missing reference. Other workers
+can immediately process individual card batches when their shared reference
+is ready. Every card's intervention still uses a fully played canonical
+expedition; no outcome is inferred from a simplified simulation. Fixed
+Vault/Warden observations reuse the same real completed references.
 
-All per-card checkpoints remain atomic and resumable. The source-seed schedule
+All per-card checkpoints remain atomic and resumable. The canonical policy
+now issues legal-action tickets once per actual decision, avoiding a duplicate
+legality enumeration during transition without changing the legal action set.
+The reference cache and trial checkpoints are restricted to a single pinned
+Git revision, combat implementation and search policy. The source-seed schedule
 is intentionally different from the legacy runner and cannot be combined with
-earlier results. The per-batch limit defaults to 24 cards (`--batch-size 24`);
-a resumed study must keep the same batch size and other manifest parameters.
+earlier results. The manifest schema is 3; do not resume earlier schema 2
+experiments with it. The per-batch limit defaults to 24 cards
+(`--batch-size 24`); a resumed study must keep its exact manifest.
 
 To benchmark actual complete-game parity and runtime savings:
 

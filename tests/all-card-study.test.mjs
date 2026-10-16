@@ -6,7 +6,8 @@ import {createDecisionSession} from "../src/engine/decision-session.js";
 import {
  ALL_CARD_ROSTER,cardKey,getCard,cardTrialSeed,partiesForCard,
  arrangePhysicalCard,cardSummary,exactPairedP,
- sharedControlKey,sharedControlForCard
+ sharedControlKey,sharedControlForCard,evaluateSharedControl,
+ evaluateCardTrial,runCanonicalCardExpedition
 } from "../src/all-card-study.js";
 
 const printed=[...HEROES,...ROOMS,...OBJECTS,...MONSTERS,
@@ -173,4 +174,30 @@ test("shared baseline exposes card-specific evidence and refuses mismatches",()=
  assert.throws(()=>sharedControlForCard(source,b,2,config),/baseline mismatch/);
  assert.throws(()=>sharedControlForCard({...source,reference:["fake"]},
   a,1,config),/baseline mismatch/);
+});
+
+test("issued legal-action tickets preserve complete canonical expedition results",()=>{
+ const settings={budget:2,maxSearchSteps:4000,maxGameSteps:7000};
+ const make=()=>createDecisionSession({
+  seed:20261016,heroes:["warrior","wizard"]
+ });
+ const original=runCanonicalCardExpedition(make(),null,
+  {...settings,issuedActions:false},20261016);
+ const optimized=runCanonicalCardExpedition(make(),null,
+  {...settings,issuedActions:true},20261016);
+ assert.deepEqual(optimized,original);
+});
+
+test("cached canonical baseline equals independently replayed control for printed cards",()=>{
+ const settings={seed:20261016,budget:2,
+  maxSearchSteps:4000,maxGameSteps:7000};
+ // Item + Room + fixed encounter, without synthetic gameplay actions.
+ for(const kind of ["room","item","fixed"]){
+  const card=ALL_CARD_ROSTER.find(x=>x.kind===kind);
+  const baseline=evaluateSharedControl(card,0,settings);
+  const actual=evaluateCardTrial(card,0,settings,baseline);
+  const unshared=evaluateCardTrial(card,0,settings);
+  assert.deepEqual(actual,unshared,
+   "Reference cache changed full-game outcome for "+kind);
+ }
 });
