@@ -4,9 +4,11 @@
  * This module must not import AI agents, rollouts, studies or browser UI.
  */
 import {itemOptions} from "../item-access.js";
+import {offerGraveSalt,rollOddMonsterBehavior} from "../odd-item-effects.js";
 
 const itemIn=(s,h,id)=>h.inventory.find(o=>o.id===id);
-const rollD20=(s,{adv=false,dis=false}={})=>{
+const rollD20=(s,{adv=false,dis=false,hero=null,attack=false}={})=>{
+ if(hero)return s.rollHeroD20(hero,{adv,dis,attack});
  const a=s.die(20);return adv&&!dis?Math.max(a,s.die(20)):
   dis&&!adv?Math.min(a,s.die(20)):a;
 };
@@ -73,7 +75,7 @@ function playerRoll(s,h,bonus,def){
   }else{const d=s.die();
    if(d<=2)rogueDis=true;else rogueAdv=true;
    if(d>=5){
-    const r=rollD20(s,{adv:true});
+    const r=rollD20(s,{adv:true,hero:h});
     if(attackHits(r,r+h.card.wit,def))s.draw();
    }
   }
@@ -86,7 +88,7 @@ function playerRoll(s,h,bonus,def){
  // no opposed defender die exists in fixed-AC combat.
  s.monsterDefenseDis=false;
  h.nextAdv=0;
- s.pendingD20=s.rerollIfKept(h,rollD20(s,{adv,dis}));
+ s.pendingD20=s.rerollIfKept(h,rollD20(s,{adv,dis,hero:h,attack:true}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
  s.pendingD20Modifier=0;
  const ring=h.slots.ring;
@@ -120,6 +122,7 @@ function playerRoll(s,h,bonus,def){
 }
 export function playerAttack(s,h){
  s.setActor(h);const m=s.monster;if(!m||h.hp<=0)return;
+ offerGraveSalt(s,h);
  if(s.monsterFirstAttackPending){
   if(s.useRetainedPotion("foam","first-attack:"+m.id))h.nextAdv++;
   s.monsterFirstAttackPending=false;
@@ -197,7 +200,7 @@ export function engraveElbereth(s,h,{face=null,mode="ward"}={}){
  const bonusAdv=s.elberethAdv;
  s.elberethAdv=false;
  const roll=useInk?20:
-  face??rollD20(s,{adv:useChalk||bonusAdv,dis:attempt===2});
+  face??rollD20(s,{adv:useChalk||bonusAdv,dis:attempt===2,hero:h});
  const success=roll===20||roll!==1&&roll+h.card.wit>=15;
  if(success){
   s.metrics.elberethSuccesses=(s.metrics.elberethSuccesses||0)+1;
@@ -336,7 +339,7 @@ export function monsterRespond(s,h){
  if(!s.monster||s.monsterHP<=0)return;
  if(s.monsterSkip>0){s.monsterSkip--;return;}
  const m=s.monster;
- let face=s.forcedBehavior||s.die();s.forcedBehavior=0;
+ let face=s.forcedBehavior||rollOddMonsterBehavior(s);s.forcedBehavior=0;
  // Fungal Garden is a retained response to a REVEALED monster behavior;
  // it no longer heals at the entrance to an unrelated Room.
  const garden=s.keptRooms.find(entry=>entry.card.id==="m-fungus");
