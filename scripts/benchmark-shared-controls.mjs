@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /**
  * Real canonical complete-expedition A/B benchmark. Both variants have
- * identical per-card samples, seeds, Hero parties, MCTS and printed rules;
- * only the duplicate reference full-game work is eliminated.
+ * identical seeds, parties, MCTS budgets and printed rules. The original
+ * reference runs separate control expeditions with the earlier allocation
+ * path; the optimized candidate shares controls and enables low-allocation
+ * search internals. It requires full terminal outcome parity.
  */
 import assert from "node:assert/strict";
 import {performance} from "node:perf_hooks";
@@ -24,6 +26,7 @@ if(native)loadNativeMcts({required:true});
 const roster=ALL_CARD_ROSTER.filter(c=>c.kind==="room").slice(0,count);
 const c={seed:20261016,budget:2,maxSearchSteps:4000,
  maxGameSteps:7000,nativeHash:native};
+const previous={...c,issuedActions:false,optimizedSearch:false};
 const comparable=result=>result.kind==="paired"?
  {kind:result.kind,seed:result.seed,index:result.index,
   control:{won:result.control.won,escaped:result.control.escaped,
@@ -35,7 +38,7 @@ const comparable=result=>result.kind==="paired"?
 let totalBaseline=0,totalShared=0,checked=0;
 for(let i=0;i<runs;i++){
  const referenceStart=performance.now();
- const ordinary=roster.map(card=>evaluateCardTrial(card,i,c));
+ const ordinary=roster.map(card=>evaluateCardTrial(card,i,previous));
  totalBaseline+=performance.now()-referenceStart;
  const sharedStart=performance.now();
  const baseline=evaluateSharedControl(roster[0],i,c);
@@ -49,12 +52,14 @@ for(let i=0;i<runs;i++){
  console.error("Verified canonical shared-control batch "+(i+1)+"/"+runs);
 }
 console.log(JSON.stringify({
- schema:"canonical-shared-baseline-benchmark-v1",
+ schema:"canonical-all-card-end-to-end-benchmark-v2",
  fullGameCanonicalParity:true,independentIndices:runs,
  cardsPerIndex:roster.length,cardTrials:checked,
- ordinaryTotalMs:+totalBaseline.toFixed(2),
- sharedTotalMs:+totalShared.toFixed(2),
+ previousTotalMs:+totalBaseline.toFixed(2),
+ optimizedTotalMs:+totalShared.toFixed(2),
  throughputSpeedup:+(totalBaseline/totalShared).toFixed(3),
  nativeHash:native,
- note:"Benchmarked real terminal expeditions; runtime varies by card and seed"
+ baseline:"Independent canonical controls, historical MCTS allocation and legality enumeration",
+ optimized:"Shared canonical controls, legal-action tickets and low-allocation MCTS",
+ note:"Complete canonical terminal expeditions with matching seed-level outcomes; runtime varies by card and seed"
 },null,2));
