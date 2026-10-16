@@ -47,7 +47,7 @@ jobs:
           from pathlib import Path
           lines = Path("/tmp/missing-art.log").read_text().splitlines()
           match = re.fullmatch(
-              r"Catalogue: (\\d+) cards; existing: (\\d+); missing: (\\d+)\\.",
+              r"Catalogue: (\d+) cards; existing: (\d+); missing: (\d+)\.",
               lines[0],
           )
           assert match, lines[0]
