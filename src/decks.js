@@ -1,9 +1,11 @@
 // Paper-deck composition only. None of these selections mutate engine or Oracle decks.
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN_CARDS} from "./tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "./print-expansion.js";
+import {EXTRA_MONSTERS} from "./monster-expansion.js";
 export const ALL_ROOMS=Object.freeze([...ROOMS,...PRINT_ONLY_ROOMS]);
+export const ALL_MONSTERS=Object.freeze([...MONSTERS,...EXTRA_MONSTERS]);
 export const ALL_OBJECTS=Object.freeze([...OBJECTS,...PRINT_ONLY_ITEMS]);
-export const SELECTABLE=Object.freeze([...ALL_ROOMS,...MONSTERS,...ALL_OBJECTS]);
+export const SELECTABLE=Object.freeze([...ALL_ROOMS,...ALL_MONSTERS,...ALL_OBJECTS]);
 export const FIXED_CARDS=Object.freeze([...HEROES,VAULT,...WARDEN_CARDS]);
 export const cardKey=c=>c.type+":"+c.id;
 const potionIds=new Set(["smoky","milky","amber","fizzy","mushroom","midnight","antidote","laughing"]);
@@ -72,7 +74,7 @@ export function selectionSummary(selection){
 }
 export const selectionGroups=Object.freeze([
  ...["UPPER","MIDDLE","DEEP"].map(stage=>({id:stage,label:stage+" ROOMS",cards:ALL_ROOMS.filter(c=>c.stage===stage)})),
- ...["UPPER","MIDDLE","DEEP"].map(stage=>({id:"monster-"+stage,label:stage+" MONSTERS",cards:MONSTERS.filter(c=>c.stage===stage)})),
+ ...["UPPER","MIDDLE","DEEP"].map(stage=>({id:"monster-"+stage,label:stage+" MONSTERS",cards:ALL_MONSTERS.filter(c=>c.stage===stage)})),
  {id:"basic-items",label:"TOOLS & EQUIPMENT",cards:ALL_OBJECTS.filter(c=>["TOOL","EQUIPMENT"].includes(c.v2.kind))},
  {id:"other-items",label:"COMPANIONS, RELICS, SCROLLS, RINGS, WANDS & POTIONS",cards:ALL_OBJECTS.filter(c=>!["TOOL","EQUIPMENT"].includes(c.v2.kind))}
 ]);

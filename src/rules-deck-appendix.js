@@ -1,7 +1,7 @@
 // Printable appendix generated from the same authoritative preset selections as decks.html.
 // Recipes never drift when a card is renamed or a physical copy count changes.
-import {PRESETS,ALL_ROOMS,ALL_OBJECTS,SELECTABLE,cardKey,selectionForPreset,selectionSummary} from "./decks.js";
-import {MONSTERS} from "./tabletop-data.js";
+import {PRESETS,ALL_ROOMS,ALL_OBJECTS,ALL_MONSTERS,SELECTABLE,cardKey,selectionForPreset,selectionSummary} from "./decks.js";
+
 const container=document.getElementById("deck-recipe-appendix");
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const selected=(preset,c)=>selectionForPreset(preset.id).has(cardKey(c));
@@ -10,7 +10,7 @@ const li=(items,qty=false)=>'<ul class="deck-list deck-single">'+items.map(c=>'<
 const group=(name,cards,qty=false)=>'<div class="deck-recipe"><h3>'+esc(name)+' · '+cards.length+'</h3>'+li(cards,qty)+'</div>';
 const roomPanel=preset=>{
  const roomSets=["UPPER","MIDDLE","DEEP"].map(stage=>group(stage,selectedCards(preset,ALL_ROOMS.filter(c=>c.stage===stage))));
- const monsters=group("MONSTERS (sort by depth)",selectedCards(preset,MONSTERS),true);
+ const monsters=group("MONSTERS (sort by depth)",selectedCards(preset,ALL_MONSTERS),true);
  return '<div><h2>'+esc(preset.name)+'</h2><p class="deck-compact">'+esc(preset.description)+'</p>'+
  roomSets.join("")+monsters+'</div>';
 };
@@ -31,7 +31,7 @@ container.innerHTML='<main class="sheet deck-appendix" aria-label="Recommended d
  '<div class="mast"><h1>CHOOSE YOUR DUNGEON</h1><div class="edition">RECOMMENDED DECKS<br>ROOMS & MONSTERS</div></div>'+
  '<p class="deck-intro">Two starting sets appear below. Gather the listed Room cards and shuffle each depth separately. Gather the Monsters (keeping their printed quantities) and shuffle into UPPER, MIDDLE and DEEP piles. The matching Object lists continue on page 4. All cards are printable on <strong>cards.html</strong>.</p>'+
  '<div class="deck-columns">'+roomPanel(classic)+roomPanel(strange)+'</div>'+
- '<div class="deck-note"><strong>Everything Goes:</strong> use all '+count.counts.UPPER+' UPPER, '+count.counts.MIDDLE+' MIDDLE and '+count.counts.DEEP+' DEEP Rooms, all 12 Monster types and every Object (with printed copies). It uses every PACT and unusual card. Details on page 4.</div>'+
+ '<div class="deck-note"><strong>Everything Goes:</strong> use all '+count.counts.UPPER+' UPPER, '+count.counts.MIDDLE+' MIDDLE and '+count.counts.DEEP+' DEEP Rooms, all 24 Monster types and every Object (with printed copies). It uses every PACT and unusual card. Details on page 4.</div>'+
  pageNumber(3,"ROOM & MONSTER LISTS")+'</main>'+
  '<main class="sheet deck-appendix" aria-label="Object deck recipes and custom dungeon instructions">'+
  '<div class="mast"><h1>OBJECT DECKS</h1><div class="edition">RECOMMENDED DECKS<br>ITEMS & YOUR OWN MIX</div></div>'+

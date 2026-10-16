@@ -78,9 +78,12 @@ const deep=make("DEEP",[
  ["d-last-chest","The Last Chest","door","TREASURE","A box rattles with final preparations.",[["OPEN","Roll d6. May REROLL for 1, then 2, then 3 HP; rerolled 1 draws DEEP Monster. Rusty Key changes 1–2 to 3–4."],["SEAL IT","Discard 1 Item; heal d6 HP."]],"OPEN",[["1–2","TRAP: Draw a DEEP Monster."],["3–4","Draw 2 Items."],["5–6","Draw 2 Items; keep this Room. Discard when Warden hits to prevent 3 damage."]],["Rusty Key"],"It was built for you."],
 ]);
 const revisions=new Map(ROOM_REVISIONS.map(x=>[x.id,x]));
-export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map(c=>revisions.get(c.id)||c).concat(EXTRA_ROOMS,FATE_ROOMS).map((c,i)=>({
- ...c,v2:{...c.v2,number:i+1}
-})));
+const ENTRY_MONSTERS=Object.freeze({"u-nest":"UPPER","u-mimic":"UPPER","m-crypt":"MIDDLE","m-statue":"MIDDLE","d-bones":"DEEP","d-reliquary":"DEEP"});
+export const V2_ROOMS=Object.freeze([...upper,...middle,...deep].map(c=>revisions.get(c.id)||c).concat(EXTRA_ROOMS,FATE_ROOMS).map((c,i)=>{
+ const stage=ENTRY_MONSTERS[c.id],prompt=stage?
+  `On entry: Draw a ${stage} Monster. ${c.v2.prompt}`:c.v2.prompt;
+ return {...c,rule:prompt,v2:{...c.v2,prompt,number:i+1}};
+}));
 export const V2_REGIONS=Object.freeze(["UPPER","MIDDLE","DEEP"]);
 export const V2_ROOMS_BY_REGION=Object.freeze(Object.fromEntries(V2_REGIONS.map(region=>[
  region,Object.freeze(V2_ROOMS.filter(room=>room.stage===region))

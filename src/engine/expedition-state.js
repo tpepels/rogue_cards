@@ -5,6 +5,7 @@
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../print-expansion.js";
+import {EXTRA_MONSTERS} from "../monster-expansion.js";
 import {randomSource} from "./random.js";
 import {physicalCopies} from "./physical-cards.js";
 import {d6Band} from "./dice-bands.js";
@@ -68,7 +69,8 @@ export class ExpeditionState {
   this.deckRemovedCounts={};
   const roomCards=gameMode==="everything-goes"?[...ROOMS,...PRINT_ONLY_ROOMS]:ROOMS;
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(roomCards.filter(x=>x.stage===s))]));
-  this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
+  const monsterPool=gameMode==="everything-goes"?[...MONSTERS,...EXTRA_MONSTERS]:MONSTERS;
+  this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,monsterPool.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
   // Publicly revealed corridor alternatives permanently removed from the
   // physical Room deck (not merely Rooms that were actually entered).
@@ -534,7 +536,8 @@ export class ExpeditionState {
  nextMonster(region=this.room?.stage){
   if(!region||region==="FINAL")return null;
   const pile=this.monsters[region];
-  if(!pile.length)this.monsters[region]=copyDeck(this.rng,MONSTERS.filter(c=>c.stage===region));
+  if(!pile.length)this.monsters[region]=copyDeck(this.rng,
+   (this.gameMode==="everything-goes"?[...MONSTERS,...EXTRA_MONSTERS]:MONSTERS).filter(c=>c.stage===region));
   return this.monsters[region].pop();
  }
  drawMonster(){
