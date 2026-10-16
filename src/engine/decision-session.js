@@ -403,6 +403,9 @@ function safeDirectAction(session,action,directSettlements=false){
     action.kind==="leave"){
   const s=session.state;
   return !!(s.monster&&s.monsterHP<=0&&s.room&&
+   // Printed DEFEAT effects may draw Items or ask which Hero benefits;
+   // those outcomes require the canonical transactional replay path.
+   !s.monster.v2?.defeatOps?.length&&
    s.room.stage!=="FINAL"&&!s.monsterQueue.length&&
    !s.pendingReward&&!s.pendingFightHeal&&
    !(s.stashedMonsterItems?.length)&&
