@@ -23,7 +23,7 @@ function render(){
  '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">COMPLETE PRINT CATALOGUE · '+CATALOGUE.length+' DESIGNS</div></div>'+
  '<nav class="tt-nav" aria-label="Main links"><a href="./index.html">HOME</a><a href="./rules.html">RULES & DECK RECIPES</a><a href="./decks.html">BUILD YOUR DECK</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
  '<main class="tt-shell"><section class="rc-intro"><h1>Every card, ready to print.</h1>'+
- '<p>All '+CATALOGUE.length+' printable designs, including '+ALL_ROOMS.length+' regional Rooms, '+ALL_OBJECTS.length+' Objects and the original Heroes, Monsters and Warden. No card is hidden inside a deck preset.</p>'+
+ '<p>All '+CATALOGUE.length+' printable designs, including '+ALL_ROOMS.length+' regional Rooms, '+ALL_OBJECTS.length+' Objects and all Heroes, Monsters and Warden phases. No card is hidden inside a deck preset.</p>'+
  '<p class="rc-subline">24 NEW ORDINARY DUNGEON CARDS · ORIGINAL UNUSUAL CARDS PRESERVED</p>'+
  '<div class="tt-links"><a href="./rules.html">RULES & THREE RECOMMENDED DECKS ↗</a><a href="./decks.html">ASSEMBLE A CUSTOM DECK ↗</a></div></section>'+
  '<div id="cards" class="tt-toolbar"><h2>ALL PRINTABLE CARDS <small class="rc-count">'+choices.length+' designs · '+printed.length+' sheets-ready cards</small></h2>'+
