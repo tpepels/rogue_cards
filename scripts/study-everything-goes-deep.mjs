@@ -160,6 +160,25 @@ function work(job,c){
   throw Error("Missing policy decision");
  if(events.some((e,i)=>e.step!==i))
   throw Error("Nonsequential decision tape");
+ if(!events.some(e=>e.dice.length))
+  throw Error("Completed expedition has no committed die observations");
+ for(const key of ["combatStarts","kills","damage","drawn",
+  "negotiations","negotiationsWon","encounterStarts"]){
+  const recorded=events.reduce((n,e)=>n+
+   (e.metrics[key]?.delta||0),0);
+  if(recorded!==m[key])
+   throw Error("Event tape "+key+" does not reconcile with engine total: "+
+    recorded+" vs "+m[key]);
+ }
+ const sums=keys=>Object.values(m[keys]||{}).reduce((n,v)=>n+v,0);
+ if(sums("monsterKillsById")!==m.kills)
+  throw Error("Per-Monster kills fail conservation check");
+ if(sums("monsterParleyAttemptsById")!==m.negotiations)
+  throw Error("Per-Monster Parley attempts fail conservation check");
+ if(sums("monsterParleyWinsById")!==m.negotiationsWon)
+  throw Error("Per-Monster Parley successes fail conservation check");
+ if(m.encounterStarts>m.monsterDraws)
+  throw Error("Impossible encounter to draw count");
  const index=String(job.i).padStart(6,"0");
  const raw={schema:"everything-goes-actual-event-tape-v1",job,
   gameMode:"everything-goes",policy:{name:"UCT canonical session",
