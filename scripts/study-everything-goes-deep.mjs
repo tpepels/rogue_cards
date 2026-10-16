@@ -67,7 +67,7 @@ function parse(argv){
  if(!["fair","oracle"].includes(knowledge))throw Error("Invalid knowledge");
  const c={
   mode,items,
-  runs:num(options,"--runs",720,1,50000),
+  runs:num(options,"--runs",3600,1,50000),
   pairsPerItem:num(options,"--pairs-per-item",120,1,10000),
   workers:num(options,"--workers",Math.min(6,availableParallelism()),1,16),
   hours:num(options,"--hours",72,1,720),
