@@ -11,6 +11,29 @@ const countById=cards=>{
 };
 const sorted=map=>Object.fromEntries(Object.entries(map||{}).sort(([a],[b])=>
  a.localeCompare(b)));
+/** Audit all remaining mutable state without exposing executable closures.
+ * Immutable printed card objects become stable identifiers, and aliases
+ * become references. The hidden decks themselves remain seed-replayable.
+ */
+function serial(value,seen=new WeakSet(),depth=0){
+ if(value===null||typeof value!=="object")
+  return typeof value==="function"?undefined:value;
+ if(value.v2?.kind&&value.id)
+  return {cardId:value.id,physicalCopy:value._physicalCopy||null};
+ if(value.card?.id&&Array.isArray(value.inventory))
+  return {heroId:value.card.id,hp:value.hp};
+ if(depth>12)return "[depth limit]";
+ if(seen.has(value))return "[shared alias]";
+ seen.add(value);
+ if(Array.isArray(value))return value.map(v=>serial(v,seen,depth+1));
+ if(value instanceof Set)return {set:[...value].map(v=>serial(v,seen,depth+1))};
+ if(value instanceof Map)return {map:[...value].map(([k,v])=>
+  [serial(k,seen,depth+1),serial(v,seen,depth+1)])};
+ const out={};
+ for(const [key,v] of Object.entries(value))
+  if(typeof v!=="function")out[key]=serial(v,seen,depth+1);
+ return out;
+}
 export function experimentSnapshot(s,phase){
  const state=s.state;
  return {
@@ -22,6 +45,15 @@ export function experimentSnapshot(s,phase){
   monster:state.monster?{id:state.monster.id,hp:state.monsterHP,
    maxHp:state.monster.hp,stage:state.monster.stage}:null,
   queuedMonsters:(state.monsterQueue||[]).map(c=>c.id),
+  // Full non-pile internal state, including retained traps, resources,
+  // Maps, Sets and transient effects. This prevents obscure mechanics
+  // becoming an unrecorded blind spot in post-hoc analysis.
+  internalState:Object.fromEntries(Object.entries(state)
+   .filter(([key])=>!new Set(["rng","metrics","deck","rooms",
+    "monsters","heroes","room","monster","seenRooms",
+    "discardedRoomIds","monsterQueue","keptRooms"]).has(key))
+   .filter(([,v])=>typeof v!=="function")
+   .map(([k,v])=>[k,serial(v)])),
   // Every mutable scalar engine field, not just a handpicked shortlist.
   engineScalars:Object.fromEntries(Object.entries(state)
    .filter(([,v])=>v===null||["string","number","boolean"].includes(typeof v))
