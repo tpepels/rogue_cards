@@ -171,7 +171,7 @@ export function roomEntry(s){
  if(s.nextLadder){s.nextLadder=false;if(room.v2?.kind==="LAIR")s.heroFirstAdv=true;else s.draw();}
  if(room.stage==="DEEP")fateStageEntry(s,"DEEP");
  if(room.stage==="FINAL")fateVaultEntry(s);
- if(s.followingWisp&&(room.stage==="FINAL"||room.v2?.special?.corridor)){
+ if(s.followingWisp&&(room.stage==="FINAL"||room.v2?.kind==="CORRIDOR")){
   const m=s.followingWisp;s.followingWisp=null;
   if(s.monster){
    s.monsterQueue.unshift(m);s.queuedForcedWisp=m;
