@@ -137,6 +137,7 @@ function awaitingMonster(session){
  s.mustFightFollowingWisp=false;
  session.monsterRound=0;
  s.metrics.battles++;
+ if(session.phase==="combat-hero")s.metrics.combatStarts++;
  return true;
 }
 function roomSettled(session){
@@ -436,7 +437,7 @@ function beginDirectTransaction(session,action){
   pendingReward:s.pendingReward,pendingFightHeal:s.pendingFightHeal,
   room:s.room,elberethAdv:s.elberethAdv,
   metrics:{
-   battles:s.metrics.battles,kills:s.metrics.kills,
+   battles:s.metrics.battles,combatStarts:s.metrics.combatStarts,kills:s.metrics.kills,
    cleared:s.metrics.cleared,won:s.metrics.won,
    escaped:s.metrics.escaped,
    hadEscaped:Object.hasOwn(s.metrics,"escaped"),

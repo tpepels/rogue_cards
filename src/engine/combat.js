@@ -299,6 +299,14 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour)&&
     wantsItem(s,h,h.slots.armour,"after-hit"))
   s.activate(h,h.slots.armour);
+ // Printed Iron Helm: discard after a hit to prevent up to 3 damage.
+ const helm=h.slots.armour?.id==="ex-helm"?h.slots.armour:null;
+ if(helm&&s.pendingDamage>0&&s.chooseEffect("iron-helm-after-hit",
+  ["save","discard"],"discard")==="discard"){
+  s.directItem(h,helm,"prevent-hit",()=>{
+   s.consume(h,helm);s.pendingDamage=Math.max(0,s.pendingDamage-3);return true;
+  });
+ }
  const knight=s.pendingDamage>0?s.living().find(x=>x.card.id==="knight"&&!x.used.has("hero")):null;
  if(knight){
   const mode=promptedHeroMode(s,knight,"after-hit");

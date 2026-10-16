@@ -653,7 +653,7 @@ export class ExpeditionState {
  basicAttackBonus(h){return h.slots.weapon?.id==="staff"?1:0;}
  stats(h){
   const w=h.slots.weapon,a=h.slots.armour,r=h.slots.ring;
-  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4,"ex-dagger":1,"ex-mace":2,"ex-spear":1}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
+  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4,"ex-dagger":1,"ex-mace":2,"ex-spear":this.monster?.v2?.tags?.includes("BEAST")?2:1}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
     def:h.card.def+({mail:2,shield:1,"cursed-mail":3,"ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[a?.id]||0)};
  }
  apply(kind,args,card){
@@ -1345,6 +1345,17 @@ export class ExpeditionState {
     this.consume(keyOwner,key);return true;
    });
    face=this.room.id==="m-vault"?6:3;
+  }
+  // Printed Lockpick Set: optional one-use reroll of a listed lock result.
+  if(["u-gate","u-mimic","m-vault","d-last-chest"].includes(this.room.id)){
+   const picks=this.heroes.find(h=>h.hp>0&&h.inventory.some(c=>c.id==="ex-lockpicks"));
+   if(picks&&this.chooseEffect("lockpicks-room:"+this.room.id,
+    ["save","reroll"],face<=2?"reroll":"save")==="reroll"){
+    const card=byId(picks.inventory,"ex-lockpicks");
+    this.directItem(picks,card,"lock-reroll",()=>{
+     this.consume(picks,card);face=this.die();return true;
+    });
+   }
   }
   // A Lamp-Eater consumes exposed FIRE; carrying light never guarantees treasure.
   // Opened Crypt no longer treats fire as automatic treasure.

@@ -334,7 +334,7 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
    mold:["eat"],rust:["eat"],goblin:["search"],
    eye:["keep-eye"],wraith:["release","keep-whisper"]
   };
-  return [{phase,kind:"leave"},...(remains[id]||[])
+  return [{phase,kind:"leave"},...(s.monster.v2?.genericRemains?["eat"]:(remains[id]||[]))
    .map(kind=>({phase,kind}))];
  }
  if(phase==="monster-response"){
