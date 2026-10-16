@@ -10,6 +10,9 @@ import {ExpeditionState} from "./expedition-runtime.js";
 import {physicalCopies,isPhysicalCard} from "./engine/physical-cards.js";
 import {randomSource} from "./playtest.js";
 import {ROOMS,MONSTERS,OBJECTS,HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
+import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "./print-expansion.js";
+import {EXTRA_MONSTERS} from "./monster-expansion.js";
+import {ODD_ITEMS} from "./item-expansion.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
 const copies=cards=>cards.flatMap(card=>
@@ -17,15 +20,24 @@ const copies=cards=>cards.flatMap(card=>
 // Printed data never changes during an expedition. Do not expand all 52
 // Object definitions or all Monster copies for every hypothetical branch.
 const ITEM_COPIES=physicalCopies(OBJECTS);
+const ALL_ITEMS=Object.freeze([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS]);
+const EXPANDED_ITEM_COPIES=physicalCopies(ALL_ITEMS);
 const MONSTER_COPIES=Object.fromEntries(STAGES.map(stage=>[
  stage,copies(MONSTERS.filter(m=>m.stage===stage))]));
+const EXPANDED_MONSTER_COPIES=Object.fromEntries(STAGES.map(stage=>[
+ stage,copies([...MONSTERS,...EXTRA_MONSTERS].filter(m=>m.stage===stage))]));
 const STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
  stage,ROOMS.filter(r=>r.stage===stage)]));
+const ALL_ROOMS=Object.freeze([...ROOMS,...PRINT_ONLY_ROOMS]);
+const EXPANDED_STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
+ stage,ALL_ROOMS.filter(r=>r.stage===stage)]));
 const ROOM_BY_ID=new Map(ROOMS.map(r=>[r.id,r]));
+const EXPANDED_ROOM_BY_ID=new Map(ALL_ROOMS.map(r=>[r.id,r]));
 // Only *canonical printed cards* may be shared between rollout forks.
 // They are fixed rules data, never mutable Hero state / equipment slots.
 const PRINTED_CARDS=new WeakSet([
- ...OBJECTS,...ROOMS,...MONSTERS,...HEROES,VAULT,WARDEN,WARDEN_FURY
+ ...ALL_ITEMS,...ALL_ROOMS,...MONSTERS,...EXTRA_MONSTERS,
+ ...HEROES,VAULT,WARDEN,WARDEN_FURY
 ]);
 /**
  * Copy only mutable expedition data. Unlike structuredClone, this does not
@@ -102,7 +114,12 @@ export function prepareRolloutDecks(s,knowledge){
  if(knowledge==="oracle")return {source:s,knowledge};
  // Count actual removals from the hidden deck. Returned/saved Items may
  // be reacquired without removing another physical card from the pile.
- const items=reduceSeen(ITEM_COPIES,s.deckRemovedCounts);
+ const expanded=s.gameMode==="everything-goes";
+ const itemPool=expanded?EXPANDED_ITEM_COPIES:ITEM_COPIES;
+ const stageRooms=expanded?EXPANDED_STAGE_ROOMS:STAGE_ROOMS;
+ const roomById=expanded?EXPANDED_ROOM_BY_ID:ROOM_BY_ID;
+ const monsterCopies=expanded?EXPANDED_MONSTER_COPIES:MONSTER_COPIES;
+ const items=reduceSeen(itemPool,s.deckRemovedCounts);
  if(items.length!==s.deck.length)throw Error(
   "Public Item accounting differs from deck: "+
   items.length+" vs "+s.deck.length);
@@ -119,16 +136,16 @@ export function prepareRolloutDecks(s,knowledge){
    .filter(id=>!seen.has(id)&&!removed.has(id)&&!revealed.includes(id));
   const excluded=new Set([
    ...seen,...removed,...revealed,...heldPaths,...knownBottom]);
-  const available=STAGE_ROOMS[stage].filter(r=>!excluded.has(r.id));
+  const available=stageRooms[stage].filter(r=>!excluded.has(r.id));
   const remaining=s.rooms[stage]?.length||0;
-  const known=revealed.slice(0,remaining).map(id=>ROOM_BY_ID.get(id));
-  const bottom=knownBottom.filter(id=>ROOM_BY_ID.has(id))
-   .slice(-Math.max(0,remaining-known.length)).map(id=>ROOM_BY_ID.get(id));
+  const known=revealed.slice(0,remaining).map(id=>roomById.get(id));
+  const bottom=knownBottom.filter(id=>roomById.has(id))
+   .slice(-Math.max(0,remaining-known.length)).map(id=>roomById.get(id));
   if(remaining-known.length-bottom.length>available.length)
    throw Error("Insufficient public Room pool for "+stage);
   rooms[stage]={known,bottom,available,remaining};
   const count=s.monsters[stage]?.length||0;
-  const all=MONSTER_COPIES[stage];
+  const all=monsterCopies[stage];
   const pool=reduceSeen(all,s.metrics.monsterVisits);
   monsters[stage]={pool:pool.length>=count?pool:all,count};
  }
