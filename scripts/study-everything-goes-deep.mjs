@@ -189,6 +189,18 @@ function work(job,c){
   }
   searchMs+=e.searchMs||0;transitionMs+=e.transitionMs||0;
  }
+ const last=events.at(-1)?.after;
+ const roomById=new Map(ALL_ROOMS.map(c=>[c.id,c]));
+ const byStage={};
+ for(const stage of ["UPPER","MIDDLE","DEEP"]){
+  const seen=(last?.seenRooms||[]).map(id=>roomById.get(id)).
+   filter(c=>c&&c.stage===stage);
+  byStage[stage]={normal:seen.filter(c=>c.v2.kind!=="CORRIDOR").length,
+   corridors:seen.filter(c=>c.v2.kind==="CORRIDOR").length};
+ }
+ const bossCombats=events.reduce((n,e)=>n+
+  (e.after.room?.stage==="FINAL"?e.metrics.combatStarts?.delta||0:0),0);
+ const finalHp=(last?.heroes||[]).map(x=>x.hp);
  const summary={
   i:job.i,group:job.group,itemId:job.itemId??null,
   sample:job.sample,arm:job.arm,seed:job.seed,heroes:job.heroes,
@@ -199,6 +211,10 @@ function work(job,c){
   equipmentProgressBreaks:result.equipmentProgressBreaks,
   encounterStarts:m.encounterStarts,combatStarts:m.combatStarts,
   kills:m.kills,rooms:m.cleared,drawn:m.drawn,
+  ordinaryCombats:Math.max(0,m.combatStarts-bossCombats),
+  bossCombats,byStage,finalHp,totalFinalHp:finalHp.reduce((a,b)=>a+b,0),
+  corridors:Object.values(byStage).reduce((n,v)=>n+v.corridors,0),
+  wipeCause:m.wipeCause||null,wipeStage:m.wipeStage||null,
   hpLoss:m.damage,
   itemGranted:!!events[0]?.before.heroes[0].inventory
    .find(card=>card.id===job.extraObjectId),
@@ -257,7 +273,8 @@ function createReport(c,done,expected){
  const pairs=rows.filter(x=>x.group==="pair");
  const metrics=["won","actions","rooms","encounterStarts","combatStarts",
   "kills","drawn","hpLoss","searchedDecisions","dice","nestedDecisions",
-  "equipmentProgressBreaks"];
+  "equipmentProgressBreaks","ordinaryCombats","bossCombats",
+  "corridors","totalFinalHp"];
  const byParty={};
  for(const row of survey){
   const key=row.heroes.join("+"),item=byParty[key]??={runs:0,wins:0,
@@ -326,6 +343,16 @@ function createReport(c,done,expected){
    if(typeof v==="number"&&Number.isFinite(v))inc(scalarTotals,k,v);
  const endings={};
  for(const row of survey)inc(endings,row.ending||"unknown");
+ const wipes={};const stages={};
+ for(const row of survey){
+  if(row.wipeCause)inc(wipes,row.wipeCause);
+  for(const [stage,cell] of Object.entries(row.byStage||{})){
+   const agg=stages[stage]??={normal:[],corridors:[]};
+   agg.normal.push(cell.normal);agg.corridors.push(cell.corridors);
+  }
+ }
+ const stageStats=Object.fromEntries(Object.entries(stages).map(
+  ([stage,v])=>[stage,{normal:ci(v.normal),corridors:ci(v.corridors)}]));
  const uniqueSeeds=new Set(survey.map(r=>r.seed)).size;
  const complete=total===expected&&rows.every((r,i)=>r.i===i);
  const summary={
@@ -336,7 +363,8 @@ function createReport(c,done,expected){
    winRate:survey.length?survey.filter(r=>r.won).length/survey.length:null,
    winWilson95:wilson(survey.filter(r=>r.won).length,survey.length),
    sample: Object.fromEntries(metrics.map(k=>[k,ci(survey.map(r=>Number(r[k])))])),
-   scalarTotals,endings,uniqueSeeds,parties},
+   scalarTotals,endings,wipeCauses:wipes,stages:stageStats,
+   uniqueSeeds,parties},
   matchedItems:byItem,
   coverage:rawCover,
   limitations:[
@@ -368,6 +396,11 @@ function save(c,done,expected){
   equipmentProgressBreaks:r.equipmentProgressBreaks,
   encounters:r.encounterStarts,combats:r.combatStarts,kills:r.kills,
   drawn:r.drawn,hpLoss:r.hpLoss,dice:r.dice,
+  ordinaryCombats:r.ordinaryCombats,bossCombats:r.bossCombats,
+  corridors:r.corridors,finalHp:r.totalFinalHp,
+  wipeCause:r.wipeCause,wipeStage:r.wipeStage,
+  upperRooms:r.byStage.UPPER.normal,middleRooms:r.byStage.MIDDLE.normal,
+  deepRooms:r.byStage.DEEP.normal,
   searchMs:r.searchMs,transitionMs:r.transitionMs,
   rawFile:r.rawFile,rawSha256:r.rawSha256
  })));
