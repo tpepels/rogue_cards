@@ -5,6 +5,10 @@ import {createGame,enterNextRoom,finishCurrentRoom} from "../src/engine/index.js
 import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../src/print-expansion.js";
 import {EXTRA_MONSTERS} from "../src/monster-expansion.js";
+import {MONSTERS} from "../src/tabletop-data.js";
+import {MONSTER_DEFEATS} from "../src/monster-defeats.js";
+import {settleMonsterVictory} from "../src/engine/combat-outcomes.js";
+import {cardMarkup} from "../src/tabletop-view.js";
 import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS,selectionForPreset,selectionSummary} from "../src/decks.js";
 
 test("Everything Goes contains the entire regional print deck and the new Monsters",()=>{
@@ -48,6 +52,8 @@ test("Twelve new Monsters have complete printed behaviours, parley and remains",
   assert.equal(mob.v2.behaviorOps.length,4,mob.id);
   assert.ok(mob.v2.parley,mob.id);
   assert.ok(mob.v2.remains,mob.id);
+  assert.ok(mob.v2.defeat,mob.id);
+  assert.ok(cardMarkup(mob).includes("DEFEAT"),mob.id);
  }
 });
 test("Extra Monsters receive legal Parley actions and EAT on defeat",()=>{
@@ -87,4 +93,49 @@ test("Trapdoors mark skipped depths complete under the twelve-Room rule",()=>{
  game.fallThrough("DEEP",{damage:0});
  assert.equal(game.stageProgress.UPPER,12);
  assert.equal(game.stageProgress.MIDDLE,12);
+});
+
+test("Every regional Monster prints and executes its own DEFEAT reward",()=>{
+ const cards=[...MONSTERS,...EXTRA_MONSTERS];
+ assert.equal(cards.length,24);
+ assert.deepEqual(cards.map(m=>m.id).sort(),Object.keys(MONSTER_DEFEATS).sort());
+ for(const monster of cards){
+  const {text,ops}=MONSTER_DEFEATS[monster.id];
+  assert.equal(monster.v2.defeat,text);
+  assert.deepEqual(monster.v2.defeatOps,ops);
+  const html=cardMarkup(monster);
+  assert.match(html,/DEFEAT/);
+  assert.ok(html.includes(text.replace(/&/g,"&amp;").replace(/</g,"&lt;")),monster.id);
+  const s=createGame({seed:20261016,gameMode:"everything-goes"});
+  s.room=s.rooms[monster.stage][0];
+  s.monster=monster;s.monsterHP=0;s.banished=false;
+  const operation=ops[0].split(":")[0];
+  const before=s.metrics.operationCounts[operation]||0;
+  settleMonsterVictory(s,monster);
+  assert.equal(s.metrics.kills,1,monster.id);
+  assert.equal(s.metrics.operationCounts[operation],before+1,monster.id);
+  assert.equal(s.monster,null,monster.id);
+ }
+});
+test("Banishment grants neither a DEFEAT reward nor a kill",()=>{
+ const monster=MONSTERS.find(m=>m.id==="goblin");
+ const s=createGame({seed:20261016,gameMode:"everything-goes"});
+ s.room=s.rooms.UPPER[0];
+ s.monster=monster;s.monsterHP=0;s.banished=true;
+ const drawn=s.metrics.drawn;
+ settleMonsterVictory(s,monster);
+ assert.equal(s.metrics.drawn,drawn);
+ assert.equal(s.metrics.kills,0);
+ assert.equal(s.metrics.operationCounts.DRAW||0,0);
+});
+test("Parley dismissal cannot trigger the printed DEFEAT benefit",()=>{
+ const monster=MONSTERS.find(m=>m.id==="rat");
+ const s=createGame({seed:20261016,gameMode:"everything-goes"});
+ s.room=s.rooms.UPPER[0];
+ s.monster=monster;s.monsterHP=monster.hp;
+ const before=s.metrics.operationCounts.HEAL||0;
+ // A successful Parley removes the monster without settling a victory.
+ s.monster=null;s.monsterHP=0;
+ assert.equal(s.metrics.operationCounts.HEAL||0,before);
+ assert.equal(s.metrics.kills,0);
 });
