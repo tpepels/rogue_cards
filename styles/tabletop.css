@@ -825,7 +825,8 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  border-top:2px solid #1b1711;
  font:9.5px/1.15 "Courier New",monospace
 }
-.tt-v2-monster-rule b,.tt-v2-monster-remains b{font-weight:900}
+.tt-v2-monster-rule b,.tt-v2-monster-remains b,.tt-v2-monster-defeat b{font-weight:900}
+.tt-v2-monster-defeat{margin:.6mm 0 0;padding:.5mm .2mm 0;border-top:2px solid #22170f;font:900 9.5px/1.15 "Courier New",monospace}
 
 
 /* Canonical Hero print slips. There is one card system for the whole game. */
@@ -1067,6 +1068,7 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-v2-monster-rule:nth-last-of-type(2){
  border-top:2px solid #22170f;
 }
+.tt-v2-monster-defeat{font-size:9.35px;line-height:1.14;margin:.45mm 0 0;padding:.45mm .2mm 0}
 .tt-v2-monster-remains{
  font-size:9.35px;line-height:1.14;
  border-top:1px dashed #261b13;
