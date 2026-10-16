@@ -9,6 +9,9 @@ on:
       - scripts/study-everything-goes-deep.mjs
       - scripts/run-everything-goes-research.sh
       - src/experiment-telemetry.js
+      - src/experiment-targets.js
+      - config/everything-goes-targets.v1.json
+      - tests/experiment-targets.test.mjs
       - src/session-agent.js
       - src/engine/decision-session.js
       - src/engine/expedition-state.js
@@ -54,6 +57,16 @@ jobs:
             throw Error('Expected one organic and a full treatment/control pair');
           if(!validation.decisionReady||!validation.allDecisionTapesPresent)
             throw Error('Decision-quality checks not satisfied');
+          const targets=JSON.parse(fs.readFileSync(join(dir,'targets.json')));
+          const audit=JSON.parse(fs.readFileSync(join(dir,'item-audit.json')));
+          if(targets.metrics.length!==10||!validation.targetAssessmentsPresent)
+            throw Error('Ten numerical targets were not evaluated');
+          if(targets.metrics.find(x=>x.id==='new_items_per_12_rooms')?.status!=='UNSET')
+            throw Error('Unanswered target 7 was silently fabricated');
+          if(targets.physical.some(x=>x.status!=='NOT_MEASURED_IN_SIMULATION'))
+            throw Error('CPU runtime was mistaken for physical playtime');
+          if(audit.catalog.combined!==193||audit.catalog.items!==79)
+            throw Error('Missing fixed cards or Items from the card audit');
           if(summary.matchedItems['odd-loaded-coin']?.pairs!==1)
             throw Error('Missing matched Item comparison');
           for(let i=0;i<3;i++){
@@ -64,8 +77,9 @@ jobs:
             if(!data.events.some(e=>e.dice.length))
               throw Error('No actual dice for job '+i);
           }
-          for(const name of ['runs.csv','card-coverage.csv',
-            'paired-item-effects.csv','coverage.json','summary.md'])
+          for(const name of ['runs.csv','card-coverage.csv','item-audit.csv',
+            'paired-item-effects.csv','coverage.json','summary.md',
+            'targets.md','targets.json','item-audit.json'])
             if(!fs.statSync(join(dir,name)).size)throw Error('Empty output '+name);
           NODE
       - name: Upload complete preflight records
