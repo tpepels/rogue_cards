@@ -287,7 +287,25 @@ function createReport(c,done,expected){
   }
   const compliant=matched.filter(g=>g.control.itemGranted&&
    g.treatment.itemGranted).length;
+  const usedRuns=matched.filter(g=>(
+   g.treatment.metrics.itemUses?.[id]?.total||0)>0).length;
+  const totalUses=matched.reduce((n,g)=>n+
+   (g.treatment.metrics.itemUses?.[id]?.total||0),0);
+  const totalOpportunities=matched.reduce((n,g)=>n+
+   (g.treatment.metrics.itemOpportunities?.[id]?.total||0),0);
+  const directEffects={};
+  for(const g of matched){
+   const result=g.treatment.metrics.itemResults?.[id]||{};
+   for(const [key,value] of Object.entries(result))
+    if(typeof value==="number")inc(directEffects,key,value);
+  }
+  const modes={};
+  for(const g of matched)
+   add(modes,g.treatment.metrics.itemUses?.[id]?.byMode);
   byItem[id]={pairs:matched.length,plannedPairs:c.mode==="survey"?0:c.pairsPerItem,
+   triggered:totalOpportunities,uses:totalUses,
+   runsWithUse:usedRuns,usedRunFraction:matched.length?usedRuns/matched.length:null,
+   observedDirectEffects:directEffects,usesByMode:modes,
    resourceMatched:"extra "+id+" versus extra ex-rations",
    grantCompliance:compliant,
    delta:estimates,
@@ -397,8 +415,11 @@ function save(c,done,expected){
   "Treatment gets one extra copy of the new Item; control gets one extra Dry Rations.",
   "A paired difference answers *relative extra starting resources*, not intrinsic card strength.",
   ...Object.entries(byItem).map(([id,v])=>"- "+id+": "+
-   v.pairs+"/"+v.plannedPairs+" matched pairs, win-rate difference "+
-   (v.delta.won?.mean??"n/a")+"; "+v.verdict),
+   v.pairs+"/"+v.plannedPairs+" matched pairs; triggered="+v.triggered+
+   ", uses="+v.uses+", used in="+v.runsWithUse+" runs; "+
+   "direct outcomes="+JSON.stringify(v.observedDirectEffects)+
+   "; win-rate delta="+(v.delta.won?.mean??"n/a")+
+   " (95% CI "+JSON.stringify(v.delta.won?.ci95)+"); "+v.verdict),
   "", "## Per-Monster performance (organic exposures; not causal)",
   ...ALL_MONSTERS.map(card=>{
    const visits=summary.coverage.aggregate.monsterVisits[card.id]||0;
