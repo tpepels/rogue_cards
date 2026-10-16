@@ -6,6 +6,8 @@
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../print-expansion.js";
 import {EXTRA_MONSTERS} from "../monster-expansion.js";
+import {ODD_ITEMS} from "../item-expansion.js";
+import {modifyOddDie,rollOddHeroD20} from "../odd-item-effects.js";
 import {randomSource} from "./random.js";
 import {physicalCopies} from "./physical-cards.js";
 import {d6Band} from "./dice-bands.js";
@@ -49,7 +51,7 @@ export class ExpeditionState {
   if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
   this.rng=randomSource(seed);this.strategy=strategy;this.roomPolicy=roomPolicy;
-  if(extraObjectId!==null&&!byId(OBJECTS,extraObjectId))
+  if(extraObjectId!==null&&!byId(gameMode==="everything-goes"?[...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS]:OBJECTS,extraObjectId))
    throw Error("Unknown extra Object "+extraObjectId);
   this.extraObjectGranted=false;
   this.objectsEverOwned=new Set();this.vaultState=null;this.heroes=heroes.map(id=>{
@@ -62,7 +64,7 @@ export class ExpeditionState {
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
   this.deck=gameMode==="everything-goes"?
-   this.rng.shuffle(physicalCopies([...OBJECTS,...PRINT_ONLY_ITEMS])):
+   this.rng.shuffle(physicalCopies([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS])):
    copyDeck(this.rng,OBJECTS);
   // Physical draws from the hidden Item pile, NOT acquisitions/transfers
   // (e.g. reclaiming an Item from the Bottomless Well).
@@ -94,6 +96,7 @@ export class ExpeditionState {
   this.lastSpent=null;this.lastCostCards=[];this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
   this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
+  this.moonLensFace=null;this.redString=null;this._oddDieGuard=false;
   this.potionIdentities=new Map();this.pendingRetainedPotion=null;
   this.elberethAdv=false;
   this.exhausted=new Set();this.consumed=new Set();this.cleansed=new Set();this.pendingReflect=false;
@@ -201,7 +204,17 @@ export class ExpeditionState {
   try{if(lost.v2.roll)this.roomRoll();}
   finally{this.room=old;}
  }
- die(n=6){return this.rng.die(n);}
+ die(n=6){
+  let face=this.rng.die(n);
+  if(n===6&&!this._oddDieGuard&&this.heroes?.some(h=>
+   h.hp>0&&h.inventory?.some(c=>c.id.startsWith("odd-")))){
+   this._oddDieGuard=true;
+   try{face=modifyOddDie(this,n,face);}
+   finally{this._oddDieGuard=false;}
+  }
+  return face;
+ }
+ rollHeroD20(h,opts={}){return rollOddHeroD20(this,h,opts);}
  amount(x){return dice(this.rng,x);}
  living(){return this.heroes.filter(h=>h.hp>0);}
  alive(){return this.living().length>0;}
@@ -472,7 +485,7 @@ export class ExpeditionState {
       this.rooms[room.stage].push(room);room=alternative;
      }else this.rooms[room.stage].push(alternative);
     }}
-   this.room=room;this.skipRoom=false;
+   this.room=room;this.skipRoom=false;this.moonLensFace=null;
    if(this.publicBottomRoomIds?.[room.stage])
     this.publicBottomRoomIds[room.stage]=
      this.publicBottomRoomIds[room.stage].filter(id=>id!==room.id);
@@ -528,6 +541,7 @@ export class ExpeditionState {
   this.heroes.forEach(h=>{
    h.poison=false;h.immune=false;h.used.clear();
    h.nextHitBlock=0;h.ignoreDarknessOnce=false;
+   h.graveSalt=false;h.trickKnifeUsed=false;
    if(h.defDuration>0&&--h.defDuration===0)h.nextDefenseBonus=0;
   });
   this.elberethAdv=false;
@@ -653,8 +667,8 @@ export class ExpeditionState {
  basicAttackBonus(h){return h.slots.weapon?.id==="staff"?1:0;}
  stats(h){
   const w=h.slots.weapon,a=h.slots.armour,r=h.slots.ring;
-  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4,"ex-dagger":1,"ex-mace":2,"ex-spear":this.monster?.v2?.tags?.includes("BEAST")?2:1}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
-    def:h.card.def+({mail:2,shield:1,"cursed-mail":3,"ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[a?.id]||0)};
+  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4,"ex-dagger":1,"ex-mace":2,"ex-spear":this.monster?.v2?.tags?.includes("BEAST")?2:1,"odd-trick-knife":1}[w?.id]||0)+(r?.id==="ring-hunger"?2:0)+(h.graveSalt&&this.monster?2:0),
+    def:h.card.def+({mail:2,shield:1,"cursed-mail":3,"ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[a?.id]||0)+(h.graveSalt&&this.monster?2:0)};
  }
  apply(kind,args,card){
   this.metrics.operationCounts[kind]=(this.metrics.operationCounts[kind]||0)+1;
@@ -1078,8 +1092,8 @@ export class ExpeditionState {
   // A risky Priest omen may have defeated the Hero making this check.
   // Do not request more dice or Item decisions from that Hero.
   if(h.hp<=0)return;
-  const roll=()=>this.die(20),a=roll();
-  let d=this.rerollIfKept(h,adv&&!dis?Math.max(a,roll()):dis&&!adv?Math.min(a,roll()):a);
+  const roll=()=>this.die(20);
+  let d=this.rerollIfKept(h,this.rollHeroD20(h,{adv,dis}));
   this.noteOptions(itemOptions(this,h,"after-roll"));
   const ring=h.slots.ring;
   if(ring?.id==="ring-luck"&&!h.used.has(ring)&&
@@ -1251,7 +1265,11 @@ export class ExpeditionState {
   // scripted agent may select a policy, but cannot inspect a future face.
   const lampChoice=lamp>=0&&this.chooseEffect("lantern-shrine-before-roll",
    ["save","use"],"use")==="use";
-  let face=typeof forced==="number"?forced:this.die();
+  let face;
+  if(typeof forced==="number")face=forced;
+  else if(this.moonLensFace?.roomId===this.room.id){
+   face=this.moonLensFace.face;this.moonLensFace=null;
+  }else face=this.die();
   if(this.reverseNextRoomStage===this.room.stage&&this.room.id!=="d-mirror"){
    this.reverseNextRoomStage=null;
    face=7-face;
