@@ -95,7 +95,14 @@ const atomic=(path,value)=>{
 const csv=(path,rows)=>{
  if(!rows.length){writeFileSync(path,"\n");return;}
  const keys=[...new Set(rows.flatMap(Object.keys))];
- const value=v=>JSON.stringify(v===null||v===undefined?"":typeof v==="object"?JSON.stringify(v):v);
+ // RFC 4180: JSON-style backslash escaping is NOT valid CSV quoting.
+ // Quote every field and double interior double-quotes, including embedded
+ // structured metric cells and multiline strings.
+ const value=v=>{
+  const raw=v===null||v===undefined?"":typeof v==="object"?
+   JSON.stringify(v):String(v);
+  return '"'+raw.replaceAll('"','""')+'"';
+ };
  writeFileSync(path,[keys.map(value).join(","),...rows.map(r=>
   keys.map(k=>value(r[k])).join(","))].join("\n")+"\n");
 };
