@@ -67,6 +67,7 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
   throw Error("Only a defeated active Monster may settle its reward");
  if(!s.banished){
   s.metrics.kills++;
+  s.metrics.monsterKillsById[m.id]=(s.metrics.monsterKillsById[m.id]||0)+1;
   // Apply only the reward actually printed on the defeated Monster.
   if(m.stage!=="FINAL"&&s.alive())applyMonsterDefeat(s,m);
  }

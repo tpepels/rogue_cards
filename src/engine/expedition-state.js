@@ -115,6 +115,8 @@ export class ExpeditionState {
    operationCounts:{},cardCounts:{},roomChoices:{},roomOptionAvailable:{},
    monsterVisits:{},monsterBehaviorBands:{},objectAcquisitions:{},objectActivations:{},
    objectRoomExposures:{},objectEquippedRoomExposures:{},
+   monsterKillsById:{},monsterParleyAttemptsById:{},
+   monsterParleyWinsById:{},
    wipeCause:null,wipeStage:null};
   for(const h of this.heroes){
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);

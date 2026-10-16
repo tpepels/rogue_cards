@@ -93,8 +93,12 @@ export function resolveParley(s){
  default:throw Error("Monster missing parley "+m.id);
  }
  s.metrics.negotiations++;
+ s.metrics.monsterParleyAttemptsById[m.id]=
+  (s.metrics.monsterParleyAttemptsById[m.id]||0)+1;
  if(success){
   s.metrics.negotiationsWon++;s.metrics.banishments++;
+  s.metrics.monsterParleyWinsById[m.id]=
+   (s.metrics.monsterParleyWinsById[m.id]||0)+1;
   s.monster=null;s.monsterHP=0;
  }
  return success;
