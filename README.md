@@ -2,7 +2,7 @@
 
 **A physical solo/cooperative dungeon-crawling card game for one or two players.**
 
-[**Complete 163-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**Four-page rules and deck recipes**](https://tpepels.github.io/rogue_cards/rules.html)
+[**Complete 175-card print catalogue**](https://tpepels.github.io/rogue_cards/cards.html) · [**Original catalogue**](https://tpepels.github.io/rogue_cards/) · [**Build your own dungeon**](https://tpepels.github.io/rogue_cards/decks.html) · [**Illustrated learn-to-play tutorial**](https://tpepels.github.io/rogue_cards/tutorial.html) · [**Four-page rules and deck recipes**](https://tpepels.github.io/rogue_cards/rules.html)
 
 All cards, dice ranges, behaviours, rewards and strange exceptions are printed on the cards. The website is only a printable catalogue; play happens at the table.
 
@@ -31,12 +31,27 @@ Use the [**interactive Dungeon Deck Builder**](https://tpepels.github.io/rogue_c
 | **Strange Paths** | 39 (13 per depth) | 6 | Standard exploration interspersed with occasional long-term bargains |
 | **Everything Goes** | 79 (29 UPPER / 27 MIDDLE / 23 DEEP) | 10 | All original and expansion Rooms and every unusual combination |
 
-The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rules.html) contains the core rules followed by the Classic and Strange card lists (with copies), Everything Goes setup, and custom-deck guidance. The [**full cards.html catalogue**](https://tpepels.github.io/rogue_cards/cards.html) displays all 163 cards and prints all physical copies without applying any deck preset.\n\nThe builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
+The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rules.html) contains the core rules followed by the Classic and Strange card lists (with copies), Everything Goes setup, and custom-deck guidance. The [**full cards.html catalogue**](https://tpepels.github.io/rogue_cards/cards.html) displays all 175 cards and prints all physical copies without applying any deck preset.\n\nThe builder can also save a **custom card selection in your browser**, print the selected cards in physical quantities, and copy a plain-text deck list. The Hero cards, Vault and both Warden phases are always included; every chosen Room and Monster stays in its matching depth pile. Select at least three Rooms and at least one Monster type per depth. Include your Heroes' printed starting Objects and keep those aside before shuffling the remaining Objects. The builder warns about incomplete custom piles but allows deliberately difficult experimental decks.
 
-**New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. They add **24 designs** to the 139 originals, for **163 selectable physical card designs**. They do not introduce new Pacts, delayed debts or universal rules. These extra cards deliberately live in `src/print-expansion.js` rather than the engine's `CATALOGUE`: the Oracle/engine and existing 139 canonical designs remain untouched until the print playtest is accepted.
+**New print-only expansion:** 15 self-contained regional Rooms (including cells, corridors, traps and ordinary treasure) and 9 simple Tools/Weapons/Armour cards. Together with twelve new regional Monsters, they add **36 designs** to the 139 originals, for **175 printable card designs**. They do not introduce new Pacts, delayed debts or universal rules. The legacy 139-card catalogue is preserved for historical comparisons. Everything Goes sessions now include the fifteen extra Rooms, nine extra Objects and twelve new Monsters, with an explicit opt-in mode.
 
-**Artwork status:** the 24 extra cards deliberately have blank illustration areas until their own artwork is generated. Their old borrowed-art names remain in `PRINT_ONLY_ART` only so the generator can identify missing art; those placeholders are not displayed on the website or printed.
+**Artwork status:** the 36 extra cards deliberately have blank illustration areas until their own artwork is generated. Their old borrowed-art names remain in `PRINT_ONLY_ART` only so the generator can identify missing art; those placeholders are not displayed on the website or printed.
 
+
+## Everything Goes - extended expedition (2026-10-16)
+
+The current Everything Goes playtest resolves **12 non-Corridor Rooms per stage** (36 normal Rooms across UPPER / MIDDLE / DEEP). Corridors add visits without counting. Trapdoors may skip a stage. The fifteen formerly print-only Rooms now have executable rules in the decision-session engine; the nine print-only Objects are in the Item pool, and twelve Monsters expand the regional roster to 24. More regional Rooms and Corridors trigger Monster draws on entry or through printed outcomes.
+
+A defeated regional Monster awards **one Item** in Everything Goes, in addition to any printed Room reward and optional Monster Remains. Parley, escape and banishment do not award this standard combat loot.
+
+Quick checks:
+
+```sh
+node --test tests/everything-goes.test.mjs tests/decks.test.mjs tests/room-memory.test.mjs
+node scripts/study-everything-goes.mjs --runs 20 --seed 20261016
+```
+
+Pass `gameMode:"everything-goes"` to `createDecisionSession` or `playSessionWithMCTS`. The short legacy mode remains available as `gameMode:"original"`; historical research results are tied to their original Git revision. The pacing script uses a deterministic, non-MCTS policy, **not a calibrated win-rate estimate or physical playtime measurement**. Tabletop timing and the target of 3-4 actual ordinary combats require further playtesting.
 
 ## Generated card illustrations
 
