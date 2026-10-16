@@ -177,3 +177,85 @@ export function evaluateBalanceTargets(targets,allRuns,{complete=false,physicalS
  };
  return report;
 }
+
+
+/**
+ * Separate reachability, executable-effect and actual policy use.
+ * Zero organic occurrences do not establish an unreachable card, and zero
+ * policy uses do not prove that its printed trigger is broken.
+ */
+export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
+ const a=coverage.aggregate||{},items=[],rooms=[],monsters=[];
+ const num=(map,id,key="total")=>{
+  const value=map?.[id];return typeof value==="number"?value:(value?.[key]||0);
+ };
+ for(const card of cardLists.items){
+  const id=card.id,
+   acquired=num(a.objectAcquisitions,id),drawn=num(a.objectDraws,id),
+   offered=num(a.itemOpportunities,id),used=num(a.itemUses,id),
+   passive=num(a.itemPassiveEffects,id,"triggers"),
+   activated=num(a.objectActivations,id),
+   heldRooms=num(a.objectRoomExposures,id),
+   equippedRooms=num(a.objectEquippedRoomExposures,id);
+  const hasRealEffect=used+passive+activated>0;
+  let finding="OBSERVED_EFFECT";
+  if(!acquired)finding="UNOBSERVED_ACQUISITION_TARGETED_TEST";
+  else if(hasRealEffect)finding="OBSERVED_EFFECT";
+  else if(offered>=targets.itemAudit.minActualLegalOpportunitiesForUseJudgment)
+   finding="TRIGGER_OFFERED_BUT_NEVER_USED_REVIEW_POLICY_OR_ENGINE";
+  else if(equippedRooms>=targets.itemAudit.minEquippedRoomExposuresForPassiveJudgment)
+   finding="EQUIPPED_BUT_NO_PASSIVE_EFFECT_REVIEW";
+  else if(offered===0)finding="ACQUIRED_BUT_NO_LEGAL_TRIGGER_OBSERVED";
+  else finding="TOO_FEW_OPPORTUNITIES_TO_JUDGE_USE";
+  items.push({id,title:card.title,kind:card.v2?.kind,
+   acquired,drawn,offered,used,passive,activated,
+   heldRooms,equippedRooms,hasRealEffect,
+   usePerOpportunity:ratio(used,offered),
+   finding,
+   structuralExecutableTest:"NOT_INFERABLE_FROM_SURVEY"});
+ }
+ for(const card of cardLists.rooms)
+  rooms.push({id:card.id,title:card.title,stage:card.stage,
+   entered:num(coverage.visits,card.id),
+   option0Available:num(a.roomOptionAvailable,card.id+":0"),
+   option1Available:num(a.roomOptionAvailable,card.id+":1"),
+   option0Chosen:num(a.roomChoices,card.id+":0"),
+   option1Chosen:num(a.roomChoices,card.id+":1"),
+   needsFocusedTest:num(coverage.visits,card.id)<
+    targets.coverageThresholds.minOrganicRoomEntriesPerSeenRoom});
+ for(const card of cardLists.monsters)
+  monsters.push({id:card.id,title:card.title,stage:card.stage,
+   encounters:num(a.monsterVisits,card.id),
+   fought:num(a.monsterFightStartsById,card.id),
+   defeated:num(a.monsterKillsById,card.id),
+   parleyAttempts:num(a.monsterParleyAttemptsById,card.id),
+   parleyWins:num(a.monsterParleyWinsById,card.id),
+   needsFocusedTest:num(a.monsterVisits,card.id)<
+    targets.coverageThresholds.minOrganicMonsterEncountersPerSeenMonster});
+ const underused=items.filter(i=>i.finding!=="OBSERVED_EFFECT");
+ const itemPairs=Object.fromEntries(Object.entries(matchedItems||{}).map(([id,v])=>
+  [id,{pairs:v.pairs,compliant:v.grantCompliance,
+   used:v.uses,triggered:v.triggered,
+   enoughMatchedPairs:v.pairs>=targets.itemAudit.minMatchedPairsPerOddItem,
+   requiresFocusedTriggerTest:v.triggered<targets.itemAudit.minActualLegalOpportunitiesForUseJudgment}]));
+ return {schema:"everything-goes-item-reachability-audit-v1",
+  catalog:{rooms:rooms.length,monsters:monsters.length,items:items.length,
+   combined:rooms.length+monsters.length+items.length,
+   intended:targets.itemAudit.catalogue},
+  items,rooms,monsters,itemPairs,
+  flags:{
+   itemsWithNoObservedEffect:underused.map(x=>x.id),
+   itemsNeverAcquired:items.filter(x=>!x.acquired).map(x=>x.id),
+   itemsWithAtLeast30ChancesButNoUse:items.filter(x=>
+    x.offered>=targets.itemAudit.minActualLegalOpportunitiesForUseJudgment&&!x.used).map(x=>x.id),
+   itemsWithPassiveExposureButNoEffect:items.filter(x=>
+    x.equippedRooms>=targets.itemAudit.minEquippedRoomExposuresForPassiveJudgment&&
+    !x.passive&&!x.used&&!x.activated).map(x=>x.id),
+   roomsUnderExposed:rooms.filter(x=>x.needsFocusedTest).map(x=>x.id),
+   monstersUnderExposed:monsters.filter(x=>x.needsFocusedTest).map(x=>x.id),
+   newItemsUnderPaired: Object.entries(itemPairs).filter(([,v])=>!v.enoughMatchedPairs).map(([id])=>id),
+   newItemsUnderTriggered: Object.entries(itemPairs).filter(([,v])=>v.requiresFocusedTriggerTest).map(([id])=>id)
+  },
+  note:"These are evidence-gathering triggers, not assertions of broken rules. Structural executability requires separate deterministic branch tests."
+ };
+}
