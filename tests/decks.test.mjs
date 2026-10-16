@@ -14,7 +14,23 @@ test("the 139-card legacy catalogue remains intact alongside 54 new printable de
  assert.equal(ALL_OBJECTS.length,79);
  assert.equal(SELECTABLE.length,79+79+24);
  assert.equal(Object.keys(CARD_ART).length,139);
- assert.equal(Object.keys(PRINT_ONLY_ART).length,24);
+ // Illustration generation is incremental: the 24 earlier expansion PNGs
+ // are always mapped, but 12 Monsters and 18 odd Items are added only
+ // after their real artwork has been generated. Never require an exact
+ // mapping count during a partially or fully illustrated local checkout.
+ const baseArtKeys=new Set([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS].map(cardKey));
+ const optionalArtKeys=new Set(SELECTABLE.filter(c=>
+  c.v2?.number>=164&&c.v2.number<=193).map(cardKey));
+ assert.equal(baseArtKeys.size,24);
+ assert.equal(optionalArtKeys.size,30);
+ for(const key of baseArtKeys)assert.ok(PRINT_ONLY_ART[key],"Missing base artwork mapping: "+key);
+ for(const [key,filename] of Object.entries(PRINT_ONLY_ART)){
+  assert.ok(baseArtKeys.has(key)||optionalArtKeys.has(key),
+   "Unexpected print-only illustration mapping: "+key);
+  assert.match(filename,/^\\d{3}_[a-z0-9_]+\\.png$/,key);
+ }
+ assert.ok(Object.keys(PRINT_ONLY_ART).length>=24);
+ assert.ok(Object.keys(PRINT_ONLY_ART).length<=54);
  assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,193); // original 139 plus 54
  assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,193);
 });
