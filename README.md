@@ -60,6 +60,29 @@ Test the new Items with `npm run test:everything` and use
 `python3 scripts/generate-illustrations.py --dry-run` before paying
 for art generation (artwork numbers 176-193).
 
+## Everything Goes - comprehensive decision-ready balance experiment
+
+For 36-Room Everything Goes balance research, use
+[`docs/everything-goes-research.md`](docs/everything-goes-research.md).
+
+```bash
+bash scripts/run-everything-goes-research.sh
+```
+
+This records **3,600 actual organic sessions** and **2,160 matched
+Item pairs (4,320 additional games)**: 7,920 genuine complete
+expeditions, with all actual decisions, MCTS alternatives, actual
+committed dice, HP/equipment/status transitions, per-card exposure
+denominators, Monster combat and Parley outcomes, and all engine metric
+deltas. Exact raw records are gzip JSON. `summary.md`, `summary.json`,
+`coverage.json`, `runs.csv`, `card-coverage.csv`, and
+`paired-item-effects.csv` are generated in the same run.
+Interrupted studies save checkpoints and can resume on the exact
+same pinned commit. The runner fails closed on unresolved sessions
+instead of silently counting them as losses.
+Use `npm run test:experiment` to verify the recording contract and
+`npm run study:deep -- --dry-run` to inspect the workload without running it.
+
 ## Everything Goes - extended expedition (2026-10-16)
 
 The current Everything Goes playtest resolves **12 non-Corridor Rooms per stage** (36 normal Rooms across UPPER / MIDDLE / DEEP). Corridors add visits without counting. Trapdoors may skip a stage. The fifteen formerly print-only Rooms now have executable rules in the decision-session engine; the nine print-only Objects are in the Item pool, and twelve Monsters expand the regional roster to 24. More regional Rooms and Corridors trigger Monster draws on entry or through printed outcomes.
