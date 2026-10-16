@@ -5,6 +5,7 @@
  */
 import {OBJECTS} from "./tabletop-data.js";
 import {ODD_ITEMS} from "./item-expansion.js";
+import {PRINT_ONLY_ITEMS} from "./print-expansion.js";
 const actions=new Set(["scroll-flame","scroll-frost","scroll-lightning",
  "scroll-banish","scroll-mischief","scroll-last","wand-sparks",
  "wand-morph","wand-turn","wand-frost","spore-jar"]);
@@ -150,3 +151,61 @@ export function auditItemTiming(){
     ids.filter(id=>ITEM_TIMING[id].includes(p)).length]))};
 }
 auditItemTiming();
+
+/** All 79 Item definitions must have an explicit mechanical timing route.
+ * This is a contract INDEX, not a proof that every branch has a deterministic
+ * executable test. The latter is deliberately reported separately.
+ * Keep the old ITEM_TIMING registry intact for original-mode consumers.
+ */
+const extraTimings=Object.freeze({
+ "ex-bandages":["between-rooms","out-of-combat-heal"],
+ "ex-lockpicks":["room-roll-reroll"],
+ "ex-rations":["between-rooms","out-of-combat-heal"],
+ "ex-dagger":["equipped-weapon"],
+ "ex-mace":["equipped-weapon"],
+ "ex-spear":["equipped-weapon","beast-matchup"],
+ "ex-jerkin":["equipped-armour"],
+ "ex-helm":["equipped-armour","on-hit"],
+ "ex-buckler":["equipped-armour"],
+ "odd-loaded-coin":["after-d6"],
+ "odd-crooked-die":["after-d6"],
+ "odd-lucky-thread":["before-own-d20"],
+ "odd-jinx-powder":["before-monster-behaviour"],
+ "odd-bent-mirror":["after-own-d20"],
+ "odd-fever-candle":["explore","between-rooms"],
+ "odd-grave-salt":["before-attack-cursed"],
+ "odd-hooked-chain":["after-d6","once-per-room"],
+ "odd-sun-charm":["explore","between-rooms"],
+ "odd-mad-compass":["explore","before-room-choice"],
+ "odd-trick-knife":["equipped-weapon","after-own-attack-d20"],
+ "odd-chaos-idol":["after-d6","after-own-d20"],
+ "odd-witchbones":["after-d6"],
+ "odd-thorn-tonic":["explore","between-rooms"],
+ "odd-echo-bell":["between-rooms-kept-trophy"],
+ "odd-moon-lens":["explore-before-room-roll"],
+ "odd-bone-dice":["between-rooms"],
+ "odd-red-string":["between-rooms-two-heroes","shared-d20"]
+});
+export const ITEM_TIMING_ALL=Object.freeze({
+ ...ITEM_TIMING,
+ ...Object.fromEntries([...PRINT_ONLY_ITEMS,...ODD_ITEMS].map(card=>{
+  const timing=extraTimings[card.id];
+  if(!timing?.length)throw Error("Unclassified extra Item "+card.id);
+  return [card.id,Object.freeze(timing)];
+ }))
+});
+export function auditAllItemTiming(){
+ const cards=[...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS];
+ const ids=cards.map(c=>c.id);
+ if(ids.length!==79||new Set(ids).size!==79)
+  throw Error("Expected 79 unique Everything Goes Item designs");
+ const actual=Object.keys(ITEM_TIMING_ALL);
+ if(actual.length!==79||actual.some(id=>!ids.includes(id)))
+  throw Error("Item timing registry and printable Item catalogue disagree");
+ for(const card of cards)
+  if(!ITEM_TIMING_ALL[card.id]?.length)
+   throw Error("Missing executable timing path for "+card.id);
+ return {classified:79,cards:ids.length,legacy:OBJECTS.length,
+  expansion:PRINT_ONLY_ITEMS.length,unusual:ODD_ITEMS.length};
+}
+auditAllItemTiming();
