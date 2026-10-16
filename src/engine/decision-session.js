@@ -11,6 +11,7 @@
  * still requires stateful test coverage; this file does not certify it.
  */
 import {VAULT} from "../tabletop-data.js";
+import {ExpeditionState} from "./expedition-state.js";
 import {createGame,observeGame,legalActions,applyAction,
  takeMonsterResponse,finishCurrentRoom} from "./index.js";
 import {resolveParley} from "./parley.js";
@@ -243,7 +244,11 @@ function afterMonsterResponse(session){
  session.heroIndex=-1;session.phase="combat-hero";
 }
 export function createDecisionSession(options={}){
- const state=createGame(options);
+ // The public createGame() deliberately rejects interventions. Only this
+ // research session entrypoint accepts a physical extra starting Item.
+ const {extraObjectId=null,...gameOptions}=options;
+ const state=extraObjectId===null?createGame(gameOptions):
+  new ExpeditionState({...gameOptions,extraObjectId});
  return {state,phase:"between-rooms",heroIndex:0,
   remainingReturns:[],returnRoomId:null,
   monsterRound:0,actionCount:0,history:[]};
