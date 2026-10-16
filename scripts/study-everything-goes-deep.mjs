@@ -236,7 +236,8 @@ function coverage(rows){
   "objectAcquisitions","objectRoomExposures",
   "objectEquippedRoomExposures","itemOpportunities","itemUses",
   "itemResults","itemPassiveEffects","objectRollBands",
-  "monsterVisits","monsterKillsById","monsterParleyAttemptsById",
+  "monsterVisits","monsterKillsById","monsterFightStartsById",
+  "damageContextById","monsterParleyAttemptsById",
   "monsterParleyWinsById","monsterBehaviorBands","operationCounts",
   "cardCounts","objectActivations"];
  const aggregate=Object.fromEntries(fields.map(k=>[k,{}]));
@@ -428,6 +429,8 @@ function save(c,done,expected){
    itemUses:summary.coverage.aggregate.itemUses[x.id]?.total||0,
    exposureRooms:summary.coverage.aggregate.objectRoomExposures[x.id]||0,
    monsterKills:summary.coverage.aggregate.monsterKillsById[x.id]||0,
+   monsterFights:summary.coverage.aggregate.monsterFightStartsById[x.id]||0,
+   hpDamageInContext:summary.coverage.aggregate.damageContextById[x.id]||0,
    parleyAttempts:summary.coverage.aggregate.monsterParleyAttemptsById[x.id]||0,
    parleyWins:summary.coverage.aggregate.monsterParleyWinsById[x.id]||0,
    option0Chosen:summary.coverage.aggregate.roomChoices[x.id+":0"]||0,
@@ -472,8 +475,11 @@ function save(c,done,expected){
    const kills=summary.coverage.aggregate.monsterKillsById[card.id]||0;
    const attempts=summary.coverage.aggregate.monsterParleyAttemptsById[card.id]||0;
    const wins=summary.coverage.aggregate.monsterParleyWinsById[card.id]||0;
+   const fights=summary.coverage.aggregate.monsterFightStartsById[card.id]||0;
+   const damage=summary.coverage.aggregate.damageContextById[card.id]||0;
    return "- "+card.title+" ["+card.stage+"]: encounters="+visits+
-    ", defeated="+kills+", parley="+wins+"/"+attempts;
+    ", fought="+fights+", defeated="+kills+
+    ", parley="+wins+"/"+attempts+", HP lost in context="+damage;
   }),
   "", "## Every Item (acquired / triggered opportunities / used / exposure Rooms)",
   ...ALL_OBJECTS.map(card=>{

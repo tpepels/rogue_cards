@@ -115,7 +115,8 @@ export class ExpeditionState {
    operationCounts:{},cardCounts:{},roomChoices:{},roomOptionAvailable:{},
    monsterVisits:{},monsterBehaviorBands:{},objectAcquisitions:{},objectActivations:{},
    objectRoomExposures:{},objectEquippedRoomExposures:{},
-   monsterKillsById:{},monsterParleyAttemptsById:{},
+   monsterKillsById:{},monsterFightStartsById:{},
+   damageContextById:{},monsterParleyAttemptsById:{},
    monsterParleyWinsById:{},
    wipeCause:null,wipeStage:null};
   for(const h of this.heroes){
@@ -345,6 +346,13 @@ export class ExpeditionState {
  }
  hurt(h,amt){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
   this.metrics.damage+=before-h.hp;
+  if(before>h.hp){
+   // Attribution is the visible *context* of the HP loss, not a causal
+   // assertion: Item backfire inside combat also occurs in this context.
+   const context=this.monster?.id||this.room?.id||"between-rooms";
+   this.metrics.damageContextById[context]=
+    (this.metrics.damageContextById[context]||0)+before-h.hp;
+  }
   if(before>0&&h.hp===0&&!this.alive()&&!this.metrics.wipeCause){
    this.metrics.wipeCause=this.monster?.id||this.room?.id||"unknown-effect";
    this.metrics.wipeStage=this.room?.stage||"unknown";

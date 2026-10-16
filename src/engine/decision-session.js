@@ -138,7 +138,12 @@ function awaitingMonster(session){
  s.mustFightFollowingWisp=false;
  session.monsterRound=0;
  s.metrics.battles++;
- if(session.phase==="combat-hero")s.metrics.combatStarts++;
+ if(session.phase==="combat-hero"){
+  s.metrics.combatStarts++;
+  const id=s.monster.id;
+  s.metrics.monsterFightStartsById[id]=
+   (s.metrics.monsterFightStartsById[id]||0)+1;
+ }
  return true;
 }
 function roomSettled(session){
@@ -284,6 +289,9 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
    if(!done(session)&&!awaitingMonster(session))roomSettled(session);
   }else if(!done(session)){
    s.metrics.combatStarts++;
+   const id=s.monster.id;
+   s.metrics.monsterFightStartsById[id]=
+    (s.metrics.monsterFightStartsById[id]||0)+1;
    s._actedCombatMask=0;session.phase="combat-hero";session.heroIndex=-1;
   }
  }else if(phase==="combat-hero"){
