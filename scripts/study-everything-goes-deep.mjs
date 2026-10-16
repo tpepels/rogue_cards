@@ -11,7 +11,7 @@
  * All attempts have deterministic identifiers, raw gzipped decision tapes,
  * compact checkpoints, resume protection and a strict completion gate.
  *
- * node scripts/study-everything-goes-deep.mjs --runs 360 --pairs-per-item 100 \
+ * node scripts/study-everything-goes-deep.mjs --runs 3600 --pairs-per-item 120 \
  *   --workers 6 --hours 72 --budget 2 --out results/everything-goes-deep
  */
 import {Worker,isMainThread,parentPort,workerData} from "node:worker_threads";
