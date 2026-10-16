@@ -256,7 +256,8 @@ function createReport(c,done,expected){
  const survey=rows.filter(x=>x.group==="survey");
  const pairs=rows.filter(x=>x.group==="pair");
  const metrics=["won","actions","rooms","encounterStarts","combatStarts",
-  "kills","drawn","hpLoss","searchedDecisions"];
+  "kills","drawn","hpLoss","searchedDecisions","dice","nestedDecisions",
+  "equipmentProgressBreaks"];
  const byParty={};
  for(const row of survey){
   const key=row.heroes.join("+"),item=byParty[key]??={runs:0,wins:0,
@@ -300,7 +301,14 @@ function createReport(c,done,expected){
    ...Object.fromEntries(metrics.map(k=>["delta_"+k,
     Number(p.treatment[k])-Number(p.control[k])]))});
  }
- const rawCover=coverage(survey),total=rows.length;
+ const rawCover=coverage(c.mode==="pairs"?pairs:survey),total=rows.length;
+ const scalarTotals={};
+ for(const row of survey)
+  for(const [k,v] of Object.entries(row.metrics))
+   if(typeof v==="number"&&Number.isFinite(v))inc(scalarTotals,k,v);
+ const endings={};
+ for(const row of survey)inc(endings,row.ending||"unknown");
+ const uniqueSeeds=new Set(survey.map(r=>r.seed)).size;
  const complete=total===expected&&rows.every((r,i)=>r.i===i);
  const summary={
   schema:"everything-goes-decision-report-v1",complete,planned:expected,
@@ -310,7 +318,7 @@ function createReport(c,done,expected){
    winRate:survey.length?survey.filter(r=>r.won).length/survey.length:null,
    winWilson95:wilson(survey.filter(r=>r.won).length,survey.length),
    sample: Object.fromEntries(metrics.map(k=>[k,ci(survey.map(r=>Number(r[k])))])),
-   parties},
+   scalarTotals,endings,uniqueSeeds,parties},
   matchedItems:byItem,
   coverage:rawCover,
   limitations:[
@@ -391,6 +399,34 @@ function save(c,done,expected){
   ...Object.entries(byItem).map(([id,v])=>"- "+id+": "+
    v.pairs+"/"+v.plannedPairs+" matched pairs, win-rate difference "+
    (v.delta.won?.mean??"n/a")+"; "+v.verdict),
+  "", "## Per-Monster performance (organic exposures; not causal)",
+  ...ALL_MONSTERS.map(card=>{
+   const visits=summary.coverage.aggregate.monsterVisits[card.id]||0;
+   const kills=summary.coverage.aggregate.monsterKillsById[card.id]||0;
+   const attempts=summary.coverage.aggregate.monsterParleyAttemptsById[card.id]||0;
+   const wins=summary.coverage.aggregate.monsterParleyWinsById[card.id]||0;
+   return "- "+card.title+" ["+card.stage+"]: encounters="+visits+
+    ", defeated="+kills+", parley="+wins+"/"+attempts;
+  }),
+  "", "## Every Item (acquired / triggered opportunities / used / exposure Rooms)",
+  ...ALL_OBJECTS.map(card=>{
+   const id=card.id,c=summary.coverage.aggregate;
+   return "- "+card.title+": "+(c.objectAcquisitions[id]||0)+" / "+
+    (c.itemOpportunities[id]?.total||0)+" / "+
+    (c.itemUses[id]?.total||0)+" / "+
+    (c.objectRoomExposures[id]||0);
+  }),
+  "", "## Every Room (entered / option 1 / option 2 / d6 bands)",
+  ...ALL_ROOMS.map(card=>{
+   const id=card.id,c=summary.coverage.aggregate;
+   return "- "+card.title+" ["+card.stage+"]: entered="+
+    (summary.coverage.visits[id]||0)+", choices="+
+    (c.roomChoices[id+":0"]||0)+"/"+(c.roomChoices[id+":1"]||0)+
+    ", d6="+[0,1,2].map(b=>c.roomRollBands[id+":"+b]||0).join("/");
+  }),
+  "", "## Terminal causes and scalar engine counters",
+  ...Object.entries(summary.survey.endings).map(([key,n])=>"- "+key+": "+n),
+  ...Object.entries(summary.survey.scalarTotals).map(([key,n])=>"- "+key+": "+n),
   "", "## Raw reproducibility",
   "raw/NNNNNN.json.gz: complete legal-action menus, choices,",
   "per-decision before/after game states, recursive engine-metric changes,",
