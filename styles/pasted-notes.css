@@ -686,5 +686,3 @@
  content:none;
 }
 
-/* Keep Rusty Gate's north-east choice ticket clear of its outcome scrap. */
-.tt-card.tt-paper-collage[data-id="u-gate"] .tt-slip--lead{top:27mm;bottom:auto}

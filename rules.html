@@ -65,11 +65,11 @@ strong{font-weight:900}
  .sheet:nth-of-type(2):not(.deck-appendix) .example{font-size:10.9px;line-height:1.3;margin:1.5mm 0;padding:1.8mm 2.3mm}
  .sheet:nth-of-type(2):not(.deck-appendix) .combat-example{font-size:10.8px;line-height:1.32;padding:1.7mm 2mm;margin:1.3mm 0}
  .sheet:nth-of-type(2):not(.deck-appendix) .combat-example>.example-title{font-size:10.4px;line-height:1.2;margin-bottom:1.3mm}
- .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .setup{gap:.3mm;margin-bottom:1.4mm;padding:1.2mm 1.6mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .setup{grid-template-columns:repeat(3,minmax(0,1fr));gap:1mm;margin-bottom:1.1mm;padding:.8mm 1mm}
  .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .setup div{font-size:10.6px;line-height:1.26}
- .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step{display:grid;grid-template-columns:29% minmax(0,1fr);gap:1.5mm;align-items:start;margin:0 0 .6mm;padding:.8mm 1.1mm}
- .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step .label{font-size:10px;line-height:1.2;margin:0}
- .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step p{font-size:10.7px;line-height:1.28;margin:0}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step{display:block;margin:0 0 .55mm;padding:.65mm 1mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step .label{display:inline;font-size:10px;line-height:1.2;margin-right:1mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step p{display:inline;font-size:10.7px;line-height:1.28;margin:0}
  .sheet:nth-of-type(2):not(.deck-appendix) .end{margin-top:2mm;padding-top:1mm}
 }
 
@@ -155,7 +155,7 @@ strong{font-weight:900}
 <p>Some challenges call for a <strong>WIT test</strong>: roll a d20, add your Hero's WIT and compare the total with the number on the card. In an <strong>opposed test</strong>, both sides roll a d20 and add the stated ability; the higher total wins.</p>
 <p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s and use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. Together they cancel. Bonuses such as <strong>+2 WIT</strong> add 2 to a WIT roll, not permanently to the Hero stat. A DEF bonus raises AC. If a card grants ADV on a DEF roll, the attacker gets DIS instead; DEF-roll DIS gives the attacker ADV.</p>
 <p>On a WIT test, a natural 1 fails and a natural 20 succeeds, even before bonuses.</p>
-<div class="example"><strong>AN EXAMPLE OF WIT</strong>A card requires WIT 15. Your Hero has WIT 4. You roll 12 on the d20: 12 + 4 = 16. You succeed.</div></section>
+<p class="wit-example"><strong>Example:</strong> A WIT 4 Hero rolls 12: 12 + 4 = 16, beating WIT 15.</p></section>
 <section><h2>7. When a Monster appears</h2>
 <p><strong>Draw one Monster only when instructed, even with two Heroes.</strong> Mark its HP. Fight one Monster at a time; put additional drawn Monsters face up in a waiting line. You may try its printed <strong>PARLEY</strong> before fighting. A peaceful departure normally gives no combat reward.</p>
 <p><strong>1. Hero turn.</strong> Each living Hero takes one action per round, in either order: attack, use an Item or ability, try Elbereth, or pass. Printed triggered abilities cost no extra action unless stated.</p>
