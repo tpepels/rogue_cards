@@ -171,7 +171,7 @@ function work(job,c){
  const file=join(c.out,"raw",index+".json.gz");
  writeFileSync(tmp,compressed);renameSync(tmp,file);
  const phases={};const selected={};const available={},offeredByCard={};
- const roomEntries={},monsterStarts={},diceKinds={};
+ const roomEntries={},monsterStarts={},diceKinds={},diceFaces={};
  let searchMs=0,transitionMs=0,rawDice=0,nested=0;
  for(const e of events){
   inc(phases,e.phase);inc(selected,e.chosen.kind);
@@ -186,6 +186,7 @@ function work(job,c){
    inc(monsterStarts,e.after.monster.id);
   for(const roll of e.dice){
    rawDice++;inc(diceKinds,String(roll.sides));
+   inc(diceFaces,String(roll.sides)+":"+roll.face);
   }
   searchMs+=e.searchMs||0;transitionMs+=e.transitionMs||0;
  }
@@ -220,7 +221,10 @@ function work(job,c){
    .find(card=>card.id===job.extraObjectId),
   counters:sampleCounters(m),metrics:m,
   phases,selected,available,offeredByCard,roomEntries,monsterStarts,
-  diceKinds,dice:rawDice,nestedDecisions:nested,
+  diceKinds,diceFaces,dice:rawDice,nestedDecisions:nested,
+  availableCardActions:result.availableCardActions,
+  chosenCardActions:result.chosenCardActions,
+  choiceCoverage:result.choiceCoverage,
   searchMs,transitionMs,wallMs:performance.now()-started,
   rawFile:"raw/"+index+".json.gz",
   rawBytes:compressed.length,rawSha256:sha(compressed)
@@ -237,6 +241,8 @@ function coverage(rows){
   "cardCounts","objectActivations"];
  const aggregate=Object.fromEntries(fields.map(k=>[k,{}]));
  const visits={};const offers={};const chosen={};const stages={};
+ const actionOfferedByCard={},actionChosenByCard={},
+  phaseCounts={},legalActions={},diceKinds={},diceFaces={};
  for(const row of rows){
   for(const key of fields){
    const src=row.metrics[key]||{};
@@ -254,7 +260,10 @@ function coverage(rows){
    }
   }
   add(visits,row.roomEntries);add(offers,row.offeredByCard);
-  add(chosen,row.selected);
+  add(chosen,row.selected);add(actionOfferedByCard,row.availableCardActions);
+  add(actionChosenByCard,row.chosenCardActions);
+  add(phaseCounts,row.phases);add(legalActions,row.available);
+  add(diceKinds,row.diceKinds);add(diceFaces,row.diceFaces);
   for(const [stage,value] of Object.entries(row.metrics.stageProgress||{}))
    inc(stages,stage,value);
  }
@@ -264,6 +273,8 @@ function coverage(rows){
  const itemNeverUsed=ALL_OBJECTS.filter(x=>!aggregate.itemUses[x.id]&&
   !aggregate.objectActivations[x.id]).map(x=>x.id);
  return {aggregate,visits,offers,chosen,stages,
+  actionOfferedByCard,actionChosenByCard,phaseCounts,legalActions,
+  diceKinds,diceFaces,
   missing:{roomsNeverEntered:roomMissing,monsterTypesNotSeen:monsterMissing,
    itemsNeverAcquired:itemMissing,itemsNeverUsed:itemNeverUsed}};
 }
@@ -423,7 +434,9 @@ function save(c,done,expected){
    option1Chosen:summary.coverage.aggregate.roomChoices[x.id+":1"]||0,
    option0Available:summary.coverage.aggregate.roomOptionAvailable[x.id+":0"]||0,
    option1Available:summary.coverage.aggregate.roomOptionAvailable[x.id+":1"]||0,
-   itemPassive:summary.coverage.aggregate.itemPassiveEffects[x.id]?.triggers||0
+   itemPassive:summary.coverage.aggregate.itemPassiveEffects[x.id]?.triggers||0,
+   legalActionOffers:summary.coverage.actionOfferedByCard[x.id+":item-trigger"]||0,
+   legalActionsChosen:summary.coverage.actionChosenByCard[x.id+":item-trigger"]||0
  }));
  csv(join(c.out,"card-coverage.csv"),cardRows);
  const fmt=x=>x===null?"n/a":(x*100).toFixed(1)+"%";
@@ -478,6 +491,15 @@ function save(c,done,expected){
     (c.roomChoices[id+":0"]||0)+"/"+(c.roomChoices[id+":1"]||0)+
     ", d6="+[0,1,2].map(b=>c.roomRollBands[id+":"+b]||0).join("/");
   }),
+  "", "## Actual decisions and random die faces",
+  ...Object.entries(summary.coverage.phaseCounts).map(([key,n])=>
+   "- phase "+key+": "+n+" decisions"),
+  ...Object.entries(summary.coverage.legalActions).map(([key,n])=>
+   "- option "+key+": "+n+" available"),
+  ...Object.entries(summary.coverage.chosen).map(([key,n])=>
+   "- chosen "+key+": "+n),
+  ...Object.entries(summary.coverage.diceFaces).map(([key,n])=>
+   "- actual die "+key+": "+n),
   "", "## Terminal causes and scalar engine counters",
   ...Object.entries(summary.survey.endings).map(([key,n])=>"- "+key+": "+n),
   ...Object.entries(summary.survey.scalarTotals).map(([key,n])=>"- "+key+": "+n),
