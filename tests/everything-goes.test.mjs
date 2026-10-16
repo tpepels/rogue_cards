@@ -19,7 +19,7 @@ test("Everything Goes contains the entire regional print deck and the new Monste
  assert.equal(EXTRA_MONSTERS.length,12);
  assert.equal(ALL_ROOMS.length,79);
  assert.equal(ALL_MONSTERS.length,24);
- assert.equal(ALL_OBJECTS.length,61);
+ assert.equal(ALL_OBJECTS.length,79);
  assert.equal(s.state.monsters.UPPER.length,20);
  assert.equal(s.state.monsters.MIDDLE.length,16);
  assert.equal(s.state.monsters.DEEP.length,16);

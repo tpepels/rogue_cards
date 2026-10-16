@@ -9,6 +9,7 @@ on:
       - "scripts/illustration-catalogue.mjs"
       - "src/print-expansion.js"
       - "src/monster-expansion.js"
+      - "src/item-expansion.js"
       - "src/tabletop-view.js"
       - "src/tabletop-data.js"
       - "tests/test_illustration_generator.py"
@@ -38,7 +39,7 @@ jobs:
           python-version: "3.12"
       - name: Verify missing-image detection and map updates without API access
         run: python3 -m unittest discover -s tests -p test_illustration_generator.py -v
-      - name: Verify 175 printable cards in offline dry-run
+      - name: Verify 193 printable cards in offline dry-run
         run: |
           python3 scripts/generate-illustrations.py --dry-run > /tmp/missing-art.log
           head -n 6 /tmp/missing-art.log
@@ -52,7 +53,7 @@ jobs:
           )
           assert match, lines[0]
           total, existing, missing = map(int, match.groups())
-          assert total == 175
+          assert total == 193
           assert existing + missing == total
           assert sum(line.startswith("  MISSING ") for line in lines[1:]) == missing
           PY

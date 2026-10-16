@@ -124,58 +124,50 @@ class IllustrationGeneratorTests(unittest.TestCase):
         self.assertIn('"monster:drain-leech":"164_drain_leech.png"', mapped)
         self.assertEqual(mapped.count('"monster:drain-leech"'), 1)
 
-    def test_physical_catalogue_covers_print_only_cards(self):
+    def test_full_physical_catalogue_includes_all_18_unillustrated_items(self):
         cards = module.get_catalogue()
-        self.assertEqual(len(cards), 175)
-        self.assertEqual(len(set(card["key"] for card in cards)), 175)
-        canonical = [c for c in cards if c["mapping_source"] == "canonical"]
+        self.assertEqual(len(cards), 193)
+        self.assertEqual(len({c["key"] for c in cards}), 193)
+        self.assertEqual(sum(c["mapping_source"] == "canonical" for c in cards), 139)
         expansion = [c for c in cards if c["mapping_source"] == "print-only"]
-        self.assertEqual(len(canonical), 139)
-        self.assertEqual(len(expansion), 36)
-        self.assertEqual(len({c["key"] for c in expansion}), 36)
-        new_monsters = [c for c in expansion if c["key"].startswith("monster:")]
-        self.assertEqual(len(new_monsters), 12)
-        self.assertEqual([c["number"] for c in new_monsters], list(range(164, 176)))
-        # Generated cards gradually acquire mappings; CI must remain valid
-        # when the user has completed any subset (or all) of the images.
-        for card in new_monsters:
+        self.assertEqual(len(expansion), 54)
+        monsters = [c for c in expansion if c["key"].startswith("monster:")]
+        odd_items = [c for c in expansion if c["key"].startswith("item:odd-")]
+        self.assertEqual(len(monsters), 12)
+        self.assertEqual(len(odd_items), 18)
+        self.assertEqual([c["number"] for c in monsters], list(range(164, 176)))
+        self.assertEqual([c["number"] for c in odd_items], list(range(176, 194)))
+        for card in monsters + odd_items:
             if card["filename"] is not None:
-                self.assertEqual(
-                    card["filename"],
-                    f"{card['number']:03d}_{module.slug(card['title'])}.png",
-                )
-        self.assertEqual(module.mapping_target(expansion[0])[1], "PRINT_ONLY_ART")
-        self.assertEqual(module.mapping_target(new_monsters[0])[1], "PRINT_ONLY_ART")
+                self.assertEqual(card["filename"],
+                                 f"{card['number']:03d}_{module.slug(card['title'])}.png")
+        self.assertTrue(all(module.mapping_target(c)[1] == "PRINT_ONLY_ART"
+                            for c in expansion))
 
-    def test_new_monster_illustrations_get_stable_164_to_175_numbers(self):
-        cards = module.get_catalogue()
-        # Recreate the initial 163-art state, even after some Monsters have
-        # been illustrated in the real repository.
-        cards = [dict(c, filename=None) if c["key"].startswith("monster:")
-                 and c["mapping_source"] == "print-only" else dict(c)
-                 for c in cards]
+    def test_missing_new_art_is_numbered_164_to_193_even_after_partial_runs(self):
+        all_cards = module.get_catalogue()
+        cards = [dict(c, filename=None) if c.get("number") is not None
+                 else dict(c) for c in all_cards]
         with tempfile.TemporaryDirectory() as tmp:
             art_dir = Path(tmp)
-            for card in cards:
-                if card["filename"]:
-                    Path(art_dir, card["filename"]).touch()
+            for c in cards:
+                if c["filename"]:
+                    Path(art_dir, c["filename"]).touch()
             planned = module.plan_cards(cards, art_dir)
-            monsters = [c for c in planned if c["mapping_source"] == "print-only"
-                        and c["key"].startswith("monster:")]
-            self.assertEqual(len(monsters), 12)
-            self.assertTrue(all(c["missing"] for c in monsters))
-            self.assertEqual(monsters[0]["filename"], "164_drain_leech.png")
-            self.assertEqual(monsters[-1]["filename"], "175_glass_revenant.png")
-            self.assertTrue(all(c["new_mapping"] for c in monsters))
-            self.assertEqual(sum(c["missing"] for c in planned), 12)
-            # Generate card 175 before 164; existing indices must stay stable.
-            Path(art_dir, monsters[-1]["filename"]).touch()
+            extra = [c for c in planned if c.get("number") is not None]
+            self.assertEqual(len(extra), 30)
+            self.assertEqual(sum(c["missing"] for c in planned), 30)
+            self.assertEqual(extra[0]["filename"], "164_drain_leech.png")
+            self.assertEqual(extra[11]["filename"], "175_glass_revenant.png")
+            self.assertEqual(extra[12]["filename"], "176_loaded_coin.png")
+            self.assertEqual(extra[-1]["filename"], "193_red_string.png")
+            Path(art_dir, extra[-1]["filename"]).touch()
             updated = [dict(c) for c in cards]
-            updated[-1]["filename"] = monsters[-1]["filename"]
-            repeated = module.plan_cards(updated, art_dir)
-            self.assertEqual([c["filename"] for c in repeated[-12:]],
-                             [c["filename"] for c in planned[-12:]])
-            self.assertEqual(sum(c["missing"] for c in repeated), 11)
+            updated[-1]["filename"] = extra[-1]["filename"]
+            again = module.plan_cards(updated, art_dir)
+            self.assertEqual([c["filename"] for c in again[-30:]],
+                             [c["filename"] for c in planned[-30:]])
+            self.assertEqual(sum(c["missing"] for c in again), 29)
 
 
 if __name__ == "__main__":

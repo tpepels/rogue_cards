@@ -63,21 +63,21 @@ test("the simple expansion has blank placeholders or genuine art and unclipped n
  }
 });
 
-test("cards.html lists all 175 printed designs including the full simple expansion",async({page})=>{
+test("cards.html lists all 193 printed designs including the extended Item wave",async({page})=>{
  test.setTimeout(180000);
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/cards.html");
  await expect(page.getByRole("heading",{name:"Every card, ready to print."})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(175);
- await expect(page.locator('.tt-grid .tt-card[data-print-expansion="true"]')).toHaveCount(36);
- await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(175);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
+ await expect(page.locator('.tt-grid .tt-card[data-print-expansion="true"]')).toHaveCount(54);
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(193);
  await page.getByRole("combobox",{name:"Card category"}).selectOption("expansion");
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(36);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(54);
  await page.getByRole("button",{name:"ONE OF EACH"}).click();
  await expect(page.getByRole("button",{name:"FULL PRINT QUANTITIES"})).toBeVisible();
  await page.evaluate(()=>{window.print=()=>{window.__printed=true}});
  await page.getByRole("button",{name:"PRINT ALL COPIES"}).click();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(175);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(physicalDeck(selectionForPreset("chaos")).length);
  await expect.poll(()=>page.evaluate(()=>window.__printed)).toBe(true);
  expect(errors).toEqual([]);

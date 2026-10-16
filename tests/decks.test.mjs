@@ -11,12 +11,12 @@ test("the 139-card legacy catalogue remains intact alongside 36 new printable de
  assert.equal(PRINT_ONLY_ROOMS.length,15);
  assert.equal(PRINT_ONLY_ITEMS.length,9);
  assert.equal(ALL_ROOMS.length,79);
- assert.equal(ALL_OBJECTS.length,61);
- assert.equal(SELECTABLE.length,79+61+24);
+ assert.equal(ALL_OBJECTS.length,79);
+ assert.equal(SELECTABLE.length,79+79+24);
  assert.equal(Object.keys(CARD_ART).length,139);
  assert.equal(Object.keys(PRINT_ONLY_ART).length,24);
- assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,175); // canonical plus 36 new identities
- assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,175);
+ assert.equal(new Set([...CATALOGUE,...SELECTABLE].map(cardKey)).size,193); // original 139 plus 54
+ assert.equal(new Set([...FIXED_CARDS,...SELECTABLE].map(cardKey)).size,193);
 });
 test("15 plain Rooms resolve immediately, never create persistent state or Pacts",()=>{
  for(const c of PRINT_ONLY_ROOMS){
