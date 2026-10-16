@@ -68,3 +68,33 @@ test("deep experiment dry-run makes no artifacts and includes matched arms",()=>
  assert.equal(result.design.items.length,18);
  assert.equal(result.design.comparisonItem,"ex-rations");
 });
+
+
+test("fair Everything Goes MCTS sampling uses all expanded physical card pools",async()=>{
+ const {prepareRolloutDecks,sampleRolloutDecks}=
+  await import("../src/rollout-state.js");
+ for(const extra of [null,"odd-loaded-coin","ex-rations"]){
+  const session=createDecisionSession({seed:82017,gameMode:"everything-goes",
+   ...(extra?{extraObjectId:extra}:{})});
+  const state=session.state;
+  const fair=prepareRolloutDecks(state,"fair");
+  assert.equal(fair.items.length,state.deck.length);
+  for(const stage of ["UPPER","MIDDLE","DEEP"]){
+   assert.equal(fair.rooms[stage].remaining,state.rooms[stage].length);
+   assert.equal(fair.monsters[stage].count,state.monsters[stage].length);
+  }
+  const first=sampleRolloutDecks(state,{knowledge:"fair",
+   deckSeed:12345,blueprint:fair});
+  const second=sampleRolloutDecks(state,{knowledge:"fair",
+   deckSeed:12345,blueprint:fair});
+  assert.deepEqual(first.deck.map(c=>c._physicalCopy),
+   second.deck.map(c=>c._physicalCopy));
+  for(const stage of ["UPPER","MIDDLE","DEEP"]){
+   assert.deepEqual(first.rooms[stage].map(c=>c.id),
+    second.rooms[stage].map(c=>c.id));
+   assert.equal(first.monsters[stage].length,state.monsters[stage].length);
+  }
+ }
+ const legacy=createDecisionSession({seed:82017,gameMode:"original"}).state;
+ assert.equal(prepareRolloutDecks(legacy,"fair").items.length,legacy.deck.length);
+});
