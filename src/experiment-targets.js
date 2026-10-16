@@ -209,6 +209,8 @@ export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
   else if(offered===0)finding="ACQUIRED_BUT_NO_LEGAL_TRIGGER_OBSERVED";
   else finding="TOO_FEW_OPPORTUNITIES_TO_JUDGE_USE";
   items.push({id,title:card.title,kind:card.v2?.kind,
+   timing:cardLists.timings?.[id]||[],
+   mechanicallyClassified:!!cardLists.timings?.[id]?.length,
    acquired,drawn,offered,used,passive,activated,
    heldRooms,equippedRooms,hasRealEffect,
    usePerOpportunity:ratio(used,offered),
