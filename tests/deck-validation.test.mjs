@@ -26,7 +26,7 @@ test("whole physical deck validates printed faces, executors, art mappings and A
   assert.equal(json.counts.objects,OBJECTS.length);
   assert.equal(json.counts.regionalMonsters,MONSTERS.length);
   assert.equal(json.handlers.objects.objects,OBJECTS.length);
-  assert.equal(json.handlers.rooms.rooms,ROOMS.length+1);
+  assert.equal(json.handlers.rooms.rooms,ROOMS.length+16);
   assert.equal(json.fateRooms,10);
   assert.equal(json.art.mapped,CATALOGUE.length);
   assert.deepEqual(json.art.missingFiles,[]);

@@ -17,7 +17,7 @@ const fragments=card=>{
 test("all 139 cards supply legible complete instructions without a second manual",()=>{
  assert.equal(CATALOGUE.length,139);
  assert.equal(verifyObjectCoverage().objects,52);
- assert.equal(verifyRoomCoverage().rooms,65);
+ assert.equal(verifyRoomCoverage().rooms,80);
  const failures=[];
  for(const c of CATALOGUE){
   const f=fragments(c);

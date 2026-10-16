@@ -10,7 +10,7 @@ const choose=(s,id,n)=>{const card=room(id);s.beginRoom(card);s.apply("ROOM_FATE
 const vault=s=>s.beginRoom(VAULT);
 test("ten ordinary Rooms encode distinct retained choices, without extra d6 tables",()=>{
  assert.equal(ROOMS.filter(r=>r.v2.fate).length,10);
- assert.equal(verifyRoomCoverage().rooms,65);
+ assert.equal(verifyRoomCoverage().rooms,80);
  for(const c of ROOMS.filter(r=>r.v2.fate)){
   assert.equal(c.v2.choices.length,2);
   assert.equal(c.v2.roll,null);

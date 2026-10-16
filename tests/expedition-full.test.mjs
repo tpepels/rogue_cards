@@ -23,7 +23,7 @@ test("all printed Object results and Room choices have exactly one executable ha
  const o=verifyObjectCoverage(),r=verifyRoomCoverage();
  assert.equal(o.objects,52);
  assert.equal(o.rollCards+o.nonRollCards,o.objects);
- assert.equal(r.rooms,65);assert.equal(r.choices,130);
+ assert.equal(r.rooms,80);assert.equal(r.choices,160);
  assert.ok(o.outcomeBands>=110);assert.ok(r.rollBands>=110);
 });
 test("every printed Object die face executes through a strict dispatcher",()=>{
