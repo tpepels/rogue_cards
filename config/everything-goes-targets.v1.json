@@ -1,0 +1,311 @@
+{
+  "schema": "everything-goes-targets-v1",
+  "version": "1.0.0",
+  "status": "provisional-user-approved-except-loot",
+  "scope": "Everything Goes: twelve normal Rooms per region, with Corridors excluded",
+  "authoringDate": "2026-10-16",
+  "source": "User responses to ten design questions; threshold buffers and evidence gates are explicitly proposed analysis conventions, not user-selected rules.",
+  "assessment": {
+    "method": "95% Wilson interval for proportions; 95% game-cluster bootstrap CI for per-room rates and maximum Hero spread; 95% CI over per-run per-fight means; no inference from CPU time",
+    "confidence": 0.95,
+    "interventionRule": "Escalate only when confidence interval entirely beyond action threshold; review when estimate breaches acceptable band; otherwise insufficient/inconclusive where CI crosses boundary.",
+    "noSilentMissing": true,
+    "primary": "organic survey",
+    "secondary": "matched Item experiments are separate and never pooled with organic balance targets"
+  },
+  "metrics": [
+    {
+      "id": "solo_win_rate",
+      "userQuestion": 2,
+      "unit": "fraction",
+      "ideal": 0.4,
+      "acceptable": [
+        0.3,
+        0.5
+      ],
+      "action": [
+        0.25,
+        0.55
+      ],
+      "population": "All organic solo expeditions, including early defeats",
+      "numerator": "Won organic solo runs",
+      "denominator": "All completed organic solo runs",
+      "minGames": 400,
+      "method": "wilson"
+    },
+    {
+      "id": "duo_win_rate",
+      "userQuestion": 2,
+      "unit": "fraction",
+      "ideal": 0.55,
+      "acceptable": [
+        0.45,
+        0.65
+      ],
+      "action": [
+        0.4,
+        0.7
+      ],
+      "population": "All organic two-Hero expeditions, including early defeats",
+      "numerator": "Won organic duo runs",
+      "denominator": "All completed organic duo runs",
+      "minGames": 400,
+      "method": "wilson"
+    },
+    {
+      "id": "vault_reach_rate",
+      "userQuestion": 3,
+      "unit": "fraction",
+      "ideal": 0.5,
+      "acceptable": [
+        0.4,
+        0.6
+      ],
+      "action": [
+        0.35,
+        0.65
+      ],
+      "population": "All organic expeditions",
+      "numerator": "Expeditions where metrics.vaultEntered is true",
+      "denominator": "All completed organic runs",
+      "minGames": 600,
+      "method": "wilson"
+    },
+    {
+      "id": "ordinary_encounters_per_full_36",
+      "userQuestion": 4,
+      "unit": "encounters",
+      "ideal": 18,
+      "acceptable": [
+        16,
+        20
+      ],
+      "action": [
+        13,
+        23
+      ],
+      "population": "Organic expeditions that enter all 36 non-Corridor regional Rooms",
+      "numerator": "Ordinary printed regional Monster encounters, counting each physical monster entry",
+      "denominator": "Number of fully traversed 36-Room organic runs",
+      "minGames": 60,
+      "method": "t_ci"
+    },
+    {
+      "id": "encounter_to_fight_rate",
+      "userQuestion": 5,
+      "unit": "fraction",
+      "ideal": 0.625,
+      "acceptable": [
+        0.55,
+        0.7
+      ],
+      "action": [
+        0.45,
+        0.8
+      ],
+      "population": "Organic regional Monster encounters (exclude Vault/Warden)",
+      "numerator": "Ordinary Monster encounters entering combat",
+      "denominator": "All ordinary regional Monster encounters",
+      "minEvents": 300,
+      "minGames": 100,
+      "method": "wilson",
+      "caveat": "A Monster fight can have multiple turns; count the encounter-to-first-combat transition only once."
+    },
+    {
+      "id": "combat_hp_loss_fraction",
+      "userQuestion": 6,
+      "unit": "fraction_of_party_max_hp_per_fight",
+      "ideal": 0.15,
+      "acceptable": [
+        0.1,
+        0.2
+      ],
+      "action": [
+        0.06,
+        0.25
+      ],
+      "population": "Organic runs with at least one ordinary Monster fight",
+      "numerator": "HP actually lost during ordinary Monster contexts, including Item backfires while fighting",
+      "denominator": "Ordinary fight starts times summed maximum HP of the party at run start",
+      "minEvents": 300,
+      "minGames": 100,
+      "method": "t_ci_per_game",
+      "caveat": "Combat-context damage is not asserted to be caused by the Monster; separate such causes in raw event tape."
+    },
+    {
+      "id": "new_items_per_12_rooms",
+      "userQuestion": 7,
+      "unit": "item_acquisitions_per_12_normal_rooms",
+      "ideal": null,
+      "acceptable": null,
+      "action": null,
+      "provisionalReference": [
+        5,
+        7
+      ],
+      "provisionalOnly": true,
+      "population": "Organic regional Room entries",
+      "numerator": "Acquired physical Item cards, excluding starter resources, starting gifts and reacquisitions only if explicitly indicated",
+      "denominator": "Ordinary non-Corridor regional Room entries/12",
+      "minEvents": 1000,
+      "method": "game_cluster_bootstrap",
+      "status": "UNSET_USER_CHOICE"
+    },
+    {
+      "id": "odd_effects_per_normal_room",
+      "userQuestion": 8,
+      "unit": "activated_effects_per_normal_room",
+      "ideal": 0.2,
+      "acceptable": [
+        0.16666666666666666,
+        0.25
+      ],
+      "action": [
+        0.125,
+        0.3333333333333333
+      ],
+      "population": "Organic regional normal Room exposures; early deaths included",
+      "numerator": "Actual Item uses of specified odd dice/chaos cards",
+      "denominator": "Total ordinary non-Corridor regional Room entries",
+      "minEvents": 1000,
+      "minGames": 200,
+      "method": "game_cluster_bootstrap",
+      "includedItemIds": [
+        "odd-loaded-coin",
+        "odd-crooked-die",
+        "odd-lucky-thread",
+        "odd-jinx-powder",
+        "odd-bent-mirror",
+        "odd-hooked-chain",
+        "odd-trick-knife",
+        "odd-chaos-idol",
+        "odd-witchbones",
+        "odd-bone-dice",
+        "odd-red-string"
+      ],
+      "caveat": "Only actual activations count. Possession and unused trigger opportunities are measured separately."
+    },
+    {
+      "id": "solo_hero_win_spread",
+      "userQuestion": 9,
+      "unit": "percentage_points_as_fraction",
+      "ideal": 0.15,
+      "acceptable": [
+        0,
+        0.25
+      ],
+      "action": [
+        0,
+        0.35
+      ],
+      "population": "Eight separate solo Hero cohorts in organic survey",
+      "numerator": "Highest observed solo-Hero win rate minus lowest",
+      "denominator": "Full completed runs per Hero, with at least 80 for each Hero",
+      "minGamesPerHero": 80,
+      "method": "stratified_hero_bootstrap"
+    },
+    {
+      "id": "room_option_usefulness",
+      "userQuestion": 10,
+      "unit": "structural_coverage",
+      "ideal": 1,
+      "acceptable": [
+        1,
+        1
+      ],
+      "action": [
+        0,
+        1
+      ],
+      "population": "All printed Room outcomes that have two choices",
+      "numerator": "Options validated by a deterministic executable action test",
+      "denominator": "Every printed option",
+      "minChecksPerOption": 1,
+      "method": "static_focused_tests",
+      "noSelectionParity": true,
+      "status": "NO_PREFERENCE_SHARE_TARGET"
+    }
+  ],
+  "physicalTime": [
+    {
+      "id": "solo_physical_minutes",
+      "userQuestion": 1,
+      "unit": "active_minutes",
+      "ideal": 105,
+      "acceptable": [
+        90,
+        120
+      ],
+      "action": [
+        90,
+        120
+      ],
+      "minTimedSessions": 12,
+      "population": "Human tabletop solo expedition, pauses removed",
+      "method": "physical_timer_only"
+    },
+    {
+      "id": "duo_physical_minutes",
+      "userQuestion": 1,
+      "unit": "active_minutes",
+      "ideal": 135,
+      "acceptable": [
+        120,
+        150
+      ],
+      "action": [
+        120,
+        150
+      ],
+      "minTimedSessions": 12,
+      "population": "Human tabletop two-Hero expedition, pauses removed",
+      "method": "physical_timer_only"
+    }
+  ],
+  "itemAudit": {
+    "catalogue": {
+      "rooms": 79,
+      "monsters": 24,
+      "items": 79,
+      "ofWhichOdd": 18,
+      "allDesigns": 193,
+      "expectedStructuralCoverage": 1
+    },
+    "focusedExecution": "Every explicitly printed effect must have at least one deterministic test that enters its condition and validates an actual result; an organic simulation cannot replace an executable proof.",
+    "organicObservation": "Every card appears in card-coverage.csv including zero-exposure cards. Compare acquired, held, equipped, legal opportunities, actual uses, passive triggers, and effect results.",
+    "minAcquisitionsForUsageJudgment": 30,
+    "minActualLegalOpportunitiesForUseJudgment": 30,
+    "minEquippedRoomExposuresForPassiveJudgment": 30,
+    "minMatchedPairsPerOddItem": 120,
+    "zeroUseWithOpportunities": "FLAG_FOR_INVESTIGATION - may reflect poor AI policy or contextual value; not automatically an engine defect",
+    "neverAppears": "TARGETED_REACHABILITY_TEST_REQUIRED - sample absence alone is not proof that the card is impossible to obtain",
+    "matchedPairBaseline": "Dry Rations (ex-rations), single extra starting physical copy for each arm; Red String requires a two-Hero party.",
+    "thresholdRule": "Never label a zero-use Item unusable without checking printed trigger conditions and a focused legal-action / effect test."
+  },
+  "coverageThresholds": {
+    "minOrganicRoomEntriesPerSeenRoom": 30,
+    "minOrganicMonsterEncountersPerSeenMonster": 30,
+    "minOrganicItemAcquisitionsPerSeenItem": 30,
+    "allUnseenRequireTargetedTest": true
+  },
+  "priority": [
+    "GAME_BREAKER",
+    "UNREACHABLE_OR_UNEXECUTABLE_CARD",
+    "OVERPOWERED_HERO_OR_ITEM",
+    "CORE_EXPERIENCE_OUTSIDE_ACCEPTABLE",
+    "UNDEREXPOSED_MECHANIC",
+    "OTHER"
+  ],
+  "userDecisions": {
+    "1": "C",
+    "2": "A",
+    "3": "B",
+    "4": "C",
+    "5": "B",
+    "6": "B",
+    "7": null,
+    "8": "A",
+    "9": "C",
+    "10": "A"
+  }
+}
