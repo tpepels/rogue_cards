@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createDecisionSession,sessionActions} from "../src/engine/decision-session.js";
-import {createGame,enterNextRoom} from "../src/engine/index.js";
+import {createGame,enterNextRoom,finishCurrentRoom} from "../src/engine/index.js";
 import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../src/print-expansion.js";
 import {EXTRA_MONSTERS} from "../src/monster-expansion.js";
@@ -66,4 +66,25 @@ test("Print expansion healing and equipment can affect the canonical state",()=>
  s.add(h,helm);h.slots.armour=helm;
  assert.equal(s.stats(h).def,h.card.def+2);
  assert.ok(enterNextRoom(s).room);
+});
+
+test("Corridors add visits but do not consume the twelve-room stage limit",()=>{
+ const game=createGame({seed:22,gameMode:"everything-goes"});
+ game.stageProgress.UPPER=11;
+ const corridor=PRINT_ONLY_ROOMS.find(c=>c.id==="ex-u-cracked-hall");
+ game.beginRoom(corridor);
+ finishCurrentRoom(game);
+ assert.equal(game.stageProgress.UPPER,11);
+ const ordinary=ALL_ROOMS.find(c=>c.id==="u-gate");
+ game.beginRoom(ordinary);
+ finishCurrentRoom(game);
+ assert.equal(game.stageProgress.UPPER,12);
+});
+test("Trapdoors mark skipped depths complete under the twelve-Room rule",()=>{
+ const game=createGame({seed:22,gameMode:"everything-goes"});
+ const ordinary=ALL_ROOMS.find(c=>c.id==="u-gate");
+ game.beginRoom(ordinary);
+ game.fallThrough("DEEP",{damage:0});
+ assert.equal(game.stageProgress.UPPER,12);
+ assert.equal(game.stageProgress.MIDDLE,12);
 });
