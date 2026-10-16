@@ -27,7 +27,7 @@ if [[ -d "${output}" ]]; then
 fi
 
 echo "Everything Goes / revision ${revision}"
-echo "720 organic MCTS expeditions covering 8 solo Heroes and 28 Hero pairs."
+echo "3,600 organic MCTS expeditions covering 8 solo Heroes and 28 Hero pairs."
 echo "18 * 120 matched Item pairs (4,320 paired games)."
 echo "Comparison: new extra Item versus extra Dry Rations (one physical copy)."
 echo "Each and every real decision and committed die is saved; no truncated runs."
