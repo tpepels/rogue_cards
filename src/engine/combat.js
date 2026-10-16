@@ -41,7 +41,7 @@ export const combatAC=def=>12+def;
 export const attackHits=(natural,total,def)=>
  natural===20||natural!==1&&total>=combatAC(def);
 function playerRoll(s,h,bonus,def){
- if(actorType==="attack"&&s.monster){
+ if(s.monster){
   const crown=s.keptRooms.find(x=>x.card.id==="d-crown");
   if(crown&&s.chooseEffect("crown-unking-monster-def",
    ["save","use"],"use")==="use"){
