@@ -22,7 +22,7 @@ const R=[
   [["1–2","A shelf falls. Lose 2 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"Someone left the fire out."],
  ["ex-u-cracked-hall","Cracked Hallway","UPPER","CORRIDOR","A cracked wall divides the passage.",
   [["CHECK THE WALL","Peek at the next Room."],["HURRY","Roll d6."]],
-  [["1–2","Loose stones fall. Lose 1 HP."],["3–4","Nothing happens."],["5–6","Draw 1 Item from a lost pack."]],"The shortest way still turns."],
+  [["1–2","Loose stones fall. Lose 1 HP; draw an UPPER Monster."],["3–4","Nothing happens."],["5–6","Draw 1 Item from a lost pack."]],"The shortest way still turns."],
  ["ex-u-spoiled-pantry","Spoiled Pantry","UPPER","TREASURE","The bread has learned to move.",
   [["RUMMAGE","Roll d6."],["LEAVE","Shut the pantry and move on."]],
   [["1–2","Moldy air: become POISONED."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"A bad smell has settled in."],
@@ -40,13 +40,13 @@ const R=[
   [["1–2","Fall and scrape the rocks. Lose d6 HP."],["3–4","Cross safely."],["5–6","Draw 1 Item from the floor."]],"It bends but does not break."],
  ["ex-m-drain-tunnel","Drain Tunnel","MIDDLE","CORRIDOR","An old drain splits the passage.",
   [["CHECK THE DRAIN","Roll d6."],["TAKE THE SIDE PASSAGE","Peek at the next 2 Rooms."]],
-  [["1–2","Filth coats you. Become POISONED."],["3–4","The water carries nothing."],["5–6","Draw 1 Item from the water."]],"Something travels upstream."],
+  [["1–2","Filth coats you. Become POISONED; draw a MIDDLE Monster."],["3–4","The water carries nothing."],["5–6","Draw 1 Item from the water."]],"Something travels upstream."],
  ["ex-d-flooded-cell","Drowned Cell","DEEP","MYSTERY","A flooded cell holds a chained chest.",
   [["FORCE THE BARS","Roll d6."],["SQUEEZE THROUGH","Lose 2 HP; draw 1 Item."]],
   [["1–2","The occupant rises. Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"The water knows the prisoner."],
  ["ex-d-ash-corridor","Ash Corridor","DEEP","CORRIDOR","Grey ash drifts from a sealed door.",
   [["HURRY","Roll d6."],["COVER YOUR FACE","Lose 1 HP; cross safely."]],
-  [["1–2","Breathe burning dust. Lose 3 HP."],["3–4","Cross safely."],["5–6","Heal 2 HP."]],"Nobody lit the fire."],
+  [["1–2","Burning ash fills the passage. Lose 1 HP; draw a DEEP Monster."],["3–4","Cross safely."],["5–6","Heal 2 HP."]],"Nobody lit the fire."],
  ["ex-d-cracked-coffer","Cracked Coffer","DEEP","TREASURE","A small chest leaks rusty water.",
   [["OPEN","Roll d6."],["BREAK THE LOCK","Lose 2 HP; draw 1 Item."]],
   [["1–2","TRAP: the lid cuts you. Lose d6 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"The lid is already moving."],
@@ -68,7 +68,12 @@ const O=[
  ["ex-helm","Iron Helm","EQUIPMENT",["METAL","ARMOUR"],"ARMOUR: +1 DEF. When hit, discard this equipped Helm to prevent 3 damage from that hit.",2,"It smells of pennies."],
  ["ex-buckler","Wooden Buckler","EQUIPMENT",["WOOD","ARMOUR"],"ARMOUR: +2 DEF while equipped.",2,"Painted with a crooked sun."]
 ];
-export const PRINT_ONLY_ROOMS=Object.freeze(R.map((row,i)=>Object.freeze({...room(...row),v2:{...room(...row).v2,number:140+i}})));
+const ENTRY_MONSTERS=Object.freeze({"ex-u-guard-cell":"UPPER","ex-m-old-barracks":"MIDDLE","ex-d-watchpost":"DEEP"});
+export const PRINT_ONLY_ROOMS=Object.freeze(R.map((row,i)=>{
+ const base=room(...row),stage=ENTRY_MONSTERS[base.id];
+ const prompt=stage?`On entry: Draw a ${stage} Monster. ${base.v2.prompt}`:base.v2.prompt;
+ return Object.freeze({...base,rule:prompt,v2:{...base.v2,prompt,number:140+i}});
+}));
 export const PRINT_ONLY_ITEMS=Object.freeze(O.map((row,i)=>Object.freeze({...item(...row),v2:{...item(...row).v2,number:155+i}})));
 export const PRINT_ONLY_CARDS=Object.freeze([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS]);
 

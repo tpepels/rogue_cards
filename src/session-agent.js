@@ -16,7 +16,7 @@ const mix=n=>{n=(n+0x9e3779b9)>>>0;
 const count=(m,k)=>{m[k]=(m[k]||0)+1};
 const cloneMetrics=s=>JSON.parse(JSON.stringify(s.metrics));
 export function playSessionWithMCTS({
- seed,heroes=["warrior"],knowledge="fair",
+ seed,heroes=["warrior"],gameMode="original",knowledge="fair",
  budget=2,maxSearchSteps=4000,maxGameSteps=7000,
  strictTerminal=true,traceLimit=120
 }={}){
@@ -25,7 +25,7 @@ export function playSessionWithMCTS({
   throw Error("Invalid maxGameSteps");
  if(!Number.isInteger(traceLimit)||traceLimit<0)
   throw Error("Invalid traceLimit");
- const session=createDecisionSession({seed,heroes});
+ const session=createDecisionSession({seed,heroes,gameMode});
  const decisionCounts={},chosenCounts={},choiceCoverage={},
   availableCardActions={},chosenCardActions={};
  const trace=[],searches=[];

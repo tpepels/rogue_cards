@@ -4,6 +4,7 @@
  * All mutable game state belongs to the expedition, not global variables.
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
+import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../print-expansion.js";
 import {randomSource} from "./random.js";
 import {physicalCopies} from "./physical-cards.js";
 import {d6Band} from "./dice-bands.js";
@@ -39,7 +40,10 @@ export const strategies=Object.freeze(["survival","treasure","magic","seal","neg
 export const roomPolicies=Object.freeze(["scripted","contextual","uniform","second-when-legal"]);
 
 export class ExpeditionState {
- constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted",extraObjectId=null}={}){
+ constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted",extraObjectId=null,gameMode="original"}={}){
+  if(!["original","everything-goes"].includes(gameMode))throw Error("Unknown game mode "+gameMode);
+  this.gameMode=gameMode;
+  this.roomGoal=gameMode==="everything-goes"?12:3;
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
   if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
@@ -56,11 +60,14 @@ export class ExpeditionState {
     nextDefenseAdv:false,nextDefenseBonus:0,
     damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
   });
-  this.deck=copyDeck(this.rng,OBJECTS);
+  this.deck=gameMode==="everything-goes"?
+   this.rng.shuffle(physicalCopies([...OBJECTS,...PRINT_ONLY_ITEMS])):
+   copyDeck(this.rng,OBJECTS);
   // Physical draws from the hidden Item pile, NOT acquisitions/transfers
   // (e.g. reclaiming an Item from the Bottomless Well).
   this.deckRemovedCounts={};
-  this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(ROOMS.filter(x=>x.stage===s))]));
+  const roomCards=gameMode==="everything-goes"?[...ROOMS,...PRINT_ONLY_ROOMS]:ROOMS;
+  this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(roomCards.filter(x=>x.stage===s))]));
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,MONSTERS.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
   // Publicly revealed corridor alternatives permanently removed from the
@@ -91,6 +98,7 @@ export class ExpeditionState {
   this.discardPile=[];this.ratFavor=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
+   monsterDraws:0,encounterStarts:0,combatStarts:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
    roomRollBands:{},objectRollBands:{},
    itemPassiveEffects:{},
@@ -534,6 +542,7 @@ export class ExpeditionState {
     this.skipNextMonster=false;return;
    }
    const m=this.nextMonster();if(!m)return;
+   this.metrics.monsterDraws++;
    // The Knight's first DEEP Monster choice happens AFTER seeing that
    // encounter, but BEFORE its printed escape/save trigger resolves.
    if(this._decisionHook&&m.stage==="DEEP"&&this.keptRooms.some(x=>
@@ -556,6 +565,7 @@ export class ExpeditionState {
     this.forcedBehavior=1;
   }else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
+  this.metrics.encounterStarts++;
  }
  activate(h,card,{face=null,consume=true,mode="printed",record=true}={}){
   if(!h.inventory.includes(card))throw Error("Object not owned "+card.id);
@@ -640,8 +650,8 @@ export class ExpeditionState {
  basicAttackBonus(h){return h.slots.weapon?.id==="staff"?1:0;}
  stats(h){
   const w=h.slots.weapon,a=h.slots.armour,r=h.slots.ring;
-  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
-    def:h.card.def+({mail:2,shield:1,"cursed-mail":3}[a?.id]||0)};
+  return {atk:h.card.atk+({sword:2,staff:1,"cursed-blade":4,"ex-dagger":1,"ex-mace":2,"ex-spear":1}[w?.id]||0)+(r?.id==="ring-hunger"?2:0),
+    def:h.card.def+({mail:2,shield:1,"cursed-mail":3,"ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[a?.id]||0)};
  }
  apply(kind,args,card){
   this.metrics.operationCounts[kind]=(this.metrics.operationCounts[kind]||0)+1;

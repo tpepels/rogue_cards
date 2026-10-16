@@ -2,8 +2,25 @@
  * to exactly the two printed choices and each printed d6 band. No guessing.
  * Conditions marked "IF..." are handled by the expedition's policy/context. */
 import {ROOMS,VAULT} from "./tabletop-data.js";
+import {PRINT_ONLY_ROOMS} from "./print-expansion.js";
 const C=(first,second,outcomes)=>({choices:[first,second],outcomes});
 export const ROOM_EFFECTS=Object.freeze({
+ "ex-u-guard-cell":C(["ROLL_ROOM"],["NONE"],[["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
+ "ex-u-slick-passage":C(["ROLL_ROOM"],["HURT:1"],[["HURT:2"],["NONE"],["DRAW:1"]]),
+ "ex-u-coal-store":C(["ROLL_ROOM"],["COST:1","HEAL:3"],[["HURT:2"],["DRAW:1"],["DRAW:2"]]),
+ "ex-u-cracked-hall":C(["PEEK:1"],["ROLL_ROOM"],[["HURT:1","MONSTER_DRAW"],["NONE"],["DRAW:1"]]),
+ "ex-u-spoiled-pantry":C(["ROLL_ROOM"],["NONE"],[["POISON"],["DRAW:1"],["DRAW:2"]]),
+ "ex-m-prison-block":C(["ROLL_ROOM"],["HURT:1","DRAW:1"],[["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
+ "ex-m-slanted-causeway":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[["HURT:d6"],["NONE"],["DRAW:1"]]),
+ "ex-m-old-barracks":C(["ROLL_ROOM"],["COST:1","HEAL:4"],[["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
+ "ex-m-footbridge":C(["ROLL_ROOM"],["HURT:1"],[["HURT:d6"],["NONE"],["DRAW:1"]]),
+ "ex-m-drain-tunnel":C(["ROLL_ROOM"],["PEEK:2"],[["POISON","MONSTER_DRAW"],["NONE"],["DRAW:1"]]),
+ "ex-d-flooded-cell":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
+ "ex-d-ash-corridor":C(["ROLL_ROOM"],["HURT:1"],[["HURT:1","MONSTER_DRAW"],["NONE"],["HEAL:2"]]),
+ "ex-d-cracked-coffer":C(["ROLL_ROOM"],["HURT:2","DRAW:1"],[["HURT:d6"],["DRAW:1"],["DRAW:2"]]),
+ "ex-d-iron-stairs":C(["ROLL_ROOM"],["HURT:1","PEEK:1"],[["HURT:3"],["NONE"],["DRAW:1"]]),
+ "ex-d-watchpost":C(["ROLL_ROOM"],["HEAL:2"],[["MONSTER_DRAW"],["DRAW:1"],["DRAW:2"]]),
+
  "u-passage":C(["ROLL_ROOM"],["PASSAGE_PRY"],[["MONSTER_DRAW"],["PEEK:1"],["DRAW:1"],["DRAW:1","PEEK:1"]]),
  "u-gate":C(["ROLL_ROOM"],["CHECK_ATK:3:DRAW1:HURT2_DEF_DIS"],[
  ["HURT:d6"],["DRAW:1"],["DRAW:2"]]),
@@ -86,7 +103,7 @@ export const ROOM_OPERATIONS=new Set([
  "SAVE_DEF","CHECK_ATK","CHECK_WIT","SEAL","WARDEN_FIGHT","ROOM_SPECIAL","ROOM_FATE","TRAPDOOR","CURSED_DETOUR"
 ]);
 export function verifyRoomCoverage(){
- const cards=[...ROOMS,VAULT],existing=new Set(cards.map(r=>r.id));
+ const cards=[...ROOMS,...PRINT_ONLY_ROOMS,VAULT],existing=new Set(cards.map(r=>r.id));
  for(const card of cards){
   const data=ROOM_EFFECTS[card.id];
   if(!data||data.choices.length!==card.v2.choices.length||

@@ -129,7 +129,7 @@ export function setReturnChoice(s,roomId,choice){
 export function enterNextRoom(s){
  if(!s.alive())throw Error("Party has been defeated");
  if(s.room)throw Error("Finish the current Room before drawing another");
- const stage=STAGES.find(k=>s.stageProgress[k]<3&&s.rooms[k].length);
+ const stage=STAGES.find(k=>s.stageProgress[k]<s.roomGoal&&s.rooms[k].length);
  if(!stage)return null; // Vault is the next stage; resolve it explicitly.
  const room=s.rooms[stage].shift();
  s.beginRoom(room);
@@ -261,7 +261,7 @@ export function createGame(options={}){
  // Do not allow experiment-only policy parameters to leak into the
  // future computer game's public constructor. AI/equipment decisions
  // are currently handled by the old scripted runner, not by this API.
- const allowed=new Set(["seed","heroes"]);
+ const allowed=new Set(["seed","heroes","gameMode"]);
  for(const key of Object.keys(options))
   if(!allowed.has(key))
    throw Error("Unknown public game option "+key+
@@ -514,7 +514,12 @@ export function applyAction(s,action,{observeResult=true,prevalidated=false}={})
  if(action.kind==="item-trigger"){
   const h=s.heroes[action.heroIndex],o=itemOptions(s,h,action.phase)[action.index];
   if(!o)throw Error("Selected Item opportunity no longer exists");
-  if(o.mode==="recharge"){
+  if(o.mode==="healing-tool"){
+   s.directItem(h,o.card,o.mode,()=>{
+    const amount=o.card.id==="ex-bandages"?s.die():2;
+    s.consume(h,o.card);s.heal(h,amount);return true;
+   });
+  }else if(o.mode==="recharge"){
    if(o.card.id!=="lantern-heart")throw Error("Unsupported free Item recharge");
    s.directItem(h,o.card,o.mode,()=>{
     s.consume(h,o.card);

@@ -92,6 +92,7 @@ export function itemOptions(s,h,phase){
   }else if(phase==="between-rooms"){
    if(kind==="POTION")push(card,"drink");
    if(id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
+   if(["ex-bandages","ex-rations"].includes(id)&&h.hp<h.card.hp)push(card,"healing-tool");
   }else if(phase==="passive"){
    if(passive.has(id)&&(["staff","cursed-blade","mail","cursed-mail"].includes(id)?
       equipped(h,card):

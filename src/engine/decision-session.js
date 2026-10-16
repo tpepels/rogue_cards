@@ -24,7 +24,7 @@ const itemOptionsAtTrigger=(state,args)=>itemOptions(state,
 import {beginWarden,wardenOptions,applyWardenChoice} from "./vault-encounter.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
-const stageReady=s=>STAGES.find(k=>s.stageProgress[k]<3&&s.rooms[k].length);
+const stageReady=s=>STAGES.find(k=>s.stageProgress[k]<s.roomGoal&&s.rooms[k].length);
 const opposite=()=>[];
 const ended=s=>!s.alive()||s.metrics.won||s.metrics.escaped;
 const nextHero=(s,from)=>s.heroes.findIndex((h,i)=>i>=from&&h.hp>0);
@@ -277,6 +277,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   if(selected.kind==="parley"&&resolveParley(s)){
    if(!done(session)&&!awaitingMonster(session))roomSettled(session);
   }else if(!done(session)){
+   s.metrics.combatStarts++;
    s._actedCombatMask=0;session.phase="combat-hero";session.heroIndex=-1;
   }
  }else if(phase==="combat-hero"){
@@ -302,7 +303,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
    // The game ends here without starting an impossible Warden turn.
   }else{
    if(selected.kind==="seal")s.monsterAdv=true;
-   beginWarden(s);s.metrics.battles++;
+   beginWarden(s);s.metrics.battles++;s.metrics.combatStarts++;
    s._actedCombatMask=0;
    session.phase="combat-hero";session.heroIndex=-1;
    session.monsterRound=0;
@@ -311,7 +312,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   const result=applyWardenChoice(s,selected.kind);
   if(result.complete||done(session))done(session);
   else{
-   s.metrics.battles++;session.monsterRound=0;
+   s.metrics.battles++;s.metrics.combatStarts++;session.monsterRound=0;
    s._actedCombatMask=0;
    session.heroIndex=-1;session.phase="combat-hero";
   }

@@ -54,7 +54,11 @@ export function resolveSpecialRemains(s,m,kind){
 export function settleMonsterVictory(s,m,{warden=false}={}){
  if(!m||s.monster!==m||s.monsterHP>0)
   throw Error("Only a defeated active Monster may settle its reward");
- if(!s.banished)s.metrics.kills++;
+ if(!s.banished){
+  s.metrics.kills++;
+  // In Everything Goes, defeating (not avoiding) a regional Monster earns loot.
+  if(m.stage!=="FINAL"&&s.gameMode==="everything-goes"&&s.alive())s.draw();
+ }
  const stolen=s.stashedMonsterItems||[];
  if(stolen.length){
   s.stashedMonsterItems=stolen.filter(x=>x.monsterId!==m.id);
