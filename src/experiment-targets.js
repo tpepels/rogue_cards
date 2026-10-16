@@ -244,7 +244,10 @@ export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
    fixed:fixed.length,
    combined:rooms.length+monsters.length+items.length+fixed.length,
    intended:targets.itemAudit.catalogue},
-  items,rooms,monsters,itemPairs,
+  items,rooms,monsters,
+  fixed:fixed.map(c=>({id:c.id,type:c.type,title:c.title,
+   structuralExecutableTest:"FOCUSED_TEST_REQUIRED"})),
+  itemPairs,
   flags:{
    itemsWithNoObservedEffect:underused.map(x=>x.id),
    itemsNeverAcquired:items.filter(x=>!x.acquired).map(x=>x.id),
