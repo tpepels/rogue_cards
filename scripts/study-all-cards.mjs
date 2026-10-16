@@ -10,7 +10,8 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync,renameSync,readdirSync}
  from "node:fs";
 import {resolve,join,dirname} from "node:path";
 import {execFileSync} from "node:child_process";
-import {ALL_CARD_ROSTER,getCard,cardKey,evaluateCardTrial,cardSummary}
+import {ALL_CARD_ROSTER,getCard,cardKey,evaluateCardTrial,cardSummary,
+ sharedControlKey,evaluateSharedControl}
  from "../src/all-card-study.js";
 import {loadNativeMcts} from "../src/native-mcts-node.js";
 const uint=(raw,name,min,max)=>{
@@ -23,7 +24,8 @@ const uint=(raw,name,min,max)=>{
 function parse(argv){
  const named=new Set(["--runs-per-card","--seed","--workers","--hours",
   "--budget","--max-search-steps","--max-game-steps","--min-paired",
-  "--job-minutes","--out","--audit","--focus","--only"]);
+  "--job-minutes","--out","--audit","--focus","--only",
+  "--batch-size"]);
  const args={},flags=new Set();
  for(let i=0;i<argv.length;i++){
   const k=argv[i];
@@ -56,6 +58,7 @@ function parse(argv){
   workers:uint(args["--workers"]??Math.min(7,availableParallelism()),"workers",1,16),
   hours:uint(args["--hours"]??24,"hours",1,168),
   jobMinutes:uint(args["--job-minutes"]??30,"job-minutes",1,240),
+  batchSize:uint(args["--batch-size"]??24,"batch-size",1,64),
   budget:uint(args["--budget"]??2,"budget",1,100000),
   maxSearchSteps:uint(args["--max-search-steps"]??4000,"max-search-steps",1,100000),
   maxGameSteps:uint(args["--max-game-steps"]??7000,"max-game-steps",1,100000),
@@ -90,6 +93,7 @@ function report(c,rev,records,failures=[]){
    "selective-deferred-native-hash":"selective-deferred",
   knowledge:"fair",
   complete,selectedCards:c.cards.length,
+  sharedReferenceExpeditions:true,
   entirePrintedRoster:ALL_CARD_ROSTER.length,
   plannedJobs:c.cards.length*c.runsPerCard,
   completedJobs:records.size,pairedJobs:totalPairs,
@@ -97,7 +101,7 @@ function report(c,rev,records,failures=[]){
    runsPerCard:c.runsPerCard,seed:c.seed,budget:c.budget,
    maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
    minPaired:c.minPaired,focus:c.focus,only:c.only,
-   nativeHash:c.nativeHash
+   nativeHash:c.nativeHash,batchSize:c.batchSize
   },
   estimands:{
    room:"Effect of moving an existing stage Room to first draw versus natural randomized ordering",
@@ -108,10 +112,12 @@ function report(c,rev,records,failures=[]){
   },
   notes:[
    "Every outcome is a completed canonical expedition with MCTS actions, never a simplified rules simulator.",
+   "Identical reference expeditions are reused only across matching seed, Hero party, canonical rules and MCTS policy.",
+   "Each card's trial indices have independent source seeds; references reused across cards create cross-card correlation, which Holm allows.",
    "Matched seeds share initial randomness, not necessarily identical later consumption after different events.",
    "Unvisited stages and unused Items dilute intent-to-schedule effects; exposure counts are reported.",
    "The relative-to-natural-draw effect is NOT the overall value of a card or its individual text effects.",
-   "Fixed boss cards cannot be causally compared without defining a genuine printed alternative.",
+   "Fixed boss cards are observational outcomes reused from the exact same canonical control as other cards; they cannot be causally compared without a printed alternative.",
    "All-card rows do not imply all effects were observed or statistically resolved.",
    "Familywise Holm adjustment covers all paired printed-card contrasts in this report.",
    "Finite MCTS search budget affects decisions; it is not a solved or optimal strategy.",
@@ -168,14 +174,25 @@ function preflight(c,rev){
 if(!isMainThread){
  if(workerData.config.nativeHash)loadNativeMcts({required:true});
  parentPort.on("message",m=>{
-  if(m.type!=="job")return;
+  if(m.type!=="batch")return;
+  let current=null;
   try{
-   const card=getCard(m.kind,m.cardId);
-   if(!card)throw Error("Unrecognized printed card "+m.kind+":"+m.cardId);
-   const result=evaluateCardTrial(card,m.index,workerData.config);
-   parentPort.postMessage({type:"done",result});
+   const first=m.cards[0];
+   // One full reference session for exactly matching seed/party/policy.
+   // The printed engine and the future MCTS choice policy are unchanged.
+   const baseline=evaluateSharedControl(
+    getCard(first.kind,first.cardId),m.index,workerData.config);
+   for(const entry of m.cards){
+    current=entry;
+    const card=getCard(entry.kind,entry.cardId);
+    if(!card)throw Error("Unknown printed card "+entry.kind+":"+entry.cardId);
+    const result=evaluateCardTrial(card,m.index,workerData.config,
+     baseline);
+    parentPort.postMessage({type:"result",result});
+   }
+   parentPort.postMessage({type:"batch-done",index:m.index});
   }catch(error){
-   parentPort.postMessage({type:"failed",job:m,
+   parentPort.postMessage({type:"failed",job:{...m,current},
     message:error.stack||String(error)});
   }
  });
@@ -184,16 +201,15 @@ if(!isMainThread){
  if(!rev)throw Error("Git revision is required");
  if(c.nativeHash)loadNativeMcts({required:true});
  if(c.resume&&c.dryRun)throw Error("Use --resume OR --dry-run");
- const design={schema:1,revision:rev,seed:c.seed,
+ const design={schema:2,revision:rev,seed:c.seed,
   runsPerCard:c.runsPerCard,budget:c.budget,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
   minPaired:c.minPaired,selected:c.cards.map(cardKey),
   mode:"selective-deferred",knowledge:"fair",
-  nativeHash:c.nativeHash};
+  nativeHash:c.nativeHash,batchSize:c.batchSize,
+  commonReferenceSeeds:true};
  console.error(JSON.stringify({study:design,out:c.out,
-  plannedFullExpeditions:c.cards.reduce((n,x)=>n+
-   c.runsPerCard*(x.kind==="fixed"?1:2),0),
-  note:"Full canonical terminal outcomes only; time estimate requires a pilot"},null,2));
+  note:"Shared identical full-game MCTS controls; complete canonical treatments"},null,2));
  if(!c.dryRun){
   preflight(c,rev);
   if(!c.resume&&existsSync(c.out))
@@ -222,14 +238,35 @@ if(!isMainThread){
    complete.set(key,row);
   }
   const todo=[];
-  // Finish a first full-card pass before accumulating deep samples.
-  for(let i=0;i<c.runsPerCard;i++)
+  let referenceBatches=0,treatedJobs=0;
+  // Keep every sample index independent. Within an index, group only
+  // genuinely identical control parties and independent source RNG seeds.
+  // Short chunks checkpoint every treated card, preserving all completed
+  // work even if a later treatment fails or a worker is terminated.
+  for(let i=0;i<c.runsPerCard;i++){
+   const groups=new Map();
    for(const card of c.cards){
-    const key=cardKey(card)+"#"+i;
-    if(!complete.has(key))todo.push({type:"job",
-     kind:card.kind,cardId:card.id,index:i});
+    if(complete.has(cardKey(card)+"#"+i))continue;
+    const reference=sharedControlKey(card,i,c);
+    if(!groups.has(reference))groups.set(reference,[]);
+    groups.get(reference).push({kind:card.kind,cardId:card.id});
+    treatedJobs++;
    }
+   for(const [reference,cards] of groups)
+    for(let j=0;j<cards.length;j+=c.batchSize){
+     const chunk=cards.slice(j,j+c.batchSize);
+     referenceBatches++;
+     todo.push({type:"batch",reference,index:i,cards:chunk});
+    }
+  }
   report(c,rev,complete);
+  console.error(JSON.stringify({
+   remainingCardJobs:treatedJobs,
+   sharedReferenceBatches:referenceBatches,
+   fullExpeditionsUpperBound:treatedJobs+referenceBatches,
+   separateReferenceUpperBound:treatedJobs*2,
+   note:"Estimated expedition count, NOT a measured speedup"
+  }));
   const workers=Array.from({length:Math.min(c.workers,todo.length)},
    ()=>new Worker(new URL(import.meta.url),{workerData:{config:{
     seed:c.seed,budget:c.budget,maxSearchSteps:c.maxSearchSteps,
@@ -251,7 +288,7 @@ if(!isMainThread){
       if(!assigned.size)done();return;
      }
      const job=todo[at++];
-     assigned.set(worker,{job,started:Date.now()});
+     assigned.set(worker,{job,started:Date.now(),progress:0});
      worker.postMessage(job);
     };
     watchdog=setInterval(()=>{
@@ -259,8 +296,8 @@ if(!isMainThread){
      for(const [worker,entry] of assigned){
       if(Date.now()-entry.started<=c.jobMinutes*60000)continue;
       closed=true;
-      reject(Error("Card trial timed out: "+entry.job.kind+":"+
-       entry.job.cardId+" #"+entry.job.index));
+      reject(Error("Card trial timed out in batch "+entry.job.reference+
+       " index "+entry.job.index+" card "+entry.progress));
       return;
      }
     },10000);
@@ -275,15 +312,26 @@ if(!isMainThread){
        closed=true;reject(Error("Canonical card trial failed: "+
         JSON.stringify(message)));return;
       }
-      if(message.type!=="done"||
-       message.result.card!==entry.job.kind+":"+entry.job.cardId||
-       message.result.index!==entry.job.index){
-       closed=true;reject(Error("Mismatched worker trial"));return;
+      if(message.type==="result"){
+       const expected=entry.job.cards[entry.progress];
+       const result=message.result;
+       if(!expected||!result||
+        result.card!==expected.kind+":"+expected.cardId||
+        result.index!==entry.job.index){
+        closed=true;reject(Error("Mismatched canonical batch checkpoint"));return;
+       }
+       save(join(c.out,"checkpoints",checkpointName(
+        getCard(expected.kind,expected.cardId),result.index)),result);
+       complete.set(result.card+"#"+result.index,result);
+       entry.progress++;
+       entry.started=Date.now();
+       return;
       }
-      const result=message.result;
-      save(join(c.out,"checkpoints",checkpointName(
-       getCard(entry.job.kind,entry.job.cardId),entry.job.index)),result);
-      complete.set(result.card+"#"+result.index,result);
+      if(message.type!=="batch-done"||
+       message.index!==entry.job.index||
+       entry.progress!==entry.job.cards.length){
+       closed=true;reject(Error("Incomplete or unexpected batch completion"));return;
+      }
       assigned.delete(worker);queueNext(worker);
       if(!assigned.size&&(at>=todo.length||Date.now()>=deadline))
        done();

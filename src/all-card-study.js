@@ -53,8 +53,12 @@ const hash=value=>{
  for(const ch of value)n=Math.imul(n^ch.charCodeAt(0),16777619);
  return n>>>0;
 };
+// Common source-seed per sample index enables exact control sharing across
+// different physical cards in the same party. Independent indices still
+// have independent seeds. The design is NOT compatible with old checkpoints.
 export function cardTrialSeed(seed,card,index){
- return mix(seed^hash(cardKey(card))^Math.imul(index+1,0x85ebca6b))||1;
+ if(!byKey.has(cardKey(card)))throw Error("Unknown card in seed schedule");
+ return mix(seed^Math.imul(index+1,0x85ebca6b))||1;
 }
 export function partiesForCard(card,index){
  if(card.kind==="fixed")return {reference:parties[index%parties.length]};
@@ -90,7 +94,8 @@ export function arrangePhysicalCard(state,card){
  if(card.kind==="hero"||card.kind==="fixed")return {eligible:true,why:null};
  throw Error("Unknown physical-card trial kind");
 }
-export function runCanonicalCardExpedition(session,card,c,runSeed){
+export function runCanonicalCardExpedition(session,card,c,runSeed,
+ {captureCoverage=false}={}){
  const policy=createSessionPolicy();
  let decisions=0,searches=0;
  const fast={
@@ -119,30 +124,75 @@ export function runCanonicalCardExpedition(session,card,c,runSeed){
  if(s.alive()&&!s.metrics.won&&!s.metrics.escaped)
   throw Error("Terminal session without a printed ending");
  let exposure=0;
- if(card.kind==="room")exposure=Number(s.seenRooms.has(card.id));
- if(card.kind==="item")exposure=s.metrics.objectDraws[card.id]||0;
- if(card.kind==="monster"||card.kind==="fixed"&&card.id!=="vault")
+ if(card?.kind==="room")exposure=Number(s.seenRooms.has(card.id));
+ if(card?.kind==="item")exposure=s.metrics.objectDraws[card.id]||0;
+ if(card?.kind==="monster"||card?.kind==="fixed"&&card.id!=="vault")
   exposure=s.metrics.monsterVisits[card.id]||0;
- if(card.kind==="fixed"&&card.id==="vault")
+ if(card?.kind==="fixed"&&card.id==="vault")
   exposure=Number(!!s.metrics.vaultEntered);
- if(card.kind==="hero")exposure=1;
+ if(card?.kind==="hero")exposure=1;
  return {
   won:Number(!!s.metrics.won),escaped:Number(!!s.metrics.escaped),
   ending:s.endingKind||null,exposure,
   decisions,searches,cycleBreaks:policy.cycleBreaks,
-  itemUses:card.kind==="item"?
+  ...(captureCoverage?{coverage:{
+   rooms:[...s.seenRooms],
+   itemDraws:{...s.metrics.objectDraws},
+   monsterVisits:{...s.metrics.monsterVisits},
+   vaultEntered:Boolean(s.metrics.vaultEntered)
+  }}:{}),
+  itemUses:card?.kind==="item"?
    (s.metrics.itemUses[card.id]?.total||0):null,
-  itemPassives:card.kind==="item"?
+  itemPassives:card?.kind==="item"?
    (s.metrics.itemPassiveEffects[card.id]?.triggers||0):null,
-  monsterBehaviors:card.kind==="monster"?
+  monsterBehaviors:card?.kind==="monster"?
    Object.entries(s.metrics.monsterBehaviorBands).filter(([k])=>
     k.startsWith(card.id+":")).reduce((n,[,v])=>n+v,0):null
  };
 }
-export function evaluateCardTrial(card,index,c){
+export function sharedControlKey(card,index,c){
+ const seed=cardTrialSeed(c.seed,card,index);
+ const party=partiesForCard(card,index).reference;
+ return String(index).padStart(6,"0")+":"+party.join(",");
+}
+export function evaluateSharedControl(card,index,c){
+ // A fixed boss card is observational only. Its full expedition is
+ // identical to the matching reference for every other printed card.
+ const seed=cardTrialSeed(c.seed,card,index);
+ const group=partiesForCard(card,index);
+ const session=createDecisionSession({seed,heroes:group.reference});
+ const result=runCanonicalCardExpedition(session,null,c,seed,{
+  captureCoverage:true});
+ return {key:sharedControlKey(card,index,c),seed,
+  reference:[...group.reference],result};
+}
+export function sharedControlForCard(baseline,card,index,c){
+ const key=sharedControlKey(card,index,c);
+ const seed=cardTrialSeed(c.seed,card,index);
+ const reference=partiesForCard(card,index).reference;
+ if(!baseline||baseline.key!==key||baseline.seed!==seed||
+   JSON.stringify(baseline.reference)!==JSON.stringify(reference)||
+   !baseline.result?.coverage)
+  throw Error("Shared baseline mismatch or missing canonical coverage: "+key);
+ const {coverage,...common}=baseline.result;
+ return {...common,exposure:
+  card.kind==="room"?Number(coverage.rooms.includes(card.id)):
+  card.kind==="item"?(coverage.itemDraws[card.id]||0):
+  card.kind==="monster"?(coverage.monsterVisits[card.id]||0):
+  card.kind==="hero"?1:
+  card.kind==="fixed"?(card.id==="vault"?
+   Number(coverage.vaultEntered):
+   (coverage.monsterVisits[card.id]||0)):0};
+}
+export function evaluateCardTrial(card,index,c,sharedBaseline=null){
  if(!byKey.has(cardKey(card)))throw Error("Card is absent from canonical roster");
  const seed=cardTrialSeed(c.seed,card,index);
  const group=partiesForCard(card,index);
+ if(card.kind==="fixed"&&sharedBaseline)return {
+  card:cardKey(card),index,seed,kind:"observed",
+  parties:group.reference,
+  result:sharedControlForCard(sharedBaseline,card,index,c)
+ };
  const treatment=createDecisionSession({seed,heroes:group.treatment||group.reference});
  const eligibility=arrangePhysicalCard(treatment.state,card);
  if(!eligibility.eligible)
@@ -154,8 +204,10 @@ export function evaluateCardTrial(card,index,c){
   card:cardKey(card),index,seed,kind:"observed",
   parties:group.reference,result:alternative
  };
- const reference=createDecisionSession({seed,heroes:group.reference});
- const control=runCanonicalCardExpedition(reference,card,c,seed);
+ const control=sharedBaseline?
+  sharedControlForCard(sharedBaseline,card,index,c):
+  runCanonicalCardExpedition(
+   createDecisionSession({seed,heroes:group.reference}),card,c,seed);
  return {
   card:cardKey(card),index,seed,kind:"paired",
   parties:group,control,treatment:alternative

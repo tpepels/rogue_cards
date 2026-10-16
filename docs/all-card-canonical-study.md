@@ -56,6 +56,27 @@ Resume **the same revision and all experimental settings** after a time cap:
 
     npm run oracle:all-cards -- --resume --runs-per-card 80 --workers 7 --hours 24 --budget 2 --min-paired 60 --seed 20261016 --audit results/canonical-audit-all-cards-01/summary.json --out results/all-card-canonical-01
 
+The queue interleaves sample indices across all printed cards. Cards sharing
+the exact same initial seed, Hero party, MCTS policy and rules reuse a single
+complete **canonical** reference expedition within a bounded batch. Every
+individual card still receives its own fully played canonical intervention;
+no outcome is inferred from a simplified simulation. Fixed Vault/Warden
+observations can also reuse these already-completed reference expeditions.
+
+All per-card checkpoints remain atomic and resumable. The source-seed schedule
+is intentionally different from the legacy runner and cannot be combined with
+earlier results. The per-batch limit defaults to 24 cards (`--batch-size 24`);
+a resumed study must keep the same batch size and other manifest parameters.
+
+To benchmark actual complete-game parity and runtime savings:
+
+    npm run bench:all-card-controls -- --runs 2 --cards 6
+
+This checks the identical per-card seeds against the former separate-reference
+execution. The theoretical reduction in full expeditions approaches 2x for
+many cards sharing a reference; a runtime speedup must be measured on the
+actual machine, and the C++ native-hash path remains disabled by default.
+
 The worker queue interleaves card IDs so an early partial summary already
 lists every card, including those without adequate observations. Each job
 checkpoints atomically; \`summary.md\` and \`summary.json\` are refreshed

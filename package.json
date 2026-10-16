@@ -75,7 +75,8 @@
     "oracle:mcts-diagnostics": "node scripts/study-mcts-diagnostics.mjs",
     "oracle:all-cards": "node scripts/study-all-cards.mjs",
     "build:native-mcts": "node scripts/build-native-mcts.mjs",
-    "test:native-mcts": "node --test tests/mcts-native.test.mjs"
+    "test:native-mcts": "node --test tests/mcts-native.test.mjs",
+    "bench:all-card-controls": "node scripts/benchmark-shared-controls.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"

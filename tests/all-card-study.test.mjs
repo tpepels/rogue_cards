@@ -5,7 +5,8 @@ import {HEROES,ROOMS,OBJECTS,MONSTERS,VAULT,WARDEN,WARDEN_FURY,
 import {createDecisionSession} from "../src/engine/decision-session.js";
 import {
  ALL_CARD_ROSTER,cardKey,getCard,cardTrialSeed,partiesForCard,
- arrangePhysicalCard,cardSummary,exactPairedP
+ arrangePhysicalCard,cardSummary,exactPairedP,
+ sharedControlKey,sharedControlForCard
 } from "../src/all-card-study.js";
 
 const printed=[...HEROES,...ROOMS,...OBJECTS,...MONSTERS,
@@ -105,4 +106,47 @@ test("report includes untested and fixed cards without invented causal p-values"
  assert.equal(boss.pRaw,null);
  assert.equal(boss.pHolm,null);
  assert.equal(exactPairedP(10,0),2/1024);
+});
+
+test("common reference seeds are reusable across cards but distinct between trial indices",()=>{
+ const a=ALL_CARD_ROSTER.find(c=>c.kind==="room");
+ const b=ALL_CARD_ROSTER.find(c=>c.kind==="item");
+ const config={seed:20261016};
+ for(let i=0;i<70;i++){
+  assert.equal(cardTrialSeed(config.seed,a,i),cardTrialSeed(config.seed,b,i));
+  assert.equal(sharedControlKey(a,i,config),sharedControlKey(b,i,config));
+ }
+ assert.notEqual(cardTrialSeed(config.seed,a,0),cardTrialSeed(config.seed,a,1));
+ const hero=ALL_CARD_ROSTER.find(c=>c.kind==="hero");
+ assert.notEqual(sharedControlKey(hero,0,config),
+  sharedControlKey(a,0,config),"Hero comparison needs its actual control party");
+});
+
+test("shared baseline exposes card-specific evidence and refuses mismatches",()=>{
+ const a=ALL_CARD_ROSTER.find(c=>c.kind==="room");
+ const b=ALL_CARD_ROSTER.find(c=>c.kind==="item");
+ const monster=ALL_CARD_ROSTER.find(c=>c.kind==="monster");
+ const hero=ALL_CARD_ROSTER.find(c=>c.kind==="hero");
+ const config={seed:20261016};
+ const source={key:sharedControlKey(a,1,config),
+  seed:cardTrialSeed(config.seed,a,1),
+  reference:partiesForCard(a,1).reference,
+  result:{
+   won:1,escaped:0,decisions:110,searches:30,
+   coverage:{rooms:[a.id],itemDraws:{[b.id]:2},
+    monsterVisits:{[monster.id]:3}}
+  }};
+ assert.equal(sharedControlForCard(source,a,1,config).exposure,1);
+ assert.equal(sharedControlForCard(source,b,1,config).exposure,2);
+ assert.equal(sharedControlForCard(source,monster,1,config).exposure,3);
+ const fixed=ALL_CARD_ROSTER.find(c=>c.kind==="fixed"&&c.id==="vault");
+ const vaultSource={...source,result:{...source.result,
+  coverage:{...source.result.coverage,vaultEntered:true}}};
+ assert.equal(sharedControlForCard(vaultSource,fixed,1,config).exposure,1);
+ assert.equal(sharedControlForCard(source,b,1,config).won,1);
+ assert.equal(sharedControlForCard(source,b,1,config).decisions,110);
+ assert.throws(()=>sharedControlForCard(source,hero,1,config),/baseline mismatch/);
+ assert.throws(()=>sharedControlForCard(source,b,2,config),/baseline mismatch/);
+ assert.throws(()=>sharedControlForCard({...source,reference:["fake"]},
+  a,1,config),/baseline mismatch/);
 });
