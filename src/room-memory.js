@@ -380,7 +380,7 @@ const printedTables={
   "m-fungus": [
     [
       "1–2",
-      "Spores: become POISONED; next WIT has DIS."
+      "Spores: become POISONED; next WIT has DIS; draw a MIDDLE Monster."
     ],
     [
       "3–4",
@@ -464,7 +464,7 @@ const printedTables={
   "u-candle": [
     [
       "1–2",
-      "Darkness: enter next Room unseen; next ATK DIS."
+      "Darkness: enter next Room unseen; next ATK DIS; draw an UPPER Monster."
     ],
     [
       "3–4",
@@ -564,7 +564,7 @@ const printedTables={
 // Do not silently use the obsolete generic "path"/"debt" table after the
 // printed card changes. A strict parity test covers these exact identifiers.
 export const REVISED_ROOM_ROLL_OPS=Object.freeze({
- "m-fungus":[["POISON","NEXT_WIT_DIS"],["HEAL:2"],["DRAW:1","CURE"]],
+ "m-fungus":[["POISON","NEXT_WIT_DIS","MONSTER_DRAW"],["HEAL:2"],["DRAW:1","CURE"]],
  "m-bridge":[["HURT:d6"],["NONE"],["DRAW:1"]],
  "m-clock":[["HURT:2","NEXT_WIT_DIS"],["NONE"],["DRAW:1"]],
  "u-fork":[["FORK_REVEAL:2:RANDOM"],["FORK_REVEAL:2"],
@@ -572,7 +572,7 @@ export const REVISED_ROOM_ROLL_OPS=Object.freeze({
  "u-echoes":[["NONE"],["FORK_REVEAL:2"],["FORK_REVEAL:3"]],
  "u-mossy":[["HURT:2"],["FORK_REVEAL:2"],
    ["FORK_ORDER:2","DRAW:1"]],
- "u-candle":[["NEXT_DIS"],["FORK_REVEAL:2:TOP"],
+ "u-candle":[["NEXT_DIS","MONSTER_DRAW"],["FORK_REVEAL:2:TOP"],
    ["KEEP_ROOM","FORK_REVEAL:2:TOP"]],
  "m-maps":[["PUSH_UNSEEN_ROOM"],["FORK_ORDER:2"],
    ["FORK_ORDER:2","KEEP_ROOM"]],
