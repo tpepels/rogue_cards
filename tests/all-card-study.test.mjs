@@ -236,3 +236,44 @@ test("combined low-allocation MCTS path preserves full canonical expeditions",()
    "change canonical complete terminal outcomes for "+scenario.seed);
  }
 });
+
+test("single-Hero all-card schedule covers eight solo Heroes without pairing",()=>{
+ const solo={seed:20261016,partySize:"single"};
+ const ordinary=ALL_CARD_ROSTER.filter(c=>["room","item","monster","fixed"].includes(c.kind));
+ assert.ok(ordinary.length>100);
+ for(const card of ordinary){
+  const seen=new Set();
+  for(let i=0;i<32;i++){
+   const g=partiesForCard(card,i,solo);
+   assert.equal(g.reference.length,1,cardKey(card)+" "+i);
+   seen.add(g.reference[0]);
+   if(g.treatment)assert.deepEqual(g.treatment,g.reference);
+  }
+  assert.equal(seen.size,HEROES.length,"All printed Heroes represented: "+cardKey(card));
+ }
+ for(const card of ALL_CARD_ROSTER.filter(c=>c.kind==="hero")){
+  for(let i=0;i<250;i++){
+   const g=partiesForCard(card,i,solo);
+   assert.equal(g.reference.length,1);
+   assert.equal(g.treatment.length,1);
+   assert.equal(g.treatment[0],card.id);
+   assert.notEqual(g.reference[0],card.id);
+  }
+ }
+});
+test("single and two-Hero studies use distinct reference identities",()=>{
+ const room=ALL_CARD_ROSTER.find(c=>c.kind==="room");
+ const one={seed:20261016,partySize:"single"};
+ const two={seed:20261016,partySize:"two"};
+ const mixed={seed:20261016,partySize:"mixed"};
+ for(let i=0;i<70;i++){
+  assert.equal(partiesForCard(room,i,one).reference.length,1);
+  assert.equal(partiesForCard(room,i,two).reference.length,2);
+  assert.notEqual(sharedControlKey(room,i,one),
+   sharedControlKey(room,i,two));
+ }
+ assert.equal(partiesForCard(room,7,mixed).reference.length,1);
+ assert.equal(partiesForCard(room,9,mixed).reference.length,2);
+ assert.throws(()=>partiesForCard(room,0,{partySize:"unknown"}),
+  /Invalid party-size/);
+});

@@ -72,8 +72,9 @@ legality enumeration during transition without changing the legal action set.
 The reference cache and trial checkpoints are restricted to a single pinned
 Git revision, combat implementation and search policy. The source-seed schedule
 is intentionally different from the legacy runner and cannot be combined with
-earlier results. The manifest schema is 4; do not resume earlier schema 2 or 3
-experiments with it. The MCTS path now enables parity-tested lazy cold
+earlier results. The manifest schema is 5; do not resume earlier schema 2, 3 or 4
+experiments with it. The manifest pins `--party-size`, preventing results
+from solo, two-Hero and historical mixed studies from being combined. The MCTS path now enables parity-tested lazy cold
 tree edges, reusable trace/scratch buffers, immutable-pile fast cloning,
 and incremental history hashing. These do not reduce search budgets,
 eliminate legal actions or replace the canonical game rules. Full-game
@@ -116,3 +117,35 @@ are never assigned invented causal values.
 
 Before making final card edits, validate stronger search budgets and
 underrepresented mechanics with pre-registered, fresh independent seeds.
+
+
+## Single-Hero first, two-Hero later
+
+The all-card study supports three mutually exclusive party populations:
+
+- `--party-size single`: **only one-Hero expeditions**. Non-Hero cards
+  rotate through all eight printed Heroes; every Hero-card intervention
+  compares one printed Hero against a different single Hero.
+- `--party-size two`: exactly two distinct printed Heroes throughout.
+  Non-Hero cards rotate through the 28 unordered pairs.
+- `--party-size mixed`: the older research schedule with both party sizes
+  (default, retained for compatibility).
+
+To launch the dedicated 250-samples-per-card solo campaign on the local
+eight-core workstation, after the new fixed-AC engine has been merged:
+
+    git pull --ff-only
+    bash scripts/run-single-hero-study.sh
+
+The launcher uses seven workers, a 24-hour checkpoint window, the complete
+printed card roster and `--party-size single`. It runs the canonical
+session tests, deck validation and a same-revision canonical audit first.
+It refuses to start while the engine still contains the superseded opposed
+attack/DEF roll used before `AC = 12 + DEF`.
+
+The launcher detects and resumes the exact same Git-revision study. Its
+study directory is `results/all-cards-single-hero-<commit>`, and the
+pointer is `results/current-single-hero-study.txt`. Inspect
+`summary.md` and `summary.json` inside that directory. The later
+two-Hero campaign must use a **different** directory and
+`--party-size two`; these experimental populations must not be pooled.

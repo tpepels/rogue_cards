@@ -60,22 +60,36 @@ export function cardTrialSeed(seed,card,index){
  if(!byKey.has(cardKey(card)))throw Error("Unknown card in seed schedule");
  return mix(seed^Math.imul(index+1,0x85ebca6b))||1;
 }
-export function partiesForCard(card,index){
- if(card.kind==="fixed")return {reference:parties[index%parties.length]};
+/**
+ * Separate party-size populations have independent manifests and must never
+ * be pooled. "single" rotates evenly through all eight Hero identities for
+ * every non-Hero card; Hero comparisons replace one actual single Hero.
+ * "two" enumerates all unordered two-Hero parties for non-Hero cards.
+ * "mixed" retains the historical all-party research schedule unchanged.
+ */
+export function partiesForCard(card,index,c={}){
+ if(!Number.isSafeInteger(index)||index<0)
+  throw Error("Invalid independent source index");
+ const mode=c.partySize??"mixed";
+ if(!["single","two","mixed"].includes(mode))
+  throw Error("Invalid party-size research population "+mode);
  if(card.kind!=="hero"){
-  const party=parties[index%parties.length];
-  return {reference:[...party],treatment:[...party]};
+  const pool=mode==="single"?heroIds.map(id=>[id]):
+   mode==="two"?parties.filter(p=>p.length===2):parties;
+  const reference=[...pool[index%pool.length]];
+  return card.kind==="fixed"?{reference}:
+   {reference,treatment:[...reference]};
  }
  const alternatives=heroIds.filter(id=>id!==card.id);
  const referenceHero=alternatives[index%alternatives.length];
- const double=index%2===1;
+ const double=mode==="two"||
+  mode==="mixed"&&index%2===1;
  if(!double)return {reference:[referenceHero],treatment:[card.id]};
  const partners=alternatives.filter(id=>id!==referenceHero);
- const partner=partners[Math.floor(index/alternatives.length)%partners.length];
- return {
-  reference:[referenceHero,partner],
-  treatment:[card.id,partner]
- };
+ const partner=partners[
+  Math.floor(index/alternatives.length)%partners.length];
+ return {reference:[referenceHero,partner],
+  treatment:[card.id,partner]};
 }
 // Moves a card already present in a real printed pile; never creates,
 // duplicates, discards, or silently adds a physical card.
@@ -183,14 +197,14 @@ export function runCanonicalCardExpedition(session,card,c,runSeed,
 }
 export function sharedControlKey(card,index,c){
  const seed=cardTrialSeed(c.seed,card,index);
- const party=partiesForCard(card,index).reference;
+ const party=partiesForCard(card,index,c).reference;
  return String(index).padStart(6,"0")+":"+party.join(",");
 }
 export function evaluateSharedControl(card,index,c){
  // A fixed boss card is observational only. Its full expedition is
  // identical to the matching reference for every other printed card.
  const seed=cardTrialSeed(c.seed,card,index);
- const group=partiesForCard(card,index);
+ const group=partiesForCard(card,index,c);
  const session=createDecisionSession({seed,heroes:group.reference});
  const result=runCanonicalCardExpedition(session,null,c,seed,{
   captureCoverage:true});
@@ -200,7 +214,7 @@ export function evaluateSharedControl(card,index,c){
 export function sharedControlForCard(baseline,card,index,c){
  const key=sharedControlKey(card,index,c);
  const seed=cardTrialSeed(c.seed,card,index);
- const reference=partiesForCard(card,index).reference;
+ const reference=partiesForCard(card,index,c).reference;
  if(!baseline||baseline.key!==key||baseline.seed!==seed||
    JSON.stringify(baseline.reference)!==JSON.stringify(reference)||
    !baseline.result?.coverage||
@@ -230,7 +244,7 @@ export function sharedControlForCard(baseline,card,index,c){
 export function evaluateCardTrial(card,index,c,sharedBaseline=null){
  if(!byKey.has(cardKey(card)))throw Error("Card is absent from canonical roster");
  const seed=cardTrialSeed(c.seed,card,index);
- const group=partiesForCard(card,index);
+ const group=partiesForCard(card,index,c);
  if(card.kind==="fixed"&&sharedBaseline)return {
   card:cardKey(card),index,seed,kind:"observed",
   parties:group.reference,

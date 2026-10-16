@@ -25,7 +25,7 @@ function parse(argv){
  const named=new Set(["--runs-per-card","--seed","--workers","--hours",
   "--budget","--max-search-steps","--max-game-steps","--min-paired",
   "--job-minutes","--out","--audit","--focus","--only",
-  "--batch-size"]);
+  "--batch-size","--party-size"]);
  const args={},flags=new Set();
  for(let i=0;i<argv.length;i++){
   const k=argv[i];
@@ -38,6 +38,9 @@ function parse(argv){
   args[k]=argv[++i];
  }
  const focus=args["--focus"]||"all";
+ const partySize=args["--party-size"]||"mixed";
+ if(!["single","two","mixed"].includes(partySize))
+  throw Error("--party-size must be single, two, or mixed");
  const possible=new Set(["all","room","item","monster","hero","fixed"]);
  if(!possible.has(focus))throw Error("Unsupported --focus "+focus);
  const only=(args["--only"]||"").split(",").filter(Boolean);
@@ -65,7 +68,8 @@ function parse(argv){
   minPaired:uint(args["--min-paired"]??60,"min-paired",2,100000),
   out:resolve(args["--out"]||"results/all-card-canonical-study"),
   audit:args["--audit"]?resolve(args["--audit"]):null,
-  focus,only,cards,nativeHash:flags.has("--native-hash"),
+  focus,only,cards,partySize,
+  nativeHash:flags.has("--native-hash"),
   resume:flags.has("--resume"),dryRun:flags.has("--dry-run")
  };
 }
@@ -99,6 +103,7 @@ function report(c,rev,records,failures=[]){
   commit:rev,executionMode:c.nativeHash?
    "selective-deferred-native-hash":"selective-deferred",
   knowledge:"fair",
+  partySize:c.partySize,
   complete,selectedCards:c.cards.length,
   sharedReferenceExpeditions:true,
   searchOptimizations:"parity-verified-cold-edges-v1",
@@ -109,6 +114,7 @@ function report(c,rev,records,failures=[]){
    runsPerCard:c.runsPerCard,seed:c.seed,budget:c.budget,
    maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
    minPaired:c.minPaired,focus:c.focus,only:c.only,
+   partySize:c.partySize,
    nativeHash:c.nativeHash,batchSize:c.batchSize
   },
   estimands:{
@@ -139,6 +145,7 @@ function report(c,rev,records,failures=[]){
   "Git revision: "+rev,
   "Execution: selective-deferred"+(c.nativeHash?" + native state hash":"")+
    " canonical MCTS; fair hidden information",
+  "Hero party population: "+c.partySize,
   "Source jobs: "+records.size+"/"+summary.plannedJobs,
   "Paired terminal source jobs: "+totalPairs,
   "Printed card IDs in the full roster: "+ALL_CARD_ROSTER.length,
@@ -211,12 +218,13 @@ if(!isMainThread){
  if(!rev)throw Error("Git revision is required");
  if(c.nativeHash)loadNativeMcts({required:true});
  if(c.resume&&c.dryRun)throw Error("Use --resume OR --dry-run");
- const design={schema:4,revision:rev,seed:c.seed,
+ const design={schema:5,revision:rev,seed:c.seed,
   runsPerCard:c.runsPerCard,budget:c.budget,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
   minPaired:c.minPaired,selected:c.cards.map(cardKey),
   mode:"selective-deferred",knowledge:"fair",
   nativeHash:c.nativeHash,batchSize:c.batchSize,
+  partySize:c.partySize,
   commonReferenceSeeds:true,
   searchOptimizations:"parity-verified-cold-edges-v1"};
  console.error(JSON.stringify({study:design,out:c.out,
@@ -260,7 +268,8 @@ if(!isMainThread){
   let remainingCards=0,remainingBatches=0,cachedReferenceGroups=0;
   const controlConfig={
    seed:c.seed,budget:c.budget,maxSearchSteps:c.maxSearchSteps,
-   maxGameSteps:c.maxGameSteps,nativeHash:c.nativeHash
+   maxGameSteps:c.maxGameSteps,nativeHash:c.nativeHash,
+   partySize:c.partySize
   };
   for(let i=0;i<c.runsPerCard;i++){
    const groups=new Map();
