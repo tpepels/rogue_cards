@@ -101,6 +101,7 @@ function report(c,rev,records,failures=[]){
   knowledge:"fair",
   complete,selectedCards:c.cards.length,
   sharedReferenceExpeditions:true,
+  searchOptimizations:"parity-verified-cold-edges-v1",
   entirePrintedRoster:ALL_CARD_ROSTER.length,
   plannedJobs:c.cards.length*c.runsPerCard,
   completedJobs:records.size,pairedJobs:totalPairs,
@@ -210,13 +211,14 @@ if(!isMainThread){
  if(!rev)throw Error("Git revision is required");
  if(c.nativeHash)loadNativeMcts({required:true});
  if(c.resume&&c.dryRun)throw Error("Use --resume OR --dry-run");
- const design={schema:3,revision:rev,seed:c.seed,
+ const design={schema:4,revision:rev,seed:c.seed,
   runsPerCard:c.runsPerCard,budget:c.budget,
   maxSearchSteps:c.maxSearchSteps,maxGameSteps:c.maxGameSteps,
   minPaired:c.minPaired,selected:c.cards.map(cardKey),
   mode:"selective-deferred",knowledge:"fair",
   nativeHash:c.nativeHash,batchSize:c.batchSize,
-  commonReferenceSeeds:true};
+  commonReferenceSeeds:true,
+  searchOptimizations:"parity-verified-cold-edges-v1"};
  console.error(JSON.stringify({study:design,out:c.out,
   note:"Shared identical full-game MCTS controls; complete canonical treatments"},null,2));
  if(!c.dryRun){

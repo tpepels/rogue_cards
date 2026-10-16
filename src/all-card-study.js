@@ -108,6 +108,18 @@ export function runCanonicalCardExpedition(session,card,c,runSeed,
   speculativeTransitions:true,
   canonicalReactionPhases:true,
   deferReactionCheckpoints:true,
+  // All optimizations below retain the identical UCT, dice, legal choices
+  // and complete canonical terminal-game rollouts. The regression suite
+  // compares this combined path against the original study policy.
+  ...(c.optimizedSearch===false?{}:{
+   lazyColdEdges:true,
+   reuseTraceSlots:true,
+   fastPileClones:true,
+   reuseEdgeActions:true,
+   reuseEmptyReplaySwitches:true,
+   reuseSelectionScratch:true,
+   streamHistoryHash:true
+  }),
   ...(c.nativeHash?{nativeHash:true}:{})
  };
  for(;session.phase!=="terminal"&&decisions<c.maxGameSteps;decisions++){

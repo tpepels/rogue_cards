@@ -72,8 +72,12 @@ legality enumeration during transition without changing the legal action set.
 The reference cache and trial checkpoints are restricted to a single pinned
 Git revision, combat implementation and search policy. The source-seed schedule
 is intentionally different from the legacy runner and cannot be combined with
-earlier results. The manifest schema is 3; do not resume earlier schema 2
-experiments with it. The per-batch limit defaults to 24 cards
+earlier results. The manifest schema is 4; do not resume earlier schema 2 or 3
+experiments with it. The MCTS path now enables parity-tested lazy cold
+tree edges, reusable trace/scratch buffers, immutable-pile fast cloning,
+and incremental history hashing. These do not reduce search budgets,
+eliminate legal actions or replace the canonical game rules. Full-game
+combined parity is checked by the test suite. The per-batch limit defaults to 24 cards
 (`--batch-size 24`); a resumed study must keep its exact manifest.
 
 To benchmark actual complete-game parity and runtime savings:

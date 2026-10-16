@@ -201,3 +201,21 @@ test("cached canonical baseline equals independently replayed control for printe
    "Reference cache changed full-game outcome for "+kind);
  }
 });
+
+test("combined low-allocation MCTS path preserves full canonical expeditions",()=>{
+ const scenarios=[
+  {seed:20261016,heroes:["warrior","wizard"]},
+  {seed:20261017,heroes:["rogue","priest"]}
+ ];
+ for(const scenario of scenarios){
+  const create=()=>createDecisionSession(scenario);
+  const config={seed:scenario.seed,budget:2,maxSearchSteps:4000,
+   maxGameSteps:7000,issuedActions:true};
+  const prior=runCanonicalCardExpedition(create(),null,{
+   ...config,optimizedSearch:false},scenario.seed);
+  const optimized=runCanonicalCardExpedition(create(),null,config,scenario.seed);
+  assert.deepEqual(optimized,prior,
+   "Cold-edge, fast immutable-pile and scratch optimizations must not "+
+   "change canonical complete terminal outcomes for "+scenario.seed);
+ }
+});
