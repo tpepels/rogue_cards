@@ -42,7 +42,7 @@ The [**four-page printable rulebook**](https://tpepels.github.io/rogue_cards/rul
 
 The current Everything Goes playtest resolves **12 non-Corridor Rooms per stage** (36 normal Rooms across UPPER / MIDDLE / DEEP). Corridors add visits without counting. Trapdoors may skip a stage. The fifteen formerly print-only Rooms now have executable rules in the decision-session engine; the nine print-only Objects are in the Item pool, and twelve Monsters expand the regional roster to 24. More regional Rooms and Corridors trigger Monster draws on entry or through printed outcomes.
 
-A defeated regional Monster awards **one Item** in Everything Goes, in addition to any printed Room reward and optional Monster Remains. Parley, escape and banishment do not award this standard combat loot.
+Every regional Monster grants its own **printed DEFEAT effect**, resolved upon victory after the optional Remains choice. There is no universal Item reward. Parley, escape and banishment do not trigger DEFEAT.
 
 Quick checks:
 
