@@ -8,6 +8,7 @@ on:
       - "scripts/generate-illustrations.py"
       - "scripts/illustration-catalogue.mjs"
       - "src/print-expansion.js"
+      - "src/monster-expansion.js"
       - "src/tabletop-view.js"
       - "src/tabletop-data.js"
       - "tests/test_illustration_generator.py"
@@ -17,6 +18,7 @@ on:
       - "scripts/generate-illustrations.py"
       - "scripts/illustration-catalogue.mjs"
       - "src/print-expansion.js"
+      - "src/monster-expansion.js"
       - "src/tabletop-view.js"
       - "src/tabletop-data.js"
       - "tests/test_illustration_generator.py"
@@ -36,9 +38,21 @@ jobs:
           python-version: "3.12"
       - name: Verify missing-image detection and map updates without API access
         run: python3 -m unittest discover -s tests -p test_illustration_generator.py -v
-      - name: Verify print-only artwork is included in safe dry-run
+      - name: Verify 175 printable cards in offline dry-run
         run: |
           python3 scripts/generate-illustrations.py --dry-run > /tmp/missing-art.log
           head -n 6 /tmp/missing-art.log
-          grep -Fx 'Catalogue: 163 cards; existing: 139; missing: 24.' /tmp/missing-art.log
-          test "$(grep -c '^  MISSING ' /tmp/missing-art.log)" -eq 24
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          lines = Path("/tmp/missing-art.log").read_text().splitlines()
+          match = re.fullmatch(
+              r"Catalogue: (\\d+) cards; existing: (\\d+); missing: (\\d+)\\.",
+              lines[0],
+          )
+          assert match, lines[0]
+          total, existing, missing = map(int, match.groups())
+          assert total == 175
+          assert existing + missing == total
+          assert sum(line.startswith("  MISSING ") for line in lines[1:]) == missing
+          PY

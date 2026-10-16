@@ -114,30 +114,44 @@ class IllustrationGeneratorTests(unittest.TestCase):
 
     def test_physical_catalogue_covers_print_only_cards(self):
         cards = module.get_catalogue()
-        self.assertEqual(len(cards), 163)
-        self.assertEqual(len(set(card["key"] for card in cards)), 163)
+        self.assertEqual(len(cards), 175)
+        self.assertEqual(len(set(card["key"] for card in cards)), 175)
         canonical = [c for c in cards if c["mapping_source"] == "canonical"]
         expansion = [c for c in cards if c["mapping_source"] == "print-only"]
         self.assertEqual(len(canonical), 139)
-        self.assertEqual(len(expansion), 24)
-        self.assertEqual(len({c["key"] for c in expansion}), 24)
-        self.assertEqual([c["filename"] for c in expansion if not c["filename"]], [])
+        self.assertEqual(len(expansion), 36)
+        self.assertEqual(len({c["key"] for c in expansion}), 36)
+        new_monsters = [c for c in expansion if c["key"].startswith("monster:")]
+        self.assertEqual(len(new_monsters), 12)
+        self.assertEqual(len([c for c in expansion if not c["filename"]]), 12)
+        self.assertEqual([c["number"] for c in new_monsters], list(range(164, 176)))
         self.assertEqual(module.mapping_target(expansion[0])[1], "PRINT_ONLY_ART")
+        self.assertEqual(module.mapping_target(new_monsters[0])[1], "PRINT_ONLY_ART")
 
-    def test_print_only_borrowed_art_is_planned_above_original_139(self):
+    def test_new_monster_illustrations_get_stable_164_to_175_numbers(self):
         cards = module.get_catalogue()
         with tempfile.TemporaryDirectory() as tmp:
             art_dir = Path(tmp)
             for card in cards:
-                if card["mapping_source"] == "canonical":
+                if card["filename"]:
                     Path(art_dir, card["filename"]).touch()
             planned = module.plan_cards(cards, art_dir)
-            original = [x for x in planned if x["mapping_source"] == "canonical"]
-            expansion = [x for x in planned if x["mapping_source"] == "print-only"]
-            self.assertTrue(all(not x["missing"] for x in original))
-            self.assertEqual(sum(x["missing"] for x in expansion), 24)
-            self.assertEqual(expansion[0]["filename"], "140_empty_guard_cell.png")
-            self.assertEqual(expansion[-1]["filename"], "163_wooden_buckler.png")
+            monsters = [c for c in planned if c["mapping_source"] == "print-only"
+                        and c["key"].startswith("monster:")]
+            self.assertEqual(len(monsters), 12)
+            self.assertTrue(all(c["missing"] for c in monsters))
+            self.assertEqual(monsters[0]["filename"], "164_drain_leech.png")
+            self.assertEqual(monsters[-1]["filename"], "175_glass_revenant.png")
+            self.assertTrue(all(c["new_mapping"] for c in monsters))
+            self.assertEqual(sum(c["missing"] for c in planned), 12)
+            # Generate card 175 before 164; existing indices must stay stable.
+            Path(art_dir, monsters[-1]["filename"]).touch()
+            updated = [dict(c) for c in cards]
+            updated[-1]["filename"] = monsters[-1]["filename"]
+            repeated = module.plan_cards(updated, art_dir)
+            self.assertEqual([c["filename"] for c in repeated[-12:]],
+                             [c["filename"] for c in planned[-12:]])
+            self.assertEqual(sum(c["missing"] for c in repeated), 11)
 
 
 if __name__ == "__main__":

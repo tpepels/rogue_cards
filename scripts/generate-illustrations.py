@@ -63,6 +63,7 @@ def plan_cards(cards: list[dict], art_dir: Path) -> list[dict]:
                     if (m := re.match(r"^(\d+)_", p.name))]
     next_number = max(used_numbers + disk_numbers, default=0) + 1
     claimed = set()
+    reserved_numbers = set(used_numbers) | set(disk_numbers)
     planned = []
     for card in cards:
         old_filename = card["filename"]
@@ -71,12 +72,27 @@ def plan_cards(cards: list[dict], art_dir: Path) -> list[dict]:
         if correct_name:
             if old_filename in claimed:
                 raise ValueError(f"Duplicate owned artwork filename: {old_filename}")
-            claimed.add(old_filename)
             filename = old_filename
         else:
-            # Unmapped cards and borrowed illustrations need their own art.
-            filename = f"{next_number:03d}_{slug(card['title'])}.png"
-            next_number += 1
+            # Stable card numbers 164-175 keep Monster filenames constant even
+            # when generated out of order with --ids.
+            fixed = card.get("number")
+            if fixed is not None:
+                if type(fixed) is not int or fixed < 1:
+                    raise ValueError(f"Invalid illustration number: {card['key']}")
+                if fixed in reserved_numbers:
+                    raise ValueError(f"Illustration number already reserved: {fixed}")
+                number = fixed
+            else:
+                while next_number in reserved_numbers:
+                    next_number += 1
+                number = next_number
+                next_number += 1
+            reserved_numbers.add(number)
+            filename = f"{number:03d}_{slug(card['title'])}.png"
+        if filename in claimed:
+            raise ValueError(f"Duplicate owned artwork filename: {filename}")
+        claimed.add(filename)
         planned.append({**card, "filename": filename,
                         "previous_filename": old_filename,
                         "new_mapping": filename != old_filename,

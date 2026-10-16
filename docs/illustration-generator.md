@@ -3,9 +3,10 @@
 The generator reads **every printable card design** from the JavaScript sources:
 
 - The original 139 engine cards from `src/tabletop-data.js`, with artwork in `CARD_ART` in `src/tabletop-view.js`.
-- The 24 print-only expansion cards from `src/print-expansion.js`, with their current temporary assignments in `PRINT_ONLY_ART` in the same file.
+- The 24 additional Rooms and Items from `src/print-expansion.js`, whose PNGs and `PRINT_ONLY_ART` assignments are already present.
+- The twelve new Monsters from `src/monster-expansion.js`, whose artwork remains blank until generated.
 
-The generator now includes **163 designs**. The original 139 PNGs are not regenerated. The 24 expansion cards still have provisional artwork-map entries for planning, but these aliases are **never displayed**: their illustration areas stay blank until they have their own PNGs. All 24 are therefore correctly treated as **missing unique illustrations**. New files begin at `140_...` if the original 139 files are present.
+The generator now includes **175 designs**. The first **163 PNGs already exist** (139 original cards and 24 expansion cards). The twelve new regional Monsters need images, assigned stable filenames numbered **164–175**, even if generated in a different order.
 
 ## Setup (once)
 
@@ -22,11 +23,11 @@ Export `GEMINI_API_KEY` in the current terminal. `GEMENI_API_KEY` is also suppor
 ```sh
 git pull --ff-only
 python3 scripts/generate-illustrations.py --dry-run
-# Expected before generating the expansion:
-# Catalogue: 163 cards; existing: 139; missing: 24.
+# Expected before generating the new regional Monsters:
+# Catalogue: 175 cards; existing: 163; missing: 12.
 ```
 
-The dry run lists the 24 new filenames in print-catalogue order. It does not make API requests or update mappings.
+The dry run lists the twelve new Monster filenames in print-catalogue order. It does not make API requests or update mappings.
 
 ## Generate gradually or all at once
 
@@ -38,7 +39,7 @@ python3 scripts/generate-illustrations.py
 
 `npm run art:check`, `npm run art:missing`, and `npm run art:missing -- --limit 3` are equivalent shortcuts.
 
-Each generated PNG is placed into `assets/illustrations/`, and the corresponding assignment is updated in **the right source file**. For print-only cards, the script replaces their individual entry in `PRINT_ONLY_ART`. The renderer only accepts filenames matching the card title, so `cards.html` and `decks.html` automatically show the new images without engine changes or modifications to the canonical `CARD_ART` map.
+Each generated PNG is placed into `assets/illustrations/`, and the corresponding assignment is updated in **the right source file**. For new Monsters, the script adds their entries to `PRINT_ONLY_ART` only after each PNG has been generated. The renderer only accepts filenames matching the card title, so `cards.html` and `decks.html` automatically show the new images without engine changes or modifications to the canonical `CARD_ART` map.
 
 **Prompt:** just the card title plus the literal contents of `scripts/illustration-style.txt`. No card mechanics, extra description or image-selection instructions are inserted.
 
