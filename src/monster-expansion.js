@@ -1,4 +1,5 @@
 // Twelve Everything Goes Monsters. Each printed behavior has a matching engine opcode.
+import {MONSTER_DEFEATS} from "./monster-defeats.js";
 const ROWS=[
  [
   "drain-leech",
@@ -334,6 +335,7 @@ const REMAINS={"drain-leech":["EAT","POISON","HEAL:2","HEAL:d6"],"keyhole-mimic"
 const REMAINS_TEXT={"POISON":"become POISONED","HURT:2":"lose 2 HP","HURT:d6":"lose d6 HP","HEAL:2":"heal 2 HP","HEAL:d6":"heal d6 HP","DRAW:1":"draw 1 Item","DRAW:2":"draw 2 Items","PEEK:1":"peek next Room","PEEK:2":"peek next 2 Rooms","CURE":"remove POISONED","NEXT_ADV":"next Hero attack has ADV","DEF_ADV":"next Monster attack against you has DIS"};
 export const EXTRA_MONSTERS=Object.freeze(ROWS.map(([id,title,stage,hp,atk,def,behavior,behaviorOps,parleyMode,parleyCost,weaknessTag,weaknessFace,tags],i)=>{
  const weakness=`With a ${weaknessTag} Item, treat behaviour ${weaknessFace} as 1–2.`;
+ const defeat=MONSTER_DEFEATS[id];if(!defeat)throw Error("Missing Monster DEFEAT: "+id);
  const [genericRemains,...remainsOps]=REMAINS[id];
  const remains=genericRemains+": d6. 1–2: "+REMAINS_TEXT[remainsOps[0]]+"; 3–4: "+REMAINS_TEXT[remainsOps[1]]+"; 5–6: "+REMAINS_TEXT[remainsOps[2]]+".";
  const parley=parleyMode==="WIT"?
@@ -343,5 +345,5 @@ export const EXTRA_MONSTERS=Object.freeze(ROWS.map(([id,title,stage,hp,atk,def,b
   type:"monster",printOnly:true,rule:"",flavor:"",
   v2:{kind:"MONSTER",number:164+i,tags,weakness,weaknessTag,weaknessFace,
    parley,parleyMode,parleyCost,behaviorOps,genericRemains,remainsOps,
-   remains}});
+   defeat:defeat.text,defeatOps:defeat.ops,remains}});
 }));
