@@ -154,10 +154,13 @@ function work(job,c){
   traceLimit:0,retainSearches:false,equipmentProgressCap:12,
   onDecision:recorder.handler});
  const events=recorder.finish(),m=result.metrics;
- if(!result.resolved||result.actions!==events.length)
-  throw Error("Inconsistent completed-decision event count");
+ if(!result.resolved||result.actions>events.length)
+  throw Error("Canonical completed actions exceed observed decisions");
+ // A nested reaction is a genuine player decision but may replay a
+ // still-open parent transaction. It does not increment the engine's
+ // completed-root actionCount until the whole parent finally commits.
  if(result.forcedDecisions+result.searchedDecisions!==events.length)
-  throw Error("Missing policy decision");
+  throw Error("Missing or duplicated player decision (including reactions)");
  if(events.some((e,i)=>e.step!==i))
   throw Error("Nonsequential decision tape");
  if(!events.some(e=>e.dice.length))
@@ -226,6 +229,7 @@ function work(job,c){
   sample:job.sample,arm:job.arm,seed:job.seed,heroes:job.heroes,
   extraObjectId:job.extraObjectId,won:result.won,
   ending:result.ending,actions:result.actions,
+  decisionEvents:events.length,nestedDecisions:nested,
   searchedDecisions:result.searchedDecisions,
   forcedDecisions:result.forcedDecisions,
   equipmentProgressBreaks:result.equipmentProgressBreaks,
@@ -240,7 +244,7 @@ function work(job,c){
    .find(card=>card.id===job.extraObjectId),
   counters:sampleCounters(m),metrics:m,
   phases,selected,available,offeredByCard,roomEntries,monsterStarts,
-  diceKinds,diceFaces,dice:rawDice,nestedDecisions:nested,
+  diceKinds,diceFaces,dice:rawDice,
   availableCardActions:result.availableCardActions,
   chosenCardActions:result.chosenCardActions,
   choiceCoverage:result.choiceCoverage,
@@ -304,6 +308,7 @@ function createReport(c,done,expected){
  const pairs=rows.filter(x=>x.group==="pair");
  const metrics=["won","actions","rooms","encounterStarts","combatStarts",
   "kills","drawn","hpLoss","searchedDecisions","dice","nestedDecisions",
+  "decisionEvents",
   "equipmentProgressBreaks","ordinaryCombats","bossCombats",
   "corridors","totalFinalHp"];
  const byParty={};
@@ -423,7 +428,8 @@ function save(c,done,expected){
  csv(join(c.out,"runs.csv"),rows.map(r=>({
   index:r.i,group:r.group,itemId:r.itemId,sample:r.sample,arm:r.arm,
   seed:r.seed,heroes:r.heroes.join("+"),win:Number(r.won),
-  ending:r.ending,actions:r.actions,rooms:r.rooms,
+  ending:r.ending,actions:r.actions,decisions:r.decisionEvents,
+  rooms:r.rooms,
   equipmentProgressBreaks:r.equipmentProgressBreaks,
   encounters:r.encounterStarts,combats:r.combatStarts,kills:r.kills,
   drawn:r.drawn,hpLoss:r.hpLoss,dice:r.dice,
