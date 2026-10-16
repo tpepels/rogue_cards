@@ -286,8 +286,6 @@
   padding: 0.3mm 0 0;
   margin: 0.4mm 0 0;
 }
-/* Make the two Rusty Gate scraps independent rather than overlapping. */
-.tt-card.tt-paper-collage[data-id="u-gate"] .tt-slip--lead{bottom:10mm}
 /* Rooms: the choice ticket and the outcomes are physically distinct. */
 .tt-card.tt-paper-collage.tt-layout-v2-room .tt-slip--lead {
   --paper-width: 37mm;
@@ -687,3 +685,6 @@
 .tt-card.tt-paper-collage[data-print-expansion="true"].tt-needs-art .tt-collage > .tt-visual::after {
  content:none;
 }
+
+/* Keep Rusty Gate's north-east choice ticket clear of its outcome scrap. */
+.tt-card.tt-paper-collage[data-id="u-gate"] .tt-slip--lead{top:27mm;bottom:auto}
