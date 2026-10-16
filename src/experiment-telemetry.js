@@ -22,6 +22,10 @@ export function experimentSnapshot(s,phase){
   monster:state.monster?{id:state.monster.id,hp:state.monsterHP,
    maxHp:state.monster.hp,stage:state.monster.stage}:null,
   queuedMonsters:(state.monsterQueue||[]).map(c=>c.id),
+  // Every mutable scalar engine field, not just a handpicked shortlist.
+  engineScalars:Object.fromEntries(Object.entries(state)
+   .filter(([,v])=>v===null||["string","number","boolean"].includes(typeof v))
+   .sort(([a],[b])=>a.localeCompare(b))),
   stageProgress:{...state.stageProgress},roomGoal:state.roomGoal,
   roomPiles:Object.fromEntries(Object.entries(state.rooms).map(([k,v])=>[k,v.length])),
   monsterPiles:Object.fromEntries(Object.entries(state.monsters).map(([k,v])=>[k,v.length])),
@@ -38,6 +42,11 @@ export function experimentSnapshot(s,phase){
   heroes:state.heroes.map((h,index)=>({
    index,id:h.card.id,hp:h.hp,maxHp:h.card.hp,alive:h.hp>0,
    poison:!!h.poison,
+   // All Hero primitive status/timer/buff fields are part of the event
+   // snapshot; adding a new engine flag cannot silently evade analysis.
+   scalarStatuses:Object.fromEntries(Object.entries(h)
+    .filter(([,v])=>v===null||["string","number","boolean"].includes(typeof v))
+    .sort(([a],[b])=>a.localeCompare(b))),
    inventory:h.inventory.map(item),
    slots:Object.fromEntries(Object.entries(h.slots).map(([name,c])=>
     [name,item(c)])),
@@ -117,8 +126,4 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
   return events;
  }};
 }
-export const allCards=()=>{
- // Deliberately import via dedicated catalogue lists in the runner;
- // this module remains independent of physical card definitions.
- return null;
-};
+
