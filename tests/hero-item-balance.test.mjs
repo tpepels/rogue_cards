@@ -45,7 +45,7 @@ test("Knight five cancels a hit and six also controls the next response",()=>{
   const {s,h}=battle("knight");
   if(h.slots.armour)s.remove(h,h.slots.armour);
   const before=h.hp;
-  const remaining=predetermined(s,[3,15,1,4,face]);
+  const remaining=predetermined(s,[3,15,1,face]);
   monsterRespond(s,h);
   assert.equal(h.hp,before);
   assert.equal(s.forcedBehavior,face===6?1:0);
@@ -55,7 +55,7 @@ test("Knight five cancels a hit and six also controls the next response",()=>{
 });
 test("Knight saves INTERCEPT when Warded Shield fully prevents damage",()=>{
  const {s,h}=battle("knight");
- const remaining=predetermined(s,[3,15,1,4,6]);
+ const remaining=predetermined(s,[3,15,1,4]);
  monsterRespond(s,h);
  assert.equal(remaining(),0);
  assert.ok(!h.used.has("hero"));
@@ -66,7 +66,7 @@ test("Wizard and Priest misfire for ceil(d6/2), not full d6",()=>{
  playerAttack(wizard.s,w);
  assert.equal(w.hp,15);assert.equal(wd(),0);
  const priest=battle("priest"),h=priest.h;
- const pd=predetermined(priest.s,[1,6,1,20]);
+ const pd=predetermined(priest.s,[1,6,1]);
  playerAttack(priest.s,h);
  assert.equal(h.hp,17);assert.equal(pd(),0);
 });
