@@ -4,6 +4,7 @@
  * offered as actions; they are handled at their actual trigger by campaign.
  */
 import {OBJECTS} from "./tabletop-data.js";
+import {ODD_ITEMS} from "./item-expansion.js";
 const actions=new Set(["scroll-flame","scroll-frost","scroll-lightning",
  "scroll-banish","scroll-mischief","scroll-last","wand-sparks",
  "wand-morph","wand-turn","wand-frost","spore-jar"]);
@@ -50,6 +51,11 @@ export function itemOptions(s,h,phase){
    if(s.monster&&kind==="POTION")push(card,"drink");
    if(s.monster&&id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
   }else if(phase==="explore"){
+   if(["odd-sun-charm","odd-fever-candle","odd-thorn-tonic"].includes(id))
+    push(card,"odd-tool");
+   if(["odd-mad-compass","odd-moon-lens"].includes(id)&&s.room?.stage!=="FINAL"&&
+      (id!=="odd-moon-lens"||!!s.room?.v2.roll&&s.moonLensFace==null))
+    push(card,"odd-tool");
    if(s.room?.stage!=="FINAL"&&scouts.has(id)&&id!=="scroll-reveal"&&
     (id!=="ring-eye"||equipped(h,card))&&(id!=="raven"||equipped(h,card)))push(card,"scout");
    if(s.room?.stage!=="FINAL"&&id==="scroll-reveal")push(card,"scout");
@@ -90,6 +96,10 @@ export function itemOptions(s,h,phase){
   }else if(phase==="room-roll"){
    if(id==="ring-echo"&&equipped(h,card))push(card,"room-reroll");
   }else if(phase==="between-rooms"){
+   if(["odd-fever-candle","odd-sun-charm","odd-thorn-tonic","odd-bone-dice"].includes(id)||
+      id==="odd-echo-bell"&&s.keptRooms.length>0||
+      id==="odd-red-string"&&s.living().length===2&&!s.redString)
+     push(card,"odd-tool");
    if(kind==="POTION")push(card,"drink");
    if(id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
    if(["ex-bandages","ex-rations"].includes(id)&&h.hp<h.card.hp)push(card,"healing-tool");
