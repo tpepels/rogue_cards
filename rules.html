@@ -28,6 +28,9 @@ strong{font-weight:900}
 .note p:last-child{margin-bottom:0}
 .example{font:12px/1.4 "Courier New",monospace;padding:2.6mm 3mm;margin:3mm 0;background:#ece0cd}
 .example strong{display:block;margin-bottom:1mm}
+.combat-example .step{font:inherit;line-height:1.45;margin:0;padding:1.8mm 0;border-top:1px solid #c8b79e}
+.combat-example .step strong{display:inline;margin:0}
+.combat-example .step:first-of-type{border-top:0;padding-top:.8mm}
 .end{border-top:2px double #3e3020;margin-top:4mm;padding-top:2mm;font:11px/1.4 "Courier New",monospace}
 .page-number{text-align:right;font:bold 10px "Courier New",monospace;margin-top:4mm}
 @media(max-width:680px){nav{padding:0 12px}.sheet{margin:8px auto;width:100%;min-height:0;padding:18px}.cols{grid-template-columns:1fr}h1{font-size:29px}}
@@ -50,6 +53,8 @@ strong{font-weight:900}
  .sheet:nth-of-type(2):not(.deck-appendix) section{margin-bottom:2.4mm}
  .sheet:nth-of-type(2):not(.deck-appendix) p,.sheet:nth-of-type(2):not(.deck-appendix) li{font-size:11.7px;line-height:1.28;margin-bottom:1.08mm}
  .sheet:nth-of-type(2):not(.deck-appendix) .example{font-size:10.9px;line-height:1.3;margin:1.5mm 0;padding:1.8mm 2.3mm}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step{font-size:10.9px;line-height:1.36;padding:1.3mm 0}
+ .sheet:nth-of-type(2):not(.deck-appendix) .combat-example .step:first-of-type{padding-top:.8mm}
  .sheet:nth-of-type(2):not(.deck-appendix) .end{margin-top:2mm;padding-top:1mm}
 }
 
@@ -133,18 +138,22 @@ strong{font-weight:900}
 <section><h2>6. Making rolls</h2>
 <p>A <strong>d6</strong> has six sides; a <strong>d20</strong> has twenty. “2d6” means roll two six-sided dice and add their results. For a Room's d6, find the range on that Room and do what it says.</p>
 <p>Some challenges call for a <strong>WIT test</strong>: roll a d20, add your Hero's WIT and compare the total with the number on the card. In an <strong>opposed test</strong>, both sides roll a d20 and add the stated ability; the higher total wins.</p>
-<p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s and use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. Together they cancel. Bonuses such as <strong>+2 WIT</strong> add 2 to a WIT roll, not permanently to the Hero stat. A bonus to DEF applies to a defence roll.</p>
+<p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s and use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. Together they cancel. Bonuses such as <strong>+2 WIT</strong> add 2 to a WIT roll, not permanently to the Hero stat. A DEF bonus raises AC. If a card grants ADV on a DEF roll, the attacker gets DIS instead; DEF-roll DIS gives the attacker ADV.</p>
 <p>On a WIT test, a natural 1 fails and a natural 20 succeeds, even before bonuses.</p>
 <div class="example"><strong>AN EXAMPLE OF WIT</strong>A card requires WIT 15. Your Hero has WIT 4. You roll 12 on the d20: 12 + 4 = 16. You succeed.</div></section>
 <section><h2>7. When a Monster appears</h2>
-<p><strong>Draw one Monster only when a card tells you to, even with two Heroes.</strong> Set its HP die to its printed HP. Fight <strong>one active Monster at a time</strong>. If another appears before the first is resolved, place it face up in a waiting line; fight it afterward.</p>
-<p>You may first try the Monster's printed <strong>PARLEY</strong> alternative. A Monster that leaves peacefully normally gives no combat reward.</p>
-<p><strong>Combat round:</strong> Each living Hero takes one turn, in either order. On your turn, take <strong>one action</strong>: attack, use an Item or ability, try Elbereth, or pass. Triggered abilities cost no action unless stated. <strong>After each Hero turn</strong>, if the Monster survives, roll a d6 and follow its printed behaviour: it may attack, cause another effect, or do nothing. An attack targets the Hero who just acted unless the card says otherwise. After all living Heroes have acted, begin the next round.</p>
-<p>A defeated or banished Monster cannot respond. Resolve it, then fight any waiting Monsters before leaving the Room.</p></section>
+<p><strong>Draw one Monster only when instructed, even with two Heroes.</strong> Mark its HP. Fight one Monster at a time; put additional drawn Monsters face up in a waiting line. You may try its printed <strong>PARLEY</strong> before fighting. A peaceful departure normally gives no combat reward.</p>
+<p><strong>1. Hero turn.</strong> Each living Hero takes one action per round, in either order: attack, use an Item or ability, try Elbereth, or pass. Printed triggered abilities cost no extra action unless stated.</p>
+<p><strong>2. Monster response.</strong> After each Hero turn, if the Monster survives, roll its behaviour d6 and follow that result. It might attack, cause another effect, or do nothing. An attack targets the Hero who just acted unless stated otherwise.</p>
+<p><strong>3. Continue.</strong> The next Hero acts, then a new round begins. A defeated Monster cannot respond. Finish any waiting fights before leaving the Room.</p></section>
 <section><h2>8. Attacking and defending</h2>
-<p>When someone <strong>ATTACKS</strong>, the attacker rolls <strong>d20 + ATK</strong> and the defender rolls <strong>d20 + DEF</strong>. A higher attack total hits; a tie misses. On a hit, roll <strong>d6 damage</strong> and subtract it from the target's HP. An attacking natural 1 always misses; a natural 20 always hits and adds another d6 damage. Monsters use the same rules as Heroes.</p>
-<div class="example"><strong>EXAMPLE: TWO HEROES FIGHT ONE GIANT RAT</strong>Hero A (+5 ATK) rolls 12 = 17. The Rat (+1 DEF) rolls 9 = 10. Hit! Hero A rolls 4 damage: Rat HP 6 → 2. The Rat survives, so roll its behaviour d6: 3 means Bite (ATTACK). The Rat rolls 14 + 2 ATK = 16. Hero A rolls 10 + 3 DEF = 13. The Rat hits and rolls 2 damage. Now Hero B acts. If Hero B kills the Rat, it cannot respond again.</div>
-<p>After victory, resolve a Room reward if printed. You may also resolve one listed Monster reward, <strong>SEARCH</strong> or <strong>EAT</strong>, once; then discard it unless you keep its printed trophy. A trophy cannot also be searched or eaten.</p></section>
+<p><strong>Defence is a fixed target:</strong> Armour Class (<strong>AC</strong>) = <strong>12 + DEF</strong>. The defender does not roll. Higher DEF makes you harder to hit; it does not reduce damage.</p>
+<p><strong>To attack:</strong> roll <strong>d20 + ATK</strong>. If the total <strong>equals or exceeds the target's AC</strong>, you hit. Roll <strong>d6 damage</strong> and subtract it from the target's HP. A natural 1 on the attack die always misses; a natural 20 always hits and adds an extra d6 damage. Monsters attack the same way.</p>
+<div class="example combat-example"><strong>EXAMPLE: TWO HEROES FIGHT A GIANT RAT</strong>
+<p class="step"><strong>1. Hero A attacks.</strong> Rat AC = 12 + 1 DEF = <strong>13</strong>. Hero A rolls 12 + 5 ATK = <strong>17</strong>: hit! Damage d6 = 4. Rat HP falls from 6 to 2.</p>
+<p class="step"><strong>2. Rat responds.</strong> Behaviour d6 = 3: Bite (ATTACK). Hero A's AC = 12 + 3 DEF = <strong>15</strong>. Rat rolls 14 + 2 ATK = <strong>16</strong>: hit! Damage d6 = 2; Hero A loses 2 HP.</p>
+<p class="step"><strong>3. Hero B attacks.</strong> Hero B rolls 9 + 4 ATK = <strong>13</strong>: hit. Damage d6 = 2; Rat falls to 0 HP. The dead Rat does not respond.</p></div>
+<p>After victory, take a printed Room reward if earned. Resolve one listed Monster reward, <strong>SEARCH</strong> or <strong>EAT</strong>, once; then discard the Monster unless keeping its printed trophy. A trophy cannot also be searched or eaten.</p></section>
 </div><div>
 <section><h2>9. Items, danger and surprises</h2>
 <p>Each Hero may equip one <strong>Weapon, Armour, Ring and Companion</strong> and carry other Objects. Outside combat, Heroes may exchange and equip them, but healing always requires a card effect. Choose an acting Hero for each Room choice; that Hero pays costs, takes damage and receives healing unless stated otherwise. A living Hero may use healing on a downed ally before leaving.</p>
