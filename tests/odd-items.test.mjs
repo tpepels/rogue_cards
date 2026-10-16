@@ -97,10 +97,13 @@ test("Grave Salt applies only against CURSED Monsters and expires after battle",
  const mob=MONSTERS.find(m=>m.v2.tags.includes("CURSED"));
  assert.ok(mob);
  s.monster=mob;s.monsterHP=mob.hp;choices(s,"use");
- const before=s.stats(h);
  offerGraveSalt(s,h);
- assert.equal(s.stats(h).atk,before.atk+2);
- assert.equal(s.stats(h).def,before.def+2);
+ const boosted=s.stats(h);
+ // Discard can automatically re-equip a different owned weapon, so compare
+ // against the same post-discard equipment without the temporary boon.
+ h.graveSalt=false;const unboosted=s.stats(h);h.graveSalt=true;
+ assert.equal(boosted.atk,unboosted.atk+2);
+ assert.equal(boosted.def,unboosted.def+2);
  assert.equal(get(h,"grave-salt"),undefined);
 });
 test("Sun Charm removes poison and all pending DIS penalties",()=>{
