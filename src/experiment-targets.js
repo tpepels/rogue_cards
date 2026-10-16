@@ -215,7 +215,9 @@ export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
    heldRooms,equippedRooms,hasRealEffect,
    usePerOpportunity:ratio(used,offered),
    finding,
-   structuralExecutableTest:"NOT_INFERABLE_FROM_SURVEY"});
+   structuralExecutableTest:cardLists.timings?.[id]?.length?
+    "TIMING_CLASSIFIED__DETERMINISTIC_EFFECT_TEST_SEPARATE":
+    "MISSING_MECHANICAL_TIMING"});
  }
  for(const card of cardLists.rooms)
   rooms.push({id:card.id,title:card.title,stage:card.stage,
