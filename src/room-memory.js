@@ -464,7 +464,7 @@ const printedTables={
   "u-candle": [
     [
       "1–2",
-      "Darkness: enter next Room unseen; next ATK DIS; draw an UPPER Monster."
+      "Darkness: next Room unseen; next ATK DIS; draw an UPPER Monster."
     ],
     [
       "3–4",

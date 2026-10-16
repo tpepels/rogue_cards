@@ -21,7 +21,7 @@ const SPEC=Object.freeze({
    parley:"FEED: Discard 1 Item to send it away. No corpse.",remains:"EAT: Roll d6. 1–2 become POISONED; 3–4 heal 2 HP; 5–6 heal d6 HP."},
  goblin:{tags:["BARGAIN"],weakness:"With Pocket Goblin, behaviour 6 becomes 1–2.",
    parley:"RECRUIT: Discard 2 Items; keep as Companion (+1 ATK), no corpse.",remains:"SEARCH POCKETS, d6: 1–2 lose 1 HP; 3–4 draw 1 Item; 5–6 draw 1, peek next Room. No EAT."},
- crawler:{tags:["ACID"],weakness:"Discard ALCHEMY Item to change next behaviour 5 to 1–2.",
+ crawler:{tags:["ACID"],weakness:"Discard ALCHEMY Item: next behaviour 5 becomes 1–2.",
    parley:"DISTRACT: discard POTION to escape. In Flooded Chamber, Acid gives the next Monster attack against you ADV. No reward.",remains:"EAT: Roll d6.  1–2 become POISONED; 3–4 heal 2 HP; 5–6 remove POISONED."},
  bat:{tags:["BEAST","DARK"],weakness:"With equipped FIRE gear, treat behaviour 6 as 1–2.",
    parley:"SNEAK: Opposed d20+WIT vs d20+3. Win: pass safely; fail: fight.",remains:"EAT: Roll d6.  1–2 lose 2 HP; 3–4 heal 2 HP; 5–6 peek next Room."},
@@ -37,7 +37,7 @@ const SPEC=Object.freeze({
    parley:"APPEASE: with equipped CURSED gear, lose d6 HP to send it away; no reward.",remains:"On defeat, RELEASE: peek next Room; or KEEP WHISPER: discard later to set a MAGIC/CURSED Monster's behaviour to 1–2. No EAT."},
  rust:{tags:["METAL"],weakness:"Without equipped METAL gear, behaviour 5 becomes 1–2.",
    parley:"FEED: Discard a METAL Item. It leaves; draw 1 Item.",remains:"EAT: Roll d6.  1–2 become POISONED; 3–4 heal 2 HP; 5–6 the next Monster attack against you has DIS."},
- cultist:{tags:["CURSED","BARGAIN"],weakness:"With equipped MAGIC gear, treat the next behaviour 6 as 1–2.",
+ cultist:{tags:["CURSED","BARGAIN"],weakness:"Equipped MAGIC gear: next behaviour 6 becomes 1–2.",
    parley:"BARGAIN: with equipped CURSED gear, lose d6 HP; it leaves; draw 1 Item.",remains:"DEATH THROES: killed by a WEAPON, deal 1 HP damage to attacker. MAGIC silences it. No EAT."},
  sentinel:{tags:["METAL","LIGHTNING"],weakness:"LIGHTNING deals +d6 damage; ICE changes the next behaviour 6 to 1–2.",
    parley:"BRIBE: Discard 2 METAL Items to bypass it. No loot.",remains:"Cannot EAT this Monster."}
