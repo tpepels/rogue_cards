@@ -124,6 +124,14 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
     stampOverlapY:Math.max(0,Math.min(stamp.bottom,title.bottom)-Math.max(stamp.top,title.top)),
     notes};
   }));
+  const overlaps=cards.flatMap(card=>{
+   if(card.notes.length!==2)return [];
+   const [a,b]=card.notes;
+   const x=Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x));
+   const y=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+   return Math.min(x,y)>6?[{id:card.id,minOverlap:Math.min(x,y),x,y}]:[];
+  });
+  if(overlaps.length)console.log("ALL CARD OVERLAPS",JSON.stringify(overlaps));
   expect(cards).toHaveLength(139);
   for(const card of cards){
    expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
