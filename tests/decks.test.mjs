@@ -27,7 +27,7 @@ test("the 139-card legacy catalogue remains intact alongside 54 new printable de
  for(const [key,filename] of Object.entries(PRINT_ONLY_ART)){
   assert.ok(baseArtKeys.has(key)||optionalArtKeys.has(key),
    "Unexpected print-only illustration mapping: "+key);
-  assert.match(filename,/^\\d{3}_[a-z0-9_]+\\.png$/,key);
+  assert.match(filename,/^\d{3}_[a-z0-9_]+\.png$/,key);
  }
  assert.ok(Object.keys(PRINT_ONLY_ART).length>=24);
  assert.ok(Object.keys(PRINT_ONLY_ART).length<=54);
