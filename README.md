@@ -64,6 +64,9 @@ for art generation (artwork numbers 176-193).
 
 For 36-Room Everything Goes balance research, use
 [`docs/everything-goes-research.md`](docs/everything-goes-research.md).
+The numerical criteria and Item usability evidence gates are fixed in
+[`docs/everything-goes-targets.md`](docs/everything-goes-targets.md)
+and in the machine-readable `config/everything-goes-targets.v1.json`.
 
 ```bash
 bash scripts/run-everything-goes-research.sh
@@ -75,7 +78,7 @@ expeditions, with all actual decisions, MCTS alternatives, actual
 committed dice, HP/equipment/status transitions, per-card exposure
 denominators, Monster combat and Parley outcomes, and all engine metric
 deltas. Exact raw records are gzip JSON. `summary.md`, `summary.json`,
-`coverage.json`, `runs.csv`, `card-coverage.csv`, and
+`coverage.json`, `runs.csv`, `card-coverage.csv`, `targets.json`, `targets.md`, `item-audit.csv`, `item-audit.json`, and
 `paired-item-effects.csv` are generated in the same run.
 Interrupted studies save checkpoints and can resume on the exact
 same pinned commit. The runner fails closed on unresolved sessions
