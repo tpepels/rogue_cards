@@ -216,7 +216,8 @@ function coverage(rows){
   "objectAcquisitions","objectRoomExposures",
   "objectEquippedRoomExposures","itemOpportunities","itemUses",
   "itemResults","itemPassiveEffects","objectRollBands",
-  "monsterVisits","monsterBehaviorBands","operationCounts",
+  "monsterVisits","monsterKillsById","monsterParleyAttemptsById",
+  "monsterParleyWinsById","monsterBehaviorBands","operationCounts",
   "cardCounts","objectActivations"];
  const aggregate=Object.fromEntries(fields.map(k=>[k,{}]));
  const visits={};const offers={};const chosen={};const stages={};
@@ -355,7 +356,15 @@ function save(c,done,expected){
    drawn:summary.coverage.aggregate.objectDraws[x.id]||0,
    itemOpportunities:summary.coverage.aggregate.itemOpportunities[x.id]?.total||0,
    itemUses:summary.coverage.aggregate.itemUses[x.id]?.total||0,
-   exposureRooms:summary.coverage.aggregate.objectRoomExposures[x.id]||0
+   exposureRooms:summary.coverage.aggregate.objectRoomExposures[x.id]||0,
+   monsterKills:summary.coverage.aggregate.monsterKillsById[x.id]||0,
+   parleyAttempts:summary.coverage.aggregate.monsterParleyAttemptsById[x.id]||0,
+   parleyWins:summary.coverage.aggregate.monsterParleyWinsById[x.id]||0,
+   option0Chosen:summary.coverage.aggregate.roomChoices[x.id+":0"]||0,
+   option1Chosen:summary.coverage.aggregate.roomChoices[x.id+":1"]||0,
+   option0Available:summary.coverage.aggregate.roomOptionAvailable[x.id+":0"]||0,
+   option1Available:summary.coverage.aggregate.roomOptionAvailable[x.id+":1"]||0,
+   itemPassive:summary.coverage.aggregate.itemPassiveEffects[x.id]?.triggers||0
  }));
  csv(join(c.out,"card-coverage.csv"),cardRows);
  const fmt=x=>x===null?"n/a":(x*100).toFixed(1)+"%";
