@@ -476,7 +476,7 @@ function advanceRolloutRooms(s,maxRooms){
   actRoom(s);
   if(!s.alive()||!finishMonsters(s))return {complete:true,state:s,won:false};
   finishRoom(s);
-  if(!s.room.v2.special?.corridor){
+  if(s.room.v2.kind!=="CORRIDOR"){
    visited++;s.metrics.cleared++;s.stageProgress[stage]++;
   }
   if(s.metrics.roundLimit)return {complete:true,state:s,won:false};

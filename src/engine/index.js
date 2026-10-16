@@ -249,7 +249,7 @@ export function finishCurrentRoom(s,{observeResult=true}={}){
   throw Error("No regional Room to finish");
  if(s.monster&&s.monsterHP>0||s.monsterQueue.length)
   throw Error("Cannot leave Room with unresolved Monsters");
- if(!s.room.v2.special?.corridor){
+ if(s.room.v2.kind!=="CORRIDOR"){
   s.metrics.cleared++;
   s.stageProgress[s.room.stage]++;
  }
