@@ -482,7 +482,7 @@ function save(c,done,expected){
   "", "## Matched Item resource tests",
   "Treatment gets one extra copy of the new Item; control gets one extra Dry Rations.",
   "A paired difference answers *relative extra starting resources*, not intrinsic card strength.",
-  ...Object.entries(byItem).map(([id,v])=>"- "+id+": "+
+  ...Object.entries(summary.matchedItems).map(([id,v])=>"- "+id+": "+
    v.pairs+"/"+v.plannedPairs+" matched pairs; triggered="+v.triggered+
    ", uses="+v.uses+", used in="+v.runsWithUse+" runs; "+
    "direct outcomes="+JSON.stringify(v.observedDirectEffects)+
