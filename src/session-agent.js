@@ -18,14 +18,16 @@ const cloneMetrics=s=>JSON.parse(JSON.stringify(s.metrics));
 export function playSessionWithMCTS({
  seed,heroes=["warrior"],gameMode="original",knowledge="fair",
  budget=2,maxSearchSteps=4000,maxGameSteps=7000,
- strictTerminal=true,traceLimit=120
+ strictTerminal=true,traceLimit=120,extraObjectId=null,
+ onDecision=null,retainSearches=true
 }={}){
  if(!Number.isSafeInteger(seed)||seed<0)throw Error("Expected a nonnegative game seed");
+ if(onDecision!==null&&typeof onDecision!=="function")throw Error("onDecision must be a function");
  if(!Number.isInteger(maxGameSteps)||maxGameSteps<1)
   throw Error("Invalid maxGameSteps");
  if(!Number.isInteger(traceLimit)||traceLimit<0)
   throw Error("Invalid traceLimit");
- const session=createDecisionSession({seed,heroes,gameMode});
+ const session=createDecisionSession({seed,heroes,gameMode,extraObjectId});
  const decisionCounts={},chosenCounts={},choiceCoverage={},
   availableCardActions={},chosenCardActions={};
  const trace=[],searches=[];
@@ -41,6 +43,7 @@ export function playSessionWithMCTS({
    if(action.cardId)count(availableCardActions,action.cardId+":"+action.kind);
   }
   let chosen,diagnostic=null;
+  const started=onDecision?performance.now():0;
   if(actions.length===1){
    chosen=actions[0];forcedDecisions++;
   }else{
@@ -56,7 +59,7 @@ export function playSessionWithMCTS({
     throw Error("Incomplete MCTS decision "+step+" at "+phase);
    chosen=diagnostic.recommended;
    searchedDecisions++;
-   searches.push({
+   if(retainSearches)searches.push({
     step,phase,roomId:session.state.room?.id??null,
     monsterId:session.state.monster?.id??null,
     budget:diagnostic.budget,rootActionCount:diagnostic.rootActionCount,
@@ -72,7 +75,15 @@ export function playSessionWithMCTS({
    monsterId:session.state.monster?.id??null,
    selected:chosen,via:diagnostic?"uct":"forced"
   });
-  submitDecision(session,chosen);
+  const selectedAt=onDecision?performance.now():0;
+  if(onDecision)onDecision({moment:"before",step,phase,session,
+   actions,chosen,diagnostic,searchMs:selectedAt-started});
+  let dice=[];
+  submitDecision(session,chosen,onDecision?{
+   onCommittedDice:rolls=>{dice=rolls;}}:{});
+  if(onDecision)onDecision({moment:"after",step,phase,session,
+   actions,chosen,diagnostic,dice,
+   searchMs:selectedAt-started,transitionMs:performance.now()-selectedAt});
  }
  if(session.phase!=="terminal")
   throw Error("Actual expedition did not finish in "+maxGameSteps+" decisions");
@@ -83,7 +94,7 @@ export function playSessionWithMCTS({
   throw Error("Terminal phase without a genuine printed ending");
  return {
   schema:"canonical-session-mcts-v1",
-  seed,heroes,knowledge,budget,won:!!s.metrics.won,
+  seed,heroes,knowledge,budget,extraObjectId,won:!!s.metrics.won,
   ending:s.endingKind,
   resolved:true,actions:session.actionCount,
   searchedDecisions,forcedDecisions,metrics:cloneMetrics(s),
