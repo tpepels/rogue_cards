@@ -84,3 +84,17 @@ test("catalogue-wide audit distinguishes never acquired, unused and never trigge
  assert.equal(audit.items[1].finding,"UNOBSERVED_ACQUISITION_TARGETED_TEST");
  assert.ok(audit.flags.itemsNeverAcquired.length>0);
 });
+
+test("all 79 printed Items have a named engine timing route",async()=>{
+ const {ITEM_TIMING_ALL,auditAllItemTiming}=await import("../src/item-access.js");
+ const actual=auditAllItemTiming();
+ assert.equal(actual.classified,79);
+ assert.equal(actual.legacy,52);
+ assert.equal(actual.expansion,9);
+ assert.equal(actual.unusual,18);
+ for(const card of ALL_OBJECTS)
+  assert.ok(ITEM_TIMING_ALL[card.id]?.length,
+   "Missing mechanical usage path: "+card.id);
+ assert.ok(ITEM_TIMING_ALL["odd-red-string"].includes("between-rooms-two-heroes"));
+ assert.ok(ITEM_TIMING_ALL["ex-lockpicks"].includes("room-roll-reroll"));
+});
