@@ -146,7 +146,10 @@ export function playerAttack(s,h){
     wantsItem(s,h,ring,"on-attack"))s.activate(h,ring);
  const stat=s.stats(h);
  if(h.slots.weapon){
-  const bonus={sword:2,staff:1,"cursed-blade":4}[h.slots.weapon.id]||0;
+  const bonus={sword:2,staff:1,"cursed-blade":4,
+   "ex-dagger":1,"ex-mace":2,
+   "ex-spear":m.v2?.tags?.includes("BEAST")?2:1,
+   "odd-trick-knife":1}[h.slots.weapon.id]||0;
   if(bonus)s.notePassive(h.slots.weapon,"attack",bonus);
  }
  if(h.slots.ring?.id==="ring-hunger")s.notePassive(h.slots.ring,"attack",2);
@@ -266,7 +269,8 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
  if(h.slots.armour){
-  const armourBonus={mail:2,shield:1,"cursed-mail":3}[h.slots.armour.id]||0;
+  const armourBonus={mail:2,shield:1,"cursed-mail":3,
+   "ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[h.slots.armour.id]||0;
   if(armourBonus)s.notePassive(h.slots.armour,"defence",armourBonus);
  }
  // A Priest acts before a Hero d20, not a Monster d20. No Hero DEF
