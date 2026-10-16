@@ -31,7 +31,7 @@ container.innerHTML='<main class="sheet deck-appendix" aria-label="Recommended d
  '<div class="mast"><h1>CHOOSE YOUR DUNGEON</h1><div class="edition">RECOMMENDED DECKS<br>ROOMS & MONSTERS</div></div>'+
  '<p class="deck-intro">Two starting sets appear below. Gather the listed Room cards and shuffle each depth separately. Gather the Monsters (keeping their printed quantities) and shuffle into UPPER, MIDDLE and DEEP piles. The matching Object lists continue on page 4. All cards are printable on <strong>cards.html</strong>.</p>'+
  '<div class="deck-columns">'+roomPanel(classic)+roomPanel(strange)+'</div>'+
- '<div class="deck-note"><strong>Everything Goes:</strong> play 12 non-Corridor Rooms per depth; Corridors add visits. A defeated regional Monster awards 1 Item; Parley does not. Use all '+count.counts.UPPER+' UPPER, '+count.counts.MIDDLE+' MIDDLE and '+count.counts.DEEP+' DEEP Rooms, all 24 Monster types and every Object (with printed copies). It uses every PACT and unusual card. Details on page 4.</div>'+
+ '<div class="deck-note"><strong>Everything Goes:</strong> play 12 non-Corridor Rooms per depth; Corridors add visits. Each regional Monster has its own printed DEFEAT reward; Parley does not grant it. Use all '+count.counts.UPPER+' UPPER, '+count.counts.MIDDLE+' MIDDLE and '+count.counts.DEEP+' DEEP Rooms, all 24 Monster types and every Object (with printed copies). It uses every PACT and unusual card. Details on page 4.</div>'+
  pageNumber(3,"ROOM & MONSTER LISTS")+'</main>'+
  '<main class="sheet deck-appendix" aria-label="Object deck recipes and custom dungeon instructions">'+
  '<div class="mast"><h1>OBJECT DECKS</h1><div class="edition">RECOMMENDED DECKS<br>ITEMS & YOUR OWN MIX</div></div>'+
