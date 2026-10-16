@@ -364,6 +364,7 @@ export function monsterRespond(s,h){
  if(m.id==="mold"&&s.anyEquippedTag("FIRE")&&face===6)face=1;
  if(m.id==="wraith"&&s.anyEquippedTag("MAGIC")&&face===5)face=1;
  if(m.id==="rust"&&!s.anyEquippedTag("METAL")&&face===5)face=1;
+ if(m.v2?.weaknessTag&&s.partyCount(m.v2.weaknessTag)>0&&face===m.v2.weaknessFace)face=1;
  const a=h.hp>0?h:s.chooseActor();s.setActor(a);
  // Monk may transform the revealed monster result BEFORE the result happens.
  const monk=s.living().find(x=>x.card.id==="monk"&&!x.used.has("hero"));
@@ -389,7 +390,24 @@ export function monsterRespond(s,h){
  s.metrics.monsterBehaviorBands[behaviourKey]=(s.metrics.monsterBehaviorBands[behaviourKey]||0)+1;
  const hit=(o={})=>monsterAttack(s,a,o);
  s.metrics.cardCounts[m.id]=(s.metrics.cardCounts[m.id]||0)+1;
- switch(m.id){
+ if(m.v2?.behaviorOps){
+  const op=m.v2.behaviorOps[band];
+  if(op==="hit")hit();
+  else if(op==="adv")hit({adv:true});
+  else if(op==="strong")hit({bonus:2});
+  else if(op==="heavy")hit({damageBonus:2});
+  else if(op==="dis")a.nextDis++;
+  else if(op==="poison")s.apply("POISON",[],m);
+  else if(op==="def-break"){
+   a.nextDefensePenalty=(a.nextDefensePenalty||0)+2;
+   a.nextDefenseDis=(a.nextDefenseDis||0)+1;
+  }else if(op==="steal"){
+   if(s.discardable())s.discard();
+   else s.hurt(a,2);
+  }else if(op==="heal-hit"){
+   if(hit())s.monsterHP=Math.min(m.hp,s.monsterHP+1);
+  }else if(op!=="none")throw Error("Unknown Monster response "+op);
+ }else switch(m.id){
  case "rat":if(band===1)hit();else if(band===2)a.nextDis++;else if(band===3)hit({bonus:2});break;
  case "goblin":
   if(band===1)hit();

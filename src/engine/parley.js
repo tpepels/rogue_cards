@@ -24,7 +24,16 @@ export function resolveParley(s){
  const cost=(n,tag=null)=>s.discardable(n,tag);
  const pay=(n,tag=null)=>{if(!cost(n,tag))return false;s.discard(n,{tag});return true};
  let success=false;
- switch(m.id){
+ if(m.v2?.parleyMode){
+  if(m.v2.parleyMode==="ITEM")success=pay(m.v2.parleyCost);
+  else{
+   const wit=s.takeWitModifiers(h);
+   const heroDie=rollD20(s,{dis:!!h.poison||wit.dis});
+   const other=s.die(20);
+   success=heroDie===20||heroDie!==1&&
+    heroDie+h.card.wit+wit.bonus>other+m.v2.parleyCost;
+  }
+ }else switch(m.id){
  case "rat":success=pay(1);break;
  case "goblin":success=pay(2);if(success){
   const owner=s.chooseRecipient("goblin-recruit");

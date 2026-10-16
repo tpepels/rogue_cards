@@ -377,7 +377,10 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
   const m=s.monster.id;
   const needs={"rat":1,"goblin":2,"troll":2,"eye":1,"rust":1,"sentinel":2};
   const tag=["rust","sentinel"].includes(m)?"METAL":null;
-  const canPay=m in needs?s.discardable(needs[m],tag):
+  const canPay=s.monster.v2?.parleyMode==="ITEM"?
+   s.discardable(s.monster.v2.parleyCost):
+   s.monster.v2?.parleyMode==="WIT"?true:
+   m in needs?s.discardable(needs[m],tag):
    ["crawler","mold"].includes(m)?s.heroes.some(h=>
     h.hp>0&&h.inventory.some(c=>c.v2.kind==="POTION")):
    ["wraith","cultist"].includes(m)?s.anyEquippedTag("CURSED"):

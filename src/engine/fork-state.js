@@ -8,7 +8,9 @@ import {ExpeditionState} from "./expedition-state.js";
 import {isPhysicalCard} from "./physical-cards.js";
 import {HEROES,ROOMS,OBJECTS,MONSTERS,WARDEN,WARDEN_FURY,VAULT}
  from "../tabletop-data.js";
-const cards=new WeakSet([...HEROES,...ROOMS,...OBJECTS,...MONSTERS,
+import {EXTRA_MONSTERS} from "../monster-expansion.js";
+import {PRINT_ONLY_ROOMS} from "../print-expansion.js";
+const cards=new WeakSet([...HEROES,...ROOMS,...PRINT_ONLY_ROOMS,...OBJECTS,...MONSTERS,...EXTRA_MONSTERS,
  WARDEN,WARDEN_FURY,VAULT]);
 function clone(value,seen){
  if(value===null||typeof value!=="object")return value;

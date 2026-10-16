@@ -8,6 +8,12 @@ export function consumeCorpse(s,m){
  const h=s.chooseRecipient("eat-monster-remains");if(!h)return;
  s.setActor(h);s.metrics.corpses++;
  const roll=s.die();
+ if(m.v2?.genericRemains){
+  if(roll<=2)s.hurt(h,2);
+  else if(roll<=4)s.heal(h,2);
+  else s.draw();
+  return;
+ }
  if(roll<=2){
   if(["rat","crawler","mold","eye","rust","troll"].includes(m.id))
    s.apply("POISON",[],m);
