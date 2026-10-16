@@ -24,7 +24,7 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {HEROES} from "../src/tabletop-data.js";
-import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS} from "../src/decks.js";
+import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS,FIXED_CARDS} from "../src/decks.js";
 import {ODD_ITEMS} from "../src/item-expansion.js";
 import {playSessionWithMCTS} from "../src/session-agent.js";
 import {createDecisionRecorder,experimentSnapshot} from "../src/experiment-telemetry.js";
