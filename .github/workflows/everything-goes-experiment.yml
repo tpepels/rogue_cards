@@ -1,0 +1,77 @@
+name: Everything Goes experiment preflight
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/everything-goes-experiment.yml
+      - scripts/study-everything-goes-deep.mjs
+      - scripts/run-everything-goes-research.sh
+      - src/experiment-telemetry.js
+      - src/session-agent.js
+      - src/engine/decision-session.js
+      - src/engine/expedition-state.js
+      - src/engine/random.js
+      - src/engine/parley.js
+      - src/engine/combat-outcomes.js
+      - tests/experiment-telemetry.test.mjs
+
+jobs:
+  end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify telemetry and reproducible plan
+        run: |
+          npm run test:experiment
+          node scripts/study-everything-goes-deep.mjs \
+            --mode all --runs 1 --pairs-per-item 1 \
+            --items odd-loaded-coin --workers 1 \
+            --out results/ci-deep --dry-run
+      - name: Play real 36-Room organic and paired MCTS sessions
+        run: |
+          node scripts/study-everything-goes-deep.mjs \
+            --mode all --runs 1 --pairs-per-item 1 \
+            --items odd-loaded-coin --workers 2 \
+            --hours 1 --budget 1 --knowledge fair \
+            --max-game-steps 20000 --max-search-steps 5000 \
+            --seed 20261016 --out results/ci-deep
+      - name: Verify complete tapes, reports, paired estimates
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {gunzipSync} from 'node:zlib';
+          import {join} from 'node:path';
+          const dir='results/ci-deep';
+          const summary=JSON.parse(fs.readFileSync(join(dir,'summary.json')));
+          const validation=JSON.parse(fs.readFileSync(join(dir,'validation.json')));
+          if(!summary.complete||summary.planned!==3||summary.completed!==3)
+            throw Error('Expected one organic and a full treatment/control pair');
+          if(!validation.decisionReady||!validation.allDecisionTapesPresent)
+            throw Error('Decision-quality checks not satisfied');
+          if(summary.matchedItems['odd-loaded-coin']?.pairs!==1)
+            throw Error('Missing matched Item comparison');
+          for(let i=0;i<3;i++){
+            const name=join(dir,'raw',String(i).padStart(6,'0')+'.json.gz');
+            const data=JSON.parse(gunzipSync(fs.readFileSync(name)).toString());
+            if(!data.events.length||data.events.length!==data.result.actions)
+              throw Error('Incomplete decision tape '+i);
+            if(!data.events.some(e=>e.dice.length))
+              throw Error('No actual dice for job '+i);
+          }
+          for(const name of ['runs.csv','card-coverage.csv',
+            'paired-item-effects.csv','coverage.json','summary.md'])
+            if(!fs.statSync(join(dir,name)).size)throw Error('Empty output '+name);
+          NODE
+      - name: Upload complete preflight records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: everything-goes-preflight
+          path: results/ci-deep/
+          if-no-files-found: ignore
