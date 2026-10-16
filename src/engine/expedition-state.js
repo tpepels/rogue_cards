@@ -1004,7 +1004,8 @@ export class ExpeditionState {
  }
  /** Consume exactly the next *WIT* modifier, no matter whether the
   * opposed check came from a Room, Monster negotiation or Vault.
-  * An ATK/DEF roll must not silently spend a pending WIT boon.
+  * Fixed-AC combat attacks are not opposed d20 rolls; only genuine
+  * printed opposed checks may exchange two actual dice faces.
   */
  swapOpposedRoll(ours,theirs,context){
   const mirror=this.keptRooms.find(x=>x.card.id==="d-mirror");

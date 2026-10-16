@@ -35,12 +35,18 @@ export function blessBeforeD20(s,target){
  if(d<=4)return {bonus:2,adv:false};
  target.poison=false;return {bonus:0,adv:true};
 }
-function playerRoll(s,h,bonus,def,actorType="attack"){
+// Fixed combat AC: the defender never rolls; the attacker meets or
+// exceeds 12 + DEF. Opposed d20 rolls remain exclusive to printed checks.
+export const combatAC=def=>12+def;
+export const attackHits=(natural,total,def)=>
+ natural===20||natural!==1&&total>=combatAC(def);
+function playerRoll(s,h,bonus,def){
  if(actorType==="attack"&&s.monster){
   const crown=s.keptRooms.find(x=>x.card.id==="d-crown");
   if(crown&&s.chooseEffect("crown-unking-monster-def",
    ["save","use"],"use")==="use"){
    s.keptRooms.splice(s.keptRooms.indexOf(crown),1);
+   // Old "Monster defence DIS" is now ADV for the Hero's attack.
    s.monsterDefenseDis=true;
   }
  }
@@ -67,14 +73,18 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
   }else{const d=s.die();
    if(d<=2)rogueDis=true;else rogueAdv=true;
    if(d>=5){
-    const r=rollD20(s,{adv:true}),op=s.die(20);
-    if(r===20||r!==1&&r+h.card.wit>op+def)s.draw();
+    const r=rollD20(s,{adv:true});
+    if(attackHits(r,r+h.card.wit,def))s.draw();
    }
   }
   }
  }
- const adv=attackAdv||rogueAdv||h.nextAdv>0||blessing.adv;
+ const adv=attackAdv||rogueAdv||h.nextAdv>0||
+  blessing.adv||s.monsterDefenseDis;
  const dis=attackDis||rogueDis;
+ // Consume the single stored Monster-defence modifier on this attack;
+ // no opposed defender die exists in fixed-AC combat.
+ s.monsterDefenseDis=false;
  h.nextAdv=0;
  s.pendingD20=s.rerollIfKept(h,rollD20(s,{adv,dis}));
  s.noteOptions(itemOptions(s,h,"after-roll"));
@@ -85,20 +95,17 @@ function playerRoll(s,h,bonus,def,actorType="attack"){
  if(h.hp<=0)return {hit:false,critical:false,natural:null};
  const wand=itemIn(s,h,"wand-undo");
  if(wand&&!s.exhausted.has(wand)&&s.pendingD20!==20&&
-  (s._decisionHook||s.pendingD20+bonus+extraAtk<10+def||
+  (s._decisionHook||
+   !attackHits(s.pendingD20,s.pendingD20+
+    s.pendingD20Modifier+bonus+extraAtk,def)||
    s.strategy==="magic")&&wantsItem(s,h,wand,"after-roll"))
   s.activate(h,wand);
  // Lethal Wand misfires and paid rerolls end the attempted attack before
  // any failed-d20 Crown prompt or attack damage is resolved.
  if(h.hp<=0)return {hit:false,critical:false,natural:null};
- let natural=s.pendingD20;
- let defense=rollD20(s,{adv:actorType==="monster"&&h.nextDefenseAdv,
-  dis:actorType==="attack"&&!!s.monsterDefenseDis});
- s.monsterDefenseDis=false;
- h.nextDefenseAdv=false;
- ({ours:natural,theirs:defense}=s.swapOpposedRoll(natural,defense,"attack"));
- const modified=natural+s.pendingD20Modifier;
- let hit=natural===20||natural!==1&&modified+bonus+extraAtk>defense+def;
+ const natural=s.pendingD20;
+ const total=natural+s.pendingD20Modifier+bonus+extraAtk;
+ let hit=attackHits(natural,total,def);
  if(!hit){
   s.noteOptions(itemOptions(s,h,"failed-d20"));
   const crown=itemIn(s,h,"crown-relic");
@@ -247,50 +254,32 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  s.noteOptions(itemOptions(s,h,"before-defence"));
  const mirror=itemIn(s,h,"mirror");
  if(mirror&&!h.used.has(mirror)&&wantsItem(s,h,mirror,"before-defence")){
-  // Printed trigger: before opposed defence. Reflection cancels the pending hit.
+ // Printed trigger before the Monster's attack roll.
+  // Reflection cancels the attack before any d20 is rolled.
   s.pendingDamage=0;s.pendingReflect=false;s.activate(h,mirror);
   if(s.pendingReflect){s.pendingReflect=false;return;}
   defenseAdv=defenseAdv||h.nextDefenseAdv;hurtExtra+=h.damageVulnerability;
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
- let atk=rollD20(s,{adv:adv||s.monsterAdv,dis:dis||s.monsterDis});
  if(h.slots.armour){
-  const bonus={mail:2,shield:1,"cursed-mail":3}[h.slots.armour.id]||0;
-  if(bonus)s.notePassive(h.slots.armour,"defence",bonus);
+  const armourBonus={mail:2,shield:1,"cursed-mail":3}[h.slots.armour.id]||0;
+  if(armourBonus)s.notePassive(h.slots.armour,"defence",armourBonus);
  }
- const blessing=blessBeforeD20(s,h);
- // A risky Priest blessing can itself kill the defending Hero. That is
- // already a printed lethal consequence; do not continue to an after-hit
- // Shield/Item decision for a dead Hero.
- if(h.hp<=0)return false;
+ // A Priest acts before a Hero d20, not a Monster d20. No Hero DEF
+ // die exists, so defensive Priest / Ring / Wand rolls are not offered.
  const floodDis=s.room?.id==="m-flood"&&
   h.slots.armour?.v2.tags.includes("METAL")&&!s.has("rope")&&!h.used.has("flood-def");
  if(floodDis)h.used.add("flood-def");
- let def=s.rerollIfKept(h,rollD20(s,{
-  adv:defenseAdv||blessing.adv,dis:floodDis||extraDefDis>0}));
- s.noteOptions(itemOptions(s,h,"after-roll"));
- let defenceBonus=blessing.bonus;
- const lucky=h.slots.ring?.id==="ring-luck"?h.slots.ring:null;
- const undo=itemIn(s,h,"wand-undo");
- if(lucky&&!h.used.has(lucky)&&wantsItem(s,h,lucky,"after-roll")){
-  s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,lucky);
-  def=s.pendingD20+s.pendingD20Modifier;
- }
- if(h.hp<=0)return false;
- if(undo&&!s.exhausted.has(undo)&&def<13&&
-    wantsItem(s,h,undo,"after-roll")){
-  s.pendingD20=def;s.pendingD20Modifier=0;s.activate(h,undo);
-  def=s.pendingD20+s.pendingD20Modifier;
- }
- // A dead defending Hero cannot roll onward or activate a Shield.
- if(h.hp<=0)return false;
+ // Defensive ADV is attack DIS; defensive DIS is attack ADV.
+ // Both may be present and cancel under the printed ADV/DIS rules.
+ const attackAdv=adv||s.monsterAdv||extraDefDis>0||floodDis;
+ const attackDis=dis||s.monsterDis||defenseAdv;
+ const atk=rollD20(s,{adv:attackAdv,dis:attackDis});
  s.monsterAdv=false;s.monsterDis=false;
- if(h.slots.armour?.id==="cursed-mail"&&def===1)s.hurt(h,2);
  if(h.hp<=0)return false;
- ({ours:def,theirs:atk}=s.swapOpposedRoll(def,atk,"defense"));
- const hit=atk===20||atk!==1&&
-  atk+s.monster.atk+bonus>def+s.stats(h).def-defPenalty+
-   defenceBonus+(h.nextDefenseBonus||0);
+ const defenderAC=s.stats(h).def-defPenalty+
+  (h.nextDefenseBonus||0);
+ const hit=attackHits(atk,atk+s.monster.atk+bonus,defenderAC);
  if(!hit)return false;
  if(acid){
   const canDiscard=s.discardable(1,"METAL");
@@ -302,7 +291,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   if(s.room?.id==="m-flood")h.nextDefenseDis=(h.nextDefenseDis||0)+1;
  }
  s.noteOptions(itemOptions(s,h,"after-hit"));
- let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra;
+ // Burial Mail's printed drawback now follows the Monster's own
+ // natural 20 (not a nonexistent Hero defence natural 1).
+ let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra+
+  (atk===20&&h.slots.armour?.id==="cursed-mail"?2:0);
  s.pendingDamage=damage;
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour)&&
     wantsItem(s,h,h.slots.armour,"after-hit"))

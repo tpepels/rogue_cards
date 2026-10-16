@@ -104,8 +104,9 @@ test("the Warden attacking both Heroes ends combat immediately after the second 
  s.monster=WARDEN;s.monsterHP=WARDEN.hp;
  // Printed Warden Blade (3-4): attack each Hero.
  s.forcedBehavior=3;
- // The real opposed d20 attack/defence dice hit both Heroes.
- s.rng=randomSource(833);
+ // A Monster natural 20 hits each Hero's fixed AC (12 + DEF);
+ // no Hero defence die is rolled. Both hits deal lethal printed damage.
+ s.die=sides=>sides===20?20:3;
  s._actedCombatMask=1;
  session.phase="monster-response";session.heroIndex=0;
  assert.deepEqual(sessionActions(session),[

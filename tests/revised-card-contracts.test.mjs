@@ -249,7 +249,7 @@ test("Lethal first Room operation prevents later printed loot after a wipe",()=>
 });
 
 
-test("a lethal risky Priest blessing during Warden defence cannot request an after-hit Shield reaction",()=>{
+test("fixed AC never offers Priest on defence but still offers after-hit Shield",()=>{
  const s=new ExpeditionState({seed:891,heroes:["priest"]});
  empty(s);
  const pos=s.deck.findIndex(x=>x.id==="shield");
@@ -261,22 +261,23 @@ test("a lethal risky Priest blessing during Warden defence cannot request an aft
  hero.hp=1;
  s.room=VAULT;s.monster=WARDEN;s.monsterHP=WARDEN.hp;
  s.forcedBehavior=3; // Printed Warden Blade: attack each Hero
- // Real deterministic dice: d20=15, Priest risky d6=2,
- // self-damage d6=5, defender d20=2. Without the death guard,
- // that hit would wrongly request the equipped Shield's after-hit choice.
- s.rng=randomSource(11272);
- let riskyBlessings=0;
+ // The Monster's natural 20 hits the fixed AC; no Hero defence d20,
+ // and the Priest cannot react to a Monster's attack roll.
+ s.die=sides=>sides===20?20:3;
+ let shieldPrompts=0;
  s._decisionHook=event=>{
-  if(event.phase==="hero-trigger"&&event.context==="before-d20"){
-   riskyBlessings++;
-   return {kind:"hero-mode",mode:"risk"};
+  if(event.phase==="hero-trigger")throw Error(
+   "Priest cannot bless the Monster's d20");
+  if(event.phase==="after-hit"&&event.cardId==="shield"){
+   shieldPrompts++;return {kind:"continue"};
   }
-  throw Error("Impossible post-death reaction: "+JSON.stringify(event));
+  throw Error("Unexpected Monster-hit reaction: "+JSON.stringify(event));
  };
  assert.doesNotThrow(()=>monsterRespond(s,hero));
- assert.equal(riskyBlessings,1);
+ assert.equal(shieldPrompts,1);
  assert.equal(hero.hp,0);
  assert.equal(s.metrics.objectActivations.shield||0,0);
+ assert.ok(!hero.used.has("hero"),"Priest ability was not consumed");
  delete s._decisionHook;
 });
 
