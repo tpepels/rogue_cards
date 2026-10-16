@@ -47,7 +47,7 @@ export function modifyOddDie(s,sides,value,{hero=null,attack=false}={}){
   if(sides===20&&hero===h){
    const mirror=owned(h,"odd-bent-mirror");
    if(offer(s,h,mirror,"reroll-d20",["reroll"])==="reroll")
-    spend(s,h,mirror,"reroll-d20",()=>{face=s.rng.die(20);});
+    spend(s,h,mirror,"reroll-d20",()=>{face=s.die(20);});
    if(attack&&h.slots.weapon?.id==="odd-trick-knife"&&!h.trickKnifeUsed){
     const knife=h.slots.weapon;
     const choice=offer(s,h,knife,"once-per-fight-d20",[
@@ -63,7 +63,7 @@ export function modifyOddDie(s,sides,value,{hero=null,attack=false}={}){
    const idol=owned(h,"odd-chaos-idol");
    if(offer(s,h,idol,"reroll-twice",["reroll-twice"])==="reroll-twice")
     spend(s,h,idol,"reroll-twice",()=>{
-     s.rng.die(sides);face=s.rng.die(sides);
+     s.die(sides);face=s.die(sides);
     });
   }
  }
@@ -82,9 +82,9 @@ export function rollOddHeroD20(s,h,{adv=false,dis=false,attack=false}={}){
  if(offer(s,h,lucky,"before-hero-d20",["adv"])==="adv"){
   spend(s,h,lucky,"before-hero-d20");adv=true;
  }
- const first=s.rng.die(20);
- let face=adv&&!dis?Math.max(first,s.rng.die(20)):
-  dis&&!adv?Math.min(first,s.rng.die(20)):first;
+ const first=s.die(20);
+ let face=adv&&!dis?Math.max(first,s.die(20)):
+  dis&&!adv?Math.min(first,s.die(20)):first;
  // No recursive prompt when an Item rethrows dice or incurs an Item cost.
  if(!s._oddDieGuard){
   s._oddDieGuard=true;
