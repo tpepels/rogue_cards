@@ -186,6 +186,7 @@ export function evaluateBalanceTargets(targets,allRuns,{complete=false,physicalS
  */
 export function auditCardAndItemUse(targets,coverage,matchedItems,cardLists){
  const a=coverage.aggregate||{},items=[],rooms=[],monsters=[];
+ const fixed=cardLists.fixed||[];
  const num=(map,id,key="total")=>{
   const value=map?.[id];return typeof value==="number"?value:(value?.[key]||0);
  };
