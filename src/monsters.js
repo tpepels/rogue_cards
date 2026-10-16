@@ -1,4 +1,5 @@
 // Rogue Cards — canonical Monster statistics and behaviour.
+import {MONSTER_DEFEATS} from "./monster-defeats.js";
 // Difficulty climbs from UPPER to DEEP. Each behaviour uses 1–2, 3–4, 5, 6.
 const BASE=[
  ["rat","Giant Rat","rat","UPPER",6,2,1,["Sniff: no attack.","Bite: ATTACK.","Scatter: next Hero attack has DIS.","Pack Bite: ATTACK with +2 ATK."]],
@@ -44,8 +45,10 @@ const SPEC=Object.freeze({
 
 export const V2_MONSTERS=Object.freeze(BASE.map(([id,title,art,stage,hp,atk,def,behavior],i)=>{
  const s=SPEC[id];if(!s)throw new Error("Missing Monster ecology: "+id);
+ const defeat=MONSTER_DEFEATS[id];if(!defeat)throw Error("Missing Monster DEFEAT: "+id);
  return {id,title,art,stage,hp,atk,def,behavior,copies:stage==="UPPER"?3:2,type:"monster",
   flavor:"",v2:{kind:"MONSTER",number:i+1,tags:s.tags,
-   weakness:s.weakness,parley:s.parley,remains:s.remains}};
+   weakness:s.weakness,parley:s.parley,remains:s.remains,
+   defeat:defeat.text,defeatOps:defeat.ops}};
 }));
 export const V2_MONSTER_BY_ID=Object.freeze(Object.fromEntries(V2_MONSTERS.map(m=>[m.id,m])));
