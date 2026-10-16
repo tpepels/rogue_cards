@@ -430,7 +430,7 @@ function createReport(c,done,expected){
  const targets=evaluateBalanceTargets(TARGETS,rows,{complete});
  const itemAudit=auditCardAndItemUse(TARGETS,rawCover,byItem,{
   rooms:ALL_ROOMS,monsters:ALL_MONSTERS,items:ALL_OBJECTS,
-  fixed:FIXED_CARDS});
+  fixed:FIXED_CARDS,timings:ITEM_TIMING_ALL});
  if(itemAudit.catalog.combined!==TARGETS.itemAudit.catalogue.allDesigns)
   throw Error("Targets and printed-card catalogue differ: "+
    itemAudit.catalog.combined+" vs "+TARGETS.itemAudit.catalogue.allDesigns);
