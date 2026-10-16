@@ -526,7 +526,8 @@ function save(c,done,expected){
   drawn:i.drawn,offered:i.offered,used:i.used,passive:i.passive,
   activated:i.activated,heldRooms:i.heldRooms,
   equippedRooms:i.equippedRooms,usePerOpportunity:i.usePerOpportunity,
-  finding:i.finding,structuralExecutableTest:i.structuralExecutableTest
+  finding:i.finding,mechanicallyClassified:i.mechanicallyClassified,
+  timing:i.timing.join("|"),structuralExecutableTest:i.structuralExecutableTest
  })));
  const fmt=x=>x===null?"n/a":(x*100).toFixed(1)+"%";
  const lines=[
