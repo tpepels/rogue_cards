@@ -236,7 +236,8 @@ function content(card,{sidebar=false}={}){
      '<div class="tt-v2-result"><b>'+["1–2","3–4","5","6"][i]+'</b><span>'+ruleMarkup(effect)+'</span></div>').join("")+'</div></div>'+
    '<div class="tt-slip tt-slip--results"><p class="tt-v2-monster-rule"><b>WEAKNESS — </b>'+ruleMarkup(v.weakness)+'</p>'+
    '<p class="tt-v2-monster-rule"><b>PARLEY — </b>'+ruleMarkup(v.parley)+'</p>'+
-   '<p class="tt-v2-monster-remains"><b>REMAINS — </b>'+ruleMarkup(v.remains)+'</p></div></section>';
+   '<p class="tt-v2-monster-remains"><b>REMAINS — </b>'+ruleMarkup(v.remains)+'</p>'+
+   (v.defeat?'<p class="tt-v2-monster-defeat"><b>DEFEAT — </b>'+ruleMarkup(v.defeat)+'</p>':'')+'</div></section>';
  }
  if(card.v2&&(card.type==="item"||card.type==="potion")){
   const v=card.v2;
