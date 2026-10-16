@@ -28,7 +28,11 @@ import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS} from "../src/decks.js";
 import {ODD_ITEMS} from "../src/item-expansion.js";
 import {playSessionWithMCTS} from "../src/session-agent.js";
 import {createDecisionRecorder,experimentSnapshot} from "../src/experiment-telemetry.js";
+import {evaluateBalanceTargets,auditCardAndItemUse} from "../src/experiment-targets.js";
 const sha=x=>createHash("sha256").update(x).digest("hex");
+const targetText=readFileSync(fileURLToPath(new URL(
+ "../config/everything-goes-targets.v1.json",import.meta.url)),"utf8");
+const TARGETS=JSON.parse(targetText),TARGET_SHA=sha(targetText);
 const mix=n=>{
  n=(n+0x9e3779b9)>>>0;
  n=Math.imul(n^(n>>>16),0x85ebca6b);
@@ -82,7 +86,8 @@ function parse(argv){
  c.design={schema:"everything-goes-deep-study-v1",mode,items,
   runs:c.runs,pairsPerItem:c.pairsPerItem,seed:c.seed,budget:c.budget,
   knowledge,maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
-  partyRotation:PARTIES,comparisonItem:"ex-rations"};
+  partyRotation:PARTIES,comparisonItem:"ex-rations",
+  targets:{schema:TARGETS.schema,version:TARGETS.version,sha256:TARGET_SHA}};
  c.signature=sha(JSON.stringify(c.design));
  return c;
 }
@@ -137,7 +142,10 @@ function jobs(c){
   for(let j=0;j<c.pairsPerItem;j++){
    const seed=mix(c.seed^Math.imul(j+1,0xc2b2ae35)^
     Math.imul(ODD_ITEMS.findIndex(x=>x.id===itemId)+1,0x9e3779b1))||1;
-   const heroes=SOLO[j%SOLO.length],base={group:"pair",itemId,
+   // Red String is a two-Hero Item. A solo-only pair study would
+   // incorrectly claim 120 tests without a single usable trigger.
+   const parties=itemId==="odd-red-string"?DUO:SOLO;
+   const heroes=parties[j%parties.length],base={group:"pair",itemId,
     sample:j,heroes,seed};
    out.push({...base,i:i++,arm:"control",extraObjectId:"ex-rations"});
    out.push({...base,i:i++,arm:"treatment",extraObjectId:itemId});
@@ -221,6 +229,23 @@ function work(job,c){
  }
  const last=events.at(-1)?.after;
  const roomById=new Map(ALL_ROOMS.map(c=>[c.id,c]));
+ const monsterIds=new Set(ALL_MONSTERS.map(c=>c.id));
+ const normalRoomEntries=Object.entries(roomEntries).reduce((n,[id,count])=>
+  n+((roomById.get(id)?.v2?.kind==="CORRIDOR"||!roomById.has(id))?0:count),0);
+ const ordinaryEncounters=Object.entries(m.monsterVisits||{}).reduce(
+  (n,[id,value])=>n+(monsterIds.has(id)?value:0),0);
+ const ordinaryFightStarts=Object.entries(m.monsterFightStartsById||{}).reduce(
+  (n,[id,value])=>n+(monsterIds.has(id)?value:0),0);
+ const combatContextDamage=Object.entries(m.damageContextById||{}).reduce(
+  (n,[id,value])=>n+(monsterIds.has(id)?value:0),0);
+ const oddIds=new Set(TARGETS.metrics.find(x=>
+  x.id==="odd_effects_per_normal_room").includedItemIds);
+ const oddItemActivations=Object.entries(m.itemUses||{}).reduce(
+  (n,[id,value])=>n+(oddIds.has(id)?Number(value.total||0):0),0);
+ const itemAcquisitionsDuringPlay=events.reduce((n,event)=>
+  n+Object.values(event.metrics.objectAcquisitions||{}).reduce((sum,change)=>
+   sum+(Number(change.now??0)-Number(change.was??0)),0),0);
+ const partyMaxHp=events[0]?.before.heroes.reduce((sum,h)=>sum+h.maxHp,0)||0;
  const byStage={};
  for(const stage of ["UPPER","MIDDLE","DEEP"]){
   const seen=(last?.seenRooms||[]).map(id=>roomById.get(id)).
@@ -242,6 +267,9 @@ function work(job,c){
   equipmentProgressBreaks:result.equipmentProgressBreaks,
   encounterStarts:m.encounterStarts,combatStarts:m.combatStarts,
   kills:m.kills,rooms:m.cleared,drawn:m.drawn,
+  normalRoomEntries,ordinaryEncounters,ordinaryFightStarts,
+  combatContextDamage,partyMaxHp,oddItemActivations,
+  itemAcquisitionsDuringPlay,vaultReached:!!m.vaultEntered,
   ordinaryCombats:Math.max(0,m.combatStarts-bossCombats),
   bossCombats,byStage,finalHp,totalFinalHp:finalHp.reduce((a,b)=>a+b,0),
   corridors:Object.values(byStage).reduce((n,v)=>n+v.corridors,0),
@@ -398,6 +426,12 @@ function createReport(c,done,expected){
   ([stage,v])=>[stage,{normal:ci(v.normal),corridors:ci(v.corridors)}]));
  const uniqueSeeds=new Set(survey.map(r=>r.seed)).size;
  const complete=total===expected&&rows.every((r,i)=>r.i===i);
+ const targets=evaluateBalanceTargets(TARGETS,rows,{complete});
+ const itemAudit=auditCardAndItemUse(TARGETS,rawCover,byItem,{
+  rooms:ALL_ROOMS,monsters:ALL_MONSTERS,items:ALL_OBJECTS});
+ if(itemAudit.catalog.combined!==TARGETS.itemAudit.catalogue.allDesigns)
+  throw Error("Targets and printed-card catalogue differ: "+
+   itemAudit.catalog.combined+" vs "+TARGETS.itemAudit.catalogue.allDesigns);
  const summary={
   schema:"everything-goes-decision-report-v1",complete,planned:expected,
   completed:total,design:c.design,
@@ -409,7 +443,7 @@ function createReport(c,done,expected){
    scalarTotals,endings,wipeCauses:wipes,stages:stageStats,
    uniqueSeeds,parties},
   matchedItems:byItem,
-  coverage:rawCover,
+  coverage:rawCover,targetResults:targets,itemAudit,
   limitations:[
    "This reports canonical game-engine events and actions, not actual tabletop minutes.",
    "A player MCTS decision is a policy observation, NOT a random assignment to alternative choices.",
@@ -424,6 +458,8 @@ function createReport(c,done,expected){
 function save(c,done,expected){
  const {summary,rows,pairedCsv}=createReport(c,done,expected);
  atomic(join(c.out,"summary.json"),summary);
+ atomic(join(c.out,"targets.json"),summary.targetResults);
+ atomic(join(c.out,"item-audit.json"),summary.itemAudit);
  atomic(join(c.out,"coverage.json"),summary.coverage);
  atomic(join(c.out,"validation.json"),{
   complete:summary.complete,completed:summary.completed,planned:expected,
@@ -431,6 +467,9 @@ function save(c,done,expected){
   allDecisionTapesPresent:rows.every(r=>existsSync(join(c.out,r.rawFile))),
   coverageDenominatorsProvided:true,
   unsupportedCausalInferenceAvoided:true,
+  targetsVersion:TARGETS.version,targetsSha256:TARGET_SHA,
+  targetAssessmentsPresent:summary.targetResults.metrics.length===10,
+  all193CardsAudited:summary.itemAudit.catalog.combined===193,
   decisionReady:summary.complete&&rows.every(r=>existsSync(join(c.out,r.rawFile)))});
  csv(join(c.out,"runs.csv"),rows.map(r=>({
   index:r.i,group:r.group,itemId:r.itemId,sample:r.sample,arm:r.arm,
@@ -440,6 +479,11 @@ function save(c,done,expected){
   equipmentProgressBreaks:r.equipmentProgressBreaks,
   encounters:r.encounterStarts,combats:r.combatStarts,kills:r.kills,
   drawn:r.drawn,hpLoss:r.hpLoss,dice:r.dice,
+  vaultReached:Number(r.vaultReached),normalRoomEntries:r.normalRoomEntries,
+  ordinaryEncounters:r.ordinaryEncounters,ordinaryFights:r.ordinaryFightStarts,
+  combatContextDamage:r.combatContextDamage,partyMaxHp:r.partyMaxHp,
+  oddItemActivations:r.oddItemActivations,
+  itemsAcquiredDuringPlay:r.itemAcquisitionsDuringPlay,
   ordinaryCombats:r.ordinaryCombats,bossCombats:r.bossCombats,
   corridors:r.corridors,finalHp:r.totalFinalHp,
   wipeCause:r.wipeCause,wipeStage:r.wipeStage,
@@ -474,6 +518,13 @@ function save(c,done,expected){
    legalActionsChosen:summary.coverage.actionChosenByCard[x.id+":item-trigger"]||0
  }));
  csv(join(c.out,"card-coverage.csv"),cardRows);
+ csv(join(c.out,"item-audit.csv"),summary.itemAudit.items.map(i=>({
+  id:i.id,title:i.title,kind:i.kind,acquired:i.acquired,
+  drawn:i.drawn,offered:i.offered,used:i.used,passive:i.passive,
+  activated:i.activated,heldRooms:i.heldRooms,
+  equippedRooms:i.equippedRooms,usePerOpportunity:i.usePerOpportunity,
+  finding:i.finding,structuralExecutableTest:i.structuralExecutableTest
+ })));
  const fmt=x=>x===null?"n/a":(x*100).toFixed(1)+"%";
  const lines=[
   "# Everything Goes - full event and paired Item study","",
@@ -484,6 +535,20 @@ function save(c,done,expected){
   "Organic survey: "+summary.survey.completed+" games",
   "Organic win rate: "+fmt(summary.survey.winRate),
   "Organic 95% Wilson CI: "+JSON.stringify(summary.survey.winWilson95),
+  "", "## Pre-registered numerical targets",
+  "The thresholds below were locked BEFORE the full experiment and are "+
+  "taken from config/everything-goes-targets.v1.json (sha256 "+TARGET_SHA+").",
+  ...summary.targetResults.metrics.map(x=>
+   "- "+x.id+": "+x.decision+
+   "; observed="+(x.observation.estimate??"not measured")+
+   "; 95% CI="+JSON.stringify(x.observation.ci95)+
+   "; acceptable="+JSON.stringify(x.acceptable)+
+   "; action="+JSON.stringify(x.action)+
+   "; n="+x.observation.sampleSize+
+   (x.reason?"; reason="+x.reason:"")),
+  ...summary.targetResults.physical.map(x=>
+   "- "+x.id+": "+x.status+" (requires "+x.minTimedSessions+
+   " real timed sessions, not CPU seconds)"),
   "", "## Organic pacing and outcomes",
   ...Object.entries(summary.survey.sample).map(([key,v])=>
    "- "+key+": "+(v?Number(v.mean.toFixed(3)):"not measured")+
@@ -541,6 +606,12 @@ function save(c,done,expected){
   "", "## Terminal causes and scalar engine counters",
   ...Object.entries(summary.survey.endings).map(([key,n])=>"- "+key+": "+n),
   ...Object.entries(summary.survey.scalarTotals).map(([key,n])=>"- "+key+": "+n),
+  "", "## Full Item usability audit",
+  "Every Item remains present even with zero acquisitions; this is not proof "+
+  "of an unreachable rule. Focused deterministic tests are required.",
+  ...Object.entries(summary.itemAudit.flags).map(([key,ids])=>
+   "- "+key+": "+ids.length+"; "+
+   (ids.slice(0,25).join(", ")||"none")),
   "", "## Raw reproducibility",
   "raw/NNNNNN.json.gz: complete legal-action menus, choices,",
   "per-decision before/after game states, recursive engine-metric changes,",
@@ -551,6 +622,30 @@ function save(c,done,expected){
   ...summary.limitations.map(x=>"- "+x)
  ];
  writeFileSync(join(c.out,"summary.md"),lines.join("\n")+"\n");
+ const targetsMd=[
+  "# Everything Goes - targets vs observed", "",
+  "Locked target version "+TARGETS.version+" / sha256 "+TARGET_SHA,
+  summary.complete?"All planned sessions complete.":"PRELIMINARY - incomplete experiment.",
+  "", "| Measure | Ideal | Acceptable | Intervention boundary | Observed | 95% CI | Decision |",
+  "| --- | ---: | --- | --- | ---: | --- | --- |",
+  ...summary.targetResults.metrics.map(x=>
+   "| "+x.id+" | "+(x.ideal??"Unselected")+" | "+
+   (x.acceptable?x.acceptable.join(" to "):"Not chosen")+" | "+
+   (x.action?x.action.join(" to "):"None")+" | "+
+   (x.observation.estimate??"Not measured")+" | "+
+   (x.observation.ci95?.map(v=>v.toFixed(4)).join(" to ")||"Unavailable")+
+   " | "+x.decision+" |"),
+  "", "## Physical playtime (no simulation conversion)",
+  ...summary.targetResults.physical.map(x=>"- "+x.id+
+   " target "+x.ideal+" minutes; acceptable "+x.acceptable.join(" to ")+
+   "; "+x.status),
+  "", "## Item/Room/Monster reachability investigations",
+  ...Object.entries(summary.itemAudit.flags).map(([key,ids])=>
+   "- "+key+": "+ids.length+" - "+(ids.join(", ")||"none")),
+  "", "Detailed exposure denominators: item-audit.csv, card-coverage.csv.",
+  "Question 7 (Item acquisitions) has no user-confirmed target.",
+ ];
+ writeFileSync(join(c.out,"targets.md"),targetsMd.join("\n")+"\n");
  return summary;
 }
 if(!isMainThread){
