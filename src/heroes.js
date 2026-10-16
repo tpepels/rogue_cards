@@ -9,7 +9,7 @@ const data=[
  ["witch","Marsh Witch","wizard",20,3,4,5,"smoky","HEX BREW · after using a Potion or Scroll",
   [["1–2","It curdles: become POISONED."],["3–4","Remove POISONED from a Hero."],["5–6","Choose the Monster's next d6 behaviour, if present."]],"Every answer has ingredients."],
  ["rogue","Cutpurse","rogue",19,4,4,5,"key","DIRTY TRICK · before you attack or negotiate",
-  [["1–2","Caught: this d20 has DIS."],["3–4","This d20 has ADV."],["5–6","Opposed d20+WIT vs Monster d20+DEF with ADV; win: draw 1 Item."]],"A lock is a conversation."],
+  [["1–2","Caught: this d20 has DIS."],["3–4","This d20 has ADV."],["5–6","Roll d20+WIT against Monster AC with ADV; succeed: draw 1 Item."]],"A lock is a conversation."],
  ["thief","Tunnel Thief","rogue",19,4,4,4,"rope","POCKET CHANGE · on Item discovery or a Corridor reveal",
   [["1–2","Caught: lose 2 HP."],["3–4","Draw 1, discard 1; peek next Room. At a Corridor, gain +2 on your next WIT roll there."],["5–6","Draw 2 Items, discard 1; order next 2 Rooms. At a Corridor, gain +2 WIT there instead of Items."]],"Some pockets are doors."],
  ["priest","Ash Priest","wizard",20,4,4,5,"antidote","BLESS OR CURSE · before any Hero d20 roll",
