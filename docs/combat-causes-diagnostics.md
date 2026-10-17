@@ -264,3 +264,51 @@ No QB/RB quality-based reward modulation, printed card or rule changes.
 Further testing should hold elapsed computational cost approximately
 constant and measure full-expedition outcomes separately from local
 combat outcome scores.
+
+
+### Hybrid parameter profile: C and implicit alpha (provisional)
+
+The classical UCT path deliberately retains `exploration = sqrt(2)`
+and `implicitWeight = 0`. The opt-in `combat-hybrid` search profile
+starts with the following conservative, **not yet empirically tuned**
+pair: **C = 0.7, alpha = 0.25**. The alpha value is inside the
+0.15-0.4 range identified as a broadly safe starting interval in
+Lanctot, Winands, Pepels and Sturtevant (2014); that result is from
+different games, not evidence for a Rogue Cards optimum.
+
+Example from the outer session policy:
+
+    selectSessionPolicyAction(session,policy,{
+      searchProfile:"combat-hybrid",
+      budget:16,seed:20261017
+    });
+
+The named profile activates sampled combat expectimax, implicit MAX
+backups, frontier mode, C=0.7 and alpha=0.25. For a meaningful number
+of revisits it enforces at least 16 root trials and four visits per
+available action, but the resulting CPU cost can be substantial.
+Explicit `exploration` and `implicitWeight` override the preset.
+
+Direct `searchDecision()` calls retain alpha=0 unless the caller
+explicitly opts into implicit backups. An omitted exploration C
+uses sqrt(2) for classic search, but 0.7 when either heuristic hybrid
+extension is enabled; an explicit C always overrides that default.
+
+The previous implicit progress heuristic incorrectly treated
+`roomGoal` as the total number of Rooms rather than Rooms per stage.
+Progress now divides `metrics.cleared` by `3*roomGoal` (all three
+ordinary stages), avoiding a prematurely saturated heuristic.
+
+The four-way benchmark additionally includes UCT with the *same low C*
+to separate the exploration effect from the expectimax effect:
+
+    npm run bench:mcts-combat-hybrids -- --budget 8 --samples 1 --c 0.7 --alpha 0.25 --monsters crawler,wisp --out results/mcts-hybrid-defaults-a
+
+Arms: `uct-classic` (sqrt(2)), `uct-low-c` (0.7),
+`uct-expectimax` (0.7, alpha=0), and
+`uct-expectimax-implicit` (0.7, alpha=0.25).
+At budget 1-2 the root is barely sampled and C has little or no
+effect; use a larger budget for exploration comparisons. Equal visit
+counts are not equal CPU-time budgets with nested expectimax, so
+evaluate both wall time and strength before treating these defaults
+as calibrated.
