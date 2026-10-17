@@ -358,8 +358,38 @@ async function main(){
   stopped=true;abortReason=reason;
   clearInterval(pulse);
   const report=refreshReport(true);
+  const winner=report.provisionalBest;
+  const chosen=winner?byName.get(winner.candidate):null;
+  const comparison=winner?report.heldOutPairedComparisons.find(x=>
+   x.candidate===winner.candidate):null;
+  const versusNoImplicit=comparison?.vsSameCNoImplicit??null;
+  const versusClassic=comparison?.vsClassic??null;
+  const alphaImproved=Boolean(versusNoImplicit&&
+   versusNoImplicit.meanFitnessDifference>0&&
+   versusNoImplicit.meanClearDifference>=0);
+  const alphaSignificant=Boolean(alphaImproved&&
+   versusNoImplicit.clusterCI95?.[0]>0);
+  atomicJson(join(config.out,"best.json"),{
+   schema:"mcts-hybrid-tuning-recommendation-v1",
+   generatedAt:new Date().toISOString(),
+   status:!report.validationIsSufficient?"insufficient-validation":
+    alphaSignificant?"positive-held-out-implicit-result":
+    alphaImproved?"provisional-implicit-improvement":"implicit-not-demonstrated",
+   bestMeasuredConfiguration:chosen?{
+    c:chosen.c,alpha:chosen.alpha,
+    rolloutCombatMode:chosen.rolloutCombatMode,
+    budget:config.budget,samples:config.samples,
+    tacticalMax:config.tacticalMax
+   }:null,
+   heldOutScore:winner??null,
+   vsSameCWithoutImplicit:versusNoImplicit,
+   vsClassicUCT:versusClassic,
+   certifiedForProduction:false,
+   note:"Encounter-root held-out results, NOT full-expedition wins. Independently validate before changing defaults."
+  });
   log("Stopped ("+reason+"): "+report.completedTrials+
-   " total completed trials. Output "+summaryPath);
+   " total completed trials. Output "+summaryPath+
+   " and best.json");
   if(failed)process.exitCode=1;
   for(const worker of workers)worker.terminate();
  }
