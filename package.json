@@ -96,7 +96,10 @@
     "test:mcts-combat-hybrids": "node --test tests/mcts-combat-hybrids.test.mjs",
     "bench:mcts-combat-hybrids": "node scripts/bench-mcts-combat-hybrids.mjs",
     "test:mcts-implicit-tuner": "node --test tests/mcts-implicit-tuner.test.mjs",
-    "tune:mcts-implicit": "node scripts/tune-mcts-hybrid.mjs"
+    "tune:mcts-implicit": "node scripts/tune-mcts-hybrid.mjs",
+    "test:mcts-heuristic-factorial": "node --test tests/mcts-heuristic-factorial.test.mjs",
+    "audit:mcts-implicit-heuristic": "node scripts/audit-implicit-heuristic.mjs",
+    "study:mcts-factorial": "node scripts/study-mcts-factorial.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
