@@ -68,3 +68,51 @@ arm percentages. Large changes can justify further tests with naturally
 encountered fights and independent seeds. Do not rebalance cards based
 on this pilot alone. The equipment smoke test checks fixed AC, weapon ATK,
 and each of the seven new printed equipment bonuses.
+
+## Phase 2 - two-ply stochastic tactical search
+
+The Phase 1 pilot was complete (384/384 encounters resolved, zero truncated
+runs and zero queued Monsters after safe clearance). It showed the original
+one-ply tactical policy was not reliably better than basic attacks.
+
+Run a bounded Phase 2 comparison:
+
+    npm run test:diagnose
+    npm run study:diagnose:phase2 -- --out results/combat-phase2-a
+
+A smaller smoke study is available with:
+
+    npm run study:diagnose:phase2:smoke
+
+The experiment contains five matched arms: `basic`, `legacy_tactical`,
+`phase2_safe`, `phase2_elbereth`, and `phase2_parley`. The last arm starts
+at the canonical Parley boundary. All arms use the same encounter start
+and initial dice seed per Monster, Hero party and trial.
+
+The Phase 2 search has *two distinct Hero decisions*, with real stochastic
+actions and compulsory Monster responses between them. At the second Hero
+decision it compares sampled full-encounter continuations through the same
+Phase 1 canonical engine. It chooses based on encounter survival, Hero
+deaths, resulting HP, poisoned Heroes, real spent resources and Monster
+responses. A simple attack/fight baseline is always included; alternatives
+require a nontrivial expected improvement and cannot have a higher sampled
+wipe risk. The `phase2_safe` arm never selects Elbereth. The
+`phase2_elbereth` arm considers it with an additional safety margin; this
+is not a claim that the spell is always useful. `phase2_parley` tests
+negotiation at an eligible initial encounter boundary.
+
+The implementation is intentionally independent of production MCTS; no
+rules, cards or expedition policy are changed. It is a small stochastic
+expectimax-style experiment, not classical adversarial alpha-beta. Its
+limited samples and baseline completion policy are hypotheses to test,
+not guarantees of optimal or superior decisions. The pilot uses starter
+parties at full HP, not naturally accumulated campaign damage.
+
+For a specific Monster or a different sample budget, run for example:
+
+    npm run study:diagnose:phase2 -- --trials 4 --samples 3 --monsters wisp,troll,sentinel --out results/combat-phase2-targeted
+
+Each run needs a fresh output directory. The summary reports separate
+`outcome` and `defeated` fields: the latter is a kill occurrence, not
+proof that the entire encounter was survived. Use `resolvedSafely` for
+encounter completion and `heroDeaths` to detect duo losses.
