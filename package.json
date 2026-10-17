@@ -85,7 +85,7 @@
     "study:diagnose:combat": "node scripts/study-combat-causes.mjs",
     "study:diagnose:mcts": "node scripts/diagnose-mcts-roots.mjs",
     "test:diagnose": "node --test tests/combat-causes-diagnostic.test.mjs",
-    "study:diagnose:phase2": "node scripts/study-combat-causes.mjs --mode phase2 --trials 2 --samples 2",
+    "study:diagnose:phase2": "node scripts/study-combat-causes.mjs --mode phase2",
     "study:diagnose:phase2:smoke": "node scripts/study-combat-causes.mjs --mode phase2 --trials 1 --samples 1 --monsters crawler --out results/combat-phase2-smoke"
   },
   "devDependencies": {
