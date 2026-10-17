@@ -364,6 +364,136 @@ export function phase2Tactical(session,{
  return best.action;
 }
 
+
+/**
+ * Phase 2c: safety-first, two-decision stochastic evaluation.
+ * Unlike Phase 2b, selection compares paired outcomes of the complete
+ * encounter, penalises both party wipes AND individual Hero casualties,
+ * and considers the downside tail instead of mean utility alone.
+ * This remains an experimental policy, never a rule change or production AI.
+ */
+const phase2cOutcome=(source,finished)=>{
+ const start=source.state,end=finished.state;
+ const result=encounterOutcome(finished);
+ if(result!=="cleared"&&result!=="wipe")
+  throw Error("Phase 2c cannot evaluate an unresolved encounter");
+ const deaths=end.heroes.reduce((n,h,i)=>
+  n+Number(h.hp<=0&&start.heroes[i].hp>0),0);
+ const hpDelta=totalHp(end)-totalHp(start);
+ const spent=Math.max(0,(end.metrics.spent||0)-(start.metrics.spent||0));
+ const used=Math.max(0,usedItems(end)-usedItems(start));
+ const behavior=Math.max(0,
+  sumMap(end.metrics.monsterBehaviorBands)-sumMap(start.metrics.monsterBehaviorBands));
+ const critical=end.heroes.some((h,i)=>
+  h.hp>0&&h.hp<=Math.max(2,Math.floor(start.heroes[i].card.hp*0.2)));
+ return {
+  utility:(result==="cleared"?260:-260)-180*deaths+
+   3*hpDelta-10*spent-4*used-14*poisoned(end)-
+   (critical?20:0)-0.4*behavior,
+  wipe:Number(result==="wipe"),
+  death:Number(deaths>0),
+  deaths,
+  critical:Number(critical)
+ };
+};
+const riskStats=rollouts=>{
+ if(!rollouts.length)throw Error("Empty Phase 2c result distribution");
+ const utilities=rollouts.map(r=>r.utility);
+ const n=rollouts.length;
+ const sorted=[...utilities].sort((a,b)=>a-b);
+ const tailCount=Math.max(1,Math.ceil(n/4));
+ const sum=(field)=>rollouts.reduce((v,r)=>v+r[field],0)/n;
+ const mean=utilities.reduce((a,b)=>a+b,0)/n;
+ const variance=n>1?
+  utilities.reduce((a,x)=>a+(x-mean)**2,0)/(n-1):0;
+ return {mean,se:Math.sqrt(variance/n),
+  tail:sorted.slice(0,tailCount).reduce((a,b)=>a+b,0)/tailCount,
+  wipe:sum("wipe"),death:sum("death"),
+  critical:sum("critical"),samples:n};
+};
+const riskChoose=(candidate,baseline,margin=4,{
+ risky=false,secondary=false
+}={})=>{
+ const delta=candidate.mean-baseline.mean;
+ const bound=margin+(risky?10:0)+
+  (secondary?0.75:1.05)*Math.hypot(candidate.se,baseline.se);
+ if(delta<=bound)return false;
+ // A policy may not buy tiny average HP gains by increasing the
+ // observed probability of a party wipe or loss of a single Hero.
+ // With few samples, differences of one death are particularly costly.
+ if(candidate.wipe>baseline.wipe+1e-9)return false;
+ if(candidate.death>baseline.death+1e-9)return false;
+ // A catastrophe in the bottom quarter is a real downside even when
+ // the mean improves. Permit a tail drop only for very large gains.
+ if(candidate.tail<baseline.tail-15&&delta<90)return false;
+ return true;
+};
+export function phase2cTactical(session,{
+ samples=4,followupSamples=2,decisionSeed=1,
+ allowElbereth=false,improvementMargin=4
+}={}){
+ if(session.pendingNested)return choose(session,"basic");
+ if(!["combat","combat-hero","parley"].includes(session.phase))
+  return choose(session,"basic");
+ if(!Number.isInteger(samples)||samples<1||samples>24||
+    !Number.isInteger(followupSamples)||followupSamples<1||followupSamples>8)
+  throw Error("Invalid Phase 2c sample budget");
+ const actions=tacticalRootActions(session,{allowElbereth});
+ if(actions.length<2)return actions[0]??choose(session,"basic");
+ const baseline=choose(session,"basic");
+ const candidates=[baseline,...actions.filter(a=>actionKey(a)!==actionKey(baseline))];
+ const initialSeeds=Array.from({length:samples},
+  (_,i)=>mixSeed(decisionSeed,i,709));
+ const evaluated=[];
+ for(const firstAction of candidates){
+  const rollouts=[];
+  for(let i=0;i<samples;i++){
+   const first=cloneSession(session);
+   first.state.rng=randomSource(initialSeeds[i]);
+   const boundary=advanceToTacticalBoundary(first,{firstAction});
+   if(boundary.terminal){
+    const result=phase2cOutcome(session,first);
+    for(let j=0;j<followupSamples;j++)rollouts.push(result);
+    continue;
+   }
+   const next=tacticalRootActions(first,{allowElbereth:false});
+   if(!next.length)throw Error("No followup actions at Phase 2c boundary");
+   const secondBaseline=choose(first,"basic");
+   const secondCandidates=[secondBaseline,
+    ...next.filter(a=>actionKey(a)!==actionKey(secondBaseline))];
+   // Each second choice gets *identical* sampled chance streams.
+   const secondEvaluations=[];
+   for(const secondAction of secondCandidates){
+    const outcomes=[];
+    for(let j=0;j<followupSamples;j++){
+     const future=cloneSession(first);
+     future.state.rng=randomSource(mixSeed(decisionSeed,i,j+2007));
+     completeEncounter(future,{firstAction:secondAction});
+     outcomes.push(phase2cOutcome(session,future));
+    }
+    secondEvaluations.push({action:secondAction,outcomes,stats:riskStats(outcomes)});
+   }
+   let chosen=secondEvaluations[0];
+   for(const alternative of secondEvaluations.slice(1)){
+    if(riskChoose(alternative.stats,secondEvaluations[0].stats,
+     improvementMargin,{secondary:true})&&
+     alternative.stats.mean>chosen.stats.mean)
+     chosen=alternative;
+   }
+   rollouts.push(...chosen.outcomes);
+  }
+  evaluated.push({action:firstAction,rollouts,stats:riskStats(rollouts)});
+ }
+ let chosen=evaluated[0];
+ for(const alt of evaluated.slice(1)){
+  if(riskChoose(alt.stats,evaluated[0].stats,improvementMargin,{
+   risky:alt.action.kind==="elbereth"
+  })&&alt.stats.mean>chosen.stats.mean)
+   chosen=alt;
+ }
+ return chosen.action;
+}
+
 function fight(source,{policy,healthReduction=0,seed,samples}){
  const session=cloneSession(source),s=session.state;
  if(["parley","phase2_parley"].includes(policy))session.phase="parley";
