@@ -14,21 +14,29 @@ import {MONSTERS} from "../src/tabletop-data.js";
 import {EXTRA_MONSTERS} from "../src/monster-expansion.js";
 import {makeEncounter} from "./study-combat-causes.mjs";
 import {searchDecision,mctsActionKey} from "../src/session-mcts.js";
+import {CLASSIC_UCT_C,HYBRID_UCT_C,HYBRID_IMPLICIT_ALPHA}
+ from "../src/mcts-hybrid-defaults.js";
 
 const monsters=[...MONSTERS,...EXTRA_MONSTERS];
+// Four arms isolate the effect of C, expectimax and implicit backups.
 const arms=[
- {name:"uct",rolloutCombatMode:"random",implicitWeight:0},
+ {name:"uct-classic",rolloutCombatMode:"random",implicitWeight:0,
+  exploration:CLASSIC_UCT_C},
+ {name:"uct-low-c",rolloutCombatMode:"random",implicitWeight:0},
  {name:"uct-expectimax",rolloutCombatMode:"sampled-expectimax",implicitWeight:0},
- {name:"uct-expectimax-implicit",rolloutCombatMode:"sampled-expectimax",implicitWeight:0.25}
+ {name:"uct-expectimax-implicit",rolloutCombatMode:"sampled-expectimax"}
 ];
 export function runHybridAblation({
- monsterIds=["crawler","wisp"],budget=2,samples=1,seed=20261017,
- maxSteps=5000,out="results/mcts-combat-hybrids-"+seed,write=true
+ monsterIds=["crawler","wisp"],budget=8,samples=1,seed=20261017,
+ maxSteps=5000,c=HYBRID_UCT_C,alpha=HYBRID_IMPLICIT_ALPHA,
+ out="results/mcts-combat-hybrids-"+seed,write=true
 }={}){
  if(!Number.isInteger(budget)||budget<1||budget>1000||
   !Number.isInteger(samples)||samples<1||samples>6||
   !Number.isInteger(seed)||seed<1||
-  !Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
+  !Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000||
+  !Number.isFinite(c)||c<0||c>10||
+  !Number.isFinite(alpha)||alpha<0||alpha>1)
   throw Error("Invalid MCTS ablation configuration");
  const rows=[];
  for(const monsterId of monsterIds){
@@ -36,16 +44,20 @@ export function runHybridAblation({
   if(!monster)throw Error("Unknown Monster "+monsterId);
   const session=makeEncounter(monster,["warrior","knight"],seed);
   for(const arm of arms){
+   const effectiveC=arm.exploration??c;
+   const effectiveAlpha=arm.implicitWeight??alpha;
    const start=performance.now();
    const result=searchDecision(session,{
     budget,seed,knowledge:"fair",treeMode:"frontier",maxSteps,
     strictTerminal:true,collectCoverage:false,
     rolloutCombatMode:arm.rolloutCombatMode,
-    rolloutCombatSamples:samples,implicitWeight:arm.implicitWeight
+    rolloutCombatSamples:samples,implicitWeight:effectiveAlpha,
+    exploration:effectiveC
    });
    const elapsedMs=performance.now()-start;
    rows.push({
     monsterId,arm:arm.name,budget,samples,elapsedMs,
+    exploration:effectiveC,implicitWeight:effectiveAlpha,
     completed:result.completed,incomplete:result.incomplete,
     terminalWins:result.terminalWins,
     recommended:result.recommended?mctsActionKey(result.recommended):null,
@@ -56,13 +68,15 @@ export function runHybridAblation({
    if(write)console.log(monsterId+" "+arm.name+" "+elapsedMs.toFixed(1)+
     "ms rollouts="+result.completed+" tactical="+
     (result.rolloutCombatSearches||0)+
-    " wins="+result.terminalWins);
+    " wins="+result.terminalWins+
+    " C="+effectiveC+" alpha="+effectiveAlpha);
   }
  }
  const report={schema:"mcts-combat-hybrid-ablation-v1",
-  design:{monsterIds,budget,samples,seed,maxSteps,knowledge:"fair",
+  design:{monsterIds,budget,samples,seed,maxSteps,c,alpha,knowledge:"fair",
    treeMode:"frontier",strictTerminal:true},
   caveats:[
+   "The low-C UCT control isolates the exploration coefficient before testing expectimax and implicit backups",
    "Equal rollout counts are NOT equal CPU budgets",
    "No difference in terminal win counts does not prove decision equivalence",
    "Implicit values remain separate from terminal win counts",
@@ -78,7 +92,7 @@ export function runHybridAblation({
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=process.argv.slice(2),options={};
- const allowed=new Set(["--monsters","--budget","--samples","--seed","--max-steps","--out"]);
+ const allowed=new Set(["--monsters","--budget","--samples","--seed","--max-steps","--c","--alpha","--out"]);
  for(let i=0;i<args.length;i+=2){
   if(!allowed.has(args[i])||!args[i+1]||Object.hasOwn(options,args[i]))
    throw Error("Unknown or missing MCTS ablation argument "+args[i]);
@@ -86,10 +100,12 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  }
  runHybridAblation({
   monsterIds:options["--monsters"]?.split(",")??["crawler","wisp"],
-  budget:Number(options["--budget"]??2),
+  budget:Number(options["--budget"]??8),
   samples:Number(options["--samples"]??1),
   seed:Number(options["--seed"]??20261017),
   maxSteps:Number(options["--max-steps"]??5000),
+  c:Number(options["--c"]??HYBRID_UCT_C),
+  alpha:Number(options["--alpha"]??HYBRID_IMPLICIT_ALPHA),
   out:options["--out"]??"results/mcts-combat-hybrids-"+(options["--seed"]??20261017)
  });
 }
