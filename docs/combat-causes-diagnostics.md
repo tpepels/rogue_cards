@@ -89,8 +89,11 @@ The experiment contains five matched arms: `basic`, `legacy_tactical`,
 at the canonical Parley boundary. All arms use the same encounter start
 and initial dice seed per Monster, Hero party and trial.
 
-The Phase 2 search has *two distinct Hero decisions*, with real stochastic
-actions and compulsory Monster responses between them. At the second Hero
+The Phase 2 search has *two successive Hero decisions*, with real stochastic
+actions and compulsory Monster responses between them. In a two-Hero party,
+choosing which Hero acts is also searched as a tactical decision (including
+its subsequent combat action); the older policy always picked the strongest
+printed attack. At the second Hero
 decision it compares sampled full-encounter continuations through the same
 Phase 1 canonical engine. It chooses based on encounter survival, Hero
 deaths, resulting HP, poisoned Heroes, real spent resources and Monster
