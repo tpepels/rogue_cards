@@ -18,7 +18,7 @@ import {randomSource} from "../src/engine/random.js";
 import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
 import {MONSTERS} from "../src/tabletop-data.js";
 import {EXTRA_MONSTERS} from "../src/monster-expansion.js";
-import {makeEncounter,choose,completeEncounter,phase2Tactical,encounterOutcome}
+import {makeEncounter,choose,completeEncounter,phase2Tactical,phase2cTactical,encounterOutcome}
  from "./study-combat-causes.mjs";
 
 const MONSTER_IDS=[
@@ -140,13 +140,18 @@ export function scenarios({seed=20261017,limit=48,ids=MONSTER_IDS}={}){
  return out.slice(0,limit);
 }
 const policyList=["attack_only","phase2_safe","phase2_elbereth","phase2_parley"];
+const phase2cPolicies=["phase2c_safe","phase2c_elbereth","phase2c_parley"];
 export function simulateScenario(scenario,policy,{
- samples=2,followupSamples=2,seed=20261017
+ samples=2,followupSamples=2,seed=20261017,repetition=0
 }={}){
- if(!policyList.includes(policy))throw Error("Unknown policy "+policy);
+ if(![...policyList,...phase2cPolicies].includes(policy))
+  throw Error("Unknown policy "+policy);
+ if(!Number.isInteger(repetition)||repetition<0||repetition>1000)
+  throw Error("Invalid independent combat replicate");
  const session=cloneSession(scenario.session),s=session.state;
  // No correlation with iteration index, filtered population or arm order.
- const diceSeed=identitySeed(seed,scenario.id+"|combat");
+ const diceSeed=identitySeed(seed,scenario.id+"|combat"+
+  (repetition===0?"":"|replicate-"+repetition));
  s.rng=randomSource(diceSeed);
  const initialHp=totalHp(s),initialByHero=s.heroes.map(h=>h.hp);
  const startKills=count(s.metrics,"kills");
@@ -155,6 +160,7 @@ export function simulateScenario(scenario,policy,{
   heroSelection:0,meaningfulAlternatives:0};
  const actions={},firstDeviation={},firstDecision={};
  let deviations=0,decisionCount=0,baselineActions=0;
+ const deviationsByPhase={"combat-hero":0,combat:0,parley:0};
  const result=completeEncounter(session,{
   selectAction:(at,step)=>{
    const legal=sessionActions(at);
@@ -172,12 +178,13 @@ export function simulateScenario(scenario,policy,{
    }
    let selected=baseline;
    if(policy!=="attack_only"&&eligible&&
-      (policy==="phase2_parley"||at.phase!=="parley"))
-    selected=phase2Tactical(at,{
-     samples,followupSamples,
+      (policy.endsWith("_parley")||at.phase!=="parley")){
+    const args={samples,followupSamples,
      decisionSeed:identitySeed(diceSeed,at.phase+"|"+step),
-     allowElbereth:policy==="phase2_elbereth"
-    });
+     allowElbereth:policy.endsWith("_elbereth")};
+    selected=policy.startsWith("phase2c_")?
+     phase2cTactical(at,args):phase2Tactical(at,args);
+   }
    if(!legal.some(a=>actionKey(a)===actionKey(selected)))
     throw Error("Search returned an illegal action at "+scenario.id+
      " step "+step+": "+JSON.stringify(selected));
@@ -189,6 +196,7 @@ export function simulateScenario(scenario,policy,{
     }
     if(actionKey(selected)!==actionKey(baseline)){
      deviations++;
+     deviationsByPhase[at.phase]++;
      if(!Object.hasOwn(firstDeviation,"step")){
       firstDeviation.step=step;
       firstDeviation.phase=at.phase;
@@ -209,6 +217,7 @@ export function simulateScenario(scenario,policy,{
   scenarioId:scenario.id,monsterId:scenario.monsterId,stage:scenario.stage,
   profileId:scenario.profileId,partySize:scenario.partySize,
   heroes:scenario.heroes,seed:scenario.scenarioSeed,diceSeed,
+  repetition,trialKey:scenario.id+"|r"+repetition,
   policy,outcome:resolved,safelyCleared:resolved==="cleared",
   initialHP:initialHp,remainingHP:totalHp(s),
   hpLost:initialHp-totalHp(s),
@@ -228,6 +237,9 @@ export function simulateScenario(scenario,policy,{
   decisions:decisionCount,
   decisionsMatchingBasic:baselineActions,
   deviations,
+  deviationsHero:deviationsByPhase["combat-hero"],
+  deviationsCombat:deviationsByPhase.combat,
+  deviationsParley:deviationsByPhase.parley,
   firstDecision:JSON.stringify(firstDecision),
   firstDeviation:JSON.stringify(firstDeviation),
   opportunities
