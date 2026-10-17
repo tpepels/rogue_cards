@@ -234,3 +234,16 @@ test("Phase 2 compares acting Heroes in a duo without changing live dice",{
  assert.equal(session.phase,"combat-hero");
  assert.equal(session.pendingNested??null,null);
 });
+
+test("Filtering Monster cards leaves the same canonical seed and outcome for shared scenarios",{
+ timeout:60000
+},()=>{
+ const configuration={mode:"phase2",trials:1,samples:1,seed:8123,
+  partyProfiles:[["warrior"]],quiet:true};
+ const one=runDiagnostic({...configuration,monsterIds:["wisp"]});
+ const two=runDiagnostic({...configuration,monsterIds:["crawler","wisp"]});
+ const shared=two.rows.filter(x=>x.monsterId==="wisp");
+ assert.equal(one.rows.length,5);
+ assert.equal(shared.length,5);
+ assert.deepEqual(one.rows,shared);
+});
