@@ -79,7 +79,7 @@ export function makeEncounter(monster,heroes,seed){
  session.monsterRound=0;
  return session;
 }
-function choose(session){
+function choose(session,policy="basic"){
  const actions=sessionActions(session);
  if(!actions.length)throw Error("No legal action at "+session.phase);
  if(session.pendingNested){
@@ -100,10 +100,16 @@ function choose(session){
     a.heroIndex-b.heroIndex;
   })[0];
  }
- if(session.phase==="combat")
+ if(session.phase==="combat"){
+  if(policy==="elbereth"&&session.state.elberethAttempts===0){
+   const ward=actions.find(a=>a.kind==="elbereth"&&a.mode==="ward");
+   if(ward)return ward;
+  }
   return actions.find(a=>a.kind==="attack")??actions[0];
+ }
  if(session.phase==="parley")
-  return actions.find(a=>a.kind==="fight")??actions[0];
+  return actions.find(a=>a.kind===(policy==="parley"?"parley":"fight"))??
+   actions.find(a=>a.kind==="fight")??actions[0];
  if(session.phase==="corpse")
   return actions.find(a=>a.kind==="leave")??actions[0];
  if(["between-rooms","explore"].includes(session.phase))
@@ -163,6 +169,7 @@ function tactical(session,{samples,depth,decisionSeed}){
 }
 function fight(source,{policy,healthReduction=0,seed,samples,depth}){
  const session=cloneSession(source),s=session.state;
+ if(policy==="parley")session.phase="parley";
  s.rng=randomSource(seed);
  // Controlled starting-HP intervention; the original printed card stays
  // unchanged, including regeneration's normal maximum HP.
@@ -170,24 +177,28 @@ function fight(source,{policy,healthReduction=0,seed,samples,depth}){
  const startHp=totalHp(s),startItems=totalItems(s);
  const startDamage=s.metrics.damage,startBehaviors=sumMap(s.metrics.monsterBehaviorBands);
  const startElbereth=s.metrics.elberethAttempts,startFailures=s.metrics.elberethFailures;
+ const startMonsterDraws=s.metrics.monsterDraws??0;
+ const startParleyWins=s.metrics.negotiationsWon??0;
  let steps=0,heroTurns=0;
  while(fighting(session)&&steps<300){
   const action=policy==="tactical"?
    tactical(session,{samples,depth,decisionSeed:mix(seed^Math.imul(steps+1,0xc2b2ae35))}):
-   choose(session);
+   choose(session,policy);
   if(session.phase==="combat")heroTurns++;
   safeSubmit(session,action);steps++;
  }
  const capped=fighting(session);
  return {
   alive:s.alive(),defeated:!capped&&s.monsterHP<=0,
+  avoided:(s.metrics.negotiationsWon??0)>startParleyWins,
   capped,heroTurns,steps,
   hpLost:startHp-totalHp(s),
   totalDamage:s.metrics.damage-startDamage,
   monsterBehaviors:sumMap(s.metrics.monsterBehaviorBands)-startBehaviors,
   consumedItems:startItems-totalItems(s),
   elbereth:s.metrics.elberethAttempts-startElbereth,
-  elberethFailures:s.metrics.elberethFailures-startFailures
+  elberethFailures:s.metrics.elberethFailures-startFailures,
+  extraMonsterDraws:(s.metrics.monsterDraws??0)-startMonsterDraws
  };
 }
 function aggregate(rows){
@@ -206,6 +217,8 @@ function aggregate(rows){
    meanHeroTurns:mean("heroTurns"),
    meanConsumedItems:mean("consumedItems"),
    meanElberethFailures:mean("elberethFailures"),
+   meanExtraMonsterDraws:mean("extraMonsterDraws"),
+   avoidRate:mean("avoided"),
    capped:rs.filter(r=>r.capped).length};
  });
 }
@@ -222,6 +235,8 @@ export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
  const arms=[
   {arm:"basic",policy:"basic",healthReduction:0},
   {arm:"basic_minus2hp",policy:"basic",healthReduction:2},
+  {arm:"parley_first",policy:"parley",healthReduction:0},
+  {arm:"elbereth_first",policy:"elbereth",healthReduction:0},
   {arm:"tactical",policy:"tactical",healthReduction:0},
   {arm:"tactical_minus2hp",policy:"tactical",healthReduction:2}
  ];
@@ -251,7 +266,8 @@ export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
    "The chosen Room contributes no entry effect or prior attrition",
    "Sampled lookahead is a limited-horizon stochastic combat policy, not alpha-beta or certified optimal play",
    "Paired arms share initial dice streams; actions may consume dice in different order",
-   "No PARLEY or future-Room decisions are included",
+   "PARLEY is tested only as a deliberately chosen initial action; no future-Room decisions are included",
+   "Queued additional Monsters are counted but the pilot ends when the first Monster is defeated",
    "The -2 HP arm starts the printed Monster already damaged; printed data are never edited"
   ]
  };
@@ -267,6 +283,7 @@ export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
    [group.partyType,group.stage,group.arm,
     "win="+(100*group.winRate).toFixed(1)+"%",
     "HP lost="+group.meanHpLost.toFixed(2),
+    "avoided="+(100*group.avoidRate).toFixed(1)+"%",
     "Monster responses="+group.meanMonsterBehaviors.toFixed(2)].join(" | "));
  }
  return {summary,rows};
