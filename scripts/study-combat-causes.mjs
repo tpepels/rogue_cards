@@ -378,15 +378,22 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
  const startHpByHero=s.heroes.map(h=>h.hp);
  // Both experimental rollouts and real test arms must use exactly the
  // same encounter-completion loop, including each queued Monster.
+ const chosenActions={};
+ const recordAction=action=>{
+  if(action.phase==="combat"||action.phase==="parley")
+   chosenActions[action.kind]=(chosenActions[action.kind]||0)+1;
+  return action;
+ };
  const {outcome,steps,heroTurns,poisonSeen,maxPoisoned}=completeEncounter(
-  session,{policy,selectAction:policy==="tactical"?
-   (at,step)=>tactical(at,{
-    samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35))
-   }):["phase2_safe","phase2_elbereth","phase2_parley"].includes(policy)?
-   (at,step)=>phase2Tactical(at,{
-    samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35)),
-    allowElbereth:policy==="phase2_elbereth"
-   }):null});
+  session,{policy,selectAction:(at,step)=>recordAction(
+   policy==="tactical"?
+    tactical(at,{samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35))}):
+    ["phase2_safe","phase2_elbereth","phase2_parley"].includes(policy)?
+    phase2Tactical(at,{
+     samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35)),
+     allowElbereth:policy==="phase2_elbereth"
+    }):choose(at,policy)
+  )});
  // Only a genuinely cleared Room with no queue is a safe completion.
  if(outcome==="cleared"&&
     (s.monster||s.monsterQueue.length||session.pendingNested||
@@ -398,6 +405,10 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
  return {
   alive:s.alive(),resolvedSafely:outcome==="cleared",
   defeated:killed>0,monstersKilled:killed,avoided,banished,
+  attackActions:chosenActions.attack||0,
+  itemActions:chosenActions.item||0,
+  elberethActions:chosenActions.elbereth||0,
+  parleyActions:chosenActions.parley||0,
   capped:false,heroTurns,steps,
   outcome,monstersHandled:1+(s.metrics.battles??0)-startBattles,
   partyHpBefore:startHp,partyHpAfter:totalHp(s),
@@ -435,6 +446,10 @@ function aggregate(rows){
    meanHeroTurns:mean("heroTurns"),
    meanConsumedItems:mean("consumedItems"),
    meanItemsUsed:mean("itemsUsed"),
+   meanAttackActions:mean("attackActions"),
+   meanItemActions:mean("itemActions"),
+   meanElberethActions:mean("elberethActions"),
+   meanParleyActions:mean("parleyActions"),
    meanHeroDeaths:mean("heroDeaths"),
    poisonSeenRate:mean("poisonSeen"),
    meanElberethFailures:mean("elberethFailures"),
