@@ -70,6 +70,62 @@ const candidateStats=(records,phase)=>{
   b.meanClear-a.meanClear||a.candidate.localeCompare(b.candidate));
  return out;
 };
+
+/**
+ * Paired held-out differences, clustered by scenario (not by the two
+ * independent dice continuations, which are averaged within a trial).
+ * This is descriptive bootstrap uncertainty, not an unbiased estimate
+ * of full-expedition superiority.
+ */
+export function pairedValidation(records,challenger,reference){
+ const rows=records.filter(x=>x.phase==="validate");
+ const base=new Map(rows.filter(x=>x.candidate===reference)
+  .map(x=>[x.scenarioId+"|"+x.replicate,x]));
+ const paired=rows.filter(x=>x.candidate===challenger)
+  .flatMap(x=>{
+   const y=base.get(x.scenarioId+"|"+x.replicate);
+   return y?[{scenarioId:x.scenarioId,
+    fitness:x.fitness-y.fitness,clear:x.clear-y.clear,
+    deaths:x.killed-y.killed,searchMs:x.searchMs-y.searchMs}]:[];
+  });
+ if(!paired.length)return null;
+ const means=new Map();
+ for(const r of paired){
+  if(!means.has(r.scenarioId))means.set(r.scenarioId,[]);
+  means.get(r.scenarioId).push(r);
+ }
+ const clusters=[...means.values()],n=clusters.length;
+ const average=x=>x.reduce((a,b)=>a+b,0)/x.length;
+ const mean=(key)=>average(paired.map(x=>x[key]));
+ // Deterministic, candidate-specific cluster bootstrap.
+ let hash=2166136261;
+ for(const x of challenger+"|"+reference)
+  hash=Math.imul(hash^x.charCodeAt(0),16777619)>>>0;
+ const rng=()=>{
+  hash=(Math.imul(1664525,hash)+1013904223)>>>0;
+  return hash/4294967296;
+ };
+ const boot=[];
+ if(n>=2)for(let b=0;b<500;b++){
+  let total=0,count=0;
+  for(let i=0;i<n;i++){
+   const selected=clusters[Math.floor(rng()*n)];
+   for(const row of selected){total+=row.fitness;count++;}
+  }
+  boot.push(total/count);
+ }
+ boot.sort((a,b)=>a-b);
+ return {
+  challenger,reference,matchedTrials:paired.length,matchedScenarios:n,
+  meanFitnessDifference:mean("fitness"),
+  meanClearDifference:mean("clear"),
+  meanHeroDeathDifference:mean("deaths"),
+  meanAdditionalSearchMs:mean("searchMs"),
+  clusterCI95:boot.length?[boot[Math.floor(.025*(boot.length-1))],
+   boot[Math.floor(.975*(boot.length-1))]]:null
+ };
+}
+
 function readOptions(argv){
  const o={};
  const allowed=new Set(["--minutes","--workers","--budget","--samples",
@@ -116,6 +172,17 @@ function buildSummary(config,records,start,end,validationStart,
  const validFront=rankedValidation.filter(r=>
   r.candidate!=="uct-classic");
  const candidateLeader=validFront[0]??null;
+ const allValidationPairs=rankedValidation.map(item=>{
+  const match=chosen?.find(c=>candidateId(c)===item.candidate);
+  const control=chosen?.find(c=>
+   c.c===match?.c&&c.alpha===0&&
+   c.rolloutCombatMode===match?.rolloutCombatMode);
+  return {candidate:item.candidate,
+   vsClassic:item.candidate==="uct-classic"?null:
+    pairedValidation(records,item.candidate,"uct-classic"),
+   vsSameCNoImplicit:control&&item.candidate!==candidateId(control)?
+    pairedValidation(records,item.candidate,candidateId(control)):null};
+ });
  const sufficient=Boolean(candidateLeader&&baselineValidation&&
   candidateLeader.scenarios>=8&&baselineValidation.scenarios>=8&&
   candidateLeader.count>=24&&baselineValidation.count>=24);
@@ -132,6 +199,7 @@ function buildSummary(config,records,start,end,validationStart,
   completedTrials:records.length,
   train:rankedTrain,
   heldOut:rankedValidation,
+  heldOutPairedComparisons:allValidationPairs,
   selectedFinalists:chosen?.map(candidateId)??[],
   provisionalBest:sufficient?candidateLeader:null,
   validationIsSufficient:sufficient,
@@ -218,6 +286,16 @@ async function main(){
   // Include both reference UCT and pure sampled-expectimax at C=0.7
   // so the held-out test isolates the *incremental* value of alpha.
   names.push("uct-classic",candidateId({c:0.7,alpha:0}));
+  // For every finalist with implicit backups, validate an alpha=0
+  // control at the EXACT SAME C. Without this, an apparent implicit
+  // advantage may just be an exploration-constant advantage.
+  for(const name of [...names]){
+   const candidate=byName.get(name);
+   if(!candidate||candidate.alpha===0)continue;
+   const control=candidates.find(c=>c.c===candidate.c&&c.alpha===0&&
+    c.rolloutCombatMode===candidate.rolloutCombatMode);
+   if(control)names.push(candidateId(control));
+  }
   finalists=[...new Set(names)].map(n=>byName.get(n)).filter(Boolean);
   if(finalists.length<2)throw Error("Not enough configurations for validation");
   log("Held-out finalists: "+finalists.map(candidateId).join(", "));
