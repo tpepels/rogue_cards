@@ -9,6 +9,7 @@ on:
       - 'scripts/study-combat-phase2c.mjs'
       - 'src/combat-rollout-expectimax.js'
       - 'src/mcts-implicit.js'
+      - 'src/mcts-hybrid-defaults.js'
       - 'src/session-mcts.js'
       - 'src/session-policy.js'
       - 'tests/combat-causes-diagnostic.test.mjs'
