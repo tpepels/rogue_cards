@@ -29,6 +29,7 @@ const arms=[
 export function runHybridAblation({
  monsterIds=["crawler","wisp"],budget=8,samples=1,seed=20261017,
  maxSteps=5000,c=HYBRID_UCT_C,alpha=HYBRID_IMPLICIT_ALPHA,
+ tacticalMax=2,
  out="results/mcts-combat-hybrids-"+seed,write=true
 }={}){
  if(!Number.isInteger(budget)||budget<1||budget>1000||
@@ -36,7 +37,8 @@ export function runHybridAblation({
   !Number.isInteger(seed)||seed<1||
   !Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000||
   !Number.isFinite(c)||c<0||c>10||
-  !Number.isFinite(alpha)||alpha<0||alpha>1)
+  !Number.isFinite(alpha)||alpha<0||alpha>1||
+  !Number.isInteger(tacticalMax)||tacticalMax<1||tacticalMax>64)
   throw Error("Invalid MCTS ablation configuration");
  const rows=[];
  for(const monsterId of monsterIds){
@@ -52,12 +54,14 @@ export function runHybridAblation({
     strictTerminal:true,collectCoverage:false,
     rolloutCombatMode:arm.rolloutCombatMode,
     rolloutCombatSamples:samples,implicitWeight:effectiveAlpha,
+    rolloutCombatMaxDecisions:tacticalMax,
     exploration:effectiveC
    });
    const elapsedMs=performance.now()-start;
    rows.push({
     monsterId,arm:arm.name,budget,samples,elapsedMs,
     exploration:effectiveC,implicitWeight:effectiveAlpha,
+    tacticalMax,
     completed:result.completed,incomplete:result.incomplete,
     terminalWins:result.terminalWins,
     recommended:result.recommended?mctsActionKey(result.recommended):null,
@@ -73,10 +77,12 @@ export function runHybridAblation({
   }
  }
  const report={schema:"mcts-combat-hybrid-ablation-v1",
-  design:{monsterIds,budget,samples,seed,maxSteps,c,alpha,knowledge:"fair",
+  design:{monsterIds,budget,samples,seed,maxSteps,c,alpha,tacticalMax,
+   knowledge:"fair",
    treeMode:"frontier",strictTerminal:true},
   caveats:[
    "The low-C UCT control isolates the exploration coefficient before testing expectimax and implicit backups",
+   "rolloutCombatSearches is capped per full MCTS trial, not per Monster encounter; a cap of 8 was exhausted on every trial in the original 16-rollout pilot",
    "Equal rollout counts are NOT equal CPU budgets",
    "No difference in terminal win counts does not prove decision equivalence",
    "Implicit values remain separate from terminal win counts",
@@ -92,7 +98,7 @@ export function runHybridAblation({
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=process.argv.slice(2),options={};
- const allowed=new Set(["--monsters","--budget","--samples","--seed","--max-steps","--c","--alpha","--out"]);
+ const allowed=new Set(["--monsters","--budget","--samples","--seed","--max-steps","--c","--alpha","--tactical-max","--out"]);
  for(let i=0;i<args.length;i+=2){
   if(!allowed.has(args[i])||!args[i+1]||Object.hasOwn(options,args[i]))
    throw Error("Unknown or missing MCTS ablation argument "+args[i]);
@@ -106,6 +112,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   maxSteps:Number(options["--max-steps"]??5000),
   c:Number(options["--c"]??HYBRID_UCT_C),
   alpha:Number(options["--alpha"]??HYBRID_IMPLICIT_ALPHA),
+  tacticalMax:Number(options["--tactical-max"]??2),
   out:options["--out"]??"results/mcts-combat-hybrids-"+(options["--seed"]??20261017)
  });
 }
