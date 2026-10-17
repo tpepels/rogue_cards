@@ -89,7 +89,10 @@
     "study:diagnose:phase2:smoke": "node scripts/study-combat-causes.mjs --mode phase2 --trials 1 --samples 1 --monsters crawler --out results/combat-phase2-smoke",
     "test:phase2b": "node --test tests/combat-phase2b.test.mjs",
     "study:diagnose:phase2b": "node scripts/study-combat-phase2b.mjs",
-    "study:diagnose:phase2b:smoke": "node scripts/study-combat-phase2b.mjs --scenarios 6 --samples 1 --followup 1 --out results/combat-phase2b-smoke"
+    "study:diagnose:phase2b:smoke": "node scripts/study-combat-phase2b.mjs --scenarios 6 --samples 1 --followup 1 --out results/combat-phase2b-smoke",
+    "test:phase2c": "node --test tests/combat-phase2c.test.mjs",
+    "study:diagnose:phase2c": "node scripts/study-combat-phase2c.mjs",
+    "study:diagnose:phase2c:smoke": "node scripts/study-combat-phase2c.mjs --scenarios 6 --repetitions 2 --samples 2 --followup 1 --out results/combat-phase2c-smoke"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
