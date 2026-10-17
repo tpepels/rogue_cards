@@ -124,10 +124,16 @@ const fighting=session=>{
 };
 function advance(session,rootAction=null,{heroHorizon=Infinity,stepLimit=240}={}){
  let heroActions=0,steps=0;
- while(fighting(session)&&heroActions<heroHorizon&&steps<stepLimit){
+ // A canonical Hero action can suspend at a printed Item/ability reaction.
+ // Evaluate only after its pending reactions AND Monster response finish.
+ // Otherwise HP losses are systematically omitted from the lookahead.
+ const mustSettle=()=>Boolean(session.pendingNested)||
+  session.phase==="monster-response"||session.phase==="corpse";
+ while(fighting(session)&&steps<stepLimit&&
+   (heroActions<heroHorizon||mustSettle())){
   const action=rootAction??choose(session);
   rootAction=null;
-  if(session.phase==="combat")heroActions++;
+  if(session.phase==="combat"&&!session.pendingNested)heroActions++;
   safeSubmit(session,action);
   steps++;
  }
@@ -142,7 +148,12 @@ function value(session,startingHp,startingItems){
   missingMonsterHp*0.85+(kill?12:0)-(alive?0:18)-
   s.heroes.filter(h=>h.hp>0&&h.poison).length*2;
 }
-function tactical(session,{samples,depth,decisionSeed}){
+export function tactical(session,{samples,depth,decisionSeed}){
+ // session.phase remains 'combat' while a canonical attack or Monster
+ // response is suspended at a nested player reaction. NEVER change RNG
+ // or fork a new search from that unfinished action: its dice prefix
+ // must replay identically when the reaction is submitted.
+ if(session.pendingNested)return choose(session);
  const actions=sessionActions(session);
  if(session.phase!=="combat"||actions.length===1)return choose(session);
  // Limit branching, but never remove the regular attack. Item options are
