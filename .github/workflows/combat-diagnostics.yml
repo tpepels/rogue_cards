@@ -10,6 +10,8 @@ on:
       - 'scripts/bench-mcts-combat-hybrids.mjs'
       - 'scripts/tune-mcts-hybrid.mjs'
       - 'scripts/tune-mcts-hybrid-core.mjs'
+      - 'scripts/audit-implicit-heuristic.mjs'
+      - 'scripts/study-mcts-factorial.mjs'
       - 'src/combat-rollout-expectimax.js'
       - 'src/mcts-implicit.js'
       - 'src/mcts-hybrid-defaults.js'
@@ -20,6 +22,7 @@ on:
       - 'tests/combat-phase2c.test.mjs'
       - 'tests/mcts-combat-hybrids.test.mjs'
       - 'tests/mcts-implicit-tuner.test.mjs'
+      - 'tests/mcts-heuristic-factorial.test.mjs'
       - 'src/engine/**'
       - 'src/monster-expansion.js'
       - 'src/tabletop-data.js'
@@ -55,6 +58,8 @@ jobs:
         run: npm run test:mcts-combat-hybrids
       - name: Verify reproducible C-alpha tuner and independent fitness
         run: npm run test:mcts-implicit-tuner
+      - name: Verify independent heuristic and expectimax factorial experiments
+        run: npm run test:mcts-heuristic-factorial
       - name: Compare Phase 2 policies on matched encounters
         run: npm run study:diagnose:phase2 -- --trials 2 --samples 2 --monsters crawler,wisp,troll,sentinel --out results/phase2-ci-pilot
       - name: Compare Phase 2b policies on 48 realistic combat states
