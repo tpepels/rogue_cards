@@ -210,3 +210,57 @@ New tactical results are not deployed in production MCTS. A neutral or
 negative 48-state result means test and revise the search, not weaken
 printed Monster cards. These are deliberately constructed encounter starts
 and do not estimate natural expedition win probabilities.
+
+
+## Experimental UCT hybrid: sampled combat expectimax and implicit backups
+
+The **production default remains unchanged**: random frontier rollouts,
+ordinary UCT selection and binary terminal rewards. Two separately
+switchable research extensions now exist:
+
+1. `rolloutCombatMode: "sampled-expectimax"` uses depth **two actual Hero
+   combat decisions** (choosing a Hero does not consume a ply), true
+   stochastic forward samples, and canonical resolution of pending nested
+   reactions/Monster responses to a legal combat decision boundary.
+   It is applied only after a frontier edge has expanded, never during
+   the outer UCT tree phase. The default remains `"random"`.
+2. `implicitWeight: 0.25` enables a **separate** backed-up heuristic
+   channel for UCT exploitation. Ordinary `wins/visits` and terminal
+   win-rate reporting remain untouched. In this single-agent cooperative
+   stochastic game the backup takes the maximum across Hero-action
+   successor estimates and averages outcomes over sampled chance.
+   This is an *implicit MAX/expectation adaptation*, not a claim of
+   a literal adversarial minimax agent.
+
+The implicit heuristic is intentionally simple and provisional:
+surviving Heroes, normalized HP, public cleared-Room progress and poison.
+Only the implicit selection channel uses it. The blending weight is an
+explicit opt-in experimental parameter, not a quality-based/reward bonus.
+
+Both extensions are exposed in `searchDecision()` and
+`selectSessionPolicyAction()`, but neither is the default. The
+sampled-combat rollout mode requires `treeMode: "frontier"` so its
+activation boundary cannot silently be mistaken for a full-tree search.
+Search cost is bounded with `rolloutCombatSamples` (1-6) and
+`rolloutCombatMaxDecisions` (1-64) per MCTS trial.
+
+Run focused regression tests:
+
+    npm run test:mcts-combat-hybrids
+
+Run the three-way ablation (exact canonical search, not changed printed
+rules) and inspect the elapsed time, chosen root action, terminal wins,
+and number of local expectimax searches:
+
+    npm run bench:mcts-combat-hybrids -- --budget 2 --samples 1 --monsters crawler,wisp --out results/hybrid-ablation-a
+
+Modes: `uct`, `uct-expectimax`, `uct-expectimax-implicit`.
+Equal **rollout** budgets are not equal **CPU** budgets; compare
+wall-clock time before deciding whether the extensions are useful.
+Terminal wins can remain at zero even if the implicit channel separates
+explored local branches, so do not present heuristic values as win rates.
+
+No QB/RB quality-based reward modulation, printed card or rule changes.
+Further testing should hold elapsed computational cost approximately
+constant and measure full-expedition outcomes separately from local
+combat outcome scores.
