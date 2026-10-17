@@ -42,7 +42,7 @@ on:
 jobs:
   combat-diagnostics:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,6 +60,10 @@ jobs:
         run: npm run test:mcts-implicit-tuner
       - name: Verify independent heuristic and expectimax factorial experiments
         run: npm run test:mcts-heuristic-factorial
+      - name: Smoke audit implicit Hero ranking across Monsters
+        run: npm run audit:mcts-implicit-heuristic -- --repetitions 2 --eval-seeds 4 --out results/implicit-audit-ci
+      - name: Smoke factorial sampled expectimax versus implicit UCT
+        run: npm run study:mcts-factorial -- --mode equal-visits --workers 2 --minutes 3 --seed 20261023 --scenarios 8 --repetitions 1 --budget 8 --c 0.35 --alpha 0.4 --out results/mcts-factorial-ci
       - name: Compare Phase 2 policies on matched encounters
         run: npm run study:diagnose:phase2 -- --trials 2 --samples 2 --monsters crawler,wisp,troll,sentinel --out results/phase2-ci-pilot
       - name: Compare Phase 2b policies on 48 realistic combat states
@@ -75,4 +79,6 @@ jobs:
             results/phase2-ci-pilot/
             results/phase2b-ci-full/
             results/phase2c-ci-smoke/
+            results/implicit-audit-ci/
+            results/mcts-factorial-ci/
           if-no-files-found: ignore
