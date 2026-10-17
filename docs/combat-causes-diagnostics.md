@@ -335,3 +335,62 @@ Concentrating eight calls in each early encounter of a sampled
 expedition can exhaust the budget before later fights. Further
 experiments should schedule the lookahead by decision value and
 compare at matched CPU time, not merely matched rollout count.
+
+
+## Two-hour, 8-worker calibration: C and implicit alpha
+
+The previous implementation had a weak implicit heuristic: it tracked
+HP and expedition progress but did not distinguish an untouched Monster
+from a Monster at one remaining HP. The heuristic now includes public
+Monster HP progress, remaining Monster queue, Item retention and Hero
+survival. The original terminal-win statistic remains separate.
+
+**The optimizer measures independent canonical encounter outcomes**,
+not the MCTS rollout wins from the search that selected each action.
+It is an empirical test of the local hybrid combat-root policy.
+Implicit backups are not guaranteed to improve results across all
+games; the success criterion is measured out-of-search improvement.
+
+Use a unique directory for the first run:
+
+    cd ~/Projects/rogue_cards
+    git pull --ff-only
+    npm run test:mcts-implicit-tuner
+    npm run tune:mcts-implicit -- --minutes 120 --workers 8 --budget 32 --samples 2 --tactical-max 2 --validate-minutes 15 --out results/hybrid-tune-20261017
+
+The same command with the same output directory may be run again to
+resume incomplete tuning work; a manifest prevents incompatible
+configuration changes. The default 120-minute wall-clock limit applies
+to each invocation, and the script stops/terminates active workers at
+the deadline. A short SIGINT also writes the current summary.
+
+Optimization considers 16 (C,alpha) combinations: C in
+{0.35,0.55,0.7,1.0}, alpha in {0,0.1,0.25,0.4}, plus a classic
+UCT reference (sqrt(2), alpha=0, random rollouts). The sampled
+expectimax mode and capped lookahead are otherwise held fixed.
+Training uses 36 constructed encounter fixtures, with a 12-fixture
+held-out set never consulted for selecting finalists. A progressive
+schedule eliminates unpromising candidates and spends extra trials
+on the survivors. Training-state seeds and independently evaluated
+continuation dice are matched across candidates.
+
+Each root action is selected by full canonical fair-information
+MCTS, then scored on two **new, unobserved** canonical encounter
+continuations, with survival preferred over Hero losses, HP loss
+and Item consumption. Thus implicit alpha is assessed by how well
+it changes root actions, NOT by reusing its own value predictions.
+The selected constants are provisional: only held-out results and
+the observed compute cost justify a recommendation.
+
+Files in the chosen output directory:
+
+- `manifest.json`: fixed parameters for safe restart
+- `trials.ndjson`: append-only completed trials, one row per trial
+- `summary.json`: training and held-out leaderboards, CPU costs
+  and a provisional best configuration when enough held-out data exist
+
+**Scope:** these are controlled Monster encounter starts and
+out-of-search encounter continuations, not 36-Room full expedition
+win-rate measurements. The tuner never changes `mcts-hybrid-defaults.js`
+automatically. Test the held-out winner in full expeditions before
+promoting it to a production default.
