@@ -407,3 +407,72 @@ The optimizer includes the no-implicit (alpha=0) counterpart at the
 comparison resamples scenario IDs (cluster bootstrap), not arbitrary
 rows. An inconclusive interval must not be advertised as an implicit
 minimax speed or strength improvement.
+
+## Auditing the implicit heuristic and sampled expectimax independently
+
+**Two distinct evaluators** are active, NOT one learned function.
+
+Implicit MAX/expectation selection uses `src/mcts-implicit.js` and,
+before clipping to [0,1], adds these publicly observed components:
+- +0.30 times the fraction of Heroes alive
+- +0.28 times the average normalized HP fraction
+- +0.22 times completed Rooms divided by three times roomGoal
+- +0.13 times fraction of Monster HP removed (or +0.13 with none)
+- +0.07 times owned Items / (3 × number of Heroes), capped at one
+- -0.05 times the fraction of living poisoned Heroes
+- -0.07 times remaining active Monster HP fraction, and -0.025
+  per queued Monster (up to three), while an active Monster exists
+- A small acting-Hero term based on hit chances versus printed AC
+  and the Hero's relative HP, only when a Hero has been selected
+
+This is NOT a calibrated probability of winning an expedition.
+Terminating games score 0/1. MCTS stores implicit sums separately
+from the terminal wins, blends edge means during UCT selection with
+alpha, and still recommends the most-visited root child.
+
+The separate two-ply expectimax leaf function is in
+`src/combat-rollout-expectimax.js`: +400 for clearing an encounter,
+-340 per dead Hero, -65 times remaining active Monster HP fraction,
+-80 per queued Monster, plus smaller Hero HP/poison/Item terms.
+The very large clear bonus may bias toward escaping/banishing rather
+than Monster rewards. This is a hypothesis to investigate, not proven.
+
+`implicitHeuristicBreakdown(session)` exposes the exact raw terms,
+final value, public variables and terminal status for audit.
+
+### Test 1: does the implicit score rank Hero choices correctly?
+
+    npm run audit:mcts-implicit-heuristic -- --repetitions 4 --eval-seeds 8 --out results/implicit-audit-a
+
+Test eight Monsters x three two-Hero profiles, with independent
+matched-seed canonical fight continuations for EACH actor choice.
+See `summary.json` (ranking accuracy and regret), `states.json`
+(per-term and per-Hero values) and `pair-comparisons.json`.
+Parley-start fixtures explicitly use the legal Fight option first.
+This is an actor-selection diagnosis, not proof of quality for all
+Item, Parley, Vault or multi-Room decisions.
+
+### Test 2: factorial ablation of expectimax versus implicit
+
+Keep C fixed at 0.35 and alpha either 0 or 0.40. Compare:
+UCT alone, UCT + implicit, expectimax samples/max tactical calls
+(1/1, 2/2, 4/2, 2/4) without implicit, and these same settings
+WITH implicit. All 10 arms are run on matched scenario starts.
+
+Equal MCTS visit counts, NOT equal CPU:
+
+    npm run study:mcts-factorial -- --mode equal-visits --workers 8 --minutes 45 --seed 20261023 --scenarios 48 --repetitions 4 --budget 32 --c 0.35 --alpha 0.4 --out results/mcts-factorial-visits-a
+
+Pilot-calibrated, APPROXIMATELY equal CPU per root decision:
+
+    npm run study:mcts-factorial -- --mode calibrated --workers 8 --minutes 45 --seed 20261024 --scenarios 48 --repetitions 4 --target-ms 1500 --max-budget 128 --c 0.35 --alpha 0.4 --out results/mcts-factorial-compute-a
+
+`--mode calibrated` estimates per-arm MCTS budgets from independent
+pilots, but the budgets are fixed thereafter: compare actual elapsed
+search time, not just planned time. Both studies keep resumable
+`manifest.json`, `trials.ndjson` and `summary.json` outputs, and
+independently evaluate the FIRST MCTS root action via canonical
+full-encounter continuations with fixed downstream basic choices.
+The score is NOT an actual full-expedition MCTS win rate.
+Paired differences, matched sample counts, and scenario-cluster
+bootstrap intervals are reported for every relevant comparison.
