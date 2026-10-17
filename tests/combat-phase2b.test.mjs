@@ -16,6 +16,8 @@ test("Phase 2b constructs 48 distinctive wounded canonical positions",()=>{
  assert.ok(all.some(s=>s.poisoned.length>0));
  assert.ok(all.some(s=>s.dis.length>0));
  assert.ok(all.some(s=>s.phase==="parley"));
+ assert.ok(all.filter(s=>s.monsterId==="sentinel")
+  .every(s=>s.phase==="combat-hero"),"Sentinel cannot start in Parley");
  for(const entry of all){
   const st=entry.session.state;
   assert.ok(sessionActions(entry.session).length>0,entry.id);
