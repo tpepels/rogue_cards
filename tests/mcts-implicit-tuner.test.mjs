@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import {tuningCandidates,parseTuningOptions,pairedValidation}
  from "../scripts/tune-mcts-hybrid.mjs";
 import {evaluateHybridJob} from "../scripts/tune-mcts-hybrid-core.mjs";
-import {makeScenario} from "../scripts/study-combat-phase2b.mjs";
+import {makeScenario,identitySeed} from "../scripts/study-combat-phase2b.mjs";
 import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
 import {implicitExpeditionHeuristic}
  from "../src/mcts-implicit.js";
@@ -164,4 +164,44 @@ test("Implicit Hero-selection successor values actually distinguish actors",()=>
  assert.equal(b.phase,"combat");
  assert.notEqual(implicitExpeditionHeuristic(a),implicitExpeditionHeuristic(b),
   "Selecting two differently injured Heroes must have a distinct implicit estimate");
+});
+
+test("All tuning seeds construct physically valid fixtures even when unique Items were dealt at setup",{
+ timeout:60000
+},()=>{
+ const all=["crawler","troll","wisp","mold","wax-golem",
+  "sentinel","bone-cantor","glass-revenant"];
+ const profiles=["wounded-warrior","injured-knight","poisoned-witch",
+  "asymmetric-frontline","weakened-mages","exhausted-support"];
+ let fixtures=0,seenSpecial=0;
+ for(const phase of ["train","validate"]){
+  for(let replicate=0;replicate<12;replicate++){
+   for(const monster of all)for(const profile of profiles){
+    const scenarioId=monster+"__"+profile;
+    const stateSeed=identitySeed(20261017,
+     phase+"|state|"+scenarioId+"|"+replicate);
+    const s=makeScenario(monster,profile,{seed:stateSeed}).session.state;
+    const allCopies=[...s.deck,...s.heroes.flatMap(h=>h.inventory)];
+    const identities=allCopies.map(card=>card._physicalCopy);
+    assert.ok(identities.every(Boolean),"Missing physical card copy "+scenarioId);
+    assert.equal(new Set(identities).size,identities.length,
+     "Duplicate physical card in "+scenarioId);
+    for(const hero of s.heroes){
+     for(const [slot,card] of Object.entries(hero.slots))
+      assert.ok(hero.inventory.includes(card),scenarioId+" "+slot+
+       " points to someone else's Item");
+    }
+    if(profile==="weakened-mages"){
+     const moths=s.heroes.flatMap(h=>h.inventory.filter(x=>x.id==="moth"));
+     assert.equal(moths.length,1,"Moth must be one physical card "+scenarioId);
+     assert.ok(s.heroes[1].inventory.includes(moths[0]),
+      "Monk did not receive the printed Moth "+scenarioId);
+     seenSpecial++;
+    }
+    fixtures++;
+   }
+  }
+ }
+ assert.equal(fixtures,1152);
+ assert.equal(seenSpecial,192);
 });
