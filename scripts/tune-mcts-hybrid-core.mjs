@@ -58,7 +58,7 @@ export function evaluateHybridJob({
   treeMode:"frontier",strictTerminal:true,maxSteps:5000,
   collectCoverage:false,exploration:candidate.c,
   implicitWeight:candidate.alpha,
-  rolloutCombatMode:"sampled-expectimax",
+  rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   rolloutCombatSamples:samples,
   rolloutCombatMaxDecisions:tacticalMax
  });
@@ -102,6 +102,7 @@ export function evaluateHybridJob({
  const mean=k=>outcomes.reduce((n,x)=>n+x[k],0)/outcomes.length;
  return {
   candidate:candidateId(candidate),c:candidate.c,alpha:candidate.alpha,
+  rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   scenarioId,replicate,phase,seed,budget,samples,tacticalMax,
   action:mctsActionKey(recommended),
   searchMs,evalMs,rolloutCombatSearches:result.rolloutCombatSearches||0,
