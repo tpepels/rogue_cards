@@ -216,3 +216,21 @@ test("Phase 2 Parley search only returns canonical legal actions",{
  assert.ok(legal.some(a=>JSON.stringify(a)===JSON.stringify(chosen)));
  assert.equal(session.state.rng.snapshot(),rng);
 });
+
+test("Phase 2 compares acting Heroes in a duo without changing live dice",{
+ timeout:30000
+},()=>{
+ const sentinel=MONSTERS.find(m=>m.id==="sentinel");
+ const session=makeEncounter(sentinel,["warrior","knight"],951);
+ const actions=sessionActions(session);
+ assert.equal(actions.length,2);
+ assert.ok(actions.every(a=>a.kind==="choose-hero-turn"));
+ const before=session.state.rng.snapshot();
+ const chosen=phase2Tactical(session,{
+  samples:2,followupSamples:2,decisionSeed:20261025
+ });
+ assert.ok(actions.some(a=>JSON.stringify(a)===JSON.stringify(chosen)));
+ assert.equal(session.state.rng.snapshot(),before);
+ assert.equal(session.phase,"combat-hero");
+ assert.equal(session.pendingNested??null,null);
+});
