@@ -94,7 +94,9 @@
     "study:diagnose:phase2c": "node scripts/study-combat-phase2c.mjs",
     "study:diagnose:phase2c:smoke": "node scripts/study-combat-phase2c.mjs --scenarios 6 --repetitions 2 --samples 2 --followup 1 --out results/combat-phase2c-smoke",
     "test:mcts-combat-hybrids": "node --test tests/mcts-combat-hybrids.test.mjs",
-    "bench:mcts-combat-hybrids": "node scripts/bench-mcts-combat-hybrids.mjs"
+    "bench:mcts-combat-hybrids": "node scripts/bench-mcts-combat-hybrids.mjs",
+    "test:mcts-implicit-tuner": "node --test tests/mcts-implicit-tuner.test.mjs",
+    "tune:mcts-implicit": "node scripts/tune-mcts-hybrid.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
