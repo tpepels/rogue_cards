@@ -312,3 +312,26 @@ effect; use a larger budget for exploration comparisons. Equal visit
 counts are not equal CPU-time budgets with nested expectimax, so
 evaluate both wall time and strength before treating these defaults
 as calibrated.
+
+
+### Interpreting the initial 16-rollout hybrid benchmark
+
+The first benchmark on Crawler and Wisp had exactly 128 sampled
+lookaheads in every 16-rollout hybrid arm: the default budget of eight
+tactical searches PER MCTS trial was saturated on all 16 trials.
+Expectimax took about 3-4 times the CPU time of regular UCT, while
+the in-search terminal-win counts were 0/16 rather than 1/16 or 2/16.
+Those terminal-win counts are not out-of-sample playing strength.
+
+The benchmark now exposes `--tactical-max` (default 2 for this
+diagnostic script only, canonical engine default still 8). Compare
+e.g. `--tactical-max 2`, `--tactical-max 4`, `--tactical-max 8`
+using unique `--out` paths. Each row records the cap used and
+the actual number of tactical lookahead calls.
+
+Do not increase sample counts or tune alpha/C aggressively until
+the marginal performance of these tactical calls has been evaluated.
+Concentrating eight calls in each early encounter of a sampled
+expedition can exhaust the budget before later fights. Further
+experiments should schedule the lookahead by decision value and
+compare at matched CPU time, not merely matched rollout count.
