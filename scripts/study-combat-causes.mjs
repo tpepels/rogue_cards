@@ -6,7 +6,7 @@
  * Monster cards, real Hero starters, real rolls and real reaction windows.
  * NOT a prediction of full-expedition win rates or natural encounter rates.
  *
- * Run: node scripts/study-combat-causes.mjs --trials 8 --samples 4 --depth 2
+ * Run: node scripts/study-combat-causes.mjs --trials 4 --samples 3 --depth 2
  * Results: results/combat-causes-<seed>/summary.json and fights.csv
  */
 import {mkdirSync,existsSync,writeFileSync} from "node:fs";
@@ -35,8 +35,10 @@ const mix=n=>{
  return (n^(n>>>16))>>>0;
 };
 const stages=["UPPER","MIDDLE","DEEP"];
-const monsters=[...MONSTERS,...EXTRA_MONSTERS].filter(m=>stages.includes(m.stage));
-const starterParties=[["warrior"],["knight"],["warrior","knight"],["wizard","monk"]];
+const allMonsters=[...MONSTERS,...EXTRA_MONSTERS].filter(m=>stages.includes(m.stage));
+const priorityIds=new Set(["crawler","troll","wisp","mold","wax-golem","sentinel","bone-cantor","glass-revenant"]);
+const monsters=allMonsters.filter(m=>priorityIds.has(m.id));
+const starterParties=[["warrior"],["warrior","knight"]];
 const totalHp=s=>s.heroes.reduce((n,h)=>n+Math.max(0,h.hp),0);
 const totalItems=s=>s.heroes.reduce((n,h)=>n+h.inventory.length,0);
 const count=(record,field)=>record?.[field]??0;
@@ -214,7 +216,7 @@ function csv(rows){
   return /[",\n]/.test(val)?'"'+val.replaceAll('"','""')+'"':val;
  }).join(",")).join("\n")+"\n";
 }
-export function runDiagnostic({trials=8,samples=4,depth=2,seed=20261017,
+export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
  out="results/combat-causes-"+seed,quiet=false}={}){
  const rows=[];
  const arms=[
@@ -275,8 +277,8 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   if(!allowed.has(args[i])||!args[i+1]||args[i+1].startsWith("--"))
    throw Error("Invalid CLI argument "+(args[i]??""));
  const seed=option("seed",20261017,1,0xffffffff);
- const trial=option("trials",8,1,100);
- const samples=option("samples",4,1,32);
+ const trial=option("trials",4,1,100);
+ const samples=option("samples",3,1,32);
  const depth=option("depth",2,1,6);
  const outIndex=args.indexOf("--out");
  runDiagnostic({seed,trials:trial,samples,depth,
