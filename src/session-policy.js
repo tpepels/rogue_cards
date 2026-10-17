@@ -15,6 +15,7 @@
  */
 import {sessionActions} from "./engine/decision-session.js";
 import {searchDecision} from "./session-mcts.js";
+import {resolveSearchProfile} from "./mcts-hybrid-defaults.js";
 
 export const MAX_CONSECUTIVE_EQUIPMENT_ACTIONS=12;
 const equipmentKinds=new Set(["equip","unequip","transfer"]);
@@ -37,8 +38,8 @@ export function selectSessionPolicyAction(session,policy,{
  budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
  legalActions=null,searchProfile="classic",deepMinBudget=16,
  deepVisitsPerAction=4,treeMode=null,mctsOptimizations=null,onSearchProfile=null,
- rolloutCombatMode="random",rolloutCombatSamples=2,
- rolloutCombatMaxDecisions=8,implicitWeight=0
+ rolloutCombatMode=null,rolloutCombatSamples=2,
+ rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -64,8 +65,9 @@ export function selectSessionPolicyAction(session,policy,{
   throw Error("onSearchProfile must be a function");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
- if(!["classic","deep-uct"].includes(searchProfile))
-  throw Error("Unknown searchProfile "+searchProfile);
+ const parameters=resolveSearchProfile({
+  searchProfile,rolloutCombatMode,implicitWeight,exploration
+ });
  if(!Number.isInteger(deepMinBudget)||deepMinBudget<2||
     deepMinBudget>100000||!Number.isInteger(deepVisitsPerAction)||
     deepVisitsPerAction<1||deepVisitsPerAction>1000)
@@ -84,28 +86,27 @@ export function selectSessionPolicyAction(session,policy,{
   policy.consecutiveEquipment=0;
   return progress;
  }
- if(!["random","sampled-expectimax"].includes(rolloutCombatMode)||
-  !Number.isInteger(rolloutCombatSamples)||rolloutCombatSamples<1||
+ if(!Number.isInteger(rolloutCombatSamples)||rolloutCombatSamples<1||
   rolloutCombatSamples>6||
   !Number.isInteger(rolloutCombatMaxDecisions)||
-  rolloutCombatMaxDecisions<1||rolloutCombatMaxDecisions>64||
-  !Number.isFinite(implicitWeight)||implicitWeight<0||implicitWeight>1)
-  throw Error("Invalid opt-in MCTS rollout/implicit backup parameters");
+  rolloutCombatMaxDecisions<1||rolloutCombatMaxDecisions>64)
+  throw Error("Invalid opt-in MCTS rollout sample parameters");
  // For any decision that can affect play, search the complete legal
  // action list, with the same budget and chance seed as before.
  // Experimental deeper UCT is a DIFFERENT policy, never the implicit
  // default for existing statistical/checkpointed Oracle studies.
- const searchBudget=searchProfile==="deep-uct"?
+ const searchBudget=["deep-uct","combat-hybrid"].includes(searchProfile)?
   Math.max(budget,deepMinBudget,legal.length*deepVisitsPerAction):
   Math.max(budget,legal.length);
  const found=legal.length===1?null:searchDecision(session,{
   budget:searchBudget,seed,
   maxSteps:maxSearchSteps,knowledge,strictTerminal:true,observedReplay,
   rootActions:legal,collectCoverage:false,
-  treeMode:treeMode??(searchProfile==="deep-uct"||
-   rolloutCombatMode!=="random"?"frontier":"full"),
-  rolloutCombatMode,rolloutCombatSamples,
-  rolloutCombatMaxDecisions,implicitWeight,
+  treeMode:treeMode??(searchProfile!=="classic"||
+   parameters.rolloutCombatMode!=="random"?"frontier":"full"),
+  rolloutCombatMode:parameters.rolloutCombatMode,rolloutCombatSamples,
+  rolloutCombatMaxDecisions,implicitWeight:parameters.implicitWeight,
+  exploration:parameters.exploration,
   ...(mctsOptimizations??{})
  });
  if(onSearchProfile&&found?.transitionProfile)
