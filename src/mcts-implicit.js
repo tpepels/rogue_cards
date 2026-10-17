@@ -23,9 +23,23 @@ export function implicitExpeditionHeuristic(session){
  const goal=Math.max(1,3*Number(s.roomGoal||3));
  const progress=Math.max(0,Math.min(1,cleared/goal));
  const statusPenalty=living.filter(h=>h.poison).length/s.heroes.length;
+ // A combat-specific signal matters in *implicit* backups: the previous
+ // heuristic assigned nearly the same value to a healthy Monster and
+ // one at 1 HP. That deprived alpha of any useful tactical gradient.
+ // Monster information is public after the encounter begins. We never
+ // peek at unknown cards or future dice.
+ const active=s.monster;
+ const monsterProgress=active?
+  1-Math.max(0,s.monsterHP)/Math.max(1,active.hp):1;
+ const queued=Math.min(3,s.monsterQueue.length);
+ const activeThreat=active?0.07*(1-monsterProgress)+0.025*queued:0;
+ const itemResources=Math.min(1,
+  s.heroes.reduce((n,h)=>n+h.inventory.length,0)/(3*s.heroes.length));
+ // Normalize into the same [0,1] support as terminal 0/1 returns.
  return Math.max(0,Math.min(1,
-  0.40*livingRate+0.40*hpRate+0.20*progress-
-  0.05*statusPenalty));
+  0.30*livingRate+0.28*hpRate+0.22*progress+
+  0.13*monsterProgress+0.07*itemResources-
+  0.05*statusPenalty-activeThreat));
 }
 export function implicitSelectedMean(edge){
  return edge.implicitVisits?edge.implicitSum/edge.implicitVisits:0.5;
