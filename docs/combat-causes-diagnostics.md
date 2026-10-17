@@ -163,3 +163,50 @@ directly pair pre-fix v1 results with new v2 subsets.
 
 These states are plausible constructed experiments, not actual reached
 expedition snapshots. Production MCTS, printed cards and rules are unchanged.
+
+
+## Phase 2c - risk-aware Hero and Item choices with repeated independent dice
+
+Run:
+
+    npm run test:phase2c
+    npm run study:diagnose:phase2c -- --scenarios 48 --repetitions 4 --samples 4 --followup 2 --out results/combat-phase2c-local
+
+For a quick smoke run:
+
+    npm run study:diagnose:phase2c:smoke
+
+Phase 2c evaluates the same 48 constructed, wounded Hero-and-Item fixtures
+from Phase 2b. Each fixture is repeated with independently hashed combat
+RNG starts; the four policy arms share the exact same combat seed within
+each fixture and replicate. Changing Monster filters or iteration order
+does not change a fixture's starting deck or combat RNG.
+
+Policies: attack_only, phase2c_safe, phase2c_elbereth and phase2c_parley.
+Parley is a starting choice only when the canonical decision session offers
+it; unsupported Monster/parley combinations revert to combat-hero.
+
+The search uses legal actions, first-stage chance samples, the next Hero
+decision, and full canonical encounter continuations. It compares candidate
+utilities after rewarding party survival and penalising a dead individual
+Hero, HP lost, consumables, persistent poison and severe post-fight injury.
+An action must beat the baseline by a meaningful margin plus sampling
+uncertainty. Higher measured wipe or individual-Hero-death probability
+blocks speculative HP gains, as does most large lower-tail deterioration.
+Elbereth is opt-in and evaluated separately. This is a deliberately
+conservative experimental risk criterion, not an optimality guarantee.
+
+The output files are summary.json, fights.csv, and scenarios.json.
+Every CSV record contains the scenario, replicate, actual chosen actions,
+Hero-selection deviations, Item decisions, Parley/Elbereth use, HP savings
+vs the exact paired Attack-only replicate, and any difference in successful
+encounter resolution. The summary reports overall and Monster/profile
+breakdowns, safety gains and losses, and a clustered descriptive 95%
+bootstrap interval for mean HP saved (resampling the 48 constructed
+scenario IDs, not pretending that all repeated dice are independent
+scenario designs).
+
+New tactical results are not deployed in production MCTS. A neutral or
+negative 48-state result means test and revise the search, not weaken
+printed Monster cards. These are deliberately constructed encounter starts
+and do not estimate natural expedition win probabilities.
