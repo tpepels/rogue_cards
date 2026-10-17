@@ -178,3 +178,41 @@ test("Phase 2 pilot compares matched combat and Parley policies",{
  assert.ok(rows.every(r=>r.outcome==="wipe"||r.queuedMonsters===0));
  assert.ok(rows.every(r=>r.capped===false));
 });
+
+test("Phase 2 evaluates Elbereth alternatives only when explicitly enabled",{
+ timeout:20000
+},()=>{
+ const crawler=MONSTERS.find(m=>m.id==="crawler");
+ const session=makeEncounter(crawler,["warrior"],920);
+ submitDecision(session,sessionActions(session)[0],{
+  observeResult:false,recordHistory:false});
+ const options=sessionActions(session);
+ assert.ok(options.some(a=>a.kind==="elbereth"));
+ const before=session.state.rng.snapshot(),originalHp=session.state.monsterHP;
+ const chosen=phase2Tactical(session,{
+  samples:2,followupSamples:1,decisionSeed:20261022,
+  allowElbereth:true
+ });
+ assert.ok(options.some(a=>JSON.stringify(a)===JSON.stringify(chosen)));
+ assert.equal(session.state.rng.snapshot(),before,
+  "Hypothetical die rolls must not change actual future dice");
+ assert.equal(session.state.monsterHP,originalHp);
+ assert.equal(session.pendingNested??null,null);
+});
+
+test("Phase 2 Parley search only returns canonical legal actions",{
+ timeout:20000
+},()=>{
+ const troll=MONSTERS.find(m=>m.id==="troll");
+ const session=makeEncounter(troll,["warrior","knight"],900);
+ session.phase="parley";
+ const legal=sessionActions(session);
+ assert.ok(legal.some(a=>a.kind==="fight"));
+ assert.ok(legal.some(a=>a.kind==="parley"));
+ const rng=session.state.rng.snapshot();
+ const chosen=phase2Tactical(session,{
+  samples:2,followupSamples:1,decisionSeed:20261024
+ });
+ assert.ok(legal.some(a=>JSON.stringify(a)===JSON.stringify(chosen)));
+ assert.equal(session.state.rng.snapshot(),rng);
+});
