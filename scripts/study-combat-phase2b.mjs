@@ -79,16 +79,33 @@ const actionKey=a=>JSON.stringify(a&&{
  optionIndex:a.optionIndex,mode:a.mode,cardId:a.cardId
 });
 function assignItem(s,h,id){
- // Starting Items must actually come from the printed physical pile.
- const existing=h.inventory.find(c=>c.id===id);
- if(existing)return existing;
- const position=s.deck.findIndex(c=>c.id===id);
- if(position<0)throw Error("Physical Item unavailable: "+id);
- const [card]=s.deck.splice(position,1);
- s.noteDeckRemoval(card);
- h.inventory.push(card);s.objectsEverOwned.add(card.id);
- // The explicit choice to equip a useful owned Item is a *pre-combat*
- // state setting. No free equipment mutation is possible in combat.
+ // The real game distributes one shuffled starting Item per Hero before
+ // this controlled fixture is constructed. A requested one-copy card
+ // (e.g. moth) may ALREADY belong to another Hero, so looking only in
+ // s.deck incorrectly fails for otherwise valid physical states.
+ // Move that exact frozen physical object; never fabricate a replacement.
+ let card=h.inventory.find(c=>c.id===id);
+ if(!card){
+  const other=s.heroes.find(owner=>owner!==h&&
+   owner.inventory.some(c=>c.id===id));
+  if(other){
+   const index=other.inventory.findIndex(c=>c.id===id);
+   [card]=other.inventory.splice(index,1);
+   for(const [slot,held] of Object.entries(other.slots))
+    if(held===card)delete other.slots[slot];
+   // This is a pre-combat ownership allocation, NOT a newly drawn card.
+   // Keep the original deck-removed counter and physical identity intact.
+  }else{
+   const position=s.deck.findIndex(c=>c.id===id);
+   if(position<0)throw Error("Physical Item unavailable anywhere: "+id);
+   [card]=s.deck.splice(position,1);
+   s.noteDeckRemoval(card);
+  }
+  h.inventory.push(card);
+  s.objectsEverOwned.add(card.id);
+ }
+ // Intentional pre-combat fixture equipment setting. Some existing
+ // starter Items occupy these slots and are simply kept in inventory.
  if(card.v2.tags.includes("WEAPON"))h.slots.weapon=card;
  else if(card.v2.tags.includes("ARMOUR"))h.slots.armour=card;
  else if(card.v2.kind==="RING")h.slots.ring=card;
