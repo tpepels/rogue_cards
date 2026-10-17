@@ -179,6 +179,7 @@ function fight(source,{policy,healthReduction=0,seed,samples,depth}){
  const startElbereth=s.metrics.elberethAttempts,startFailures=s.metrics.elberethFailures;
  const startMonsterDraws=s.metrics.monsterDraws??0;
  const startParleyWins=s.metrics.negotiationsWon??0;
+ const startBanishments=s.metrics.banishments??0;
  let steps=0,heroTurns=0;
  while(fighting(session)&&steps<300){
   const action=policy==="tactical"?
@@ -188,9 +189,13 @@ function fight(source,{policy,healthReduction=0,seed,samples,depth}){
   safeSubmit(session,action);steps++;
  }
  const capped=fighting(session);
+ const avoided=(s.metrics.negotiationsWon??0)>startParleyWins;
+ const banished=(s.metrics.banishments??0)>startBanishments;
+ const resolved=!capped&&(!s.monster||s.monsterHP<=0);
  return {
-  alive:s.alive(),defeated:!capped&&s.monsterHP<=0,
-  avoided:(s.metrics.negotiationsWon??0)>startParleyWins,
+  alive:s.alive(),resolvedSafely:resolved&&s.alive(),
+  defeated:resolved&&!avoided&&!banished,
+  avoided,banished,
   capped,heroTurns,steps,
   hpLost:startHp-totalHp(s),
   totalDamage:s.metrics.damage-startDamage,
@@ -219,6 +224,7 @@ function aggregate(rows){
    meanConsumedItems:mean("consumedItems"),
    meanElberethFailures:mean("elberethFailures"),
    meanExtraMonsterDraws:mean("extraMonsterDraws"),
+   safeResolutionRate:mean("resolvedSafely"),
    meanQueuedMonsters:mean("queuedMonsters"),
    avoidRate:mean("avoided"),
    capped:rs.filter(r=>r.capped).length};
@@ -283,7 +289,8 @@ export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
   console.log("Scenarios: "+rows.length+", truncated: "+summary.truncated);
   for(const group of summary.grouped)console.log(
    [group.partyType,group.stage,group.arm,
-    "win="+(100*group.winRate).toFixed(1)+"%",
+    "kill="+(100*group.winRate).toFixed(1)+"%",
+    "safe="+(100*group.safeResolutionRate).toFixed(1)+"%",
     "HP lost="+group.meanHpLost.toFixed(2),
     "avoided="+(100*group.avoidRate).toFixed(1)+"%",
     "Monster responses="+group.meanMonsterBehaviors.toFixed(2)].join(" | "));
