@@ -5,7 +5,7 @@ These pilots do not alter printed cards, encounters or core game rules.
 ## Run
 
     npm run test:diagnose
-    npm run study:diagnose:combat -- --trials 4 --samples 3 --depth 2 --out results/combat-pilot-a
+    npm run study:diagnose:combat -- --trials 4 --samples 3 --out results/combat-phase1-a
     npm run study:diagnose:mcts -- --monsters wisp,troll,crawler,sentinel --out results/mcts-pilot-a
 
 Alternatively, npm run study:diagnose runs both with default output folders.
@@ -18,8 +18,12 @@ canonical engine. Two party profiles: solo Warrior and Warrior + Knight.
 All arms of a scenario share the same starting setup and initial dice seed.
 
 Six arms: basic attacks, basic with Monster initially at -2 HP, Parley
-first if legal, up to two Elbereth attempts, sampled tactical lookahead,
-and tactical lookahead with Monster initially at -2 HP.
+first if legal, up to two Elbereth attempts, sampled tactical choice,
+and the tactical choice with Monster initially at -2 HP.
+
+Phase 1: every tactical candidate now continues through the entire
+canonical encounter with a basic follow-up policy before being scored.
+The tactical choice is not yet a full multi-ply policy (Phase 2).
 
 The short tactical search selects from real legal combat actions, simulates
 shared sampled chance streams and scores surviving HP, Monster HP, status
@@ -31,11 +35,20 @@ Outputs:
 - summary.json: results grouped by party size, stage, and test arm.
 - fights.csv: each Monster, party, trial, arm, losses and effects.
 
+Per-run telemetry distinguishes net party HP change from actual cumulative
+damage, Item activations from Items spent, and tracks post-fight HP by Hero,
+Hero deaths, poison observed during combat, extra Monster draws, and the
+number of Monsters handled. Inventory changes may also reflect reward draws.
+A safely resolved encounter requires a cleared Room with no active Monster,
+no remaining Monster queue and no suspended reaction.
+
 These are controlled encounters at starting Hero HP, without preceding
 Rooms or their attrition. Initial Monster damage is a test intervention;
 the printed Monster card and regeneration cap remain unchanged.
-Queued Monsters from a failed Elbereth attempt are counted but not fought
-after the primary Monster resolves.
+Every queued Monster must now be resolved through the canonical session,
+including nested reactions, Parley, combat, Monster responses and corpse
+settlement. A party wipe is a separate terminal result. Any step-limit or
+engine round-limit is an explicit study error, never a victory or safe clear.
 
 ## MCTS root pilot
 
