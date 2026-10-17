@@ -101,7 +101,7 @@ function choose(session,policy="basic"){
   })[0];
  }
  if(session.phase==="combat"){
-  if(policy==="elbereth"&&session.state.elberethAttempts===0){
+  if(policy==="elbereth"&&session.state.elberethAttempts<2){
    const ward=actions.find(a=>a.kind==="elbereth"&&a.mode==="ward");
    if(ward)return ward;
   }
@@ -198,7 +198,8 @@ function fight(source,{policy,healthReduction=0,seed,samples,depth}){
   consumedItems:startItems-totalItems(s),
   elbereth:s.metrics.elberethAttempts-startElbereth,
   elberethFailures:s.metrics.elberethFailures-startFailures,
-  extraMonsterDraws:(s.metrics.monsterDraws??0)-startMonsterDraws
+  extraMonsterDraws:(s.metrics.monsterDraws??0)-startMonsterDraws,
+  queuedMonsters:s.monsterQueue?.length??0
  };
 }
 function aggregate(rows){
@@ -218,6 +219,7 @@ function aggregate(rows){
    meanConsumedItems:mean("consumedItems"),
    meanElberethFailures:mean("elberethFailures"),
    meanExtraMonsterDraws:mean("extraMonsterDraws"),
+   meanQueuedMonsters:mean("queuedMonsters"),
    avoidRate:mean("avoided"),
    capped:rs.filter(r=>r.capped).length};
  });
@@ -236,7 +238,7 @@ export function runDiagnostic({trials=4,samples=3,depth=2,seed=20261017,
   {arm:"basic",policy:"basic",healthReduction:0},
   {arm:"basic_minus2hp",policy:"basic",healthReduction:2},
   {arm:"parley_first",policy:"parley",healthReduction:0},
-  {arm:"elbereth_first",policy:"elbereth",healthReduction:0},
+  {arm:"elbereth_twice",policy:"elbereth",healthReduction:0},
   {arm:"tactical",policy:"tactical",healthReduction:0},
   {arm:"tactical_minus2hp",policy:"tactical",healthReduction:2}
  ];
