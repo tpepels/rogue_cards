@@ -211,9 +211,157 @@ export function tactical(session,{samples,decisionSeed}){
  }
  return best;
 }
+
+/**
+ * Phase 2: a small stochastic expectimax-style policy. Every candidate's
+ * immediate chance events are simulated to the NEXT hero decision; from
+ * each resulting position choose the best legal follow-up by averaging
+ * complete canonical encounter continuations. No hidden-die oracle is
+ * consulted: all simulated futures are independently sampled, never the
+ * actual game's future RNG. Both plies share one initial reference state.
+ */
+const mixSeed=(seed,a,b)=>mix(seed^Math.imul(a+1,0x85ebca6b)^Math.imul(b+1,0xc2b2ae35));
+const actionKey=a=>JSON.stringify(a);
+const tacticalRootActions=(session,{allowElbereth=false}={})=>{
+ const actions=sessionActions(session);
+ if(session.phase==="parley")return actions.filter(a=>a.kind==="fight"||a.kind==="parley");
+ if(session.phase!=="combat")return [];
+ return actions.filter(a=>
+  a.kind==="attack"||a.kind==="item"||
+  allowElbereth&&a.kind==="elbereth")
+  .slice(0,7);
+};
+/** Complete just one real Hero action and its mandatory reaction chain. */
+export function advanceToTacticalBoundary(session,{
+ firstAction,stepLimit=240
+}={}){
+ if(!firstAction)throw Error("Missing first tactical action");
+ let steps=0,first=true,initialActionCompleted=false;
+ while(encounterOutcome(session)==="ongoing"&&steps<stepLimit){
+  if(!first&&!session.pendingNested&&
+     (session.phase==="combat"||session.phase==="parley"))
+   return {terminal:false,steps};
+  const next=first?firstAction:choose(session,"basic");
+  first=false;
+  if(!initialActionCompleted)initialActionCompleted=true;
+  safeSubmit(session,next);
+  steps++;
+ }
+ const outcome=encounterOutcome(session);
+ if(outcome==="cleared"||outcome==="wipe")
+  return {terminal:true,steps};
+ throw Error("Phase 2 could not reach canonical decision boundary: "+
+  JSON.stringify({phase:session.phase,pending:!!session.pendingNested,
+   active:session.state.monster?.id,queued:session.state.monsterQueue.length,
+   steps,outcome}));
+};
+const tacticalValue=(source,finished)=>{
+ const starting=source.state,ended=finished.state;
+ const result=encounterOutcome(finished);
+ if(result!=="cleared"&&result!=="wipe")
+  throw Error("Phase 2 attempted to evaluate an unfinished combat");
+ const initialHp=totalHp(starting),finalHp=totalHp(ended);
+ const initialDead=starting.heroes.filter(h=>h.hp<=0).length;
+ const finalDead=ended.heroes.filter(h=>h.hp<=0).length;
+ const itemsSpent=Math.max(0,(ended.metrics.spent||0)-(starting.metrics.spent||0));
+ const activated=Math.max(0,usedItems(ended)-usedItems(starting));
+ const newDead=Math.max(0,finalDead-initialDead);
+ // Survival is lexicographically much more important than modest HP gain.
+ // HP, depleted consumables, poison and combat duration break ties.
+ return (result==="cleared"?220:-220) +
+  3*(finalHp-initialHp)-90*newDead-8*itemsSpent-
+  4*activated-10*poisoned(ended)-
+  0.35*Math.max(0,
+   sumMap(ended.metrics.monsterBehaviorBands)-
+   sumMap(starting.metrics.monsterBehaviorBands));
+};
+const summariseRollouts=values=>{
+ const n=values.length;
+ const mean=values.reduce((x,v)=>x+v,0)/n;
+ const variance=n>1?values.reduce((x,v)=>x+(v-mean)**2,0)/(n-1):0;
+ return {mean,se:Math.sqrt(variance/n)};
+};
+/**
+ * Stochastic first action -> next Hero decision -> best sampled follow-up.
+ * Paired chance streams and a conservative attack/fight baseline stop the
+ * search from spending Items on noisy, marginal apparent improvements.
+ *
+ * allowElbereth=false is the default, and a separate experimental arm
+ * explicitly enables this risky action class.
+ */
+export function phase2Tactical(session,{
+ samples=2,decisionSeed=1,allowElbereth=false,followupSamples=2,
+ improvementMargin=4
+}={}){
+ if(session.pendingNested)return choose(session,"basic");
+ if(!["combat","parley"].includes(session.phase))return choose(session,"basic");
+ if(!Number.isInteger(samples)||samples<1||samples>32||
+    !Number.isInteger(followupSamples)||followupSamples<1||followupSamples>8)
+  throw Error("Invalid Phase 2 chance-sample budget");
+ const actions=tacticalRootActions(session,{allowElbereth});
+ if(actions.length<2)return actions[0]??choose(session,"basic");
+ const baseline=actions.find(a=>a.kind===(session.phase==="parley"?"fight":"attack"));
+ if(!baseline)throw Error("Phase 2 must have a legal baseline action");
+ const candidates=[baseline,...actions.filter(a=>actionKey(a)!==actionKey(baseline))];
+ const firstStageSeeds=Array.from({length:samples},(_,j)=>mixSeed(decisionSeed,j,73));
+ const evaluations=[];
+ for(const action of candidates){
+  const values=[],exposure=[];
+  for(let i=0;i<samples;i++){
+   const fork=cloneSession(session);
+   // Resample from the public boundary, not during a pending replay.
+   fork.state.rng=randomSource(firstStageSeeds[i]);
+   const reached=advanceToTacticalBoundary(fork,{firstAction:action});
+   if(reached.terminal){
+    const score=tacticalValue(session,fork);
+    values.push(score);exposure.push({score,dead:encounterOutcome(fork)==="wipe"});
+    continue;
+   }
+   const secondActions=tacticalRootActions(fork,{allowElbereth:false});
+   if(!secondActions.length)
+    throw Error("Phase 2 reached combat boundary without legal candidates");
+   let bestFollowup=-Infinity,bestDead=1;
+   for(const second of secondActions){
+    let total=0,wipes=0;
+    for(let j=0;j<followupSamples;j++){
+     const future=cloneSession(fork);
+     future.state.rng=randomSource(mixSeed(decisionSeed,i,j+101));
+     completeEncounter(future,{firstAction:second});
+     total+=tacticalValue(session,future);
+     wipes+=Number(encounterOutcome(future)==="wipe");
+    }
+    const expected=total/followupSamples;
+    if(expected>bestFollowup){
+     bestFollowup=expected;bestDead=wipes/followupSamples;
+    }
+   }
+   values.push(bestFollowup);
+   exposure.push({score:bestFollowup,dead:bestDead});
+  }
+  const estimate=summariseRollouts(values);
+  evaluations.push({action,...estimate,
+   wipeRisk:exposure.reduce((n,x)=>n+x.dead,0)/samples});
+ }
+ const reference=evaluations[0];
+ let best=reference;
+ for(const estimate of evaluations.slice(1)){
+  // The small pilot intentionally favors the nonconsumptive baseline.
+  // Require both a useful expected gain and stronger evidence than the
+  // Monte Carlo noise. Never take a higher estimated wipe risk merely
+  // to gain a few HP in tiny samples.
+  const uncertainty=1.15*Math.hypot(estimate.se,reference.se);
+  const required=improvementMargin+uncertainty+
+   (estimate.action.kind==="elbereth"?15:0);
+  if(estimate.mean<=reference.mean+required)continue;
+  if(estimate.wipeRisk>reference.wipeRisk+1e-9)continue;
+  if(estimate.mean>best.mean)best=estimate;
+ }
+ return best.action;
+}
+
 function fight(source,{policy,healthReduction=0,seed,samples}){
  const session=cloneSession(source),s=session.state;
- if(policy==="parley")session.phase="parley";
+ if(["parley","phase2_parley"].includes(policy))session.phase="parley";
  s.rng=randomSource(seed);
  // Controlled starting-HP intervention; the printed Monster stays unchanged.
  s.monsterHP=Math.max(1,s.monsterHP-healthReduction);
@@ -234,6 +382,10 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
   session,{policy,selectAction:policy==="tactical"?
    (at,step)=>tactical(at,{
     samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35))
+   }):["phase2_safe","phase2_elbereth","phase2_parley"].includes(policy)?
+   (at,step)=>phase2Tactical(at,{
+    samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35)),
+    allowElbereth:policy==="phase2_elbereth"
    }):null});
  // Only a genuinely cleared Room with no queue is a safe completion.
  if(outcome==="cleared"&&
