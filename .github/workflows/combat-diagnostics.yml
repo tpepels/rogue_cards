@@ -7,6 +7,7 @@ on:
       - 'scripts/study-combat-causes.mjs'
       - 'scripts/study-combat-phase2b.mjs'
       - 'scripts/study-combat-phase2c.mjs'
+      - 'scripts/bench-mcts-combat-hybrids.mjs'
       - 'src/combat-rollout-expectimax.js'
       - 'src/mcts-implicit.js'
       - 'src/mcts-hybrid-defaults.js'
