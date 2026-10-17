@@ -83,7 +83,8 @@
     "test:experiment": "node --test tests/experiment-telemetry.test.mjs tests/experiment-targets.test.mjs",
     "study:diagnose": "npm run study:diagnose:combat && npm run study:diagnose:mcts",
     "study:diagnose:combat": "node scripts/study-combat-causes.mjs",
-    "study:diagnose:mcts": "node scripts/diagnose-mcts-roots.mjs"
+    "study:diagnose:mcts": "node scripts/diagnose-mcts-roots.mjs",
+    "test:diagnose": "node --test tests/combat-causes-diagnostic.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
