@@ -39,8 +39,8 @@ jobs:
         run: npm run test:phase2b
       - name: Compare Phase 2 policies on matched encounters
         run: npm run study:diagnose:phase2 -- --trials 2 --samples 2 --monsters crawler,wisp,troll,sentinel --out results/phase2-ci-pilot
-      - name: Compare Phase 2b policies on six fixed scenarios
-        run: npm run study:diagnose:phase2b -- --scenarios 6 --samples 1 --followup 1 --out results/phase2b-ci-smoke
+      - name: Compare Phase 2b policies on 48 realistic combat states
+        run: npm run study:diagnose:phase2b -- --scenarios 48 --samples 2 --followup 2 --out results/phase2b-ci-full
       - name: Upload paired combat study results
         if: always()
         uses: actions/upload-artifact@v4
@@ -48,5 +48,5 @@ jobs:
           name: phase2-paired-combat-pilot
           path: |
             results/phase2-ci-pilot/
-            results/phase2b-ci-smoke/
+            results/phase2b-ci-full/
           if-no-files-found: ignore
