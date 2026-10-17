@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'scripts/study-combat-causes.mjs'
+      - 'scripts/study-combat-phase2b.mjs'
       - 'tests/combat-causes-diagnostic.test.mjs'
+      - 'tests/combat-phase2b.test.mjs'
       - 'src/engine/**'
       - 'src/monster-expansion.js'
       - 'src/tabletop-data.js'
@@ -33,12 +35,18 @@ jobs:
           node-version: '22'
       - name: Verify canonical complete-encounter settlement
         run: npm run test:diagnose
+      - name: Verify Phase 2b realistic scenarios and paired reproducibility
+        run: npm run test:phase2b
       - name: Compare Phase 2 policies on matched encounters
         run: npm run study:diagnose:phase2 -- --trials 2 --samples 2 --monsters crawler,wisp,troll,sentinel --out results/phase2-ci-pilot
+      - name: Compare Phase 2b policies on six fixed scenarios
+        run: npm run study:diagnose:phase2b -- --scenarios 6 --samples 1 --followup 1 --out results/phase2b-ci-smoke
       - name: Upload paired combat study results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase2-paired-combat-pilot
-          path: results/phase2-ci-pilot/
+          path: |
+            results/phase2-ci-pilot/
+            results/phase2b-ci-smoke/
           if-no-files-found: ignore
