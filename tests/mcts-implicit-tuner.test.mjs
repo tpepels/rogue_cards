@@ -109,6 +109,10 @@ test("Two worker threads persist results and stop cleanly on SIGINT",{
    "Unexpected tuner worker exit: "+stderr+"\n"+stdout);
   assert.ok(existsSync(join(out,"manifest.json")));
   assert.ok(existsSync(join(out,"summary.json")));
+  assert.ok(existsSync(join(out,"best.json")));
+  const result=JSON.parse(readFileSync(join(out,"best.json"),"utf8"));
+  assert.equal(result.certifiedForProduction,false);
+  assert.equal(result.schema,"mcts-hybrid-tuning-recommendation-v1");
   assert.ok(existsSync(join(out,"trials.ndjson")),
    "No completed live worker trials: "+stderr+"\n"+stdout);
   const rows=readFileSync(join(out,"trials.ndjson"),"utf8")
