@@ -225,6 +225,8 @@ const actionKey=a=>JSON.stringify(a);
 const tacticalRootActions=(session,{allowElbereth=false}={})=>{
  const actions=sessionActions(session);
  if(session.phase==="parley")return actions.filter(a=>a.kind==="fight"||a.kind==="parley");
+ if(session.phase==="combat-hero")
+  return actions.filter(a=>a.kind==="choose-hero-turn");
  if(session.phase!=="combat")return [];
  return actions.filter(a=>
   a.kind==="attack"||a.kind==="item"||
@@ -294,13 +296,16 @@ export function phase2Tactical(session,{
  improvementMargin=4
 }={}){
  if(session.pendingNested)return choose(session,"basic");
- if(!["combat","parley"].includes(session.phase))return choose(session,"basic");
+ if(!["combat","parley","combat-hero"].includes(session.phase))
+  return choose(session,"basic");
  if(!Number.isInteger(samples)||samples<1||samples>32||
     !Number.isInteger(followupSamples)||followupSamples<1||followupSamples>8)
   throw Error("Invalid Phase 2 chance-sample budget");
  const actions=tacticalRootActions(session,{allowElbereth});
  if(actions.length<2)return actions[0]??choose(session,"basic");
- const baseline=actions.find(a=>a.kind===(session.phase==="parley"?"fight":"attack"));
+ const baseline=session.phase==="combat-hero"?
+  choose(session,"basic"):
+  actions.find(a=>a.kind===(session.phase==="parley"?"fight":"attack"));
  if(!baseline)throw Error("Phase 2 must have a legal baseline action");
  const candidates=[baseline,...actions.filter(a=>actionKey(a)!==actionKey(baseline))];
  const firstStageSeeds=Array.from({length:samples},(_,j)=>mixSeed(decisionSeed,j,73));
@@ -380,7 +385,7 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
  // same encounter-completion loop, including each queued Monster.
  const chosenActions={};
  const recordAction=action=>{
-  if(action.phase==="combat"||action.phase==="parley")
+  if(["combat","parley","combat-hero"].includes(action.phase))
    chosenActions[action.kind]=(chosenActions[action.kind]||0)+1;
   return action;
  };
@@ -405,6 +410,7 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
  return {
   alive:s.alive(),resolvedSafely:outcome==="cleared",
   defeated:killed>0,monstersKilled:killed,avoided,banished,
+  heroSelections:chosenActions["choose-hero-turn"]||0,
   attackActions:chosenActions.attack||0,
   itemActions:chosenActions.item||0,
   elberethActions:chosenActions.elbereth||0,
@@ -446,6 +452,7 @@ function aggregate(rows){
    meanHeroTurns:mean("heroTurns"),
    meanConsumedItems:mean("consumedItems"),
    meanItemsUsed:mean("itemsUsed"),
+   meanHeroSelections:mean("heroSelections"),
    meanAttackActions:mean("attackActions"),
    meanItemActions:mean("itemActions"),
    meanElberethActions:mean("elberethActions"),
