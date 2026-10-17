@@ -299,6 +299,13 @@ export function runPhase2b({
      new Set(subset.map(r=>r.diceSeed)).size!==1||
      new Set(subset.map(r=>r.seed)).size!==1)
    throw Error("Invalid paired scenario: "+fixture.id);
+  const basic=subset.find(r=>r.policy==="attack_only");
+  for(const r of subset){
+   r.hpSavedVsAttack=basic.hpLost-r.hpLost;
+   r.safetyDeltaVsAttack=Number(r.safelyCleared)-Number(basic.safelyCleared);
+   r.firstDecisionDifferentFromBasic=
+    JSON.parse(r.firstDecision).chosen!==JSON.parse(r.firstDecision).baseline;
+  }
  }
  const report={
   schema:"combat-phase2b-v1",
