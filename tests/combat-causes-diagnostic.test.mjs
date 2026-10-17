@@ -203,8 +203,8 @@ test("Phase 2 evaluates Elbereth alternatives only when explicitly enabled",{
 test("Phase 2 Parley search only returns canonical legal actions",{
  timeout:20000
 },()=>{
- const troll=MONSTERS.find(m=>m.id==="troll");
- const session=makeEncounter(troll,["warrior","knight"],900);
+ const wisp=MONSTERS.find(m=>m.id==="wisp");
+ const session=makeEncounter(wisp,["warrior","knight"],900);
  session.phase="parley";
  const legal=sessionActions(session);
  assert.ok(legal.some(a=>a.kind==="fight"));
