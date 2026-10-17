@@ -35,11 +35,30 @@ export function implicitExpeditionHeuristic(session){
  const activeThreat=active?0.07*(1-monsterProgress)+0.025*queued:0;
  const itemResources=Math.min(1,
   s.heroes.reduce((n,h)=>n+h.inventory.length,0)/(3*s.heroes.length));
+ // Hero-selection previously produced precisely the same static score for
+ // both acting Heroes because it changes only session.heroIndex. Give the
+ // implicit backup a SMALL, public, tactical gradient at the combat action
+ // boundary: estimated hit chance versus known printed AC, offset by how
+ // exposed the selected Hero is to the next Monster response.
+ let actorSignal=0;
+ if(active&&session.phase==="combat"&&session.heroIndex>=0){
+  const h=s.heroes[session.heroIndex];
+  if(h?.hp>0){
+   const stat=s.stats(h);
+   const chance=(atk,def)=>Math.max(1,Math.min(19,
+    21-(12+def-atk)))/20;
+   const hit=chance(stat.atk,active.def);
+   const monsterHit=chance(active.atk,stat.def);
+   const hpSafety=Math.max(0,Math.min(1,h.hp/h.card.hp));
+   actorSignal=0.035*(hit-.5)-
+    0.035*monsterHit*(1-hpSafety);
+  }
+ }
  // Normalize into the same [0,1] support as terminal 0/1 returns.
  return Math.max(0,Math.min(1,
   0.30*livingRate+0.28*hpRate+0.22*progress+
   0.13*monsterProgress+0.07*itemResources-
-  0.05*statusPenalty-activeThreat));
+  0.05*statusPenalty-activeThreat+actorSignal));
 }
 export function implicitSelectedMean(edge){
  return edge.implicitVisits?edge.implicitSum/edge.implicitVisits:0.5;
