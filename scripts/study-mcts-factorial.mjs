@@ -235,6 +235,16 @@ async function main(){
   const summary=report();
   log("Stopped: "+reason+"; rows="+summary.completedRows+
    "; pending="+summary.unfinished+"; summary="+summaryPath);
+  log("Arm means: "+JSON.stringify(summary.byArm.map(x=>({
+   arm:x.arm,budget:x.plannedBudget,trials:x.trials,
+   survival:x.meanClear,fitness:x.meanFitness,
+   searchMs:x.meanSearchMs}))));
+  log("Paired effects: "+JSON.stringify(summary.comparisons.map(x=>({
+   arm:x.arm,
+   vsUCT:x.vsUCT?.deltaFitness??null,
+   vsSameExpectimaxNoImplicit:
+    x.vsSameIntensityNoImplicit?.deltaFitness??null,
+   paired:x.vsUCT?.matchedTrials??0}))));
   if(error)process.exitCode=1;
   for(const worker of workers)worker.terminate();
  }
