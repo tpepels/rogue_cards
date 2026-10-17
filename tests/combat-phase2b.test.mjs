@@ -80,7 +80,14 @@ test("Phase 2b reports legal action opportunities, paired HP savings and deviati
    assert.ok(row.outcome==="wipe"||row.queuedRemaining===0);
    assert.ok(row.deviations>=0&&row.deviations<=row.decisions);
    assert.ok(Number.isFinite(row.hpLost));
+   assert.ok(Number.isFinite(row.hpSavedVsAttack));
+   assert.ok([-1,0,1].includes(row.safetyDeltaVsAttack));
+   assert.equal(typeof row.firstDecisionDifferentFromBasic,"boolean");
   }
+  const basic=pair.find(r=>r.policy==="attack_only");
+  assert.equal(basic.hpSavedVsAttack,0);
+  for(const item of pair)
+   assert.equal(item.hpSavedVsAttack,basic.hpLost-item.hpLost);
  }
  const per=report.comparisons.byPolicy;
  assert.equal(per.length,4);
