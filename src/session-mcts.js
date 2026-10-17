@@ -18,6 +18,7 @@ import {observeSession,sessionActions,submitDecision,submitSpeculativeDecision}
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
 import {sampledCombatRolloutAction} from "./combat-rollout-expectimax.js";
+import {resolveExploration} from "./mcts-hybrid-defaults.js";
 import {implicitExpeditionHeuristic,implicitUCTExploitation,
  backupImplicit,implicitSelectedMean} from "./mcts-implicit.js";
 // sampleRolloutDecks allocates fresh arrays for each call. These are owned
@@ -184,7 +185,7 @@ const rootStats=(node,rootActions)=>{
  * worker and aggregate raw (wins, visits) rather than average percentages.
  */
 export function searchDecision(session,{budget=100,seed=1,
- knowledge="fair",exploration=Math.SQRT2,maxSteps=4000,
+ knowledge="fair",exploration=null,maxSteps=4000,
  strictTerminal=true,observedReplay=null,collectCoverage=true,
  rootActions=null,transactional=true,fastTransitions=true,
  reuseLegalActions=true,fastStateHash=true,treeMode="full",
@@ -204,8 +205,11 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("MCTS maxSteps must be an integer in [1,100000]");
  if(!["fair","oracle"].includes(knowledge))
   throw Error("Knowledge must be fair or oracle");
- if(!Number.isFinite(exploration)||exploration<0)
-  throw Error("Exploration coefficient must be nonnegative");
+ // Explicit C overrides the provisional profile. Omitted C preserves
+ // classic sqrt(2), using C=0.7 when either hybrid extension is enabled.
+ const effectiveExploration=resolveExploration({
+  exploration,rolloutCombatMode,implicitWeight
+ });
  if(typeof transactional!=="boolean"||typeof fastTransitions!=="boolean"||
     typeof reuseLegalActions!=="boolean"||typeof fastStateHash!=="boolean"||
     typeof lazyColdEdges!=="boolean"||typeof reuseTraceSlots!=="boolean"||
@@ -472,7 +476,7 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):null;
       const selected=forcedCandidate||
-       select(node,found.candidates,choiceRng,exploration,selectionScratch,
+       select(node,found.candidates,choiceRng,effectiveExploration,selectionScratch,
         implicitWeight);
       choice=selected.action;
       selectedId=selected.id;
@@ -696,6 +700,8 @@ export function searchDecision(session,{budget=100,seed=1,
    rolloutCombatMode,rolloutCombatSearches,
    rolloutCombatSamples,rolloutCombatMaxDecisions}:{}),
   ...(implicitWeight>0?{implicitWeight,implicitRootValue:root?.implicitValue??null}:{}),
+  ...(rolloutCombatMode!=="random"||implicitWeight>0?
+   {exploration:effectiveExploration}:{}),
   rootActionCount:rootActions.length,choices:decisions,
   recommended:chosen?.action??null,
   actionCoverage:{phaseOpportunities,phaseSelections,
