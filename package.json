@@ -80,7 +80,10 @@
     "test:everything": "node --test tests/everything-goes.test.mjs tests/decks.test.mjs tests/room-memory.test.mjs tests/odd-items.test.mjs",
     "study:everything": "node scripts/study-everything-goes.mjs",
     "study:deep": "node scripts/study-everything-goes-deep.mjs",
-    "test:experiment": "node --test tests/experiment-telemetry.test.mjs tests/experiment-targets.test.mjs"
+    "test:experiment": "node --test tests/experiment-telemetry.test.mjs tests/experiment-targets.test.mjs",
+    "study:diagnose": "npm run study:diagnose:combat && npm run study:diagnose:mcts",
+    "study:diagnose:combat": "node scripts/study-combat-causes.mjs",
+    "study:diagnose:mcts": "node scripts/diagnose-mcts-roots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
