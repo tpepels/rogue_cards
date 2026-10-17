@@ -551,11 +551,11 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   if(!allowed.has(args[i])||!args[i+1]||args[i+1].startsWith("--"))
    throw Error("Invalid CLI argument "+(args[i]??""));
  const seed=option("seed",20261017,1,0xffffffff);
- const trial=option("trials",4,1,100);
- const samples=option("samples",3,1,32);
  const outIndex=args.indexOf("--out"),modeIndex=args.indexOf("--mode");
  const monsterIndex=args.indexOf("--monsters");
  const mode=modeIndex<0?"legacy":args[modeIndex+1];
+ const trial=option("trials",mode==="phase2"?2:4,1,100);
+ const samples=option("samples",mode==="phase2"?2:3,1,32);
  const monsterIds=monsterIndex<0?null:args[monsterIndex+1].split(",");
  runDiagnostic({seed,trials:trial,samples,mode,monsterIds,
   out:outIndex<0?"results/combat-"+mode+"-"+seed:args[outIndex+1]});
