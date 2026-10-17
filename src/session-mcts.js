@@ -17,6 +17,9 @@ import {observeSession,sessionActions,submitDecision,submitSpeculativeDecision}
  from "./engine/decision-session.js";
 import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
+import {sampledCombatRolloutAction} from "./combat-rollout-expectimax.js";
+import {implicitExpeditionHeuristic,implicitUCTExploitation,
+ backupImplicit,implicitSelectedMean} from "./mcts-implicit.js";
 // sampleRolloutDecks allocates fresh arrays for each call. These are owned
 // by the current hypothetical game and can be assigned without copying.
 
@@ -132,7 +135,7 @@ function nodeFor(tree,key,actions,reuseEdgeActions=false){
  });
  return {node,candidates,isNew};
 }
-function select(node,candidates,rng,c,scratch=null){
+function select(node,candidates,rng,c,scratch=null,implicitWeight=0){
  const unseen=scratch?scratch.unseen:[];
  if(scratch)unseen.length=0;
  for(const candidate of candidates)
@@ -146,7 +149,9 @@ function select(node,candidates,rng,c,scratch=null){
  let maximum=-Infinity;
  for(let i=0;i<candidates.length;i++){
   const e=candidates[i].edge;
-  const score=e.wins/e.visits+c*Math.sqrt(logVisits/e.visits);
+  const exploitation=implicitWeight?
+   implicitUCTExploitation(e,implicitWeight):e.wins/e.visits;
+  const score=exploitation+c*Math.sqrt(logVisits/e.visits);
   scores[i]=score;
   if(score>maximum)maximum=score;
  }
@@ -190,7 +195,9 @@ export function searchDecision(session,{budget=100,seed=1,
  checkpointEvery=32,lazyInitialCheckpoint=false,
  profileTransitions=false,canonicalReactionPhases=false,
  deferReactionCheckpoints=false,onDemandCheckpoints=false,
- nativeHash=false}={}){
+ nativeHash=false,rolloutCombatMode="random",
+ rolloutCombatSamples=2,rolloutCombatMaxDecisions=8,
+ implicitWeight=0}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -233,6 +240,18 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("checkpointEvery must be an integer in [1,256]");
  if(!["full","frontier"].includes(treeMode))
   throw Error("treeMode must be full or frontier");
+ if(!["random","sampled-expectimax"].includes(rolloutCombatMode))
+  throw Error("Invalid combat rollout mode");
+ if(rolloutCombatMode!=="random"&&treeMode!=="frontier")
+  throw Error("Combat rollout lookahead requires frontier tree mode");
+ if(!Number.isInteger(rolloutCombatSamples)||
+  rolloutCombatSamples<1||rolloutCombatSamples>6||
+  !Number.isInteger(rolloutCombatMaxDecisions)||
+  rolloutCombatMaxDecisions<1||rolloutCombatMaxDecisions>64)
+  throw Error("Invalid combat rollout sample/call limit");
+ if(!Number.isFinite(implicitWeight)||implicitWeight<0||
+  implicitWeight>1)
+  throw Error("Implicit backup weight must be in [0,1]");
  const stateHash=fastStateHash?
   (nativeHash?s=>mctsPublicStateHash(s,true):mctsPublicStateHash):
   mctsLegacyPublicStateHash;
@@ -271,7 +290,7 @@ export function searchDecision(session,{budget=100,seed=1,
   prepareRolloutDecks(session.state,"fair"):null;
  const tree=new Map(),rootKey="root:"+stateHash(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
- let rolloutEquipmentAdvances=0;
+ let rolloutEquipmentAdvances=0,rolloutCombatSearches=0;
  const incompleteReasons={};
  const phaseOpportunities={},phaseSelections={},actionOpportunities={},
   actionSelections={},cardOpportunities={},cardSelections={};
@@ -371,6 +390,8 @@ export function searchDecision(session,{budget=100,seed=1,
   };
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null,equipmentStreak=0;
+  let implicitFrontierDepth=0,implicitFrontierValue=null;
+  let rolloutCombatThisTrial=0;
   // Standard UCT: expand one new action per trial, then use the same
   // random default policy from actual legal canonical actions. "full"
   // preserves the historical study's tree bookkeeping and seed results.
@@ -404,7 +425,26 @@ export function searchDecision(session,{budget=100,seed=1,
     let choice,selectedId,progress=false;
     if(treeMode==="frontier"&&inRollout){
      const continueAction=forced?actions.find(a=>a.kind==="continue"):null;
-     choice=continueAction||choiceRng.choose(actions);
+     let combatChoice=null;
+     if(!continueAction&&rolloutCombatMode==="sampled-expectimax"&&
+       !sim.pendingNested&&actions.length>1&&
+       ["combat-hero","combat","parley"].includes(sim.phase)&&
+       rolloutCombatThisTrial<rolloutCombatMaxDecisions){
+      combatChoice=sampledCombatRolloutAction(sim,{
+       samples:rolloutCombatSamples,ply:2,
+       seed:mix(seed^Math.imul(i+1,0x632be59b)^
+        Math.imul(depth+1,0x85ebca6b))
+      });
+      if(combatChoice){
+       // Use the canonical ticketed action, not a separately enumerated
+       // equivalent, so nested replay remains exactly reproducible.
+       const candidate=actions.find(a=>actionKey(a)===actionKey(combatChoice));
+       if(!candidate)throw Error("Expectimax returned an illegal MCTS action");
+       combatChoice=candidate;
+       rolloutCombatThisTrial++;rolloutCombatSearches++;
+      }
+     }
+     choice=continueAction||combatChoice||choiceRng.choose(actions);
      progress=Boolean(continueAction);
      // The history key is not used after entering a default rollout.
      selectedId=null;
@@ -432,12 +472,16 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):null;
       const selected=forcedCandidate||
-       select(node,found.candidates,choiceRng,exploration,selectionScratch);
+       select(node,found.candidates,choiceRng,exploration,selectionScratch,
+        implicitWeight);
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
       progress=Boolean(forcedCandidate);
      }
+     if(implicitWeight>0&&!implicitFrontierDepth&&
+       selectedEdge.visits===0)
+      implicitFrontierDepth=path.length+1;
      path.push({node,edge:selectedEdge});
      if(treeMode==="frontier"&&selectedEdge.visits===0)
       inRollout=true;
@@ -559,6 +603,12 @@ export function searchDecision(session,{budget=100,seed=1,
      sinceCheckpoint=[];
     }
     if(replayObserved&&!sim.pendingNested)observedRootResolved=true;
+    // Capture the first stable expansion frontier, independent of the
+    // eventual terminal binary rollout reward. Suspended reaction states
+    // are never evaluated before the canonical replay has completed.
+    if(implicitWeight>0&&implicitFrontierDepth&&
+       implicitFrontierValue===null&&!sim.pendingNested)
+     implicitFrontierValue=implicitExpeditionHeuristic(sim);
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
      historyKey=mix(streamHistoryHash?
@@ -620,12 +670,20 @@ export function searchDecision(session,{budget=100,seed=1,
   for(const {node,edge} of path){
    node.visits++;edge.visits++;edge.wins+=result;
   }
+  if(implicitWeight>0&&implicitFrontierDepth)
+   backupImplicit(path.slice(0,implicitFrontierDepth),
+    implicitFrontierValue??implicitExpeditionHeuristic(sim));
  }
  if(JSON.stringify(observeSession(session))!==original||
     session.state.rng.snapshot()!==actualRng)
   throw Error("MCTS mutated the actual player state or future dice");
  const root=tree.get(rootKey+":"+stateHash(session));
- const decisions=rootStats(root,rootActions).sort((a,b)=>
+ const decisions=rootStats(root,rootActions).map(d=>{
+  if(!implicitWeight)return d;
+  const edge=root?.edges.get(actionKey(d.action));
+  return {...d,implicitValue:edge?.implicitVisits?
+   implicitSelectedMean(edge):null};
+ }).sort((a,b)=>
   b.visits-a.visits||((b.estimatedWinRate??0)-(a.estimatedWinRate??0)));
  // Select robust child (most visits), not an exploratory single lucky win.
  const chosen=decisions[0];
@@ -634,6 +692,10 @@ export function searchDecision(session,{budget=100,seed=1,
   maximumDepth,treeNodes:tree.size,
   rolloutEquipmentAdvances,
   maxConsecutiveRolloutEquipmentActions:MAX_ROLLOUT_EQUIPMENT_ACTIONS,
+  ...(rolloutCombatMode!=="random"?{
+   rolloutCombatMode,rolloutCombatSearches,
+   rolloutCombatSamples,rolloutCombatMaxDecisions}:{}),
+  ...(implicitWeight>0?{implicitWeight,implicitRootValue:root?.implicitValue??null}:{}),
   rootActionCount:rootActions.length,choices:decisions,
   recommended:chosen?.action??null,
   actionCoverage:{phaseOpportunities,phaseSelections,
