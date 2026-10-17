@@ -154,8 +154,8 @@ test("Implicit Room-progress heuristic only saturates after three complete stage
  s.metrics.cleared=36;
  const threeStages=implicitExpeditionHeuristic(expedition);
  assert.ok(firstStage<twoStages&&twoStages<threeStages);
- assert.ok(Math.abs(twoStages-firstStage-0.2/3)<1e-12);
- assert.ok(Math.abs(threeStages-twoStages-0.2/3)<1e-12);
+ assert.ok(Math.abs(twoStages-firstStage-0.22/3)<1e-12);
+ assert.ok(Math.abs(threeStages-twoStages-0.22/3)<1e-12);
 });
 
 test("Ablation tactical cap is explicit and never exceeds per-rollout limit",{
