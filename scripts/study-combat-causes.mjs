@@ -144,7 +144,7 @@ const encounterPhases=new Set([
  * A phase cap is an invalid measurement, never a successful encounter.
  */
 export function completeEncounter(session,{
- policy="basic",firstAction=null,stepLimit=1200
+ policy="basic",firstAction=null,stepLimit=1200,selectAction=null
 }={}){
  let steps=0,heroTurns=0,poisonSeen=poisoned(session.state)>0;
  let maxPoisoned=poisoned(session.state);
@@ -153,7 +153,8 @@ export function completeEncounter(session,{
   if(!encounterPhases.has(session.phase))
    throw Error("Unexpected phase during encounter: "+session.phase+
     " ("+(session.state.monster?.id??"no Monster")+")");
-  const action=firstAction??choose(session,policy);
+  const action=firstAction??(selectAction?
+   selectAction(session,steps):choose(session,policy));
   firstAction=null;
   if(session.phase==="combat"&&!session.pendingNested)heroTurns++;
   safeSubmit(session,action);
@@ -227,27 +228,13 @@ function fight(source,{policy,healthReduction=0,seed,samples}){
  const startItemsUsed=usedItems(s),startSpent=s.metrics.spent??0;
  const startDrawn=s.metrics.drawn??0;
  const startHpByHero=s.heroes.map(h=>h.hp);
- let steps=0,heroTurns=0,poisonSeen=poisoned(s)>0,maxPoisoned=poisoned(s);
- // Tactical selection happens only at a fresh combat decision. Nested
- // reaction windows are always replayed with unchanged committed RNG.
- while(encounterOutcome(session)==="ongoing"&&steps<1200){
-  if(!encounterPhases.has(session.phase))
-   throw Error("Unexpected combat phase "+session.phase);
-  const action=policy==="tactical"?
-   tactical(session,{samples,decisionSeed:mix(seed^Math.imul(steps+1,0xc2b2ae35))}):
-   choose(session,policy);
-  if(session.phase==="combat"&&!session.pendingNested)heroTurns++;
-  safeSubmit(session,action);
-  const activePoison=poisoned(s);
-  maxPoisoned=Math.max(maxPoisoned,activePoison);
-  poisonSeen||=activePoison>0;
-  steps++;
- }
- const outcome=encounterOutcome(session);
- if(outcome!=="cleared"&&outcome!=="wipe")
-  throw Error("Combat measurement is incomplete: "+
-   JSON.stringify({policy,phase:session.phase,pending:!!session.pendingNested,
-    monster:s.monster?.id??null,queue:s.monsterQueue.map(m=>m.id),steps,outcome}));
+ // Both experimental rollouts and real test arms must use exactly the
+ // same encounter-completion loop, including each queued Monster.
+ const {outcome,steps,heroTurns,poisonSeen,maxPoisoned}=completeEncounter(
+  session,{policy,selectAction:policy==="tactical"?
+   (at,step)=>tactical(at,{
+    samples,decisionSeed:mix(seed^Math.imul(step+1,0xc2b2ae35))
+   }):null});
  // Only a genuinely cleared Room with no queue is a safe completion.
  if(outcome==="cleared"&&
     (s.monster||s.monsterQueue.length||session.pendingNested||
