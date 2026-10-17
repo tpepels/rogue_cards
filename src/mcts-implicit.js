@@ -6,59 +6,74 @@
  * outcomes are averaged, so this is an implicit MAX / expectation backup.
  * It is NOT a Q/RB quality-based reward added to terminal rollouts.
  */
-export function implicitExpeditionHeuristic(session){
+/**
+ * Explain every term of the actual implicit evaluation used by UCT.
+ * Numeric components are raw contributions before [0,1] clipping.
+ * No roll, hidden deck card or future RNG is inspected.
+ */
+export function implicitHeuristicBreakdown(session){
  const s=session.state;
- if(session.phase==="terminal")
-  return s.metrics.won?1:0;
- if(!s.alive())return 0;
- const living=s.heroes.filter(h=>h.hp>0);
- const livingRate=living.length/s.heroes.length;
- const hpRate=s.heroes.reduce((v,h)=>v+
-  Math.max(0,h.hp)/Math.max(1,h.card.hp),0)/s.heroes.length;
- // Count only public recorded progress, never inspect shuffled Rooms.
+ if(session.phase==="terminal"||!s.alive()){
+  const value=Number(session.phase==="terminal"&&!!s.metrics.won);
+  return {terminal:true,value,unclipped:value,terms:{},
+   variables:{phase:session.phase,won:!!s.metrics.won,
+    alive:s.alive()}};
+ }
+ const party=s.heroes;
+ const living=party.filter(h=>h.hp>0);
+ const livingRate=living.length/party.length;
+ const hpRate=party.reduce((v,h)=>v+
+  Math.max(0,h.hp)/Math.max(1,h.card.hp),0)/party.length;
+ // roomGoal counts Rooms PER stage, not per expedition.
  const cleared=Number(s.metrics.cleared||0);
- // roomGoal is PER stage (UPPER/MIDDLE/DEEP), not the expedition total.
- // Three ordinary stages precede the Vault. Avoid reaching 100% progress
- // after completing just the first stage.
  const goal=Math.max(1,3*Number(s.roomGoal||3));
  const progress=Math.max(0,Math.min(1,cleared/goal));
- const statusPenalty=living.filter(h=>h.poison).length/s.heroes.length;
- // A combat-specific signal matters in *implicit* backups: the previous
- // heuristic assigned nearly the same value to a healthy Monster and
- // one at 1 HP. That deprived alpha of any useful tactical gradient.
- // Monster information is public after the encounter begins. We never
- // peek at unknown cards or future dice.
+ const statusPenalty=living.filter(h=>h.poison).length/party.length;
  const active=s.monster;
  const monsterProgress=active?
   1-Math.max(0,s.monsterHP)/Math.max(1,active.hp):1;
  const queued=Math.min(3,s.monsterQueue.length);
  const activeThreat=active?0.07*(1-monsterProgress)+0.025*queued:0;
  const itemResources=Math.min(1,
-  s.heroes.reduce((n,h)=>n+h.inventory.length,0)/(3*s.heroes.length));
- // Hero-selection previously produced precisely the same static score for
- // both acting Heroes because it changes only session.heroIndex. Give the
- // implicit backup a SMALL, public, tactical gradient at the combat action
- // boundary: estimated hit chance versus known printed AC, offset by how
- // exposed the selected Hero is to the next Monster response.
- let actorSignal=0;
+  party.reduce((n,h)=>n+h.inventory.length,0)/(3*party.length));
+ let actorSignal=0,actorHit=null,actorMonsterHit=null;
  if(active&&session.phase==="combat"&&session.heroIndex>=0){
-  const h=s.heroes[session.heroIndex];
+  const h=party[session.heroIndex];
   if(h?.hp>0){
    const stat=s.stats(h);
+   // Approximates unmodified natural d20 chance; combat rules and
+   // ADV/DIS/Items/hero powers can differ considerably.
    const chance=(atk,def)=>Math.max(1,Math.min(19,
     21-(12+def-atk)))/20;
-   const hit=chance(stat.atk,active.def);
-   const monsterHit=chance(active.atk,stat.def);
+   actorHit=chance(stat.atk,active.def);
+   actorMonsterHit=chance(active.atk,stat.def);
    const hpSafety=Math.max(0,Math.min(1,h.hp/h.card.hp));
-   actorSignal=0.035*(hit-.5)-
-    0.035*monsterHit*(1-hpSafety);
+   actorSignal=0.035*(actorHit-.5)-
+    0.035*actorMonsterHit*(1-hpSafety);
   }
  }
- // Normalize into the same [0,1] support as terminal 0/1 returns.
- return Math.max(0,Math.min(1,
-  0.30*livingRate+0.28*hpRate+0.22*progress+
-  0.13*monsterProgress+0.07*itemResources-
-  0.05*statusPenalty-activeThreat+actorSignal));
+ const terms={
+  living:0.30*livingRate,
+  remainingHP:0.28*hpRate,
+  stageProgress:0.22*progress,
+  monsterDamage:0.13*monsterProgress,
+  items:0.07*itemResources,
+  poison:-0.05*statusPenalty,
+  activeMonsterAndQueue:-activeThreat,
+  actorSelection:actorSignal
+ };
+ const unclipped=Object.values(terms).reduce((n,v)=>n+v,0);
+ return {
+  terminal:false,
+  value:Math.max(0,Math.min(1,unclipped)),unclipped,terms,
+  variables:{phase:session.phase,livingRate,hpRate,cleared,goal,
+   progress,poisonRate:statusPenalty,monsterId:active?.id??null,
+   monsterHP:s.monsterHP,monsterProgress,queued,itemResources,
+   actorIndex:session.heroIndex,actorHit,actorMonsterHit}
+ };
+}
+export function implicitExpeditionHeuristic(session){
+ return implicitHeuristicBreakdown(session).value;
 }
 export function implicitSelectedMean(edge){
  return edge.implicitVisits?edge.implicitSum/edge.implicitVisits:0.5;
