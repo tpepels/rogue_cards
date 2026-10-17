@@ -84,28 +84,32 @@ function assignItem(s,h,id){
  // (e.g. moth) may ALREADY belong to another Hero, so looking only in
  // s.deck incorrectly fails for otherwise valid physical states.
  // Move that exact frozen physical object; never fabricate a replacement.
- let card=h.inventory.find(c=>c.id===id);
- if(!card){
+ const existing=h.inventory.find(c=>c.id===id);
+ // Preserve the ORIGINAL allocation for every already-successful seed.
+ // Existing trials in trials.ndjson remain comparable when resuming.
+ if(existing)return existing;
+ let card;
+ const position=s.deck.findIndex(c=>c.id===id);
+ if(position>=0){
+  [card]=s.deck.splice(position,1);
+  s.noteDeckRemoval(card);
+ }else{
+  // Only fall back to a transfer when the old code would have thrown.
+  // The last physical copy was randomly dealt to another Hero.
   const other=s.heroes.find(owner=>owner!==h&&
    owner.inventory.some(c=>c.id===id));
-  if(other){
-   const index=other.inventory.findIndex(c=>c.id===id);
-   [card]=other.inventory.splice(index,1);
-   for(const [slot,held] of Object.entries(other.slots))
-    if(held===card)delete other.slots[slot];
-   // This is a pre-combat ownership allocation, NOT a newly drawn card.
-   // Keep the original deck-removed counter and physical identity intact.
-  }else{
-   const position=s.deck.findIndex(c=>c.id===id);
-   if(position<0)throw Error("Physical Item unavailable anywhere: "+id);
-   [card]=s.deck.splice(position,1);
-   s.noteDeckRemoval(card);
-  }
-  h.inventory.push(card);
-  s.objectsEverOwned.add(card.id);
+  if(!other)throw Error("Physical Item unavailable anywhere: "+id);
+  const index=other.inventory.findIndex(c=>c.id===id);
+  [card]=other.inventory.splice(index,1);
+  for(const [slot,held] of Object.entries(other.slots))
+   if(held===card)delete other.slots[slot];
+  // A transfer must NOT increment the deck-removed count: it was
+  // already counted when this physical copy was drawn initially.
  }
- // Intentional pre-combat fixture equipment setting. Some existing
- // starter Items occupy these slots and are simply kept in inventory.
+ h.inventory.push(card);
+ s.objectsEverOwned.add(card.id);
+ // Equip the newly allocated physical card in the requested slot.
+ // Existing-in-same-Hero cards use the old behavior above unchanged.
  if(card.v2.tags.includes("WEAPON"))h.slots.weapon=card;
  else if(card.v2.tags.includes("ARMOUR"))h.slots.armour=card;
  else if(card.v2.kind==="RING")h.slots.ring=card;
