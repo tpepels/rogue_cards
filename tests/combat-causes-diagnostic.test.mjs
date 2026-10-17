@@ -31,7 +31,7 @@ test("new equipment changes canonical stats and fixed AC",()=>{
   ["ex-buckler","armour",2]
  ];
  for(const [id,slot,bonus] of cases){
-  const card=s.deck.find(c=>c.id===id);
+  const card=[...s.deck,...h.inventory].find(c=>c.id===id);
   assert.ok(card,"Missing physical Item "+id);
   h.slots.weapon=null;h.slots.armour=null;
   h.inventory.push(card);
