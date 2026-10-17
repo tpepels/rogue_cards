@@ -17,7 +17,10 @@ export function implicitExpeditionHeuristic(session){
   Math.max(0,h.hp)/Math.max(1,h.card.hp),0)/s.heroes.length;
  // Count only public recorded progress, never inspect shuffled Rooms.
  const cleared=Number(s.metrics.cleared||0);
- const goal=Math.max(1,Number(s.roomGoal||36));
+ // roomGoal is PER stage (UPPER/MIDDLE/DEEP), not the expedition total.
+ // Three ordinary stages precede the Vault. Avoid reaching 100% progress
+ // after completing just the first stage.
+ const goal=Math.max(1,3*Number(s.roomGoal||3));
  const progress=Math.max(0,Math.min(1,cleared/goal));
  const statusPenalty=living.filter(h=>h.poison).length/s.heroes.length;
  return Math.max(0,Math.min(1,
