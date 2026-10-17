@@ -8,6 +8,9 @@ import {sampledCombatRolloutAction,combatLeafValue}
 import {backupImplicit,implicitUCTExploitation,
  implicitExpeditionHeuristic} from "../src/mcts-implicit.js";
 import {makeEncounter} from "../scripts/study-combat-causes.mjs";
+import {CLASSIC_UCT_C,HYBRID_UCT_C,HYBRID_IMPLICIT_ALPHA,
+ resolveExploration,resolveSearchProfile}
+ from "../src/mcts-hybrid-defaults.js";
 import {MONSTERS} from "../src/tabletop-data.js";
 
 test("Sampled 2-ply combat lookahead stays canonical and leaves source untouched",{
@@ -91,6 +94,7 @@ test("Frontier UCT accepts sampled combat rollout and implicit backup together",
  });
  assert.equal(result.rolloutCombatMode,"sampled-expectimax");
  assert.equal(result.implicitWeight,0.25);
+ assert.equal(result.exploration,HYBRID_UCT_C);
  assert.ok(result.rolloutCombatSearches>=1);
  assert.equal(session.phase,"combat-hero");
  assert.ok(result.choices.every(x=>Object.hasOwn(x,"implicitValue")));
@@ -112,4 +116,43 @@ test("Completed UCT trial backs up implicit heuristic without fabricating wins",
  assert.ok(result.choices.some(c=>c.implicitValue!==null));
  assert.equal(result.terminalWins,
   result.choices.reduce((sum,c)=>sum+c.wins,0));
+});
+
+test("Hybrid defaults use a lower C and literature-range alpha, while classic stays unchanged",()=>{
+ assert.equal(CLASSIC_UCT_C,Math.SQRT2);
+ assert.equal(HYBRID_UCT_C,0.7);
+ assert.equal(HYBRID_IMPLICIT_ALPHA,0.25);
+ assert.deepEqual(resolveSearchProfile({searchProfile:"classic"}),{
+  rolloutCombatMode:"random",implicitWeight:0,exploration:Math.SQRT2
+ });
+ assert.deepEqual(resolveSearchProfile({searchProfile:"deep-uct"}),{
+  rolloutCombatMode:"random",implicitWeight:0,exploration:Math.SQRT2
+ });
+ assert.deepEqual(resolveSearchProfile({searchProfile:"combat-hybrid"}),{
+  rolloutCombatMode:"sampled-expectimax",implicitWeight:0.25,
+  exploration:0.7
+ });
+ assert.equal(resolveExploration({rolloutCombatMode:"sampled-expectimax"}),0.7);
+ assert.equal(resolveExploration({implicitWeight:0.25}),0.7);
+ assert.equal(resolveExploration({exploration:0.35}),0.35);
+ assert.equal(resolveSearchProfile({searchProfile:"combat-hybrid",
+  exploration:0.5,implicitWeight:0.15}).exploration,0.5);
+ assert.throws(()=>resolveExploration({exploration:-0.5}),/Exploration/);
+});
+
+test("Implicit Room-progress heuristic only saturates after three complete stages",()=>{
+ const expedition=createDecisionSession({
+  seed:67,heroes:["warrior"],gameMode:"everything-goes"
+ });
+ const s=expedition.state;
+ assert.equal(s.roomGoal,12);
+ s.metrics.cleared=12;
+ const firstStage=implicitExpeditionHeuristic(expedition);
+ s.metrics.cleared=24;
+ const twoStages=implicitExpeditionHeuristic(expedition);
+ s.metrics.cleared=36;
+ const threeStages=implicitExpeditionHeuristic(expedition);
+ assert.ok(firstStage<twoStages&&twoStages<threeStages);
+ assert.ok(Math.abs(twoStages-firstStage-0.2/3)<1e-12);
+ assert.ok(Math.abs(threeStages-twoStages-0.2/3)<1e-12);
 });
