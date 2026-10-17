@@ -1,4 +1,9 @@
 import test from "node:test";
+import {spawn} from "node:child_process";
+import {mkdtempSync,existsSync,readFileSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {setTimeout as pause} from "node:timers/promises";
 import assert from "node:assert/strict";
 import {tuningCandidates,parseTuningOptions}
  from "../scripts/tune-mcts-hybrid.mjs";
@@ -69,4 +74,50 @@ test("Held-out fitness uses real canonical actions and repeats exactly",{
   rolloutCombatMode:"random"}});
  assert.equal(classic.rolloutCombatSearches,0);
  assert.equal(classic.scenarioId,a.scenarioId);
+});
+
+test("Two worker threads persist results and stop cleanly on SIGINT",{
+ timeout:60000
+},async()=>{
+ const out=mkdtempSync(join(tmpdir(),"rc-hybrid-workers-"));
+ const script=new URL("../scripts/tune-mcts-hybrid.mjs",import.meta.url);
+ const child=spawn(process.execPath,[script.pathname,
+  "--minutes","2","--validate-minutes","1","--workers","2",
+  "--budget","2","--samples","1","--tactical-max","1",
+  "--seed","20261017","--out",out
+ ],{stdio:["ignore","pipe","pipe"]});
+ let stderr="",stdout="";
+ child.stderr.on("data",d=>{stderr+=d;});
+ child.stdout.on("data",d=>{stdout+=d;});
+ let exited=false,exitCode=null;
+ const onExit=new Promise(resolve=>child.once("exit",(code,signal)=>{
+  exited=true;exitCode={code,signal};resolve();
+ }));
+ try{
+  for(let i=0;i<80;i++){
+   if(exited)break;
+   if(existsSync(join(out,"trials.ndjson"))&&
+    readFileSync(join(out,"trials.ndjson"),"utf8").trim().length>0)
+    break;
+   await pause(150);
+  }
+  if(!exited)child.kill("SIGINT");
+  await Promise.race([onExit,pause(12000)]);
+  if(!exited)child.kill("SIGKILL");
+  await onExit;
+  assert.deepEqual(exitCode,{code:0,signal:null},
+   "Unexpected tuner worker exit: "+stderr+"\n"+stdout);
+  assert.ok(existsSync(join(out,"manifest.json")));
+  assert.ok(existsSync(join(out,"summary.json")));
+  assert.ok(existsSync(join(out,"trials.ndjson")),
+   "No completed live worker trials: "+stderr+"\n"+stdout);
+  const rows=readFileSync(join(out,"trials.ndjson"),"utf8")
+   .trim().split("\n").map(JSON.parse);
+  assert.ok(rows.length>=1);
+  const summary=JSON.parse(readFileSync(join(out,"summary.json"),"utf8"));
+  assert.equal(summary.completedTrials,rows.length);
+ }finally{
+  if(!exited)child.kill("SIGKILL");
+  rmSync(out,{force:true,recursive:true});
+ }
 });
