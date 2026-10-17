@@ -9,6 +9,7 @@ import {tuningCandidates,parseTuningOptions,pairedValidation}
  from "../scripts/tune-mcts-hybrid.mjs";
 import {evaluateHybridJob} from "../scripts/tune-mcts-hybrid-core.mjs";
 import {makeScenario} from "../scripts/study-combat-phase2b.mjs";
+import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
 import {implicitExpeditionHeuristic}
  from "../src/mcts-implicit.js";
 
@@ -150,4 +151,17 @@ test("Held-out comparisons pair identical scenario and replicate identifiers",()
  assert.equal(paired.clusterCI95.length,2);
  assert.ok(paired.clusterCI95[0]<=paired.meanFitnessDifference);
  assert.ok(paired.clusterCI95[1]>=paired.meanFitnessDifference);
+});
+
+test("Implicit Hero-selection successor values actually distinguish actors",()=>{
+ const a=makeScenario("crawler","exhausted-support",{seed:751}).session;
+ const b=makeScenario("crawler","exhausted-support",{seed:751}).session;
+ const choices=sessionActions(a);
+ assert.equal(choices.length,2);
+ submitDecision(a,choices[0],{observeResult:false,recordHistory:false});
+ submitDecision(b,choices[1],{observeResult:false,recordHistory:false});
+ assert.equal(a.phase,"combat");
+ assert.equal(b.phase,"combat");
+ assert.notEqual(implicitExpeditionHeuristic(a),implicitExpeditionHeuristic(b),
+  "Selecting two differently injured Heroes must have a distinct implicit estimate");
 });
