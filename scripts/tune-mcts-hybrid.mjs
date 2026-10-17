@@ -48,12 +48,12 @@ const candidateStats=(records,phase)=>{
  }
  const out=[...by].map(([name,items])=>{
   const count=items.length;
-  const sd=Math.sqrt(avg(items,r=>(r.fitness-
-   avg(items,x=>x.fitness))**2));
+  const meanFitness=avg(items,r=>r.fitness);
+  const sd=Math.sqrt(avg(items,r=>(r.fitness-meanFitness)**2));
   return {
    candidate:name,count,
    scenarios:new Set(items.map(r=>r.scenarioId)).size,
-   meanFitness:avg(items,r=>r.fitness),
+   meanFitness,
    meanClear:avg(items,r=>r.clear),
    meanHeroDeaths:avg(items,r=>r.killed),
    meanHPFraction:avg(items,r=>r.hpFraction),
@@ -89,13 +89,13 @@ function readOptions(argv){
  const minutes=integer("--minutes",120,1,720);
  const workers=integer("--workers",8,1,32);
  const validationMinutes=integer("--validate-minutes",
-  Math.min(15,Math.max(1,Math.floor(minutes/8))),1,minutes);
+  Math.min(15,Math.max(1,Math.floor(minutes/8))),0,minutes);
  if(validationMinutes>=minutes)
   throw Error("Reserve less validation time than total wall clock time");
  const now=new Date().toISOString().replace(/[:.]/g,"-");
  return {
-  minutes,workers,budget:integer("--budget",16,2,512),
-  samples:integer("--samples",1,1,6),
+  minutes,workers,budget:integer("--budget",32,2,512),
+  samples:integer("--samples",2,1,6),
   tacticalMax:integer("--tactical-max",2,1,64),
   seed:integer("--seed",20261017,1,0xffffffff),
   validationMinutes,
@@ -247,6 +247,11 @@ async function main(){
    }
    enqueue("train",chosen,ids,from,to);
    wave++;
+   if(!queue.length&&wave<100000){
+    // A resumed run may have all these trial keys in trials.ndjson.
+    // Advance immediately rather than leaving eight workers idle.
+    fill();
+   }
   }else{
    // Once validation starts, NEVER use validation outcomes to select a
    // fresh finalist. Replicate until the wall-clock deadline instead.
@@ -254,6 +259,8 @@ async function main(){
    const highest=Math.floor(counts.length/
     Math.max(1,holdoutIds.length*finalists.length));
    enqueue("validate",finalists,holdoutIds,highest,highest+1);
+   if(!queue.length&&Date.now()<end)
+    enqueue("validate",finalists,holdoutIds,highest+1,highest+2);
   }
  }
  function assign(worker){
