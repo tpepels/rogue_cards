@@ -4,7 +4,8 @@ import {MONSTERS} from "../src/tabletop-data.js";
 import {combatAC,attackHits} from "../src/engine/combat.js";
 import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
 import {makeEncounter,tactical,runDiagnostic,encounterOutcome,
- completeEncounter} from "../scripts/study-combat-causes.mjs";
+ completeEncounter,phase2Tactical,advanceToTacticalBoundary}
+ from "../scripts/study-combat-causes.mjs";
 
 test("combat diagnostic constructs a canonical actionable encounter",()=>{
  const rat=MONSTERS.find(m=>m.id==="rat");
@@ -125,4 +126,55 @@ test("a terminal party wipe is distinct from an encounter safely cleared",()=>{
  session.phase="terminal";
  assert.equal(encounterOutcome(session),"wipe");
  assert.notEqual(encounterOutcome(session),"cleared");
+});
+
+test("Phase 2 keeps printed reactions and initial dice state unchanged",()=>{
+ const rat=MONSTERS.find(m=>m.id==="rat");
+ const session=makeEncounter(rat,["warrior"],882);
+ submitDecision(session,sessionActions(session)[0],{
+  observeResult:false,recordHistory:false});
+ const snapshot=session.state.rng.snapshot();
+ const before=session.state.monsterHP;
+ const chosen=phase2Tactical(session,{
+  samples:1,followupSamples:1,decisionSeed:780
+ });
+ assert.ok(sessionActions(session).some(a=>JSON.stringify(a)===JSON.stringify(chosen)));
+ assert.notEqual(chosen.kind,"elbereth","Elbereth must be opt-in");
+ assert.equal(session.state.rng.snapshot(),snapshot);
+ assert.equal(session.state.monsterHP,before);
+});
+
+test("Phase 2 continuation stops at the next combat decision or true ending",()=>{
+ const rat=MONSTERS.find(m=>m.id==="rat");
+ const session=makeEncounter(rat,["warrior","knight"],883);
+ submitDecision(session,sessionActions(session)[0],{
+  observeResult:false,recordHistory:false});
+ const action=sessionActions(session).find(a=>a.kind==="attack");
+ const boundary=advanceToTacticalBoundary(session,{firstAction:action});
+ assert.ok(boundary.steps>=1);
+ if(boundary.terminal)
+  assert.ok(["cleared","wipe"].includes(encounterOutcome(session)));
+ else{
+  assert.ok(["combat","parley"].includes(session.phase));
+  assert.equal(session.pendingNested??null,null);
+  assert.equal(encounterOutcome(session),"ongoing");
+ }
+});
+
+test("Phase 2 pilot compares matched combat and Parley policies",{
+ timeout:120000
+},()=>{
+ const {summary,rows}=runDiagnostic({
+  mode:"phase2",trials:1,samples:1,seed:20261019,
+  monsterIds:["crawler"],partyProfiles:[["warrior"]],quiet:true
+ });
+ assert.equal(summary.design.mode,"phase2");
+ assert.equal(rows.length,5);
+ assert.deepEqual(rows.map(r=>r.arm),[
+  "basic","legacy_tactical","phase2_safe","phase2_elbereth","phase2_parley"
+ ]);
+ assert.equal(new Set(rows.map(r=>r.seed)).size,1);
+ assert.ok(rows.every(r=>r.outcome==="cleared"||r.outcome==="wipe"));
+ assert.ok(rows.every(r=>r.outcome==="wipe"||r.queuedMonsters===0));
+ assert.ok(rows.every(r=>r.capped===false));
 });
