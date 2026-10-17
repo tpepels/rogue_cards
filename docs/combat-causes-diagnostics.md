@@ -386,11 +386,20 @@ Files in the chosen output directory:
 
 - `manifest.json`: fixed parameters for safe restart
 - `trials.ndjson`: append-only completed trials, one row per trial
-- `summary.json`: training and held-out leaderboards, CPU costs
-  and a provisional best configuration when enough held-out data exist
+- `summary.json`: training and held-out leaderboards, paired
+  out-of-sample confidence intervals and CPU costs
+- `best.json`: numeric C/alpha parameters for the best measured
+  held-out candidate, its matched alpha=0 control at the same C,
+  comparison with classic UCT, and whether improvement is demonstrated
 
 **Scope:** these are controlled Monster encounter starts and
 out-of-search encounter continuations, not 36-Room full expedition
 win-rate measurements. The tuner never changes `mcts-hybrid-defaults.js`
 automatically. Test the held-out winner in full expeditions before
 promoting it to a production default.
+
+The optimizer includes the no-implicit (alpha=0) counterpart at the
+**same C** for each training finalist in the held-out phase. Paired
+comparison resamples scenario IDs (cluster bootstrap), not arbitrary
+rows. An inconclusive interval must not be advertised as an implicit
+minimax speed or strength improvement.
