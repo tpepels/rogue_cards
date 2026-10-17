@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import {MONSTERS} from "../src/tabletop-data.js";
 import {combatAC,attackHits} from "../src/engine/combat.js";
 import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
-import {makeEncounter,tactical,runDiagnostic} from "../scripts/study-combat-causes.mjs";
+import {makeEncounter,tactical,runDiagnostic,encounterOutcome,
+ completeEncounter} from "../scripts/study-combat-causes.mjs";
 
 test("combat diagnostic constructs a canonical actionable encounter",()=>{
  const rat=MONSTERS.find(m=>m.id==="rat");
@@ -73,10 +74,55 @@ test("small paired combat pilot resolves all nested reaction replays",{
  timeout:60000
 },()=>{
  const {summary,rows}=runDiagnostic({
-  trials:1,samples:1,depth:1,seed:20261018,quiet:true
+  trials:1,samples:1,seed:20261018,quiet:true
  });
  assert.equal(rows.length,8*2*6);
  assert.equal(summary.rows,rows.length);
  assert.ok(rows.every(r=>Number.isFinite(r.hpLost)));
+ assert.ok(rows.every(r=>r.outcome==="cleared"||r.outcome==="wipe"));
+ assert.ok(rows.every(r=>r.queuedMonsters===0||r.outcome==="wipe"));
+ assert.ok(rows.every(r=>r.outcome!=="cleared"||r.resolvedSafely));
+ assert.ok(rows.every(r=>r.monstersHandled>=1));
+ assert.ok(rows.every(r=>r.itemsUsed>=0&&r.consumedItems>=0));
  assert.ok(rows.some(r=>r.arm==="tactical"));
+});
+
+test("a killed Monster with a queued follow-up is not an encounter end",()=>{
+ const rat=MONSTERS.find(m=>m.id==="rat");
+ const session=makeEncounter(rat,["warrior","knight"],230);
+ session.state.monsterHP=0;
+ session.state.monsterQueue.push(rat);
+ session.phase="corpse";
+ assert.equal(encounterOutcome(session),"ongoing");
+ const result=completeEncounter(session);
+ assert.ok(["cleared","wipe"].includes(result.outcome));
+ assert.ok(result.steps>2,"Queued Monster must be fought after corpse settlement");
+ assert.equal(session.state.metrics.battles,2,
+  "The printed pending Monster must enter the canonical encounter");
+ if(result.outcome==="cleared"){
+  assert.equal(session.phase,"between-rooms");
+  assert.equal(session.state.monster,null);
+  assert.equal(session.state.monsterQueue.length,0);
+ }else{
+  assert.equal(session.phase,"terminal");
+  assert.equal(session.state.alive(),false);
+ }
+});
+
+test("a pending Monster-response is not a safely finished encounter",()=>{
+ const rat=MONSTERS.find(m=>m.id==="rat");
+ const session=makeEncounter(rat,["warrior"],230);
+ assert.equal(encounterOutcome(session),"ongoing");
+ assert.throws(()=>completeEncounter(session,{stepLimit:0}),/did not settle/);
+ assert.equal(session.phase,"combat-hero");
+ assert.equal(encounterOutcome(session),"ongoing");
+});
+
+test("a terminal party wipe is distinct from an encounter safely cleared",()=>{
+ const rat=MONSTERS.find(m=>m.id==="rat");
+ const session=makeEncounter(rat,["warrior"],98);
+ session.state.heroes[0].hp=0;
+ session.phase="terminal";
+ assert.equal(encounterOutcome(session),"wipe");
+ assert.notEqual(encounterOutcome(session),"cleared");
 });
