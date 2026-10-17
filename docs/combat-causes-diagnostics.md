@@ -119,3 +119,47 @@ Each run needs a fresh output directory. The summary reports separate
 `outcome` and `defeated` fields: the latter is a kill occurrence, not
 proof that the entire encounter was survived. Use `resolvedSafely` for
 encounter completion and `heroDeaths` to detect duo losses.
+
+
+## Phase 2b - 48 controlled wounded and equipped encounter positions
+
+Phase 2b uses a **controlled intervention design**, not an estimate of naturally
+observed encounter frequencies. It constructs 8 printed Monsters times 6 Hero
+profiles: wounded Warrior, injured Knight, poisoned Witch, asymmetric
+Warrior/Knight, weakened Wizard/Monk, and exhausted Rogue/Priest.
+
+Each position uses real physical Items removed from the canonical Item deck,
+appropriate equipped slots, intentionally wounded Heroes and printed status
+conditions. Every combat action and Monster response uses the canonical engine.
+
+Run:
+
+    git pull --ff-only
+    npm run test:phase2b
+    npm run study:diagnose:phase2b -- --out results/combat-phase2b-local
+
+Optional quick run:
+
+    npm run study:diagnose:phase2b:smoke
+
+The full study writes summary.json, fights.csv, and scenarios.json. Results
+compare attack_only, phase2_safe, phase2_elbereth and phase2_parley using
+the same 48 scenario/seed combinations. Every row contains starting and
+remaining HP by Hero, survived/failed encounter, physical Item use,
+Parley and Elbereth decisions, legal action opportunities, and how often
+the chosen action differs from basic play **in that actual state**.
+
+The summary reports mean paired HP savings relative to attack-only, better
+or worse HP outcomes, safety improvements or regressions, number of
+scenarios with different decisions, and total changed decision windows.
+An action can consume a different number of dice; identical starting RNG
+streams need not produce identical later individual die faces.
+
+**Seed correction:** older phase-2 diagnostics derived seeds from the
+position of each Monster in a loop, so selecting a subset changed the
+scenario. That has been corrected in the baseline study to hash Monster,
+Hero IDs and trial number. The older study schema is now v2; do not
+directly pair pre-fix v1 results with new v2 subsets.
+
+These states are plausible constructed experiments, not actual reached
+expedition snapshots. Production MCTS, printed cards and rules are unchanged.
