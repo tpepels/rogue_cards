@@ -343,7 +343,11 @@ The previous implementation had a weak implicit heuristic: it tracked
 HP and expedition progress but did not distinguish an untouched Monster
 from a Monster at one remaining HP. The heuristic now includes public
 Monster HP progress, remaining Monster queue, Item retention and Hero
-survival. The original terminal-win statistic remains separate.
+survival. At a Hero's combat-action boundary, it now also distinguishes
+acting Heroes using an approximate printed-AC hit likelihood and their
+immediate exposure to a Monster response. These are heuristic estimates,
+not substitutes for canonical dice and printed combat resolution.
+The original terminal-win statistic remains separate.
 
 **The optimizer measures independent canonical encounter outcomes**,
 not the MCTS rollout wins from the search that selected each action.
