@@ -57,7 +57,7 @@ const cloneSession=session=>({
   actions:session.pendingNested.actions.map(x=>({...x}))
  }:null
 });
-function makeEncounter(monster,heroes,seed){
+export function makeEncounter(monster,heroes,seed){
  const session=createDecisionSession({seed,heroes,gameMode:"everything-goes"});
  const s=session.state;
  // Use a real physical Room card for canonical settlement, but do not
