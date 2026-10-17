@@ -113,15 +113,16 @@ export function makeScenario(monsterId,profileId,{seed=20261017}={}){
   if(profile.poison.includes(i))h.poison=true;
   if(profile.dis.includes(i))h.nextDis=1;
  }
- if(profile.phase==="parley"){
-  // Legal pre-fight negotiation opportunity (if Monster supports it).
+ if(profile.phase==="parley"&&monster.id!=="sentinel"){
+  // Sentinel always forces combat; never construct an unreachable Parley
+  // phase for it. All other printed regional Monsters may offer Parley.
   session.phase="parley";session.heroIndex=-1;
  }
  // Other than the controlled interventions above, all mutable state
  // remains canonical, including Monster stages, real Item copies, RNG.
  const actions=sessionActions(session);
  const hasParley=actions.some(a=>a.kind==="parley");
- if(profile.phase==="parley"&&!actions.some(a=>a.kind==="fight"))
+ if(session.phase==="parley"&&!actions.some(a=>a.kind==="fight"))
   throw Error("No legal fight alternative at Parley start "+id);
  return {
   id,monsterId,monster:monster.title,stage:monster.stage,profileId,
