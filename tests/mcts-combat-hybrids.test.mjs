@@ -8,6 +8,7 @@ import {sampledCombatRolloutAction,combatLeafValue}
 import {backupImplicit,implicitUCTExploitation,
  implicitExpeditionHeuristic} from "../src/mcts-implicit.js";
 import {makeEncounter} from "../scripts/study-combat-causes.mjs";
+import {runHybridAblation} from "../scripts/bench-mcts-combat-hybrids.mjs";
 import {CLASSIC_UCT_C,HYBRID_UCT_C,HYBRID_IMPLICIT_ALPHA,
  resolveExploration,resolveSearchProfile}
  from "../src/mcts-hybrid-defaults.js";
@@ -155,4 +156,24 @@ test("Implicit Room-progress heuristic only saturates after three complete stage
  assert.ok(firstStage<twoStages&&twoStages<threeStages);
  assert.ok(Math.abs(twoStages-firstStage-0.2/3)<1e-12);
  assert.ok(Math.abs(threeStages-twoStages-0.2/3)<1e-12);
+});
+
+test("Ablation tactical cap is explicit and never exceeds per-rollout limit",{
+ timeout:90000
+},()=>{
+ const report=runHybridAblation({
+  monsterIds:["crawler"],budget:1,samples:1,
+  seed:20261017,tacticalMax:2,write:false
+ });
+ assert.equal(report.design.tacticalMax,2);
+ assert.equal(report.rows.length,4);
+ for(const row of report.rows){
+  assert.equal(row.tacticalMax,2);
+  assert.ok(row.rolloutCombatSearches<=2*row.budget);
+  if(row.arm==="uct-classic"||row.arm==="uct-low-c")
+   assert.equal(row.rolloutCombatSearches,0);
+ }
+ assert.throws(()=>runHybridAblation({
+  monsterIds:["crawler"],tacticalMax:0,write:false
+ }),/Invalid MCTS ablation/);
 });
