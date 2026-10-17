@@ -453,9 +453,16 @@ function csv(rows){
  }).join(",")).join("\n")+"\n";
 }
 export function runDiagnostic({trials=4,samples=3,seed=20261017,
- out="results/combat-causes-"+seed,quiet=false}={}){
+ out="results/combat-causes-"+seed,quiet=false,mode="legacy",
+ monsterIds=null,partyProfiles=null}={}){
+ if(!["legacy","phase2"].includes(mode))throw Error("Unknown combat study mode");
+ const selectedMonsters=monsterIds===null?monsters:
+  monsters.filter(m=>monsterIds.includes(m.id));
+ const selectedParties=partyProfiles??starterParties;
+ if(!selectedMonsters.length||!selectedParties.length)
+  throw Error("Empty combat study population");
  const rows=[];
- const arms=[
+ const legacyArms=[
   {arm:"basic",policy:"basic",healthReduction:0},
   {arm:"basic_minus2hp",policy:"basic",healthReduction:2},
   {arm:"parley_first",policy:"parley",healthReduction:0},
@@ -463,8 +470,16 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
   {arm:"tactical",policy:"tactical",healthReduction:0},
   {arm:"tactical_minus2hp",policy:"tactical",healthReduction:2}
  ];
+ const phase2Arms=[
+  {arm:"basic",policy:"basic",healthReduction:0},
+  {arm:"legacy_tactical",policy:"tactical",healthReduction:0},
+  {arm:"phase2_safe",policy:"phase2_safe",healthReduction:0},
+  {arm:"phase2_elbereth",policy:"phase2_elbereth",healthReduction:0},
+  {arm:"phase2_parley",policy:"phase2_parley",healthReduction:0}
+ ];
+ const arms=mode==="legacy"?legacyArms:phase2Arms;
  let index=0;
- for(const monster of monsters)for(const heroes of starterParties){
+ for(const monster of selectedMonsters)for(const heroes of selectedParties){
   for(let trial=0;trial<trials;trial++){
    const gameSeed=mix(seed^Math.imul(++index,0x9e3779b9));
    const source=makeEncounter(monster,heroes,gameSeed);
@@ -479,10 +494,10 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
   if(!quiet)console.error("Analyzed "+monster.title);
  }
  const summary={
-  schema:"combat-causes-v1",
+  schema:mode==="legacy"?"combat-causes-v1":"combat-phase2-v1",
   scope:"Isolated canonical encounters at full starting Hero HP, starting Items and no previous Rooms; not full-expedition probabilities",
-  design:{trials,samples,seed,parties:starterParties,
-   monsterCount:monsters.length,arms:arms.map(a=>a.arm)},
+  design:{mode,trials,samples,seed,parties:selectedParties,
+   monsterCount:selectedMonsters.length,arms:arms.map(a=>a.arm)},
   rows:rows.length,grouped:aggregate(rows),
   truncated:rows.filter(r=>r.capped).length,
   limitations:[
@@ -492,7 +507,9 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
    "PARLEY is tested only as a deliberately chosen initial action; no future-Room decisions are included",
    "All queued Monsters are resolved by canonical combat and corpse decisions, or the encounter ends in a party wipe",
    "The -2 HP arm starts the printed Monster already damaged; printed data are never edited",
-   "Tactical samples play the complete encounter with a basic continuation after the candidate action; deeper tactical policy work is Phase 2"
+   "Legacy tactical search uses one-step candidates and basic continuation",
+   "Phase 2 search uses two successive Hero decisions, sampled chance nodes and complete canonical continuation",
+   "Small Monte Carlo budgets have significant uncertainty; no policy is certified stronger from this pilot alone"
   ]
  };
  if(!quiet){
@@ -514,14 +531,17 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
  return {summary,rows};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- const allowed=new Set(["--trials","--samples","--seed","--out"]);
+ const allowed=new Set(["--trials","--samples","--seed","--out","--mode","--monsters"]);
  for(let i=0;i<args.length;i+=2)
   if(!allowed.has(args[i])||!args[i+1]||args[i+1].startsWith("--"))
    throw Error("Invalid CLI argument "+(args[i]??""));
  const seed=option("seed",20261017,1,0xffffffff);
  const trial=option("trials",4,1,100);
  const samples=option("samples",3,1,32);
- const outIndex=args.indexOf("--out");
- runDiagnostic({seed,trials:trial,samples,
-  out:outIndex<0?"results/combat-causes-"+seed:args[outIndex+1]});
+ const outIndex=args.indexOf("--out"),modeIndex=args.indexOf("--mode");
+ const monsterIndex=args.indexOf("--monsters");
+ const mode=modeIndex<0?"legacy":args[modeIndex+1];
+ const monsterIds=monsterIndex<0?null:args[monsterIndex+1].split(",");
+ runDiagnostic({seed,trials:trial,samples,mode,monsterIds,
+  out:outIndex<0?"results/combat-"+mode+"-"+seed:args[outIndex+1]});
 }
