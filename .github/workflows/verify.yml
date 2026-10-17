@@ -23,6 +23,8 @@ jobs:
         run: npm run validate:deck -- --out deck-validation.json
       - name: Validate tabletop cards and one-sheet rules
         run: npm test
+      - name: Verify queued Monster diagnostic settlement
+        run: npm run test:diagnose
       # The historical Phase 5 approximation is deliberately excluded:
       # its coverage/hash review is stale after the printed card redesign.
       # Run npm run test:legacy-baseline only when explicitly reviewing it.
