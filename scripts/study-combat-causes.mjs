@@ -81,7 +81,7 @@ export function makeEncounter(monster,heroes,seed){
  session.monsterRound=0;
  return session;
 }
-function choose(session,policy="basic"){
+export function choose(session,policy="basic"){
  const actions=sessionActions(session);
  if(!actions.length)throw Error("No legal action at "+session.phase);
  if(session.pendingNested){
@@ -500,10 +500,20 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
   {arm:"phase2_parley",policy:"phase2_parley",healthReduction:0}
  ];
  const arms=mode==="legacy"?legacyArms:phase2Arms;
- let index=0;
+ // Stable identity-derived seeds: filtering or reordering Monsters MUST NOT
+ // change any scenario's opening deck, stats or combat chance stream.
+ // The old enumeration counter invalidated comparisons across subsets.
+ const stableScenarioSeed=(monsterId,heroes,trial)=>{
+  const key=monsterId+"|"+heroes.join("+")+"|"+trial;
+  let hash=2166136261;
+  for(let i=0;i<key.length;i++){
+   hash=Math.imul(hash^key.charCodeAt(i),16777619)>>>0;
+  }
+  return mix(seed^hash);
+ };
  for(const monster of selectedMonsters)for(const heroes of selectedParties){
   for(let trial=0;trial<trials;trial++){
-   const gameSeed=mix(seed^Math.imul(++index,0x9e3779b9));
+   const gameSeed=stableScenarioSeed(monster.id,heroes,trial);
    const source=makeEncounter(monster,heroes,gameSeed);
    const combatSeed=mix(gameSeed^0x75cdd1e1);
    for(const arm of arms){
@@ -516,7 +526,7 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
   if(!quiet)console.error("Analyzed "+monster.title);
  }
  const summary={
-  schema:mode==="legacy"?"combat-causes-v1":"combat-phase2-v1",
+  schema:mode==="legacy"?"combat-causes-v2":"combat-phase2-v2",
   scope:"Isolated canonical encounters at full starting Hero HP, starting Items and no previous Rooms; not full-expedition probabilities",
   design:{mode,trials,samples,seed,parties:selectedParties,
    monsterCount:selectedMonsters.length,arms:arms.map(a=>a.arm)},
@@ -531,6 +541,7 @@ export function runDiagnostic({trials=4,samples=3,seed=20261017,
    "The -2 HP arm starts the printed Monster already damaged; printed data are never edited",
    "Legacy tactical search uses one-step candidates and basic continuation",
    "Phase 2 search uses two successive Hero decisions, sampled chance nodes and complete canonical continuation",
+   "Scenario seeds are stable across filters and ordering as of schema v2; earlier results used traversal-order seeds and must not be paired across different subset selections",
    "Small Monte Carlo budgets have significant uncertainty; no policy is certified stronger from this pilot alone"
   ]
  };
