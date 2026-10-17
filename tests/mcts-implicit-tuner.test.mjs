@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {setTimeout as pause} from "node:timers/promises";
 import assert from "node:assert/strict";
-import {tuningCandidates,parseTuningOptions}
+import {tuningCandidates,parseTuningOptions,pairedValidation}
  from "../scripts/tune-mcts-hybrid.mjs";
 import {evaluateHybridJob} from "../scripts/tune-mcts-hybrid-core.mjs";
 import {makeScenario} from "../scripts/study-combat-phase2b.mjs";
@@ -120,4 +120,30 @@ test("Two worker threads persist results and stop cleanly on SIGINT",{
   if(!exited)child.kill("SIGKILL");
   rmSync(out,{force:true,recursive:true});
  }
+});
+
+test("Held-out comparisons pair identical scenario and replicate identifiers",()=>{
+ const cases=[
+  {scenarioId:"a",replicate:0,reference:1,challenger:1.3},
+  {scenarioId:"a",replicate:1,reference:1.2,challenger:1.5},
+  {scenarioId:"b",replicate:0,reference:0.8,challenger:0.7},
+  {scenarioId:"b",replicate:1,reference:1.0,challenger:0.9}
+ ];
+ const rows=cases.flatMap(c=>[
+  {phase:"validate",candidate:"uct-classic",scenarioId:c.scenarioId,
+   replicate:c.replicate,fitness:c.reference,clear:0.5,killed:0.2,searchMs:4},
+  {phase:"validate",candidate:"c0.700-a0.250",scenarioId:c.scenarioId,
+   replicate:c.replicate,fitness:c.challenger,clear:0.75,killed:0.1,searchMs:10}
+ ]);
+ rows.push({phase:"train",candidate:"c0.700-a0.250",
+  scenarioId:"a",replicate:0,fitness:1000,clear:1,killed:0,searchMs:1});
+ const paired=pairedValidation(rows,"c0.700-a0.250","uct-classic");
+ assert.equal(paired.matchedTrials,4);
+ assert.equal(paired.matchedScenarios,2);
+ assert.ok(Math.abs(paired.meanFitnessDifference-0.1)<1e-12);
+ assert.ok(Math.abs(paired.meanClearDifference-0.25)<1e-12);
+ assert.ok(Math.abs(paired.meanAdditionalSearchMs-6)<1e-12);
+ assert.equal(paired.clusterCI95.length,2);
+ assert.ok(paired.clusterCI95[0]<=paired.meanFitnessDifference);
+ assert.ok(paired.clusterCI95[1]>=paired.meanFitnessDifference);
 });
