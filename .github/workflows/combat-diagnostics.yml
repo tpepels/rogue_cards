@@ -1,0 +1,35 @@
+name: Combat diagnostic regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/study-combat-causes.mjs'
+      - 'tests/combat-causes-diagnostic.test.mjs'
+      - 'src/engine/**'
+      - 'src/monster-expansion.js'
+      - 'src/tabletop-data.js'
+      - 'package.json'
+      - '.github/workflows/combat-diagnostics.yml'
+  pull_request:
+    paths:
+      - 'scripts/study-combat-causes.mjs'
+      - 'tests/combat-causes-diagnostic.test.mjs'
+      - 'src/engine/**'
+      - 'src/monster-expansion.js'
+      - 'src/tabletop-data.js'
+      - 'package.json'
+      - '.github/workflows/combat-diagnostics.yml'
+  workflow_dispatch:
+
+jobs:
+  combat-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify canonical complete-encounter settlement
+        run: npm run test:diagnose
