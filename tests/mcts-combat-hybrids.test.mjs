@@ -95,3 +95,21 @@ test("Frontier UCT accepts sampled combat rollout and implicit backup together",
  assert.equal(session.phase,"combat-hero");
  assert.ok(result.choices.every(x=>Object.hasOwn(x,"implicitValue")));
 });
+
+test("Completed UCT trial backs up implicit heuristic without fabricating wins",{
+ timeout:60000
+},()=>{
+ const session=createDecisionSession({seed:700,heroes:["warrior"],
+  gameMode:"original"});
+ const result=searchDecision(session,{
+  seed:750,budget:2,knowledge:"oracle",strictTerminal:true,
+  maxSteps:5000,treeMode:"frontier",implicitWeight:0.25,
+  collectCoverage:false
+ });
+ assert.equal(result.completed,2);
+ assert.equal(result.incomplete,0);
+ assert.ok(result.implicitRootValue>=0&&result.implicitRootValue<=1);
+ assert.ok(result.choices.some(c=>c.implicitValue!==null));
+ assert.equal(result.terminalWins,
+  result.choices.reduce((sum,c)=>sum+c.wins,0));
+});
