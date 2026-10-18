@@ -182,7 +182,7 @@ function queuedReturn(session){
 }
 function drawNext(session){
  const s=session.state,stage=stageReady(s);
- const room=stage?s.rooms[stage].shift():VAULT;
+ const room=stage?s.rooms[stage].shift():(s.cardPools?.vault??VAULT);
  s.beginRoom(room,{deferEntry:true});
  session.remainingReturns=pendingReturnIds(s);
  queuedReturn(session);
@@ -251,9 +251,9 @@ function afterMonsterResponse(session){
 export function createDecisionSession(options={}){
  // The public createGame() deliberately rejects interventions. Only this
  // research session entrypoint accepts a physical extra starting Item.
- const {extraObjectId=null,...gameOptions}=options;
- const state=extraObjectId===null?createGame(gameOptions):
-  new ExpeditionState({...gameOptions,extraObjectId});
+ const {extraObjectId=null,cardPools=null,...gameOptions}=options;
+ const state=extraObjectId===null&&cardPools===null?createGame(gameOptions):
+  new ExpeditionState({...gameOptions,extraObjectId,cardPools});
  return {state,phase:"between-rooms",heroIndex:0,
   remainingReturns:[],returnRoomId:null,
   monsterRound:0,actionCount:0,history:[]};
