@@ -118,7 +118,9 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
     step:event.step,phase:event.phase,legalCount:event.actions.length,
     legal:includeLegal?event.actions.map(x=>({...x})):undefined,
     chosen:{...event.chosen},
-    via:event.diagnostic?"mcts":"forced",
+    via:event.policyRule?"policy-shortcut":
+     event.diagnostic?"mcts":"forced",
+    policyRule:event.policyRule??null,
     searchMs:event.searchMs,
     search:includeSearch&&event.diagnostic?{
      budget:event.diagnostic.budget,
@@ -155,6 +157,7 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
    step:pending.step,phase:pending.phase,
    legalCount:pending.legalCount,legal:pending.legal,
    chosen:pending.chosen,via:pending.via,
+   policyRule:pending.policyRule,
    searchMs:pending.searchMs,transitionMs:event.transitionMs,
    search:pending.search,
    before:pending.before,
