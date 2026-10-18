@@ -14,7 +14,7 @@
  */
 import {Worker,isMainThread,parentPort} from "node:worker_threads";
 import {cpus} from "node:os";
-import {gzipSync} from "node:zlib";
+import {gzipSync,gunzipSync} from "node:zlib";
 import {createDecisionRecorder,experimentSnapshot} from "../src/experiment-telemetry.js";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
@@ -65,6 +65,62 @@ const atomic=(path,value)=>{
  renameSync(tmp,path);
 };
 const key=r=>r.hero+"|"+r.replicate+"|"+r.arm;
+/**
+ * Explicitly opt-in to reusing complete recorded trials after THIS
+ * observation-only invariant fix. Never accept a changed algorithm,
+ * rule card, saved trial plan or unverified trace.
+ */
+const COMPATIBLE_OBSERVATION_PATHS=new Set([
+ "scripts/study-solo-expedition-balance.mjs",
+ "scripts/report-solo-balance-details.mjs",
+ "tests/solo-expedition-balance.test.mjs",
+ "tests/experiment-telemetry.test.mjs",
+ "src/experiment-telemetry.js",
+ "src/session-policy.js",
+ "package.json","README.md","docs/research-workflows.md",
+ ".github/workflows/combat-diagnostics.yml",
+ ".github/workflows/solo-balance-telemetry.yml"
+]);
+export function assertBalanceObservationMigration(saved,current,changedPaths){
+ if(saved?.schema!=="solo-full-expedition-balance-v1"||
+  saved.signature!==signature(saved.design))
+  throw Error("Original balance manifest/signature is invalid");
+ if(saved.design?.trace!=="full"||current.design?.trace!=="full")
+  throw Error("Compatibility migration requires full decision traces");
+ const next={...saved.design,revision:current.design.revision};
+ if(signature(next)!==current.signature)
+  throw Error("Cannot migrate: study parameters or algorithms changed");
+ if(!Array.isArray(changedPaths)||!changedPaths.length||
+  !changedPaths.includes("scripts/study-solo-expedition-balance.mjs")||
+  changedPaths.some(p=>!COMPATIBLE_OBSERVATION_PATHS.has(p)))
+  throw Error("Cannot migrate: gameplay, search, or unknown source files changed: "+
+   changedPaths.filter(p=>!COMPATIBLE_OBSERVATION_PATHS.has(p)).join(", "));
+ return true;
+}
+function verifyRecordedTraces(records,out){
+ const seen=new Set();
+ for(const row of records){
+  if(seen.has(key(row)))throw Error("Duplicate previous trial "+key(row));
+  seen.add(key(row));
+  if(!row.traceFile||!row.traceSHA256||
+   row.traceEvents!==row.steps||!row.traceFile.startsWith("traces/"))
+   throw Error("Missing full recorded telemetry for "+key(row));
+  const path=resolve(out,row.traceFile);
+  if(!path.startsWith(resolve(out)+"/")||!existsSync(path))
+   throw Error("Missing/unsafe recorded trace for "+key(row));
+  const bytes=readFileSync(path);
+  if(createHash("sha256").update(bytes).digest("hex")!==row.traceSHA256)
+   throw Error("Trace checksum mismatch for "+key(row));
+  const events=gunzipSync(bytes).toString("utf8").split("\n").filter(Boolean);
+  if(events.length!==row.steps)
+   throw Error("Trace length mismatch for "+key(row));
+  const last=JSON.parse(events.at(-1));
+  if(last.after?.heroes?.[0]?.hp!==row.remainingHp)
+   throw Error("Recorded last HP mismatch for "+key(row));
+ }
+ return seen;
+}
+
 export function persistSoloDecisionTrace(result,tag,outputDir){
  const events=result.events;
  if(!events||events.length!==result.steps)
@@ -260,9 +316,12 @@ export function playFullSoloExpedition({
 }
 export function parseSoloBalanceArgs(argv){
  const dryRun=argv.includes("--dry-run");
- if(argv.filter(x=>x==="--dry-run").length>1)
-  throw Error("Duplicate --dry-run");
- argv=argv.filter(x=>x!=="--dry-run");
+ const resumeCompatible=argv.includes("--resume-compatible-metrics-fix");
+ if(argv.filter(x=>x==="--dry-run").length>1||
+  argv.filter(x=>x==="--resume-compatible-metrics-fix").length>1)
+  throw Error("Duplicate solo balance flag");
+ argv=argv.filter(x=>!["--dry-run",
+  "--resume-compatible-metrics-fix"].includes(x));
  const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
   "--tactical-max","--from-study","--out","--arms",
@@ -299,7 +358,7 @@ export function parseSoloBalanceArgs(argv){
   throw Error("--trace must be full or off");
  const seed=int("--seed",20261101,1,0xffffffff);
  return {
-  dryRun,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
+  dryRun,resumeCompatible,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
   arms:armNames,trace,
@@ -506,21 +565,47 @@ async function main(){
  };
  const manifest={schema:"solo-full-expedition-balance-v1",design,
   signature:signature(design)};
- if(existsSync(manifestPath)){
-  const saved=JSON.parse(readFileSync(manifestPath,"utf8"));
-  if(saved.signature!==manifest.signature)
-   throw Error("Cannot resume after code, model or design changes");
- }else atomic(manifestPath,manifest);
  const records=existsSync(recordPath)?readFileSync(recordPath,"utf8")
   .split("\n").filter(Boolean).map(JSON.parse):[];
- if(c.trace==="full"){
-  for(const record of records){
-   if(!record.traceFile||!existsSync(join(c.out,record.traceFile)))
-    throw Error("Resume would silently lose telemetry: missing trace "+key(record));
+ if(existsSync(manifestPath)){
+  const saved=JSON.parse(readFileSync(manifestPath,"utf8"));
+  if(saved.signature!==manifest.signature){
+   if(!c.resumeCompatible)
+    throw Error("Code revision or design changed. To reuse FULLY "+
+     "traced episodes after the fixed Wisp invariant only, pass "+
+     "--resume-compatible-metrics-fix; otherwise use a new --out.");
+   execFileSync("git",["merge-base","--is-ancestor",
+    saved.design.revision,revision],{stdio:"ignore"});
+   if(execFileSync("git",["status","--porcelain",
+    "--untracked-files=no"],{encoding:"utf8"}).trim())
+    throw Error("Cannot adopt prior trials with uncommitted tracked changes");
+   const changed=execFileSync("git",["diff","--name-only",
+    saved.design.revision,revision],{encoding:"utf8"}).trim()
+    .split("\n").filter(Boolean);
+   assertBalanceObservationMigration(saved,manifest,changed);
+   if(!records.length)throw Error("No completed trials to recover");
+   verifyRecordedTraces(records,c.out);
+   const backup=manifestPath+".before-wisp-invariant-fix.json";
+   if(existsSync(backup))
+    throw Error("Migration backup already exists; review manually: "+backup);
+   writeFileSync(backup,JSON.stringify(saved,null,2)+"\n",{flag:"wx"});
+   const migration={
+    fromRevision:saved.design.revision,toRevision:revision,
+    completedTrialsReused:records.length,changedFiles:changed,
+    source:"explicit Wisp encounter-count invariant correction",
+    time:new Date().toISOString()
+   };
+   atomic(manifestPath,{...manifest,
+    originalRevision:saved.originalRevision??saved.design.revision,
+    migrations:[...(saved.migrations||[]),migration]});
+   console.log("Verified and adopted "+records.length+
+    " fully traced prior expeditions; original manifest saved at "+backup);
   }
- }
- const seen=new Set(records.map(key));
- if(seen.size!==records.length)throw Error("Duplicate saved solo experiment rows");
+ }else atomic(manifestPath,manifest);
+ const seen=c.trace==="full"?verifyRecordedTraces(records,c.out):
+  new Set(records.map(key));
+ if(seen.size!==records.length)
+  throw Error("Duplicate saved solo experiment rows");
  const pending=[];
  for(let replicate=0;replicate<c.runsPerHero;replicate++)
   for(const hero of SOLO_HEROES)
@@ -591,7 +676,7 @@ async function main(){
     stop("worker error",true);return;
    }
    active--;w.busy=false;
-   const row={...message.result,...message.tag};
+   const row={...message.result,...message.tag,revision};
    const k=key(row);
    if(!seen.has(k)){
     appendFileSync(recordPath,JSON.stringify(row)+"\n");
