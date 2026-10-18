@@ -19,7 +19,8 @@ import {randomSource} from "./engine/random.js";
 import {prepareRolloutDecks,sampleRolloutDecks} from "./rollout-state.js";
 import {sampledCombatRolloutAction} from "./combat-rollout-expectimax.js";
 import {resolveExploration} from "./mcts-hybrid-defaults.js";
-import {pragmaticSoloAction,usefulSoloEquipmentAction} from "./solo-pragmatic.js";
+import {pragmaticSoloAction,pragmaticSoloPreference,
+ usefulSoloEquipmentAction} from "./solo-pragmatic.js";
 import {implicitExpeditionHeuristic,implicitUCTExploitation,
  backupImplicit,implicitSelectedMean} from "./mcts-implicit.js";
 // sampleRolloutDecks allocates fresh arrays for each call. These are owned
@@ -137,12 +138,19 @@ function nodeFor(tree,key,actions,reuseEdgeActions=false){
  });
  return {node,candidates,isNew};
 }
-function select(node,candidates,rng,c,scratch=null,implicitWeight=0){
+function select(node,candidates,rng,c,scratch=null,implicitWeight=0,
+ preferredId=null){
  const unseen=scratch?scratch.unseen:[];
  if(scratch)unseen.length=0;
  for(const candidate of candidates)
   if(candidate.edge.visits===0)unseen.push(candidate);
- if(unseen.length)return rng.choose(unseen);
+ if(unseen.length){
+  if(preferredId){
+   const preferred=unseen.find(candidate=>candidate.id===preferredId);
+   if(preferred&&rng.die(4)<=3)return preferred;
+  }
+  return rng.choose(unseen);
+ }
  // Preserve identical UCT scores and the same single tie-breaking draw,
  // without allocating score objects or computing log(visits) per action.
  const logVisits=Math.log(Math.max(2,node.visits));
@@ -153,7 +161,9 @@ function select(node,candidates,rng,c,scratch=null,implicitWeight=0){
   const e=candidates[i].edge;
   const exploitation=implicitWeight?
    implicitUCTExploitation(e,implicitWeight):e.wins/e.visits;
-  const score=exploitation+c*Math.sqrt(logVisits/e.visits);
+  const softBonus=preferredId&&candidates[i].id===preferredId?
+   0.15/Math.sqrt(e.visits):0;
+  const score=exploitation+c*Math.sqrt(logVisits/e.visits)+softBonus;
   scores[i]=score;
   if(score>maximum)maximum=score;
  }
@@ -262,7 +272,8 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Unknown implicit heuristic mode");
  if(implicitHeuristicMode!=="legacy"&&session.state.heroes.length!==1)
   throw Error("Solo implicit heuristic requires exactly one Hero");
- if(!["default","solo-pragmatic"].includes(simulationPolicy))
+ if(!["default","solo-pragmatic","solo-pragmatic-external",
+   "solo-pragmatic-tree","solo-pragmatic-rollout"].includes(simulationPolicy))
   throw Error("Unknown MCTS simulation policy");
  if(simulationPolicy==="solo-pragmatic"&&session.state.heroes.length!==1)
   throw Error("Pragmatic MCTS simulation requires exactly one Hero");
@@ -296,7 +307,12 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Invalid prior observed chance replay");
  rootActions=rootActions??sessionActions(session);
  if(!rootActions.length)throw Error("No pending player choice to search");
- const pragmaticRootKeys=simulationPolicy==="solo-pragmatic"?
+ const pragmaticEnabled=simulationPolicy!=="default";
+ const pragmaticTree=simulationPolicy==="solo-pragmatic"||
+  simulationPolicy==="solo-pragmatic-tree";
+ const pragmaticRollout=simulationPolicy==="solo-pragmatic"||
+  simulationPolicy==="solo-pragmatic-rollout";
+ const pragmaticRootKeys=pragmaticEnabled?
   new Set(rootActions.map(actionKey)):null;
  const original=JSON.stringify(observeSession(session));
  const actualRng=session.state.rng.snapshot();
@@ -308,7 +324,9 @@ export function searchDecision(session,{budget=100,seed=1,
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0,rolloutCombatSearches=0;
  let pragmaticTreeShortcuts=0,pragmaticRolloutShortcuts=0,
-  pragmaticSuppressedEquipment=0;
+  pragmaticSuppressedEquipment=0,pragmaticTreeSoft=0,
+  pragmaticRolloutSoft=0,pragmaticTreeSoftOffered=0,
+  pragmaticRolloutSoftOffered=0;
  const pragmaticRules={};
  const incompleteReasons={};
  const phaseOpportunities={},phaseSelections={},actionOpportunities={},
@@ -443,14 +461,16 @@ export function searchDecision(session,{budget=100,seed=1,
     const forced=progressionPhases.has(sim.phase)&&
      equipmentStreak>=MAX_ROLLOUT_EQUIPMENT_ACTIONS;
     // Rules and canonical legality do not change; only candidate selection.
+    const wasRollout=treeMode==="frontier"&&inRollout;
     let candidates=actions,pragmaticRule=null;
-    if(simulationPolicy==="solo-pragmatic"){
+    if(pragmaticEnabled){
      if(depth===0){
       // Honor equipment options removed by the actual decision policy.
       candidates=actions.filter(a=>pragmaticRootKeys.has(actionKey(a)));
       if(candidates.length!==pragmaticRootKeys.size)
        throw Error("Pragmatic root candidates are not canonical legal actions");
-     }else if(!(forced&&actions.some(a=>a.kind==="continue"))){
+     }else if((wasRollout?pragmaticRollout:pragmaticTree)&&
+      !(forced&&actions.some(a=>a.kind==="continue"))){
       // Shared with actual play, so no hidden cards or future dice are used.
       const shortcut=pragmaticSoloAction(sim,actions);
       const upgrade=shortcut?null:usefulSoloEquipmentAction(sim,actions);
@@ -478,7 +498,17 @@ export function searchDecision(session,{budget=100,seed=1,
       actions.find(a=>a.kind==="continue");
      if(advance){candidates=[advance];pragmaticRule=null;}
     }
-    const wasRollout=treeMode==="frontier"&&inRollout;
+    // Risk-sensitive combat recommendations are priors, not forced edges.
+    const softOn=wasRollout?pragmaticRollout:pragmaticTree;
+    const softPreference=softOn&&!pragmaticRule&&!forced?
+     pragmaticSoloPreference(sim,candidates):null;
+    const softId=softPreference?actionKey(softPreference.action):null;
+    if(softPreference){
+     if(!candidates.some(a=>actionKey(a)===softId))
+      throw Error("Soft pragmatic preference is not a legal search candidate");
+     if(wasRollout)pragmaticRolloutSoftOffered++;
+     else pragmaticTreeSoftOffered++;
+    }
     let choice,selectedId,progress=false;
     if(treeMode==="frontier"&&inRollout){
      const continueAction=forced?actions.find(a=>a.kind==="continue"):null;
@@ -502,8 +532,12 @@ export function searchDecision(session,{budget=100,seed=1,
        rolloutCombatThisTrial++;rolloutCombatSearches++;
       }
      }
+     // Rollouts follow the safe combat preference three quarters of the
+     // time, but retain random exploration of every legal alternative.
+     const softChoice=softId&&choiceRng.die(4)<=3?
+      candidates.find(a=>actionKey(a)===softId):null;
      choice=continueAction||(pragmaticRule?candidates[0]:null)||
-      combatChoice||choiceRng.choose(candidates);
+      combatChoice||softChoice||choiceRng.choose(candidates);
      progress=Boolean(continueAction);
      // The history key is not used after entering a default rollout.
      selectedId=null;
@@ -520,7 +554,9 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedChoice=forced?
        candidates.find(a=>a.kind==="continue"):
        (pragmaticRule?candidates[0]:null);
-      choice=forcedChoice||choiceRng.choose(candidates);
+      const preferredCold=!forcedChoice&&softId&&choiceRng.die(4)<=3?
+       candidates.find(a=>actionKey(a)===softId):null;
+      choice=forcedChoice||preferredCold||choiceRng.choose(candidates);
       selectedId=actionKey(choice);
       selectedEdge={action:reuseEdgeActions&&Object.isFrozen(choice)?choice:{...choice},
        visits:0,wins:0};
@@ -534,7 +570,7 @@ export function searchDecision(session,{budget=100,seed=1,
        (pragmaticRule?found.candidates[0]:null);
       const selected=forcedCandidate||
        select(node,found.candidates,choiceRng,effectiveExploration,selectionScratch,
-        implicitWeight);
+        implicitWeight,softId);
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
@@ -546,6 +582,10 @@ export function searchDecision(session,{budget=100,seed=1,
      path.push({node,edge:selectedEdge});
      if(treeMode==="frontier"&&selectedEdge.visits===0)
       inRollout=true;
+    }
+    if(softId&&actionKey(choice)===softId){
+     if(wasRollout)pragmaticRolloutSoft++;
+     else pragmaticTreeSoft++;
     }
     if(pragmaticRule){
      if(wasRollout)pragmaticRolloutShortcuts++;
@@ -766,11 +806,15 @@ export function searchDecision(session,{budget=100,seed=1,
   terminalWins:wins,terminalWinRate:completed?wins/completed:null,
   maximumDepth,treeNodes:tree.size,
   rolloutEquipmentAdvances,
-  ...(simulationPolicy==="solo-pragmatic"?{
+  ...(pragmaticEnabled?{
    simulationPolicy,pragmaticSimulation:{
     treeShortcuts:pragmaticTreeShortcuts,
     rolloutShortcuts:pragmaticRolloutShortcuts,
     suppressedEquipmentCandidates:pragmaticSuppressedEquipment,
+    treeSoftOffered:pragmaticTreeSoftOffered,
+    treeSoftChosen:pragmaticTreeSoft,
+    rolloutSoftOffered:pragmaticRolloutSoftOffered,
+    rolloutSoftChosen:pragmaticRolloutSoft,
     rules:pragmaticRules
    }}:{}),
   maxConsecutiveRolloutEquipmentActions:MAX_ROLLOUT_EQUIPMENT_ACTIONS,
@@ -797,9 +841,9 @@ export function searchDecision(session,{budget=100,seed=1,
    "After six consecutive reversible equipment moves in a sampled rollout "+
     "the canonical Continue action is selected; every legal root action "+
     "is still searched and all printed consequences are executed",
-   ...(simulationPolicy==="solo-pragmatic"?[
-    "Internal tree nodes and rollouts apply solo shortcuts and suppress "+
-     "unprofitable equipment changes without altering game rules"
+   ...(pragmaticEnabled?[
+    "Opt-in internal tree and rollout heuristics are independently selectable; "+
+     "combat advice is a soft prior and does not remove legal alternatives"
    ]:[])
   ]};
 }
