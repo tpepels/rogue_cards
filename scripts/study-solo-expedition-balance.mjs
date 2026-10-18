@@ -569,7 +569,7 @@ async function main(){
    totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*c.arms.length,
    workers:c.workers,hours:c.hours,budget:c.budget,
    c:c.c,alpha:c.alpha,samples:c.samples,
-   tacticalMax:c.tacticalMax,trace:c.trace,sourceStudy:c.sourceStudy,
+   tacticalMax:c.tacticalMax,trace:c.trace,equipmentMode:c.equipmentMode,sourceStudy:c.sourceStudy,
    output:c.out
   },null,2));
   return;
@@ -592,7 +592,7 @@ async function main(){
   c:c.c,alpha:c.alpha,
   heuristicMode:selected.heuristic,
   samples:c.samples,tacticalMax:c.tacticalMax,
-  trace:c.trace,traceSchema:"solo-full-expedition-decision-trace-v1",
+  trace:c.trace,equipmentMode:c.equipmentMode,traceSchema:"solo-full-expedition-decision-trace-v1",
   sourceStudy:c.sourceStudy,sourceStudyHash:studyHash,
   sourceRanking:selected.source,gameMode:"everything-goes",
   heroes:SOLO_HEROES,arms:c.arms
@@ -663,7 +663,7 @@ async function main(){
      heuristicMode:selected.heuristic,
      samples:c.samples,tacticalMax:c.tacticalMax,
      maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
-     recordTelemetry:c.trace==="full",traceOutputDir:c.out
+     equipmentMode:c.equipmentMode,recordTelemetry:c.trace==="full",traceOutputDir:c.out
     }});
    }
  const workers=[];let active=0,stopped=false;
