@@ -101,7 +101,9 @@
     "audit:mcts-implicit-heuristic": "node scripts/audit-implicit-heuristic.mjs",
     "study:mcts-factorial": "node scripts/study-mcts-factorial.mjs",
     "test:mcts-solo-overnight": "node --test tests/mcts-solo-overnight.test.mjs",
-    "study:mcts-solo-overnight": "node scripts/study-mcts-solo-overnight.mjs"
+    "study:mcts-solo-overnight": "node scripts/study-mcts-solo-overnight.mjs",
+    "study:solo:balance": "node scripts/study-solo-expedition-balance.mjs",
+    "test:solo:balance": "node --test tests/solo-expedition-balance.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
