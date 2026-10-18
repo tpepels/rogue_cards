@@ -1,0 +1,36 @@
+name: Pragmatic MCTS four-arm pilot
+on:
+  push:
+    paths:
+      - '.github/workflows/pragmatic-mcts-ablation.yml'
+  workflow_dispatch:
+jobs:
+  paired-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove four-way canonical solo pilot with matched Hero-seeds
+        env:
+          OUT: results/pragmatic-ablation-ci
+          SOURCE_STUDY: none
+          RUNS_PER_HERO: '2'
+          WORKERS: '8'
+          HOURS: '2'
+          BUDGET: '8'
+          SEED: '20261101'
+        run: bash scripts/run-pragmatic-ablation.sh
+      - name: Upload matched results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pragmatic-mcts-ablation
+          path: |
+            results/pragmatic-ablation-ci/**/summary.json
+            results/pragmatic-ablation-ci/**/trials.ndjson
+            results/pragmatic-ablation-ci/comparison.json
+            results/pragmatic-ablation-ci/comparison.md
+          if-no-files-found: warn
