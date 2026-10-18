@@ -6,6 +6,7 @@ import {createSessionPolicy,pragmaticSoloAction,
  selectSessionPolicyAction} from "../src/session-policy.js";
 import {ALL_MONSTERS} from "../src/decks.js";
 import {playFullSoloExpedition} from "../scripts/study-solo-expedition-balance.mjs";
+import {createDecisionRecorder} from "../src/experiment-telemetry.js";
 
 const hero=(seed=891)=>createDecisionSession({
  seed,heroes:["warrior"],gameMode:"everything-goes"
@@ -154,4 +155,30 @@ test("Canonical complete expedition records policy shortcuts and ends normally",
   ["policy-shortcut"].includes(e.via)));
  assert.ok(r.events.every(e=>!e.policyRule||
   !e.search),"Do not count bypassed MCTS as an actual search");
+});
+
+test("Actual committed healing shortcut is audited with its reason and zero MCTS diagnostics",()=>{
+ const s=hero(2032);s.state.heroes[0].hp=2;
+ give(s,"ex-rations");
+ const recorder=createDecisionRecorder();
+ const legal=sessionActions(s);
+ let rule=null;
+ const action=selectSessionPolicyAction(s,createSessionPolicy(),{
+  equipmentMode:"solo-pragmatic",legalActions:legal,
+  onPolicyDecision:event=>{rule=event.rule;},
+  onSearchResult:()=>assert.fail("No search should happen")
+ });
+ assert.equal(rule,"safe-heal:ex-rations");
+ recorder.handler({moment:"before",step:1,phase:s.phase,
+  actions:legal,chosen:action,session:s,policyRule:rule,
+  searchMs:0,diagnostic:null});
+ submitDecision(s,action,{observeResult:false,recordHistory:false});
+ recorder.handler({moment:"after",step:1,phase:"between-rooms",
+  actions:legal,chosen:action,session:s,dice:[],transitionMs:0});
+ const events=recorder.finish();
+ assert.equal(events.length,1);
+ assert.equal(events[0].via,"policy-shortcut");
+ assert.equal(events[0].policyRule,"safe-heal:ex-rations");
+ assert.equal(events[0].search,undefined);
+ assert.equal(events[0].after.heroes[0].hp,4);
 });
