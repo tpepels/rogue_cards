@@ -16,6 +16,7 @@
 import {sessionActions} from "./engine/decision-session.js";
 import {searchDecision} from "./session-mcts.js";
 import {resolveSearchProfile} from "./mcts-hybrid-defaults.js";
+import {itemOptions} from "./item-access.js";
 
 export const MAX_CONSECUTIVE_EQUIPMENT_ACTIONS=12;
 const equipmentKinds=new Set(["equip","unequip","transfer"]);
@@ -23,7 +24,8 @@ const safePhases=new Set(["between-rooms","explore"]);
 
 export function createSessionPolicy(){
  return {consecutiveEquipment:0,cycleBreaks:0,equipmentActions:0,
-  equippedUpgradeCount:0,equipmentChoicesSuppressed:0};
+  equippedUpgradeCount:0,equipmentChoicesSuppressed:0,
+  shortcutCounts:{},shortcutCount:0};
 }
 
 /**
@@ -77,6 +79,91 @@ export function usefulSoloEquipmentAction(session,legal){
 }
 
 
+
+/**
+ * Conservative, opt-in solo human-play shortcuts. Each action is selected
+ * from canonical sessionActions() and checked for real printed costs.
+ *
+ * "low HP -> heal" applies ONLY to reliable healing Tools with a known
+ * positive effect at a safe between-Rooms boundary. Unidentified
+ * Potions, once-per-Room reactions and random Item outcomes go to MCTS.
+ *
+ * "low HP -> avoid" applies at the actual parley boundary. If a
+ * non-costly WIT parley is offered we try it; a paid dismissal is
+ * allowed when HP is critically low and the Hero will keep at least
+ * one Item where that is necessary. High-HP Heroes facing a Monster
+ * with actual printed DEFEAT operations fight for those rewards.
+ * Borderline cases remain MCTS decisions; there is no false
+ * guaranteed-flee assumption.
+ */
+export function pragmaticSoloAction(session,legal){
+ if(session.state.heroes.length!==1)return null;
+ const s=session.state,h=s.heroes[0];
+ if(!h||h.hp<=0||!legal.length)return null;
+ const maxHP=h.card.hp,hp=h.hp,missing=maxHP-hp;
+ if(session.phase==="between-rooms"&&!s.monster&&
+   hp<=Math.ceil(maxHP*0.42)&&missing>=2){
+  const available=itemOptions(s,h,"between-rooms");
+  // These are exact known heal-only effects from printed Tools. Potions
+  // may be unidentified/random and must NOT be blindly consumed.
+  const tools=["ex-rations","ex-bandages"];
+  for(const id of tools){
+   if(id==="ex-bandages"&&missing<4)continue;
+   const option=available.find(o=>o.card.id===id&&
+    o.mode==="healing-tool");
+   const action=option&&legal.find(a=>a.kind==="item-trigger"&&
+    a.phase==="between-rooms"&&a.cardId===id&&
+    a.heroIndex===0&&a.mode==="healing-tool");
+   if(action)return {action,rule:"safe-heal:"+id};
+  }
+ }
+ if(session.phase!=="parley"||s.monster?.stage==="FINAL")return null;
+ const fight=legal.find(a=>a.kind==="fight");
+ const parley=legal.find(a=>a.kind==="parley");
+ if(!fight||!parley)return null;
+ const m=s.monster;
+ // Visible current defensive and offensive stats. No hidden pile
+ // or future random faces are consulted.
+ const stats=s.stats(h);
+ const expectedThreat=Math.max(0.1,(21-Math.max(2,
+  12+stats.def-m.atk))/20)*3.5;
+ const lowHP=hp<=Math.max(4,Math.ceil(maxHP*0.40),
+  Math.ceil(1.6*expectedThreat));
+ const printedReward=Array.isArray(m.v2?.defeatOps)&&
+  m.v2.defeatOps.length>0;
+ // WIT parley can fail and still lead to combat. It is an attempt to
+ // avoid a dangerous fight, not a guarantee of success.
+ const noItemCost=m.v2?.parleyMode==="WIT"||
+  ["bat","wisp"].includes(m.id);
+ const parleyCost=m.v2?.parleyMode==="ITEM"?
+  m.v2.parleyCost:
+  ({rat:1,goblin:2,troll:2,eye:1,rust:1,
+    sentinel:2,crawler:1,mold:1})[m.id]??null;
+ const affordable=parleyCost!==null&&
+  h.inventory.length>parleyCost;
+ const hurtsToParley=["wraith","cultist"].includes(m.id);
+ if(lowHP){
+  if(noItemCost||affordable&&!hurtsToParley)
+   return {action:parley,rule:"low-hp-avoid:"+m.id};
+  // Unable to safely avoid? Let the full search assess actual costs
+  // and odds, rather than force a dangerous paid negotiation.
+  return null;
+ }
+ const healthy=hp>=Math.max(6,Math.ceil(maxHP*0.65),
+  Math.ceil(expectedThreat*3));
+ if(healthy&&printedReward)
+  return {action:fight,rule:"healthy-reward-fight:"+m.id};
+ return null;
+}
+
+function markShortcut(policy,onPolicyDecision,rule,action){
+ policy.shortcutCount=(policy.shortcutCount||0)+1;
+ policy.shortcutCounts??={};
+ policy.shortcutCounts[rule]=(policy.shortcutCounts[rule]||0)+1;
+ if(onPolicyDecision)onPolicyDecision({rule,action});
+ return action;
+}
+
 /** True only when the study has already committed to progress; MCTS
  * cannot change the next action at this boundary.
  */
@@ -93,7 +180,8 @@ export function selectSessionPolicyAction(session,policy,{
  onSearchResult=null,
  rolloutCombatMode=null,rolloutCombatSamples=2,
  rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null,
- implicitHeuristicMode="legacy",equipmentMode="legacy"
+ implicitHeuristicMode="legacy",equipmentMode="legacy",
+ onPolicyDecision=null
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -119,6 +207,8 @@ export function selectSessionPolicyAction(session,policy,{
   throw Error("onSearchProfile must be a function");
  if(onSearchResult!==null&&typeof onSearchResult!=="function")
   throw Error("onSearchResult must be a function");
+ if(onPolicyDecision!==null&&typeof onPolicyDecision!=="function")
+  throw Error("onPolicyDecision must be a function");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
  const parameters=resolveSearchProfile({
@@ -132,16 +222,24 @@ export function selectSessionPolicyAction(session,policy,{
  // Reuse that array instead of rebuilding equipment options a second time.
  const legal=legalActions??sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
- if(!["legacy","solo-efficient"].includes(equipmentMode))
+ if(!["legacy","solo-efficient","solo-pragmatic"].includes(equipmentMode))
   throw Error("Unknown equipment policy mode");
- if(equipmentMode==="solo-efficient"&&session.state.heroes.length!==1)
+ if(equipmentMode!=="legacy"&&session.state.heroes.length!==1)
   throw Error("Solo-efficient equipment policy requires exactly one Hero");
- if(equipmentMode==="solo-efficient"&&safePhases.has(session.phase)){
+ if(equipmentMode==="solo-pragmatic"){
+  const shortcut=pragmaticSoloAction(session,legal);
+  if(shortcut)return markShortcut(policy,onPolicyDecision,
+   shortcut.rule,shortcut.action);
+ }
+ if(equipmentMode!=="legacy"&&safePhases.has(session.phase)){
   const upgrade=usefulSoloEquipmentAction(session,legal);
   if(upgrade){
    policy.equipmentActions++;
    policy.equippedUpgradeCount++;
    policy.consecutiveEquipment++;
+   if(equipmentMode==="solo-pragmatic")
+    return markShortcut(policy,onPolicyDecision,
+     "profitable-equipment",upgrade);
    return upgrade;
   }
   // Do not offer reversible equipment actions as search candidates
@@ -157,7 +255,8 @@ export function selectSessionPolicyAction(session,policy,{
     treeMode,mctsOptimizations,onSearchProfile,onSearchResult,
     rolloutCombatMode,rolloutCombatSamples,
     rolloutCombatMaxDecisions,implicitWeight,exploration,
-    implicitHeuristicMode,equipmentMode:"legacy"
+    implicitHeuristicMode,equipmentMode:"legacy",
+    onPolicyDecision
    });
   }
  }
