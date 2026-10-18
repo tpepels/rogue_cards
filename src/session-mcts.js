@@ -467,7 +467,10 @@ export function searchDecision(session,{budget=100,seed=1,
      if(depth===0){
       // Honor equipment options removed by the actual decision policy.
       candidates=actions.filter(a=>pragmaticRootKeys.has(actionKey(a)));
-      if(candidates.length!==pragmaticRootKeys.size){
+      // A printed choice may yield two distinct legal entries with the
+      // same action fingerprint (e.g. spend identical physical Items).
+      // Compare unique legal keys, not the number of action entries.
+      if(new Set(candidates.map(actionKey)).size!==pragmaticRootKeys.size){
        const present=new Set(candidates.map(actionKey));
        const missing=rootActions.filter(a=>!present.has(actionKey(a)));
        throw Error("Pragmatic root candidates are not canonical legal actions: "+
