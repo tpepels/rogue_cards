@@ -213,8 +213,12 @@ export function playFullSoloExpedition({
  // rooms and final unresolved Rooms can appear in seenRooms. Only the
  // canonical completed-Room counter supports the 36-Room denominator.
  const hasAll36=m.cleared>=3*session.state.roomGoal;
- if(ordinaryEncounters>0&&m.encounterStarts<ordinaryEncounters)
-  throw Error("Inconsistent live encounter counters: stale metrics?");
+ // The returning Will-o'-Wisp is registered as another Monster
+ // APPEARANCE by completePrintedRoomChoice() without a fresh Monster
+ // draw/encounterStarts increment. Those counters have distinct
+ // meanings and must NOT be compared by an >= invariant.
+ // Trace-driven analysis validates both against canonical metric deltas.
+
  return {
   schema:"solo-full-canonical-expedition-v1",
   hero,seed,arm,won:Number(ending==="win"),ending,
@@ -225,6 +229,8 @@ export function playFullSoloExpedition({
   roomsCleared:m.cleared,stageProgress:{...session.state.stageProgress},
   byStage,hasAll36:Number(hasAll36),
   ordinaryEncounters,ordinaryFights,combatContextDamage,
+  // Fresh Monster draws accepted as encounters; differs from returning
+  // appearances such as a Will-o'-Wisp pursuing the Hero.
   encounterStarts:m.encounterStarts,combatStarts:m.combatStarts,
   fightsPerEncounter:ordinaryEncounters?
    ordinaryFights/ordinaryEncounters:null,
@@ -364,6 +370,7 @@ function summarizeCell(items){
   vaultWilson95:wilson(vaultCount,n),
   roomsCleared:mean(items,r=>r.roomsCleared),
   ordinaryEncounters:mean(items,r=>r.ordinaryEncounters),
+  freshEncounterStarts:mean(items,r=>r.encounterStarts),
   ordinaryFights:mean(items,r=>r.ordinaryFights),
   combatConversion:encounterCount?combatCount/encounterCount:null,
   full36Runs:complete36.length,
@@ -444,6 +451,7 @@ export function soloBalanceSummary(records,design){
    "Every selected AI arm starts each paired Hero-seed with the same initial RNG/deck, but subsequent dice sequences may diverge after different decisions.",
    "Fixed outer MCTS visits across arms do NOT imply equal CPU time; compare meanSearchSeconds and wall seconds.",
    "Causal card balance requires controlled counterfactual changes; monster/card usage is descriptive exposure, not standalone evidence of imbalance.",
+   "Ordinary Monster appearances (monsterVisits) can include returning Will-o'-Wisps, while encounterStarts counts new encounter draws. Do not compare them with a >= invariant.",
    "Ordinary encounter/fight rates use ONLY regional Monsters. Warden phases are excluded.",
    "The 16–20 encounter target is assessed ONLY in runs that canonically COMPLETED 36 normal Rooms (metrics.cleared), not just saw them; if full36Runs=0 the target remains unmeasured.",
    "Combat-context damage is measured by the engine's Monster-ID damage counters (not general damage). Fractions are weighted by fights × starting maximum Hero HP.",
