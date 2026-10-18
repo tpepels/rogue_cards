@@ -43,19 +43,23 @@ export const strategies=Object.freeze(["survival","treasure","magic","seal","neg
 export const roomPolicies=Object.freeze(["scripted","contextual","uniform","second-when-legal"]);
 
 export class ExpeditionState {
- constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted",extraObjectId=null,gameMode="original"}={}){
+ constructor({seed=1,heroes=["warrior"],strategy="survival",roomPolicy="scripted",extraObjectId=null,gameMode="original",cardPools=null}={}){
   if(!["original","everything-goes"].includes(gameMode))throw Error("Unknown game mode "+gameMode);
   this.gameMode=gameMode;
+  if(cardPools!==null&&cardPools._stagingCatalogue!==true)
+   throw Error("Only a validated staging catalogue can alter card pools");
+  this.cardPools=cardPools;
   this.roomGoal=gameMode==="everything-goes"?12:3;
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
   if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
   if(!Array.isArray(heroes)||heroes.length<1||heroes.length>2)throw RangeError("Choose 1–2 Heroes");
   this.rng=randomSource(seed);this.strategy=strategy;this.roomPolicy=roomPolicy;
+  const staged=cardPools&&gameMode==="everything-goes";
   if(extraObjectId!==null&&!byId(gameMode==="everything-goes"?[...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS]:OBJECTS,extraObjectId))
    throw Error("Unknown extra Object "+extraObjectId);
   this.extraObjectGranted=false;
   this.objectsEverOwned=new Set();this.vaultState=null;this.heroes=heroes.map(id=>{
-   const card=byId(HEROES,id);if(!card)throw Error("Unknown Hero "+id);
+   const card=byId(staged?cardPools.heroes:HEROES,id);if(!card)throw Error("Unknown Hero "+id);
    return {card,hp:card.hp,inventory:[],slots:{},used:new Set(),poison:false,immune:false,
     nextAdv:0,nextDis:0,nextAtk:0,nextDamage:0,
     nextWitDis:0,nextHitBlock:0,nextDarknessDis:0,ignoreDarknessOnce:false,
@@ -64,14 +68,16 @@ export class ExpeditionState {
     damageVulnerability:0,scouting:0,kept:[],defDuration:0,alive:true};
   });
   this.deck=gameMode==="everything-goes"?
-   this.rng.shuffle(physicalCopies([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS])):
+   this.rng.shuffle(physicalCopies(staged?cardPools.items:[...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS])):
    copyDeck(this.rng,OBJECTS);
   // Physical draws from the hidden Item pile, NOT acquisitions/transfers
   // (e.g. reclaiming an Item from the Bottomless Well).
   this.deckRemovedCounts={};
-  const roomCards=gameMode==="everything-goes"?[...ROOMS,...PRINT_ONLY_ROOMS]:ROOMS;
+  const roomCards=gameMode==="everything-goes"?
+   (staged?cardPools.rooms:[...ROOMS,...PRINT_ONLY_ROOMS]):ROOMS;
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(roomCards.filter(x=>x.stage===s))]));
-  const monsterPool=gameMode==="everything-goes"?[...MONSTERS,...EXTRA_MONSTERS]:MONSTERS;
+  const monsterPool=gameMode==="everything-goes"?
+   (staged?cardPools.monsters:[...MONSTERS,...EXTRA_MONSTERS]):MONSTERS;
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,monsterPool.filter(x=>x.stage===s))]));
   this.seenRooms=new Set();
   // Publicly revealed corridor alternatives permanently removed from the
@@ -1473,7 +1479,8 @@ export class ExpeditionState {
     }
    }
   }
-  const band=ranges(this.room,face),ops=ROOM_EFFECTS[this.room.id].outcomes[band];
+  const band=ranges(this.room,face),
+   ops=(this.cardPools?.roomEffects?.[this.room.id]??ROOM_EFFECTS[this.room.id]).outcomes[band];
   const roomKey=this.room.id+":"+band;
   this.metrics.roomRollBands[roomKey]=(this.metrics.roomRollBands[roomKey]||0)+1;
   // A kept Reliquary can ignore one printed trap, then must be discarded.
