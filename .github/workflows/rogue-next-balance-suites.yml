@@ -1,0 +1,63 @@
+name: Verify independent encounter and Warden studies
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rogue-next-balance-suites.yml'
+      - 'src/staging/next-balance-hypotheses.js'
+      - 'src/room-effect-model.js'
+      - 'src/engine/expedition-state.js'
+      - 'scripts/study-balance-hypotheses.mjs'
+      - 'tests/next-balance-hypotheses.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify new staged mechanics, frozen canonical cards and Warden isolation
+        run: npm run test:balance:next
+      - name: Complete independent encounter screening and held-out trial
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite encounters --smoke true --variant-limit 2 \
+            --finalists 1 --heroes warrior,witch \
+            --workers 2 --minutes 8 \
+            --out "$RUNNER_TEMP/encounters-v2-smoke"
+      - name: Complete Warden-only screening and held-out trial
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite warden --smoke true --variant-limit 2 \
+            --finalists 1 --heroes warrior,witch \
+            --workers 2 --minutes 8 \
+            --out "$RUNNER_TEMP/warden-v2-smoke"
+      - name: Inspect completed, disjoint study artifacts
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            for(const [dir,suite] of [
+              ["encounters-v2-smoke","encounters"],
+              ["warden-v2-smoke","warden"]
+            ]){
+              const base=process.env.RUNNER_TEMP+"/"+dir+"/";
+              const r=JSON.parse(readFileSync(base+"summary.json","utf8"));
+              if(r.status!=="complete"||r.suite!==suite||
+                r.screen.completedCanonical!==2||
+                r.confirm.completedCanonical!==2||
+                r.totals.rows!==10)throw Error(suite+" not validated");
+              if(suite==="warden"&&!r.screen.ranked.every(x=>
+                x.measured.wardenEngagement))throw Error("Warden metrics missing");
+            }
+          '
+      - name: Save separate verified study artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogue-next-balance-suites-smoke
+          path: ${{ runner.temp }}/*-v2-smoke/
+          if-no-files-found: ignore
