@@ -17,6 +17,17 @@ on:
       - 'scripts/tune-mcts-hybrid-core.mjs'
       - 'tests/solo-coarse-tuner.test.mjs'
       - 'package.json'
+      - 'src/staging/catalogue.js'
+      - 'src/rollout-state.js'
+      - 'src/engine/expedition-state.js'
+      - 'src/engine/decision-session.js'
+      - 'src/engine/index.js'
+      - 'src/engine/vault-encounter.js'
+      - 'src/engine/fork-state.js'
+      - 'scripts/study-card-staging.mjs'
+      - 'tests/card-staging.test.mjs'
+      - 'experiments/staging/**'
+      - 'experiments/agents/**'
       - 'tests/solo-equipment-frequency.test.mjs'
       - 'tests/solo-pragmatic-policy.test.mjs'
       - 'tests/solo-expedition-balance.test.mjs'
@@ -25,7 +36,7 @@ on:
 jobs:
   trace-integrity:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -74,6 +85,11 @@ jobs:
             if(s.expectedScreen!==576||s.holdoutScenarioCount!==48)
               throw Error("Invalid refinement sample plan");
           '
+      - name: Prove canonical/staging isolation and matched card studies
+        run: npm run test:card:staging
+      - name: Verify staging pilot manifest
+        run: |
+          npm run study:card:staging -- --stage experiments/staging/wisp-hp-8.json --runs-per-hero 1 --dry-run
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
