@@ -212,6 +212,8 @@ export function playFullSoloExpedition({
  // committed action. Never hold a metrics reference across the run.
  let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
  let combatSearchMs=0,vaultSeen=false;
+ const pragmaticSimulation={treeShortcuts:0,rolloutShortcuts:0,
+  suppressedEquipmentCandidates:0,rules:{}};
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const recorder=recordTelemetry?createDecisionRecorder({
@@ -249,7 +251,16 @@ export function playFullSoloExpedition({
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
    equipmentMode,
    onPolicyDecision:event=>{shortcutReason=event.rule;},
-   ...(recorder?{onSearchResult:result=>{searchDiagnostics=result;}}:{})
+   onSearchResult:result=>{
+    if(recorder)searchDiagnostics=result;
+    const p=result.pragmaticSimulation;
+    if(!p)return;
+    for(const key of ["treeShortcuts","rolloutShortcuts",
+     "suppressedEquipmentCandidates"])
+     pragmaticSimulation[key]+=p[key]??0;
+    for(const [rule,count] of Object.entries(p.rules??{}))
+     pragmaticSimulation.rules[rule]=(pragmaticSimulation.rules[rule]??0)+count;
+   }
   });
   const spent=performance.now()-started;
   if(policy.equippedUpgradeCount>upgradesBefore||
@@ -347,7 +358,7 @@ export function playFullSoloExpedition({
   equipmentChoicesSuppressed:policy.equipmentChoicesSuppressed,
   policyShortcutCount:policy.shortcutCount,
   policyShortcutReasons:{...policy.shortcutCounts},
-  equipmentMode
+  equipmentMode,pragmaticSimulation
  };
 }
 export function parseSoloBalanceArgs(argv){
