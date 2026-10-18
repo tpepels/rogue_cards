@@ -27,6 +27,17 @@ partial report must not be mistaken for a finished optimization.
 
 ### Phase B – Full solo Everything Goes balance (new, prepared)
 
+**Important finding from the completed overnight run:** the `solo-threat`
+implicit policy chose Elbereth **flee** in 1,434 / 2,304 equal-visits
+encounter starts (62.2%), versus 119 / 2,304 (5.2%) for UCT.
+The root encounter score counts safely leaving a Monster as `clear`,
+even when the Monster was not killed and its DEFEAT reward was not
+earned. Therefore the large encounter-level gain is NOT proof that
+the full expedition benefits. This is precisely what the next
+full-expedition balance study must independently determine.
+
+
+
 Dry run to inspect the design, with **no data/files created**:
 
 ```sh
@@ -59,9 +70,14 @@ CPU-calibrated hybrid score among `legacy`, `solo-hp` and
 `--from-study` and pass `--heuristic solo-threat` (or another
 known profile). The balance run evaluates on new starting seeds.
 
-Three arms compete **on matched initial full-expedition seeds** for each
-of the eight individual Heroes: plain UCT, UCT+implicit, and
-UCT+implicit+sampled-expectimax. All three commit every move through the
+The **default** study now runs TWO arms **on matched initial
+full-expedition seeds** for each of the eight individual Heroes:
+plain UCT and UCT+implicit using the best sampled SOLO heuristic.
+Expectimax was 6–19x more expensive per root decision but provided
+no reliable improvement in the finished 46,080-trial solo encounter
+audit. For a separate exploratory full-expedition comparison, pass
+`--arms uct,implicit,hybrid`; do NOT conflate its different compute
+cost with a fair time-budget match. All three commit every move through the
 same canonical 36-Room `everything-goes` game. All live episodes must
 end in a genuine printed win, death or escape; nonterminal/stalled/
 unimplemented branches halt the run with an error and are not treated
