@@ -1,12 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtempSync,writeFileSync,rmSync,existsSync} from "node:fs";
+import {mkdtempSync,writeFileSync,rmSync,existsSync,readFileSync} from "node:fs";
+import {gunzipSync} from "node:zlib";
+import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {BALANCE_TARGETS,SOLO_HEROES,
  parseSoloBalanceArgs,soloBalanceSummary,
- chooseHeuristicFromCompletedStudy,playFullSoloExpedition}
+ chooseHeuristicFromCompletedStudy,playFullSoloExpedition,
+ persistSoloDecisionTrace}
  from "../scripts/study-solo-expedition-balance.mjs";
 
 test("Solo balance protocol is eight Heroes, three AI arms, 36-Room goal",()=>{
@@ -115,7 +118,8 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
  const r=playFullSoloExpedition({
   hero:"warrior",seed:20261016,arm:"implicit",
   heuristicMode:"solo-threat",budget:1,
-  maxGameSteps:20000,maxSearchSteps:5000
+  maxGameSteps:20000,maxSearchSteps:5000,
+  recordTelemetry:true
  });
  assert.equal(r.hero,"warrior");
  assert.equal(r.schema,"solo-full-canonical-expedition-v1");
@@ -146,6 +150,33 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
  const visits=Object.values(r.coverage.monsterVisits).reduce((n,v)=>n+v,0);
  assert.equal(visits,r.ordinaryEncounters,
   "Regional Monster exposure must match canonical terminal metrics");
+ // No silent aggregation: preserve every observed state and every
+ // committed decision, including the complete engine counters.
+ assert.equal(r.finalMetrics.cleared,r.roomsCleared);
+ assert.equal(r.finalMetrics.damage,r.damage);
+ assert.equal(r.finalMetrics.encounterStarts,r.encounterStarts);
+ assert.equal(r.events.length,r.steps);
+ assert.equal(r.initialSnapshot.heroes[0].id,"warrior");
+ assert.equal(r.events.at(-1).after.heroes[0].hp,r.finalHero.hp);
+ const tmp=mkdtempSync(join(tmpdir(),"rc-solo-trace-"));
+ try{
+  persistSoloDecisionTrace(r,{hero:"warrior",replicate:0,arm:"implicit"},tmp);
+  assert.ok(r.traceSHA256);
+  assert.equal(r.events,undefined);
+  const archive=readFileSync(join(tmp,r.traceFile));
+  assert.equal(createHash("sha256").update(archive).digest("hex"),r.traceSHA256);
+  const records=gunzipSync(archive).toString("utf8").trim().split("\n").
+   map(JSON.parse);
+  assert.equal(records.length,r.traceEvents);
+  assert.equal(records.length,r.steps);
+  assert.ok(records.every(e=>e.before&&e.after&&e.metrics&&
+   e.chosen&&Array.isArray(e.legal)));
+  assert.ok(records.some(e=>e.before.room?.id||e.after.room?.id));
+  assert.ok(records.some(e=>e.before.monster?.id||e.after.monster?.id));
+  assert.ok(records.some(e=>e.metrics.cleared));
+  assert.ok(records.every(e=>Array.isArray(e.dice)));
+  assert.equal(records.at(-1).after.heroes[0].hp,r.finalHero.hp);
+ }finally{rmSync(tmp,{recursive:true,force:true});}
 });
 
 test("Side-effect-free dry-run lists all full-solo policies without creating output",()=>{
