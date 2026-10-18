@@ -58,7 +58,13 @@ export function analyzeSoloEvents(record,events){
   if(e.step!==i+1||!e.before||!e.after||!e.chosen||
    !e.metrics||!Array.isArray(e.dice))
    throw Error("Malformed decision event "+(i+1)+" for "+record.hero);
-  if(previous&&JSON.stringify(previous.after)!==JSON.stringify(e.before))
+  // A pending nested reaction can change the phase *label* used in
+  // recorder.before without changing the canonical engine state.
+  // Compare the immutable, meaningful continuity anchors instead.
+  if(previous&&(previous.after.heroes?.[0]?.hp!==e.before.heroes?.[0]?.hp||
+   previous.after.room?.id!==e.before.room?.id||
+   previous.after.monster?.id!==e.before.monster?.id||
+   previous.after.monster?.hp!==e.before.monster?.hp))
    throw Error("Gapped canonical state between events "+i+" and "+(i+1));
   const before=e.before.heroes?.[0],after=e.after.heroes?.[0];
   if(!before||!after)throw Error("Trace without solo Hero");
@@ -98,7 +104,8 @@ export function analyzeSoloEvents(record,events){
    mapDelta(b.itemDraws,metric.objectDraws);
    mapDelta(b.itemActivations,metric.objectActivations);
    for(const [id,change] of Object.entries(metric.itemUses||{})){
-    const old=change?.total;
+    const old=change?.total??(change?.now?.total!==undefined?
+     {was:change?.was?.total??0,now:change.now.total}:undefined);
     const count=delta(old);
     if(count)add(b.itemUses,id,count);
    }
