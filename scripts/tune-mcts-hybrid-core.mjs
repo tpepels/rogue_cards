@@ -62,6 +62,8 @@ export function evaluateHybridJob({
   collectCoverage:false,exploration:candidate.c,
   implicitWeight:candidate.alpha,
   implicitHeuristicMode:candidate.heuristicMode??"legacy",
+  implicitHpScale:candidate.implicitHpScale??1,
+  implicitThreatScale:candidate.implicitThreatScale??1,
   rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   rolloutCombatSamples:samples,
   rolloutCombatMaxDecisions:tacticalMax,
@@ -118,6 +120,8 @@ export function evaluateHybridJob({
   softTreeFirstVisitProbability:
    candidate.softTreeFirstVisitProbability??0.75,
   softRolloutProbability:candidate.softRolloutProbability??0.75,
+  implicitHpScale:candidate.implicitHpScale??1,
+  implicitThreatScale:candidate.implicitThreatScale??1,
   scenarioId,replicate,phase,seed,budget,samples,tacticalMax,
   action:mctsActionKey(recommended),
   searchMs,evalMs,rolloutCombatSearches:result.rolloutCombatSearches||0,
