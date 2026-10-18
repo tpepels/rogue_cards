@@ -1,0 +1,45 @@
+name: Validate physical-card hypothesis study
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/balance-hypotheses-smoke.yml'
+      - 'src/staging/balance-hypotheses.js'
+      - 'scripts/study-balance-hypotheses.mjs'
+      - 'tests/balance-hypotheses.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+jobs:
+  verify-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate all physical-card staging hypotheses
+        run: npm run test:balance:hypotheses
+      - name: Complete small genuinely paired screening and holdout
+        run: |
+          npm run study:balance:hypotheses -- \
+            --smoke true --variant-limit 2 --finalists 1 \
+            --screen-repeats 1 --confirm-repeats 1 \
+            --heroes warrior,witch --workers 2 --minutes 8 \
+            --out "$RUNNER_TEMP/study-hypotheses-smoke"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const report=JSON.parse(readFileSync(process.env.RUNNER_TEMP+
+              "/study-hypotheses-smoke/summary.json","utf8"));
+            if(report.status!=="complete"||
+              report.screen.completedCanonical!==2||
+              report.confirm.completedCanonical!==2||
+              report.totals.rows!==10)
+              throw Error("Pilot screening/confirmation did not complete as paired");
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hypothesis-study-smoke
+          path: ${{ runner.temp }}/study-hypotheses-smoke/
+          if-no-files-found: ignore
