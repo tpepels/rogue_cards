@@ -9,6 +9,7 @@ on:
       - 'src/session-policy.js'
       - 'scripts/audit-monster-frequency.mjs'
       - 'tests/solo-equipment-frequency.test.mjs'
+      - 'tests/solo-pragmatic-policy.test.mjs'
       - 'tests/solo-expedition-balance.test.mjs'
       - '.github/workflows/solo-balance-telemetry.yml'
   workflow_dispatch:
@@ -23,6 +24,8 @@ jobs:
           node-version: '22'
       - name: Test efficient solo equipment policy and printed Monster exposure
         run: npm run test:solo:equipment-frequency
+      - name: Prove deterministic HP, reward and parley shortcuts
+        run: npm run test:solo:pragmatic
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
