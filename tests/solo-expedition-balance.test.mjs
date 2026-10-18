@@ -21,12 +21,17 @@ test("Solo balance protocol is eight Heroes, three AI arms, 36-Room goal",()=>{
  assert.equal(c.workers,8);
  assert.equal(c.runsPerHero,30);
  assert.equal(c.heuristic,"solo-threat");
+ assert.deepEqual(c.arms,["uct","implicit"]);
  assert.equal(BALANCE_TARGETS.soloWinRate,0.4);
  assert.equal(BALANCE_TARGETS.vaultReachRate,0.5);
  assert.deepEqual(BALANCE_TARGETS.monsterEncountersRange,[16,20]);
  assert.throws(()=>parseSoloBalanceArgs(["--heuristic","auto"]),
   /requires --from-study/);
  assert.throws(()=>parseSoloBalanceArgs(["--workers","0"]),/workers/);
+ assert.deepEqual(parseSoloBalanceArgs(["--arms","uct,implicit,hybrid"]).arms,
+  ["uct","implicit","hybrid"]);
+ assert.throws(()=>parseSoloBalanceArgs(["--arms","uct,hybrid"]),/must include/);
+ assert.throws(()=>parseSoloBalanceArgs(["--arms","uct,implicit,implicit"]),/no repeats/);
  assert.throws(()=>parseSoloBalanceArgs(["--heuristic","duo"]),
   /Unknown solo/);
 });
@@ -89,6 +94,14 @@ test("Auto-selected solo heuristic requires sufficient independent night samples
   const x=chooseHeuristicFromCompletedStudy(summaryFile);
   assert.equal(x.heuristic,"solo-threat");
   assert.equal(x.source.length,3);
+  const implicitData={
+   ...data,results:data.results.map(x=>({
+    ...x,arm:x.arm.replace("hybrid-","implicit-")
+   }))
+  };
+  writeFileSync(summaryFile,JSON.stringify(implicitData));
+  assert.equal(chooseHeuristicFromCompletedStudy(summaryFile,"implicit").heuristic,
+   "solo-threat");
   data.results[0].count=80;
   writeFileSync(summaryFile,JSON.stringify(data));
   assert.throws(()=>chooseHeuristicFromCompletedStudy(summaryFile),
@@ -132,8 +145,8 @@ test("Side-effect-free dry-run lists all full-solo policies without creating out
   assert.equal(run.status,0,run.stderr);
   const design=JSON.parse(run.stdout);
   assert.equal(design.heroes.length,8);
-  assert.equal(design.totalPlannedExpeditions,1920);
-  assert.deepEqual(design.policies,["uct","implicit","hybrid"]);
+  assert.equal(design.totalPlannedExpeditions,1280);
+  assert.deepEqual(design.policies,["uct","implicit"]);
   assert.equal(design.heuristic,"solo-threat");
   assert.equal(existsSync(out),false);
  }finally{rmSync(folder,{force:true,recursive:true});}
