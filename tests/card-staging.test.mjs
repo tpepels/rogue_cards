@@ -156,6 +156,37 @@ test("One canonical and staged full solo run preserve printed card globals",{
  assert.equal(a.stagingId,null);
  assert.equal(ALL_MONSTERS.find(x=>x.id==="wisp").hp,before);
 });
+test("No-op staging is an A/A control: same seeds and policy give exactly equal game outcomes",{
+ timeout:120000
+},()=>{
+ const noOp=make({});
+ const conditions=[
+  ["knight",1115715462],
+  ["wizard",2540495206],
+  ["warrior",stageSeed(20261121,0,0)]
+ ];
+ const measurable=[
+  "won","ending","endingKind","vaultReached","roomsCleared",
+  "stageProgress","byStage","hasAll36","ordinaryEncounters",
+  "ordinaryFights","combatContextDamage","encounterStarts",
+  "combatStarts","damage","kills","drawn","spent","itemsUsed",
+  "remainingHp","wipeCause","wipeStage","selectedActions",
+  "phaseDecisions","coverage","finalMetrics","finalInventory",
+  "finalHero","equipmentBreaks","equippedUpgradeCount",
+  "policyShortcutCount","policyShortcutReasons",
+  "pragmaticSimulation","seenRoomIds"
+ ];
+ for(const [hero,seed] of conditions){
+  const args={hero,seed,arm:"implicit",budget:2,c:0.2,alpha:0.5,
+   heuristicMode:"solo-threat",equipmentMode:"solo-pragmatic",
+   mctsPragmaticVariant:"tree-only",recordTelemetry:false};
+  const original=playFullSoloExpedition(args);
+  const staged=playFullSoloExpedition({...args,cardPools:noOp});
+  for(const field of measurable)
+   assert.deepEqual(staged[field],original[field],
+    hero+" seed "+seed+" changed without a card change: "+field);
+ }
+});
 test("Paired report emits Hero/deck/card comparisons without overwriting canonical",()=>{
  const row=(arm,won)=>({arm,hero:"warrior",replicate:0,
   seed:123,won,vaultReached:0,roomsCleared:2,ordinaryEncounters:1,
