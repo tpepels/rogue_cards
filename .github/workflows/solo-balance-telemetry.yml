@@ -25,7 +25,7 @@ on:
 jobs:
   trace-integrity:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -43,6 +43,20 @@ jobs:
           node scripts/study-solo-expedition-balance.mjs --dry-run --mcts-pragmatic rollout-only --runs-per-hero 2 --heuristic solo-threat
       - name: Verify coarse MCTS tuning grid and independent validation
         run: npm run test:solo:coarse
+      - name: Exercise resumable coarse tuning workers on tiny paired grid
+        run: |
+          node scripts/tune-solo-coarse.mjs \
+            --workers 2 --minutes 3 --screen-groups 1 \
+            --holdout-groups 1 --holdout-repetitions 1 \
+            --candidate-limit 2 --out "$RUNNER_TEMP/solo-coarse-smoke"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const r=JSON.parse(readFileSync(process.env.RUNNER_TEMP+
+              "/solo-coarse-smoke/summary.json","utf8"));
+            if(!r.completeScreen||!r.completeValidation||
+              r.recommendedForProduction!==false)
+              throw Error("Coarse MCTS trial was incomplete or automatically promoted");
+          '
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
