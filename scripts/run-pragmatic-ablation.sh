@@ -10,7 +10,11 @@ HOURS="${HOURS:-2}"
 BUDGET="${BUDGET:-8}"
 SEED="${SEED:-20261101}"
 SOURCE_STUDY="${SOURCE_STUDY:-results/mcts-solo-overnight/summary.json}"
-if [[ ! -f "$SOURCE_STUDY" ]]; then
+if [[ "$SOURCE_STUDY" == "none" ]]; then
+ STUDY_ARGS=(--heuristic solo-threat)
+elif [[ -f "$SOURCE_STUDY" ]]; then
+ STUDY_ARGS=(--from-study "$SOURCE_STUDY")
+else
  echo "Missing --from-study source: $SOURCE_STUDY" >&2
  exit 1
 fi
@@ -22,7 +26,7 @@ for variant in external-only tree-only rollout-only both; do
   --runs-per-hero "$RUNS_PER_HERO" --budget "$BUDGET" \
   --seed "$SEED" --c 0.35 --alpha 0.4 \
   --equipment-policy solo-pragmatic --mcts-pragmatic "$variant" \
-  --from-study "$SOURCE_STUDY" \
+  "${STUDY_ARGS[@]}" \
   --out "$OUT/$variant"
 done
 node scripts/report-pragmatic-ablation.mjs "$OUT"
