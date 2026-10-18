@@ -5,6 +5,7 @@ import {createDecisionSession,sessionActions,submitDecision}
 import {createSessionPolicy,selectSessionPolicyAction,
  usefulSoloEquipmentAction} from "../src/session-policy.js";
 import {auditMonsterFrequency} from "../scripts/audit-monster-frequency.mjs";
+import {playFullSoloExpedition} from "../scripts/study-solo-expedition-balance.mjs";
 
 const take=(s,id)=>{
  const i=s.state.deck.findIndex(c=>c.id===id);
@@ -118,4 +119,32 @@ test("Monster audit does not equate returning Wisp appearances with fresh draws"
  assert.equal(a.empirical.byArm.implicit.meanFreshMonsterStarts,3);
  assert.equal(a.empirical.byArm.implicit.meanMonsterAppearances,4);
  assert.equal(a.empirical.byArm.implicit.full36Runs,1);
+});
+
+
+test("Canonical full solo expedition drops equip/unequip churn without changing card rules",{
+ timeout:120000
+},()=>{
+ const options={hero:"warrior",seed:20261016,arm:"implicit",
+  heuristicMode:"solo-threat",budget:1,maxSearchSteps:5000};
+ const old=playFullSoloExpedition({...options,equipmentMode:"legacy"});
+ const efficient=playFullSoloExpedition({...options,equipmentMode:"solo-efficient"});
+ const equipActions=r=>["equip","unequip","transfer"]
+  .reduce((sum,k)=>sum+(r.selectedActions[k]||0),0);
+ console.log(JSON.stringify({
+  experiment:"canonical-solo-equipment-policy-ablation",
+  legacy:{steps:old.steps,equipmentActions:equipActions(old),
+   rooms:old.roomsCleared,outcome:old.ending},
+  efficient:{steps:efficient.steps,equipmentActions:equipActions(efficient),
+   rooms:efficient.roomsCleared,outcome:efficient.ending,
+   upgrades:efficient.equippedUpgradeCount,
+   suppressedCandidates:efficient.equipmentChoicesSuppressed}
+ }));
+ assert.ok(equipActions(old)>equipActions(efficient),
+  "Removing reversible MCTS equipment options must reduce churn");
+ assert.equal(efficient.selectedActions.unequip||0,0);
+ assert.equal(efficient.equipmentBreaks,0);
+ assert.ok(efficient.equippedUpgradeCount<=equipActions(efficient));
+ assert.ok(efficient.equipmentChoicesSuppressed>0);
+ assert.ok(["win","escape","death"].includes(efficient.ending));
 });
