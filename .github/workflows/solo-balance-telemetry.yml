@@ -1,0 +1,23 @@
+name: Full solo balance telemetry proof
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/study-solo-expedition-balance.mjs'
+      - 'scripts/report-solo-balance-details.mjs'
+      - 'src/experiment-telemetry.js'
+      - 'src/session-policy.js'
+      - 'tests/solo-expedition-balance.test.mjs'
+      - '.github/workflows/solo-balance-telemetry.yml'
+  workflow_dispatch:
+jobs:
+  trace-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove complete canonical solo decision traces and detailed reports
+        run: npm run test:solo:balance
