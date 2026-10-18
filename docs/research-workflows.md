@@ -119,7 +119,9 @@ expedition**. The raw file is canonical, not a reconstructed/synthetic
 playthrough. For every actual decision boundary, it records:
 
 - step, phase, full legal actions, chosen action, search time, and
-  whether the engine suspended for a nested reaction;
+  whether the engine suspended for a nested reaction; for every
+  MCTS-selected action also the root action visit counts, estimated
+  win rates, implicit values, search budget and number of tree nodes;
 - complete **before/after** public and mutable non-pile state:
   Room identifier/stage/kind, active Monster and HP, queued Monsters,
   all Hero HP/poison/scalar statuses, equipped slots, each physical Item
