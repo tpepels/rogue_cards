@@ -91,6 +91,8 @@ export function assertBalanceObservationMigration(saved,current,changedPaths){
  if(saved?.schema!=="solo-full-expedition-balance-v1"||
   saved.signature!==signature(saved.design))
   throw Error("Original balance manifest/signature is invalid");
+ if(current?.signature!==signature(current.design))
+  throw Error("New balance manifest/signature is invalid");
  if(saved.design?.trace!=="full"||current.design?.trace!=="full")
   throw Error("Compatibility migration requires full decision traces");
  const next={...saved.design,revision:current.design.revision};
