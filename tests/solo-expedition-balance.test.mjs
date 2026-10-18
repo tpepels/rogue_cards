@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {mkdtempSync,writeFileSync,rmSync,existsSync,readFileSync} from "node:fs";
+import {reportSoloTraceDirectory} from "../scripts/report-solo-balance-details.mjs";
 import {gunzipSync} from "node:zlib";
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
@@ -176,6 +177,18 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
   assert.ok(records.some(e=>e.metrics.cleared));
   assert.ok(records.every(e=>Array.isArray(e.dice)));
   assert.equal(records.at(-1).after.heroes[0].hp,r.finalHero.hp);
+  writeFileSync(join(tmp,"trials.ndjson"),JSON.stringify({
+   ...r,hero:"warrior",replicate:0,arm:"implicit"
+  })+"\n");
+  const detail=reportSoloTraceDirectory(tmp);
+  assert.equal(detail.trialCount,1);
+  const report=JSON.parse(readFileSync(detail.path,"utf8"));
+  assert.equal(report.runs.length,1);
+  assert.equal(report.runs[0].stats.decisions,r.steps);
+  assert.equal(report.runs[0].stats.hpLost>=0,true);
+  assert.equal(report.grouped.implicit.n,1);
+  assert.equal(report.grouped["implicit|warrior"].rooms,r.roomsCleared);
+  assert.ok(report.runs[0].stats.roomCompletions);
  }finally{rmSync(tmp,{recursive:true,force:true});}
 });
 
