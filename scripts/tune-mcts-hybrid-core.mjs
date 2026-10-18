@@ -8,6 +8,7 @@
  * probability of winning a full 36-Room expedition.
  */
 import {makeScenario,identitySeed} from "./study-combat-phase2b.mjs";
+import {makeSoloScenario} from "./solo-encounter-fixtures.mjs";
 import {sessionActions,submitDecision} from "../src/engine/decision-session.js";
 import {completeEncounter,encounterOutcome} from "./study-combat-causes.mjs";
 import {searchDecision,mctsActionKey} from "../src/session-mcts.js";
@@ -39,7 +40,9 @@ export function evaluateHybridJob({
  // Each replicate changes the *starting* deck and starting combat state;
  // candidate-independent hashing keeps the paired scenarios identical.
  const stateSeed=identitySeed(seed,phase+"|state|"+scenarioId+"|"+replicate);
- const scenario=makeScenario(monsterId,profileId,{seed:stateSeed});
+ const scenario=profileId.startsWith("solo-")?
+  makeSoloScenario(scenarioId,{seed:stateSeed}):
+  makeScenario(monsterId,profileId,{seed:stateSeed});
  const session=scenario.session;
  let legal=sessionActions(session);
  // Solo actor selection is forced and contains zero tactical information.
@@ -58,6 +61,7 @@ export function evaluateHybridJob({
   treeMode:"frontier",strictTerminal:true,maxSteps:5000,
   collectCoverage:false,exploration:candidate.c,
   implicitWeight:candidate.alpha,
+  implicitHeuristicMode:candidate.heuristicMode??"legacy",
   rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   rolloutCombatSamples:samples,
   rolloutCombatMaxDecisions:tacticalMax
@@ -103,6 +107,7 @@ export function evaluateHybridJob({
  return {
   candidate:candidateId(candidate),c:candidate.c,alpha:candidate.alpha,
   rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
+  heuristicMode:candidate.heuristicMode??"legacy",
   scenarioId,replicate,phase,seed,budget,samples,tacticalMax,
   action:mctsActionKey(recommended),
   searchMs,evalMs,rolloutCombatSearches:result.rolloutCombatSearches||0,
