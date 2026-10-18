@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
-import {coarseCandidates,parseCoarseArgs,coarseSummary}
+import {coarseCandidates,refineCandidates,splitGroups,
+ parseCoarseArgs,coarseSummary}
  from "../scripts/tune-solo-coarse.mjs";
 import {evaluateHybridJob} from "../scripts/tune-mcts-hybrid-core.mjs";
 import {makeSoloScenario} from "../scripts/solo-encounter-fixtures.mjs";
@@ -31,6 +32,41 @@ test("Coarse tuner covers UCT, implicit MAX, numeric C/alpha, budgets and priors
  assert.equal(c.holdoutGroups,8);
  assert.throws(()=>parseCoarseArgs(["--screen-groups","40",
   "--holdout-groups","40"]),/disjoint/);
+});
+
+test("Refinement scans C/alpha at higher budgets with an untouched final holdout",()=>{
+ const arms=refineCandidates();
+ assert.ok(arms.length>=30);
+ assert.equal(new Set(arms.map(x=>x.name)).size,arms.length);
+ for(const budget of [8,16,32,64])
+  assert.ok(arms.some(c=>c.budget===budget));
+ const params=parseCoarseArgs(["--profile","refine","--dry-run"]);
+ assert.equal(params.screenGroups,48);
+ assert.equal(params.holdoutGroups,16);
+ assert.equal(params.screenRepetitions,12);
+ assert.equal(params.holdoutRepetitions,16);
+ const original=splitGroups(params.seed,24,24);
+ const refined=splitGroups(params.seed,48,16,{allConditions:true});
+ const parent=id=>id.replace(/-(fresh|injured|critical)$/,"");
+ const explored=new Set([...original.train,...original.validate].map(parent));
+ const finalGroups=new Set(refined.validate.map(parent));
+ assert.equal(refined.train.length,144);
+ assert.equal(refined.validate.length,48);
+ assert.equal(finalGroups.size,16);
+ assert.ok([...finalGroups].every(id=>!explored.has(id)),
+  "Final held-out Monster/Hero pairs must not be seen during coarse study");
+ assert.ok(refined.train.every(id=>!finalGroups.has(parent(id))));
+ assert.throws(()=>parseCoarseArgs(["--profile","refine",
+  "--screen-groups","24"]),/hold back/);
+});
+test("Refine summary scales expected screen by independent repetitions",()=>{
+ const manifest={schema:"solo-mcts-refinement-v1",revision:"none",
+  setup:{profile:"refine",screenRepetitions:12,holdoutRepetitions:16},
+  candidates:refineCandidates().slice(0,4),screen:["x"],holdout:["y"]};
+ const report=coarseSummary([],manifest);
+ assert.equal(report.expectedScreen,48);
+ assert.equal(report.completeScreen,false);
+ assert.equal(report.candidateToReview,null);
 });
 test("Coarse validation summary never certifies production defaults",()=>{
  const candidates=coarseCandidates().slice(0,2);
