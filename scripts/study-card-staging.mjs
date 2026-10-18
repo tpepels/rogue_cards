@@ -13,7 +13,8 @@ import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {cpus} from "node:os";
 import {HEROES} from "../src/tabletop-data.js";
-import {compileStaging} from "../src/staging/catalogue.js";
+import {compileStaging,canonicalStagingCatalogue}
+ from "../src/staging/catalogue.js";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
 
 const agentDefault="experiments/agents/solo-balance-reference-v1.json";
@@ -69,6 +70,19 @@ const average=(rows,field)=>rows.length?
 const metrics=["won","vaultReached","roomsCleared","ordinaryEncounters",
  "ordinaryFights","combatContextDamage","remainingHp","itemsUsed",
  "searchMs","elapsedMs"];
+export function deckComposition(catalogue){
+ const tally=cards=>Object.fromEntries(cards.map(c=>[c.id,c.copies??1]));
+ return {
+  rooms:Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>
+   [stage,tally(catalogue.rooms.filter(c=>c.stage===stage))])),
+  monsters:Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>
+   [stage,tally(catalogue.monsters.filter(c=>c.stage===stage))])),
+  items:tally(catalogue.items),
+  heroes:tally(catalogue.heroes),
+  finalCards:{vault:catalogue.vault.hp??null,
+   warden:catalogue.warden.hp,wardenFury:catalogue.wardenFury.hp}
+ };
+}
 const cardMaps=["monsterVisits","monsterFightStartsById","monsterKillsById",
  "monsterParleyAttemptsById","damageContextById","objectAcquisitions",
  "objectActivations","roomChoices","roomRollBands","itemUses"];
@@ -157,6 +171,8 @@ export function compareStaging(rows,manifest){
  const out={schema:"rogue-cards-staging-comparison-v1",
   stage:manifest.stageId,canonicalRevision:manifest.revision,
   stageSha256:manifest.stageSha256,agentSha256:manifest.agentSha256,
+  deckComposition:manifest.deckComposition,
+  experimentChanges:manifest.experimentChanges,
   complete,finishedRows:rows.length,pairedExpeditions:pairs.length,
   expectedPairs:manifest.heroes.length*manifest.runsPerHero,
   cells:summarizeCells(rows),pairedDelta:comparison,
@@ -189,6 +205,21 @@ function reportMarkdown(report){
    " | "+format(delta.difference)+" | "+
    (delta.bootstrap95?"["+delta.bootstrap95.map(x=>format(x)).join(", ")+"]":"insufficient pairs")+" |");
  }
+ header.push("","## Starting deck composition","",
+  "| Deck | Canonical copies | Staging copies |",
+  "|---|---:|---:|");
+ for(const kind of ["rooms","monsters"]){
+  for(const stage of ["UPPER","MIDDLE","DEEP"]){
+   const sum=map=>Object.values(map).reduce((n,v)=>n+v,0);
+   const baseline=report.deckComposition.canonical[kind][stage],
+    variant=report.deckComposition.staging[kind][stage];
+   header.push("| "+kind+" "+stage+" | "+sum(baseline)+
+    " | "+sum(variant)+" |");
+  }
+ }
+ const sum=map=>Object.values(map).reduce((n,v)=>n+v,0);
+ header.push("| Items | "+sum(report.deckComposition.canonical.items)+
+  " | "+sum(report.deckComposition.staging.items)+" |");
  header.push("","## Per Hero","",
  "| Hero | Pairs | Δ wins | Δ vault | Δ rooms | Δ ordinary Monsters |",
  "|---|---:|---:|---:|---:|---:|");
@@ -223,7 +254,7 @@ async function main(){
  const stageSource=readFileSync(opts.stagePath,"utf8");
  const agentSource=readFileSync(opts.agentPath,"utf8");
  const spec=JSON.parse(stageSource),agent=JSON.parse(agentSource);
- compileStaging(spec); // fail-fast validation before worker creation
+ const cardPools=compileStaging(spec); // validate before workers start
  if(agent.schema!=="rogue-cards-solo-agent-profile-v1"||
   agent.status!=="frozen-for-staging-comparisons")
   throw Error("Staging requires a frozen, versioned test-agent profile");
@@ -231,7 +262,11 @@ async function main(){
  const manifest={schema:"rogue-cards-staging-run-v1",
   revision:git(),stageId:spec.id,stageSha256:hash(stageSource),
   agentSha256:hash(agentSource),seed:opts.seed,
-  runsPerHero:opts.runsPerHero,heroes,trace:opts.trace};
+  runsPerHero:opts.runsPerHero,heroes,trace:opts.trace,
+  deckComposition:{canonical:deckComposition(canonicalStagingCatalogue()),
+   staging:deckComposition(cardPools)},
+  experimentChanges:{cards:spec.cards??[],
+   roomDeck:spec.roomDeck??{},roomEffects:spec.roomEffects??{}}};
  if(opts.dryRun){
   console.log(JSON.stringify({...manifest,
    pairs:heroes.length*opts.runsPerHero,
