@@ -10,6 +10,8 @@ on:
       - 'src/session-mcts.js'
       - 'src/solo-pragmatic.js'
       - 'tests/mcts-pragmatic-simulation.test.mjs'
+      - 'scripts/run-pragmatic-ablation.sh'
+      - 'scripts/report-pragmatic-ablation.mjs'
       - 'scripts/audit-monster-frequency.mjs'
       - 'tests/solo-equipment-frequency.test.mjs'
       - 'tests/solo-pragmatic-policy.test.mjs'
@@ -29,6 +31,12 @@ jobs:
         run: npm run test:solo:equipment-frequency
       - name: Prove deterministic HP, reward and parley shortcuts
         run: npm run test:solo:pragmatic
+      - name: Validate four-mode ablation scripts
+        run: |
+          node --check scripts/report-pragmatic-ablation.mjs
+          bash -n scripts/run-pragmatic-ablation.sh
+          node scripts/study-solo-expedition-balance.mjs --dry-run --mcts-pragmatic tree-only --runs-per-hero 2 --heuristic solo-threat
+          node scripts/study-solo-expedition-balance.mjs --dry-run --mcts-pragmatic rollout-only --runs-per-hero 2 --heuristic solo-threat
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
