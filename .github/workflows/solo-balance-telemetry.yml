@@ -13,6 +13,10 @@ on:
       - 'scripts/run-pragmatic-ablation.sh'
       - 'scripts/report-pragmatic-ablation.mjs'
       - 'scripts/audit-monster-frequency.mjs'
+      - 'scripts/tune-solo-coarse.mjs'
+      - 'scripts/tune-mcts-hybrid-core.mjs'
+      - 'tests/solo-coarse-tuner.test.mjs'
+      - 'package.json'
       - 'tests/solo-equipment-frequency.test.mjs'
       - 'tests/solo-pragmatic-policy.test.mjs'
       - 'tests/solo-expedition-balance.test.mjs'
@@ -37,6 +41,8 @@ jobs:
           bash -n scripts/run-pragmatic-ablation.sh
           node scripts/study-solo-expedition-balance.mjs --dry-run --mcts-pragmatic tree-only --runs-per-hero 2 --heuristic solo-threat
           node scripts/study-solo-expedition-balance.mjs --dry-run --mcts-pragmatic rollout-only --runs-per-hero 2 --heuristic solo-threat
+      - name: Verify coarse MCTS tuning grid and independent validation
+        run: npm run test:solo:coarse
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
