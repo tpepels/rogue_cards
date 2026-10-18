@@ -130,6 +130,22 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
  assert.equal(r.maxHp>0,true);
  assert.ok(r.ordinaryFights<=r.ordinaryEncounters,
   "Fights per encounter must be physically conserved");
+ // Regression for accidentally holding the initial metrics reference
+ // through canonical fork/replay commits. Coverage used to be nonzero
+ // while ALL scalar metrics (Rooms, Monster starts, damage, Items) were 0.
+ assert.ok(r.roomsCleared>0,
+  "Canonical completed Rooms must survive transactional metric replacement");
+ assert.ok(r.encounterStarts>=r.ordinaryEncounters,
+  "Canonical encounter-start count must match actual Monster visits");
+ assert.ok(r.encounterStarts>0,
+  "The sampled full game had real Monster encounters");
+ assert.ok(r.damage>0,
+  "Canonical damage metric must reflect actual encounters and hazards");
+ assert.equal(r.roomsCleared>=36,Boolean(r.hasAll36),
+  "36-Room milestone must follow COMPLETED regional Rooms, not drawn cards");
+ const visits=Object.values(r.coverage.monsterVisits).reduce((n,v)=>n+v,0);
+ assert.equal(visits,r.ordinaryEncounters,
+  "Regional Monster exposure must match canonical terminal metrics");
 });
 
 test("Side-effect-free dry-run lists all full-solo policies without creating output",()=>{
