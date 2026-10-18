@@ -12,6 +12,7 @@ import {execFileSync} from "node:child_process";
 import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {cpus} from "node:os";
+import {gzipSync} from "node:zlib";
 import {HEROES} from "../src/tabletop-data.js";
 import {compileStaging,canonicalStagingCatalogue}
  from "../src/staging/catalogue.js";
@@ -333,7 +334,8 @@ async function main(){
   " CPUs, "+pending.length+" remaining tasks, variant "+spec.id);
  for(let i=0;i<opts.workers;i++){
   const w=new Worker(new URL(import.meta.url),{workerData:{
-   spec,agent,recordTelemetry:opts.trace==="full"
+   spec,agent,recordTelemetry:opts.trace==="full",
+   traceDir:join(opts.out,"traces")
   }});
   workers.push(w);w.busy=false;
   w.on("message",msg=>{
@@ -381,6 +383,15 @@ if(!isMainThread){
    });
    // Keep card-level diagnostics, not a giant decision history by default.
    const {events,initialSnapshot,finalSnapshot,...result}=p;
+   if(workerData.recordTelemetry){
+    mkdirSync(workerData.traceDir,{recursive:true});
+    const name=job.arm+"-"+job.hero+"-"+job.replicate+".json.gz";
+    writeFileSync(join(workerData.traceDir,name),gzipSync(JSON.stringify({
+     schema:"rogue-cards-staging-trace-v1",...job,
+     stagingId:result.stagingId,events,initialSnapshot,finalSnapshot
+    })));
+    result.traceFile="traces/"+name;
+   }
    parentPort.postMessage({job,result});
   }catch(error){
    parentPort.postMessage({job,error:error.stack??String(error)});
