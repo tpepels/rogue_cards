@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtempSync,writeFileSync,rmSync} from "node:fs";
+import {mkdtempSync,writeFileSync,rmSync,existsSync} from "node:fs";
+import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {BALANCE_TARGETS,SOLO_HEROES,
@@ -116,4 +117,24 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
  assert.equal(r.maxHp>0,true);
  assert.ok(r.ordinaryFights<=r.ordinaryEncounters,
   "Fights per encounter must be physically conserved");
+});
+
+test("Side-effect-free dry-run lists all full-solo policies without creating output",()=>{
+ const folder=mkdtempSync(join(tmpdir(),"solo-balance-dry-"));
+ const out=join(folder,"not-created");
+ const script=new URL("../scripts/study-solo-expedition-balance.mjs",import.meta.url);
+ try{
+  const run=spawnSync(process.execPath,[script.pathname,
+   "--dry-run","--runs-per-hero","80","--workers","8",
+   "--seed","20261101","--out",out],{
+    encoding:"utf8",timeout:30000
+   });
+  assert.equal(run.status,0,run.stderr);
+  const design=JSON.parse(run.stdout);
+  assert.equal(design.heroes.length,8);
+  assert.equal(design.totalPlannedExpeditions,1920);
+  assert.deepEqual(design.policies,["uct","implicit","hybrid"]);
+  assert.equal(design.heuristic,"solo-threat");
+  assert.equal(existsSync(out),false);
+ }finally{rmSync(folder,{force:true,recursive:true});}
 });
