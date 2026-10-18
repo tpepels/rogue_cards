@@ -138,8 +138,15 @@ function nodeFor(tree,key,actions,reuseEdgeActions=false){
  });
  return {node,candidates,isNew};
 }
+// Preserve the original 3-in-4 draw when using the old default.
+function useSoftPrior(rng,probability){
+ if(probability<=0)return false;
+ if(probability>=1)return true;
+ return probability===0.75?rng.die(4)<=3:
+  rng.die(1000)<=Math.round(probability*1000);
+}
 function select(node,candidates,rng,c,scratch=null,implicitWeight=0,
- preferredId=null){
+ preferredId=null,softTreeBonus=0.15,softTreeFirstVisitProbability=0.75){
  const unseen=scratch?scratch.unseen:[];
  if(scratch)unseen.length=0;
  for(const candidate of candidates)
@@ -147,7 +154,7 @@ function select(node,candidates,rng,c,scratch=null,implicitWeight=0,
  if(unseen.length){
   if(preferredId){
    const preferred=unseen.find(candidate=>candidate.id===preferredId);
-   if(preferred&&rng.die(4)<=3)return preferred;
+   if(preferred&&useSoftPrior(rng,softTreeFirstVisitProbability))return preferred;
   }
   return rng.choose(unseen);
  }
@@ -162,7 +169,7 @@ function select(node,candidates,rng,c,scratch=null,implicitWeight=0,
   const exploitation=implicitWeight?
    implicitUCTExploitation(e,implicitWeight):e.wins/e.visits;
   const softBonus=preferredId&&candidates[i].id===preferredId?
-   0.15/Math.sqrt(e.visits):0;
+   softTreeBonus/Math.sqrt(e.visits):0;
   const score=exploitation+c*Math.sqrt(logVisits/e.visits)+softBonus;
   scores[i]=score;
   if(score>maximum)maximum=score;
@@ -210,7 +217,8 @@ export function searchDecision(session,{budget=100,seed=1,
  nativeHash=false,rolloutCombatMode="random",
  rolloutCombatSamples=2,rolloutCombatMaxDecisions=8,
  implicitWeight=0,implicitHeuristicMode="legacy",
- simulationPolicy="default"}={}){
+ simulationPolicy="default",softTreeBonus=0.15,
+ softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -272,6 +280,12 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Unknown implicit heuristic mode");
  if(implicitHeuristicMode!=="legacy"&&session.state.heroes.length!==1)
   throw Error("Solo implicit heuristic requires exactly one Hero");
+ for(const [name,value] of Object.entries({softTreeBonus,
+  softTreeFirstVisitProbability,softRolloutProbability})){
+  if(!Number.isFinite(value)||value<0||
+   value>(name==="softTreeBonus"?2:1))
+   throw Error("Invalid "+name);
+ }
  if(!["default","solo-pragmatic","solo-pragmatic-external",
    "solo-pragmatic-tree","solo-pragmatic-rollout"].includes(simulationPolicy))
   throw Error("Unknown MCTS simulation policy");
@@ -544,7 +558,7 @@ export function searchDecision(session,{budget=100,seed=1,
      }
      // Rollouts follow the safe combat preference three quarters of the
      // time, but retain random exploration of every legal alternative.
-     const softChoice=softId&&choiceRng.die(4)<=3?
+     const softChoice=softId&&useSoftPrior(choiceRng,softRolloutProbability)?
       candidates.find(a=>actionKey(a)===softId):null;
      choice=continueAction||(pragmaticRule?candidates[0]:null)||
       combatChoice||softChoice||choiceRng.choose(candidates);
@@ -564,7 +578,8 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedChoice=forced?
        candidates.find(a=>a.kind==="continue"):
        (pragmaticRule?candidates[0]:null);
-      const preferredCold=!forcedChoice&&softId&&choiceRng.die(4)<=3?
+      const preferredCold=!forcedChoice&&softId&&
+       useSoftPrior(choiceRng,softTreeFirstVisitProbability)?
        candidates.find(a=>actionKey(a)===softId):null;
       choice=forcedChoice||preferredCold||choiceRng.choose(candidates);
       selectedId=actionKey(choice);
@@ -580,7 +595,7 @@ export function searchDecision(session,{budget=100,seed=1,
        (pragmaticRule?found.candidates[0]:null);
       const selected=forcedCandidate||
        select(node,found.candidates,choiceRng,effectiveExploration,selectionScratch,
-        implicitWeight,softId);
+        implicitWeight,softId,softTreeBonus,softTreeFirstVisitProbability);
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
