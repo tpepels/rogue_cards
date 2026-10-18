@@ -1,0 +1,454 @@
+#!/usr/bin/env node
+/**
+ * FULL 36-Room canonical SOlO expedition balance study.
+ * Paired independent game seeds across three real MCTS policies:
+ *   UCT, UCT+implicit, UCT+implicit+sampled-expectimax.
+ * Every decision is committed through the canonical decision session.
+ *
+ * The optional --from-study must be a FINISHED solo combat research
+ * summary. It only supplies heuristic-mode and expectimax settings;
+ * the full-expedition seed is disjoint and no training data is reused.
+ *
+ * No automatic nerfs/buffs, fabricated cards, scripted combat or
+ * nonterminal-as-loss conversions. Source commit is pinned on resume.
+ */
+import {Worker,isMainThread,parentPort} from "node:worker_threads";
+import {cpus} from "node:os";
+import {createHash} from "node:crypto";
+import {execFileSync} from "node:child_process";
+import {existsSync,mkdirSync,readFileSync,writeFileSync,
+ appendFileSync,renameSync} from "node:fs";
+import {resolve,join} from "node:path";
+import {fileURLToPath} from "node:url";
+import {HEROES} from "../src/tabletop-data.js";
+import {createDecisionSession,sessionActions,submitDecision}
+ from "../src/engine/decision-session.js";
+import {createSessionPolicy,selectSessionPolicyAction,
+ forcesEquipmentProgress} from "../src/session-policy.js";
+
+export const SOLO_HEROES=HEROES.map(h=>h.id);
+export const BALANCE_TARGETS=Object.freeze({
+ soloWinRate:0.40,vaultReachRate:0.50,
+ monsterEncountersRange:[16,20],combatConversionRange:[0.55,0.70],
+ hpLossPerCombatRange:[0.10,0.20]
+});
+const ARM_NAMES=["uct","implicit","hybrid"];
+const mix=value=>{
+ let n=(value+0x9e3779b9)>>>0;
+ n=Math.imul(n^(n>>>16),0x85ebca6b);
+ n=Math.imul(n^(n>>>13),0xc2b2ae35);
+ return (n^(n>>>16))>>>0;
+};
+const mean=(arr,fn)=>arr.length?
+ arr.reduce((n,x)=>n+fn(x),0)/arr.length:null;
+const wilson=(wins,n)=>{
+ if(!n)return null;
+ const z=1.95996398454,z2=z*z,p=wins/n;
+ const den=1+z2/n,mid=(p+z2/(2*n))/den;
+ const delta=z*Math.sqrt(p*(1-p)/n+z2/(4*n*n))/den;
+ return [Math.max(0,mid-delta),Math.min(1,mid+delta)];
+};
+const git=()=>execFileSync("git",["rev-parse","HEAD"],{
+ encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();
+const signature=x=>createHash("sha256")
+ .update(JSON.stringify(x)).digest("hex");
+const atomic=(path,value)=>{
+ const tmp=path+".tmp";
+ writeFileSync(tmp,JSON.stringify(value,null,2)+"\n");
+ renameSync(tmp,path);
+};
+const key=r=>r.hero+"|"+r.replicate+"|"+r.arm;
+function classifyEnding(s){
+ if(s.metrics.won)return "win";
+ if(s.metrics.escaped)return "escape";
+ if(!s.alive())return "death";
+ throw Error("Unexplained terminal state");
+}
+function addCounts(target,source){
+ for(const [name,value] of Object.entries(source||{}))
+  if(typeof value==="number"&&Number.isFinite(value))
+   target[name]=(target[name]||0)+value;
+}
+function captureCounts(s){
+ const m=s.metrics;
+ return {
+  monsterVisits:{...m.monsterVisits},
+  monsterFights:{...m.monsterFightStartsById},
+  monsterKills:{...m.monsterKillsById},
+  monsterParley:{...m.monsterParleyAttemptsById},
+  monsterParleyWins:{...m.monsterParleyWinsById},
+  objectAcquisitions:{...m.objectAcquisitions},
+  objectActivations:{...m.objectActivations},
+  roomChoices:{...m.roomChoices},
+  damageContext:{...m.damageContextById}
+ };
+}
+export function playFullSoloExpedition({
+ hero="warrior",seed=20261101,arm="uct",
+ c=0.35,alpha=0.4,heuristicMode="solo-threat",
+ samples=2,tacticalMax=2,budget=8,
+ maxGameSteps=20000,maxSearchSteps=5000
+}={}){
+ if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
+  throw Error("Only canonical solo Hero and known agent arm are accepted");
+ const session=createDecisionSession({
+  seed,heroes:[hero],gameMode:"everything-goes"
+ });
+ const policy=createSessionPolicy();
+ const m=session.state.metrics;
+ let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
+ let combatSearchMs=0;
+ const selectedActions={},phaseDecisions={};
+ const maxHp=session.state.heroes[0].card.hp;
+ const start=performance.now();
+ while(session.phase!=="terminal"){
+  if(decisions++>=maxGameSteps)
+   throw Error("NONTERMINAL solo expedition after "+maxGameSteps+" decisions");
+  const legal=sessionActions(session);
+  if(!legal.length)
+   throw Error("No canonical action at "+session.phase+" seed "+seed);
+  const phase=session.pendingNested?
+   "reaction:"+session.pendingNested.trigger?.phase:session.phase;
+  phaseDecisions[phase]=(phaseDecisions[phase]||0)+1;
+  const forced=legal.length===1||
+   forcesEquipmentProgress(session,policy,legal);
+  const started=performance.now();
+  const action=selectSessionPolicyAction(session,policy,{
+   budget,seed:mix(seed^Math.imul(decisions,0xc2b2ae35))||1,
+   maxSearchSteps,knowledge:"fair",legalActions:legal,
+   searchProfile:"classic",treeMode:"frontier",exploration:c,
+   rolloutCombatMode:arm==="hybrid"?"sampled-expectimax":"random",
+   rolloutCombatSamples:samples,
+   rolloutCombatMaxDecisions:tacticalMax,
+   implicitWeight:arm==="uct"?0:alpha,
+   implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode
+  });
+  const spent=performance.now()-started;
+  if(!forced){searches++;searchMs+=spent;}
+  if(["combat","combat-hero","parley"].includes(phase)){
+   combatDecisionCount++;
+   if(!forced)combatSearchMs+=spent;
+  }
+  if(!legal.includes(action)&&!legal.some(x=>
+   JSON.stringify(x)===JSON.stringify(action)))
+   throw Error("Selected action not in canonical legal list "+phase);
+  selectedActions[action.kind]=(selectedActions[action.kind]||0)+1;
+  submitDecision(session,action,{
+   observeResult:false,recordHistory:false
+  });
+ }
+ if(m.roundLimit||m.unresolved)throw Error("Unresolved canonical expedition");
+ const ending=classifyEnding(session.state);
+ const hp=Math.max(0,session.state.heroes[0].hp);
+ const monsters=Object.values(m.monsterVisits||{})
+  .reduce((n,x)=>n+x,0);
+ const combatStarts=m.combatStarts||0;
+ const encounters=m.encounterStarts||0;
+ const vaultReached=Boolean(
+  session.state.vaultState||
+  (m.sealAttempt||m.sealAvailable)||
+  ["warden","warden-fury"].some(x=>(m.monsterVisits[x]||0)>0)||
+  (session.state.endingKind&&m.won));
+ return {
+  schema:"solo-full-canonical-expedition-v1",
+  hero,seed,arm,won:Number(ending==="win"),ending,
+  vaultReached:Number(vaultReached),steps:decisions,
+  searches,searchMs,combatSearchMs,combatDecisions:combatDecisionCount,
+  elapsedMs:performance.now()-start,
+  maxHp,remainingHp:hp,hpLost:maxHp-hp,
+  roomsCleared:m.cleared,stageProgress:{...session.state.stageProgress},
+  monsterVisits:monsters,encounterStarts:encounters,combatStarts,
+  fightsPerEncounter:encounters?combatStarts/encounters:null,
+  damage:m.damage,kills:m.kills,drawn:m.drawn,spent:m.spent,
+  elberethAttempts:m.elberethAttempts,elberethSuccesses:m.elberethSuccesses,
+  elberethFlees:m.elberethFlees,negotiations:m.negotiations,
+  negotiationsWon:m.negotiationsWon,
+  itemsUsed:Object.values(m.itemUses||{})
+   .reduce((n,x)=>n+(x.total||0),0),
+  wipeCause:m.wipeCause??null,wipeStage:m.wipeStage??null,
+  endingKind:session.state.endingKind??null,
+  selectedActions,phaseDecisions,coverage:captureCounts(session.state),
+  equipmentBreaks:policy.cycleBreaks
+ };
+}
+export function parseSoloBalanceArgs(argv){
+ const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
+  "--seed","--budget","--c","--alpha","--heuristic","--samples",
+  "--tactical-max","--from-study","--out",
+  "--max-game-steps","--max-search-steps"]);
+ for(let i=0;i<argv.length;i+=2){
+  const k=argv[i],v=argv[i+1];
+  if(!allowed.has(k)||v===undefined||Object.hasOwn(opts,k))
+   throw Error("Unknown/duplicate/missing solo balance option "+k);
+  opts[k]=v;
+ }
+ const int=(k,def,min,max)=>{
+  const n=Number(opts[k]??def);
+  if(!Number.isSafeInteger(n)||n<min||n>max)
+   throw Error(k+" must be an integer in ["+min+","+max+"]");
+  return n;
+ };
+ const c=Number(opts["--c"]??0.35),alpha=Number(opts["--alpha"]??0.4);
+ if(!Number.isFinite(c)||c<0||c>10||
+  !Number.isFinite(alpha)||alpha<0||alpha>1)
+  throw Error("Invalid C/alpha");
+ const heuristic=opts["--heuristic"]??(
+  opts["--from-study"]?"auto":"solo-threat");
+ if(!["auto","legacy","solo-hp","solo-threat"].includes(heuristic))
+  throw Error("Unknown solo heuristic");
+ if(heuristic==="auto"&&!opts["--from-study"])
+  throw Error("--heuristic auto requires --from-study");
+ const seed=int("--seed",20261101,1,0xffffffff);
+ return {
+  hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
+  runsPerHero:int("--runs-per-hero",30,1,2000),
+  seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
+  samples:int("--samples",2,1,6),
+  tacticalMax:int("--tactical-max",2,1,64),
+  maxGameSteps:int("--max-game-steps",20000,1,100000),
+  maxSearchSteps:int("--max-search-steps",5000,1,100000),
+  sourceStudy:opts["--from-study"]?resolve(opts["--from-study"]):null,
+  out:resolve(opts["--out"]??"results/solo-balance-"+seed)
+ };
+}
+export function chooseHeuristicFromCompletedStudy(path){
+ const study=JSON.parse(readFileSync(path,"utf8"));
+ if(study.schema!=="solo-mcts-overnight-v1"||
+  study.remaining!==0)
+  throw Error("Source study must be a FINISHED solo overnight study");
+ const rows=study.results.filter(r=>r.mode==="cpu-calibrated"&&
+  /^hybrid-(legacy|solo-hp|solo-threat)$/.test(r.arm));
+ if(rows.length!==3||rows.some(r=>!r.meanFitness||r.count<32||
+  r.count!==rows[0].count))
+  throw Error("Source study has insufficient or unpaired solo hybrid data");
+ const ranked=[...rows].sort((a,b)=>b.meanFitness-a.meanFitness||
+  b.meanClear-a.meanClear||a.meanSearchMs-b.meanSearchMs);
+ return {heuristic:ranked[0].arm.replace("hybrid-",""),
+  source:ranked.map(r=>({arm:r.arm,
+   meanFitness:r.meanFitness,meanClear:r.meanClear,
+   count:r.count,searchMs:r.meanSearchMs})),
+  selectedFrom:path};
+}
+function summarizeCell(items){
+ const n=items.length,wins=items.reduce((x,r)=>x+r.won,0);
+ const monsters={},fights={},kills={},parleys={},itemsAcquired={},itemsUsed={};
+ const causes={},stages={};
+ for(const row of items){
+  addCounts(monsters,row.coverage.monsterVisits);
+  addCounts(fights,row.coverage.monsterFights);
+  addCounts(kills,row.coverage.monsterKills);
+  addCounts(parleys,row.coverage.monsterParley);
+  addCounts(itemsAcquired,row.coverage.objectAcquisitions);
+  addCounts(itemsUsed,row.coverage.objectActivations);
+  if(row.wipeCause)causes[String(row.wipeCause)]=(causes[String(row.wipeCause)]||0)+1;
+  if(row.wipeStage)stages[String(row.wipeStage)]=(stages[String(row.wipeStage)]||0)+1;
+ }
+ const encounterCount=items.reduce((x,r)=>x+r.encounterStarts,0);
+ const combatCount=items.reduce((x,r)=>x+r.combatStarts,0);
+ return {n,wins,winRate:n?wins/n:null,winWilson95:wilson(wins,n),
+  vaultRate:mean(items,r=>r.vaultReached),
+  roomsCleared:mean(items,r=>r.roomsCleared),
+  encounterStarts:mean(items,r=>r.encounterStarts),
+  combatStarts:mean(items,r=>r.combatStarts),
+  combatConversion:encounterCount?combatCount/encounterCount:null,
+  // All damage from all sources, NOT merely combat HP loss.
+  meanDamageAllSources:mean(items,r=>r.damage),
+  damageAllSourcesPerCombatMaxHP:
+   combatCount?items.reduce((x,r)=>x+r.damage,0)/
+    items.reduce((x,r)=>x+r.combatStarts*r.maxHp,0):null,
+  meanSteps:mean(items,r=>r.steps),
+  meanSearchSeconds:mean(items,r=>r.searchMs/1000),
+  meanWallSeconds:mean(items,r=>r.elapsedMs/1000),
+  itemUses:mean(items,r=>r.itemsUsed),
+  negotiations:mean(items,r=>r.negotiations),
+  elbereth:mean(items,r=>r.elberethAttempts),
+  monsterVisits:monsters,monsterFights:fights,monsterKills:kills,
+  monsterParleys:parleys,itemAcquisitions:itemsAcquired,
+  itemActivations:itemsUsed,deathCauses:causes,deathStages:stages
+ };
+}
+export function soloBalanceSummary(records,design){
+ const cells=Object.fromEntries(ARM_NAMES.map(arm=>[
+  arm,{
+   overall:summarizeCell(records.filter(r=>r.arm===arm)),
+   byHero:Object.fromEntries(SOLO_HEROES.map(hero=>[
+    hero,summarizeCell(records.filter(r=>r.arm===arm&&r.hero===hero))
+   ]))
+  }
+ ]));
+ const paired=[];
+ const reference=new Map(records.filter(r=>r.arm==="uct")
+  .map(r=>[r.hero+"|"+r.replicate,r]));
+ for(const arm of ["implicit","hybrid"]){
+  const matches=records.filter(r=>r.arm===arm).flatMap(r=>{
+   const b=reference.get(r.hero+"|"+r.replicate);
+   return b?[{hero:r.hero,win:r.won-b.won,
+    vault:r.vaultReached-b.vaultReached,
+    rooms:r.roomsCleared-b.roomsCleared,
+    timeMs:r.searchMs-b.searchMs}]:[];
+  });
+  paired.push({
+   arm,reference:"uct",pairedHeroSeeds:matches.length,
+   meanWinDifference:mean(matches,r=>r.win),
+   meanVaultDifference:mean(matches,r=>r.vault),
+   meanRoomsDifference:mean(matches,r=>r.rooms),
+   meanAdditionalSearchMs:mean(matches,r=>r.timeMs),
+   byHero:Object.fromEntries(SOLO_HEROES.map(h=>{
+    const group=matches.filter(r=>r.hero===h);
+    return [h,{n:group.length,meanWinDifference:mean(group,r=>r.win)}];
+   }))
+  });
+ }
+ return {
+  schema:"solo-full-expedition-balance-v1",design,targets:BALANCE_TARGETS,
+  completed:records.length,
+  independentSeedHeroPairs:new Set(records.map(x=>x.hero+"|"+x.replicate)).size,
+  rowsByArm:cells,paired,
+  caveats:[
+   "Full canonical Everything Goes expeditions from ordinary shuffled physical decks, exactly one Hero each.",
+   "Only real terminal wins, escapes and deaths are counted; unsupported/nonterminal outcomes fail the run, not recorded as losses.",
+   "All three AI agents start each paired Hero-seed with the same initial RNG/deck, but subsequent dice sequences may diverge after different decisions.",
+   "Fixed outer MCTS visits across arms do NOT imply equal CPU time; compare meanSearchSeconds and wall seconds.",
+   "Causal card balance requires controlled counterfactual changes; monster/card usage is descriptive exposure, not standalone evidence of imbalance.",
+   "The tracked damage metric includes ALL damage sources; it is NOT a direct measure of damage per fight. Do not compare it as if it were the 10–20% combat-only target.",
+   "Only complete matched rows are used for paired agent comparisons; partial research outputs are not convergence evidence.",
+   "Source nightly root-decision experiment does not prove full-game success; this evaluation measures it independently."
+  ]
+ };
+}
+async function main(){
+ const c=parseSoloBalanceArgs(process.argv.slice(2));
+ mkdirSync(c.out,{recursive:true});
+ const manifestPath=join(c.out,"manifest.json"),
+  recordPath=join(c.out,"trials.ndjson"),
+  reportPath=join(c.out,"summary.json");
+ const revision=git();
+ const selected=c.heuristic==="auto"?
+  chooseHeuristicFromCompletedStudy(c.sourceStudy):{
+   heuristic:c.heuristic,selectedFrom:null,source:null
+  };
+ const studyHash=c.sourceStudy?
+  createHash("sha256").update(readFileSync(c.sourceStudy)).digest("hex"):null;
+ const design={
+  revision,seed:c.seed,runsPerHero:c.runsPerHero,budget:c.budget,
+  maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
+  c:c.c,alpha:c.alpha,
+  heuristicMode:selected.heuristic,
+  samples:c.samples,tacticalMax:c.tacticalMax,
+  sourceStudy:c.sourceStudy,sourceStudyHash:studyHash,
+  sourceRanking:selected.source,gameMode:"everything-goes",
+  heroes:SOLO_HEROES,arms:ARM_NAMES
+ };
+ const manifest={schema:"solo-full-expedition-balance-v1",design,
+  signature:signature(design)};
+ if(existsSync(manifestPath)){
+  const saved=JSON.parse(readFileSync(manifestPath,"utf8"));
+  if(saved.signature!==manifest.signature)
+   throw Error("Cannot resume after code, model or design changes");
+ }else atomic(manifestPath,manifest);
+ const records=existsSync(recordPath)?readFileSync(recordPath,"utf8")
+  .split("\n").filter(Boolean).map(JSON.parse):[];
+ const seen=new Set(records.map(key));
+ if(seen.size!==records.length)throw Error("Duplicate saved solo experiment rows");
+ const pending=[];
+ for(let replicate=0;replicate<c.runsPerHero;replicate++)
+  for(const hero of SOLO_HEROES)
+   for(const arm of ARM_NAMES){
+    const tag={hero,replicate,arm};
+    if(seen.has(key(tag)))continue;
+    const gameSeed=mix(c.seed^Math.imul(replicate+1,0x85ebca6b)^
+     Math.imul(SOLO_HEROES.indexOf(hero)+1,0xc2b2ae35))||1;
+    pending.push({tag,args:{
+     hero,seed:gameSeed,arm,budget:c.budget,c:c.c,alpha:c.alpha,
+     heuristicMode:selected.heuristic,
+     samples:c.samples,tacticalMax:c.tacticalMax,
+     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps
+    }});
+   }
+ const workers=[];let active=0,stopped=false;
+ const start=Date.now(),deadline=start+c.hours*3600000;
+ const persist=()=>{
+  const s=soloBalanceSummary(records,design);
+  s.remaining=pending.length+active;
+  s.elapsedHours=(Date.now()-start)/3600000;
+  s.updatedAt=new Date().toISOString();
+  s.complete=s.remaining===0;
+  atomic(reportPath,s);
+  return s;
+ };
+ const stop=(reason,failed=false)=>{
+  if(stopped)return;
+  stopped=true;clearInterval(timer);clearTimeout(endTimer);
+  const s=persist();
+  console.log("Solo balance "+reason+": "+
+   s.completed+"/"+(c.runsPerHero*SOLO_HEROES.length*3)+
+   " completed trials, "+s.remaining+" outstanding; "+reportPath);
+  if(failed)process.exitCode=1;
+  for(const worker of workers)worker.terminate();
+ };
+ const assign=w=>{
+  if(stopped||w.busy||Date.now()>=deadline)return;
+  const task=pending.shift();
+  if(!task)return;
+  w.busy=true;w.task=task;active++;
+  w.postMessage({type:"play",task});
+ };
+ const timer=setInterval(()=>{
+  const s=persist();
+  console.log("Balance progress "+s.completed+" completed; "+
+   s.remaining+" remaining, hours="+s.elapsedHours.toFixed(2));
+  if(Date.now()>=deadline)stop("deadline");
+ },60000);
+ const endTimer=setTimeout(()=>stop("deadline"),
+  Math.max(0,deadline-Date.now()));
+ process.on("SIGINT",()=>stop("SIGINT"));
+ process.on("SIGTERM",()=>stop("SIGTERM"));
+ console.log("Starting SOLO Everything Goes balance: "+c.workers+
+  " workers / "+cpus().length+" visible CPUs, 8 Heroes, "+
+  c.runsPerHero+" independent seeds/Hero, 3 policies, "+
+  c.hours+"h wall limit; heuristic "+selected.heuristic+
+  "; remaining jobs "+pending.length);
+ for(let i=0;i<Math.min(c.workers,pending.length);i++){
+  const w=new Worker(new URL(import.meta.url));
+  w.busy=false;workers.push(w);
+  w.on("message",message=>{
+   if(stopped)return;
+   if(message.type==="error"){
+    console.error("FATAL complete expedition "+key(message.tag)+
+     ": "+message.error);
+    stop("worker error",true);return;
+   }
+   active--;w.busy=false;
+   const row={...message.result,...message.tag};
+   const k=key(row);
+   if(!seen.has(k)){
+    appendFileSync(recordPath,JSON.stringify(row)+"\n");
+    records.push(row);seen.add(k);
+   }
+   if(records.length%6===0)persist();
+   assign(w);
+   if(!active&&!pending.length)stop("complete");
+  });
+  w.on("error",err=>{if(!stopped){console.error(err.stack);
+   stop("worker crashed",true);}});
+  w.on("exit",code=>{if(!stopped&&code!==0)
+   stop("worker exited "+code,true);});
+ }
+ for(const w of workers)assign(w);
+ if(!workers.length)stop("already complete");
+}
+if(!isMainThread){
+ parentPort.on("message",message=>{
+  if(message.type!=="play")return;
+  try{
+   parentPort.postMessage({type:"done",tag:message.task.tag,
+    result:playFullSoloExpedition(message.task.args)});
+  }catch(error){
+   parentPort.postMessage({type:"error",tag:message.task.tag,
+    error:error.stack??String(error)});
+  }
+ });
+}else if(process.argv[1]&&resolve(process.argv[1])===
+ fileURLToPath(import.meta.url)){
+ await main();
+}
