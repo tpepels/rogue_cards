@@ -85,8 +85,8 @@ export function refineCandidates(){
  for(const n of [8,16,32,64])add("baseline-"+n,{budget:n});
  add("classic-uct-16",{alpha:0,c:Math.SQRT2,
   heuristicMode:"legacy",simulationPolicy:"default"});
- for(const c of [0.15,0.35,0.65,1])
-  for(const alpha of [0,0.2,0.4,0.6])
+ for(const c of [0.2,0.35,0.5,0.8])
+  for(const alpha of [0,0.2,0.4,0.5])
    if(!(c===0.35&&alpha===0.4))
     add("b16-c"+c+"-a"+alpha,{c,alpha});
  for(const c of [0.2,0.5])
