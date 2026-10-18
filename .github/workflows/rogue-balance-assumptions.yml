@@ -1,0 +1,75 @@
+name: Rogue Cards physical-game balance hypotheses
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/rogue-balance-assumptions.yml'
+  workflow_dispatch:
+    inputs:
+      screen_repeats:
+        description: 'Independent screening starts per Hero'
+        required: false
+        default: '2'
+      confirm_repeats:
+        description: 'New held-out starts per Hero'
+        required: false
+        default: '4'
+      minutes:
+        description: 'Maximum work minutes'
+        required: false
+        default: '138'
+concurrency:
+  group: rogue-card-hypotheses-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  physical-game-balance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    permissions:
+      contents: read
+    env:
+      SCREEN_REPEATS: ${{ inputs.screen_repeats || '2' }}
+      CONFIRM_REPEATS: ${{ inputs.confirm_repeats || '4' }}
+      STUDY_MINUTES: ${{ inputs.minutes || '138' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate staging hypotheses and rules parity
+        run: |
+          npm run test:balance:hypotheses
+          npm run test:card:staging
+      - name: Execute all fourteen A/B hypotheses and independent confirmation
+        run: |
+          npm run study:balance:hypotheses -- \
+            --workers 4 \
+            --screen-repeats "$SCREEN_REPEATS" \
+            --confirm-repeats "$CONFIRM_REPEATS" \
+            --finalists 4 \
+            --minutes "$STUDY_MINUTES" \
+            --out "$RUNNER_TEMP/rogue-card-balance-hypotheses"
+      - name: Publish complete and partial research artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogue-card-balance-hypotheses
+          path: ${{ runner.temp }}/rogue-card-balance-hypotheses/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Verify complete comparison when no wall cap intervened
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.RUNNER_TEMP+
+              "/rogue-card-balance-hypotheses/";
+            const r=JSON.parse(readFileSync(root+"summary.json","utf8"));
+            const expectedScreen=15*8*Number(process.env.SCREEN_REPEATS);
+            const expectedConfirm=5*8*Number(process.env.CONFIRM_REPEATS);
+            if(r.status!=="complete"||!r.screen.complete||
+              !r.confirm?.complete||
+              r.totals.screenRows!==expectedScreen||
+              r.totals.confirmRows!==expectedConfirm)
+              throw Error("Study incomplete: inspect uploaded partial "+
+                "manifest/trials and resume on workstation; no conclusions.");
+          '
