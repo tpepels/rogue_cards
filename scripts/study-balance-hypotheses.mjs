@@ -15,6 +15,8 @@ import {HEROES} from "../src/tabletop-data.js";
 import {compileStaging,canonicalStagingCatalogue}
  from "../src/staging/catalogue.js";
 import {balanceHypotheses} from "../src/staging/balance-hypotheses.js";
+import {nextEncounterHypotheses,independentWardenHypotheses}
+ from "../src/staging/next-balance-hypotheses.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -37,7 +39,7 @@ const METRICS=["won","vaultReached","roomsCleared","ordinaryEncounters",
 export function balanceStudyArgs(argv){
  const opts={},allowed=new Set(["--out","--seed","--workers","--minutes",
   "--screen-repeats","--confirm-repeats","--finalists","--heroes",
-  "--variant-limit","--agent","--smoke"]);
+  "--variant-limit","--agent","--smoke","--suite"]);
  const dryRun=argv.includes("--dry-run");
  argv=argv.filter(x=>x!=="--dry-run");
  for(let i=0;i<argv.length;i+=2){
@@ -63,7 +65,10 @@ export function balanceStudyArgs(argv){
  const screenRepeats=num("--screen-repeats",smoke?1:4,1,500);
  const confirmRepeats=num("--confirm-repeats",smoke?1:6,1,500);
  const seed=num("--seed",20261215,1,0xffffffff);
- return {heroes,seed,smoke,screenRepeats,confirmRepeats,dryRun,
+ const suite=opts["--suite"]??"original";
+ if(!["original","encounters","warden"].includes(suite))
+  throw Error("--suite must be original, encounters or warden");
+ return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:4,1,12),
   variantLimit:num("--variant-limit",smoke?2:99,1,99),
@@ -82,10 +87,19 @@ const health=(rows)=>{
  const battles=rows.reduce((sum,row)=>sum+row.ordinaryFights,0);
  const full=rows.filter(r=>r.hasAll36===1);
  const vault=rows.filter(r=>r.vaultReached===1);
+ const warden=rows.filter(r=>(r.finalMetrics?.monsterVisits?.warden??0)>0);
+ const fury=rows.filter(r=>(r.finalMetrics?.monsterVisits?.["warden-fury"]??0)>0);
+ const wins=x=>x.filter(r=>r.won===1).length;
  return {n,mean:Object.fromEntries(METRICS.map(k=>[k,avg(rows,k)])),
   encounterPerRoom:rooms?encounters/rooms:null,
   encountersPer36Equivalent:rooms?36*encounters/rooms:null,
   fightConversion:encounters?battles/encounters:null,
+  winGivenVault:vault.length?wins(vault)/vault.length:null,
+  wardenEngagement:{n:warden.length,winRate:warden.length?
+   wins(warden)/warden.length:null,furyEntered:fury.length,
+   deaths:warden.filter(r=>r.won!==1).length},
+  endingCauses:Object.fromEntries([...new Set(rows.map(r=>r.wipeCause).
+   filter(Boolean))].map(reason=>[reason,rows.filter(r=>r.wipeCause===reason).length])),
   complete36:{n:full.length,meanEncounters:avg(full,"ordinaryEncounters"),
    meanFights:avg(full,"ordinaryFights")},
   vaultEntry:{n:vault.length,meanHp:avg(vault.filter(x=>
@@ -98,7 +112,22 @@ const healthShallow=rows=>({n:rows.length,
  winRate:avg(rows,"won"),vaultReach:avg(rows,"vaultReached"),
  rooms:avg(rows,"roomsCleared"),encounters:avg(rows,"ordinaryEncounters"),
  fights:avg(rows,"ordinaryFights"),hp:avg(rows,"remainingHp")});
-const evalScore=(baseline,cell)=>{
+const evalScore=(baseline,cell,suite="original")=>{
+ if(suite==="warden"){
+  if(!cell.n||!baseline.n)return -Infinity;
+  // Full expeditions: changing Warden-only stats should improve finish
+  // probability while preserving travel, normal combat and exploration.
+  // This is a screening tie-breaker, not a substitute for paired holdout.
+  const preVault=Math.abs((cell.mean.vaultReached??0)-
+   (baseline.mean.vaultReached??0))+
+   Math.abs((cell.mean.roomsCleared??0)-
+    (baseline.mean.roomsCleared??0))/36+
+   Math.abs((cell.mean.ordinaryEncounters??0)-
+    (baseline.mean.ordinaryEncounters??0))/20;
+  return (cell.mean.won??0)*5+
+   (cell.winGivenVault??0)*1-preVault;
+ }
+
  // Screens a *card-design hypothesis*, not an AI policy.
  // Density target 16-20 / 36 Rooms. Attrition, wins and exploration
  // penalize any putative gains achieved by wiping parties early.
@@ -135,7 +164,7 @@ export function phaseSummary(records,phase,manifest,selected){
     experimentChanges:{cards:spec.cards??[],
      roomEffects:spec.roomEffects??{},roomDeck:spec.roomDeck??{}}});
   output.push({id:spec.id,description:spec.description,
-   score:evalScore(baseline,measurable),measured:measurable,
+   score:evalScore(baseline,measurable,manifest.suite),measured:measurable,
    paired:paired.length,pairedDeltas:report.pairedDelta,
    byHero:report.byHero,changedCards:report.changedCards,
    byCard:report.byCard,deckComposition:report.deckComposition});
@@ -162,6 +191,9 @@ function markdown(result){
   "16–20 encounters in 36 Rooms without collapsing survival and choice?",""];
  for(const phase of [result.screen,result.confirm].filter(Boolean)){
   lines.push("## "+phase.phase+" ("+(phase.complete?"complete":"partial")+")","",
+   result.suite==="warden"?
+    "Warden-only: all regional Room and ordinary Monster cards are unchanged.": 
+    "Encounter suite: escape/toll/reward choices use existing physical mechanics.","",
    "Control runs: "+phase.completedCanonical+"/"+phase.expectedPerVariant,"",
    "| Hypothesis | runs | encounter/36 equiv. | wins | Vault | Rooms | 36-Room encounters |",
    "|---|---:|---:|---:|---:|---:|---:|");
@@ -173,6 +205,18 @@ function markdown(result){
     num(r.measured.mean.roomsCleared)+" | "+
     num(r.measured.complete36.meanEncounters)+" (n="+
     r.measured.complete36.n+") |");
+  if(result.suite==="warden"){
+   lines.push("","### Independent Warden comparison","",
+    "| Variant | Wins given Vault | Wins given actual Warden fight | Fury entered |",
+    "|---|---:|---:|---:|");
+   lines.push("| canonical | "+num(phase.baseline.winGivenVault,3)+" | "+
+    num(phase.baseline.wardenEngagement.winRate,3)+" | "+
+    phase.baseline.wardenEngagement.furyEntered+" |");
+   for(const r of phase.ranked)
+    lines.push("| "+r.id+" | "+num(r.measured.winGivenVault,3)+
+     " | "+num(r.measured.wardenEngagement.winRate,3)+
+     " | "+r.measured.wardenEngagement.furyEntered+" |");
+  }
   lines.push("","Canonical: "+num(phase.baseline.encountersPer36Equivalent)+
    " encounters/36 equivalent; "+num(phase.baseline.mean.won,3)+
    " wins; "+num(phase.baseline.mean.roomsCleared)+" Rooms.","");
@@ -192,7 +236,9 @@ function markdown(result){
 }
 async function main(){
  const opts=balanceStudyArgs(process.argv.slice(2));
- const hypotheses=balanceHypotheses().slice(0,opts.variantLimit);
+ const hypotheses=(opts.suite==="warden"?independentWardenHypotheses():
+  opts.suite==="encounters"?nextEncounterHypotheses():
+  balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
  const agentSource=readFileSync(opts.agentPath,"utf8"),agent=JSON.parse(agentSource);
@@ -206,6 +252,7 @@ async function main(){
  const stagedDecks=Object.fromEntries(hypotheses.map(x=>[
   x.id,deckComposition(compileStaging(x))]));
  const manifest={schema:"rogue-cards-hypothesis-study-v1",
+  ...(opts.suite==="original"?{}:{suite:opts.suite}),
   revision:revision(),agentId:agent.id,agentSha256:sha(agentSource),
   hypotheses:hypotheses.map(spec=>({id:spec.id,hash:sha(spec)})),
   canonicalDeck:deckComposition(canonicalStagingCatalogue()),
@@ -214,7 +261,8 @@ async function main(){
   finalists:opts.finalists,smoke:opts.smoke};
  if(opts.dryRun){
   console.log(JSON.stringify({schema:manifest.schema,revision:manifest.revision,
-   agent:agent.id,hypotheses:manifest.hypotheses.map(h=>h.id),
+   agent:agent.id,suite:opts.suite,
+   hypotheses:manifest.hypotheses.map(h=>h.id),
    heroes:opts.heroes,screenTrials:(hypotheses.length+1)*opts.heroes.length*
     opts.screenRepeats,confirmTrials:(opts.finalists+1)*
     opts.heroes.length*opts.confirmRepeats,
@@ -269,6 +317,7 @@ async function main(){
   const status=confirm?.complete?"complete":
    screen.complete?"confirm-incomplete":"screen-incomplete";
   const result={schema:"rogue-cards-hypothesis-report-v1",
+   suite:opts.suite,
    revision:manifest.revision,agentId:agent.id,status,
    selectedForConfirmation:finalists?.map(x=>x.id)??[],
    screeningScoreWarning:"Exploratory multi-arm ranking. Independent "+
@@ -316,7 +365,8 @@ async function main(){
   }
   if(!pending.length){write();console.log("Already complete");return;}
  }
- console.log("Rogue Cards: "+hypotheses.length+" staged hypotheses vs "+
+ console.log("Rogue Cards suite="+opts.suite+": "+
+  hypotheses.length+" staged hypotheses vs "+
   "canonical, "+opts.heroes.length+" Heroes, "+opts.workers+" workers, "+
   "up to "+opts.minutes+" min; starting "+phase+" with "+pending.length+
   " tasks. Canonical stays untouched.");
