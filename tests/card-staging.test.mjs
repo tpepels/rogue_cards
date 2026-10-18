@@ -38,7 +38,7 @@ test("Staged Monster changes only its own frozen definition and not canonical",(
 });
 test("Staged Item copy counts and Room exclusions change physical pools",()=>{
  const staged=make({cards:[
-  {collection:"items",id:"rope",set:{copies:3}},
+  {collection:"items",id:"rope",set:{copies:2}},
   {collection:"monsters",id:"rat",set:{copies:2}}
  ],roomDeck:{UPPER:{exclude:["ex-u-guard-cell"]}}});
  const real=new ExpeditionState({seed:93,heroes:["warrior"],
@@ -47,14 +47,14 @@ test("Staged Item copy counts and Room exclusions change physical pools",()=>{
  assert.ok(real.rooms.UPPER.length>=12);
  const rope=real.deck.filter(c=>c.id==="rope").length+
   real.heroes[0].inventory.filter(c=>c.id==="rope").length;
- assert.equal(rope,3);
+ assert.equal(rope,2);
  assert.equal(real.monsters.UPPER.filter(m=>m.id==="rat").length,2);
  const canonical=new ExpeditionState({seed:93,heroes:["warrior"],
   gameMode:"everything-goes"});
  assert.ok(canonical.rooms.UPPER.some(c=>c.id==="ex-u-guard-cell"));
  assert.equal(ALL_ROOMS.find(c=>c.id==="ex-u-guard-cell")?.id,
   "ex-u-guard-cell");
- assert.ok(ALL_OBJECTS.find(c=>c.id==="rope").copies!==3);
+ assert.ok(ALL_OBJECTS.find(c=>c.id==="rope").copies!==2);
 });
 test("Room executable opcode edits retain original printed catalogue",()=>{
  const original=ALL_ROOMS.find(x=>x.id==="ex-u-guard-cell");
