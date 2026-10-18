@@ -12,6 +12,9 @@ function woundedEquipmentRoot(){
  assert.ok(i>=0,"Must have actual printed rations available");
  s.state.heroes[0].inventory.push(s.state.deck.splice(i,1)[0]);
  s.state.heroes[0].hp=2;
+ const weaponIndex=s.state.deck.findIndex(x=>x.id==="ex-mace");
+ assert.ok(weaponIndex>=0,"Must have a real equippable weapon");
+ s.state.heroes[0].inventory.push(s.state.deck.splice(weaponIndex,1)[0]);
  const equip=sessionActions(s).find(a=>a.kind==="equip");
  assert.ok(equip,"Must have a real root equipment action");
  return {s,equip};
