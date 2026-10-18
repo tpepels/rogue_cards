@@ -124,7 +124,8 @@ test("Suite-specific study dry-runs do not mix original or Warden interventions"
   const run=spawnSync(process.execPath,[
    new URL("../scripts/study-balance-hypotheses.mjs",import.meta.url).pathname,
    "--dry-run","--suite",suite,"--variant-limit","2",
-   "--finalists","1","--heroes","warrior,witch"
+   "--finalists","1","--heroes","warrior,witch",
+   "--screen-repeats","2","--confirm-repeats","3"
   ],{encoding:"utf8"});
   assert.equal(run.status,0,run.stderr);
   const info=JSON.parse(run.stdout);
