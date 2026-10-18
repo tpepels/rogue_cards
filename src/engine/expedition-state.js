@@ -569,7 +569,8 @@ export class ExpeditionState {
   if(!region||region==="FINAL")return null;
   const pile=this.monsters[region];
   if(!pile.length)this.monsters[region]=copyDeck(this.rng,
-   (this.gameMode==="everything-goes"?[...MONSTERS,...EXTRA_MONSTERS]:MONSTERS).filter(c=>c.stage===region));
+   (this.cardPools?.monsters??(this.gameMode==="everything-goes"?
+    [...MONSTERS,...EXTRA_MONSTERS]:MONSTERS)).filter(c=>c.stage===region));
   return this.monsters[region].pop();
  }
  drawMonster(){
