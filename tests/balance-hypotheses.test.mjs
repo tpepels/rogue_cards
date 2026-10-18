@@ -59,8 +59,11 @@ test("Assumptions isolate Monster ATK, Item supply, deck exclusion and interacti
  const more=compileStaging(get("recovery-item-copies"));
  assert.equal(more.items.find(x=>x.id==="ex-bandages").copies,5);
  const combined=compileStaging(get("encounter-strong-atk-recovery"));
- assert.ok(Object.keys(combined.roomEffects).length>
-  Object.keys(compileStaging(get("encounter-strong")).roomEffects).length);
+ const id="ex-u-coal-store";
+ assert.notDeepEqual(combined.roomEffects[id].choices,
+  ROOM_EFFECTS[id].choices);
+ assert.notDeepEqual(combined.roomEffects[id].outcomes,
+  ROOM_EFFECTS[id].outcomes);
  assert.equal(combined.monsters.find(x=>x.id==="wisp").atk,
   Math.max(0,canon.monsters.find(x=>x.id==="wisp").atk-1));
 });
@@ -99,7 +102,7 @@ test("Dry-run validates the real hypotheses without committing trials",()=>{
  ],{encoding:"utf8"});
  assert.equal(run.status,0,run.stderr);
  const json=JSON.parse(run.stdout);
- assert.equal(json.screenTrials,96); // (3+1)*8*2
+ assert.equal(json.screenTrials,64); // (3+1)*8*2
  assert.equal(json.confirmTrials,72); // (2+1)*8*3
  assert.equal(json.physicallyCanonicalCardsChanged,false);
 });
