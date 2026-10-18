@@ -99,7 +99,9 @@
     "tune:mcts-implicit": "node scripts/tune-mcts-hybrid.mjs",
     "test:mcts-heuristic-factorial": "node --test tests/mcts-heuristic-factorial.test.mjs",
     "audit:mcts-implicit-heuristic": "node scripts/audit-implicit-heuristic.mjs",
-    "study:mcts-factorial": "node scripts/study-mcts-factorial.mjs"
+    "study:mcts-factorial": "node scripts/study-mcts-factorial.mjs",
+    "test:mcts-solo-overnight": "node --test tests/mcts-solo-overnight.test.mjs",
+    "study:mcts-solo-overnight": "node scripts/study-mcts-solo-overnight.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
