@@ -438,7 +438,7 @@ async function main(){
  if(!pending.length&&!active)stop("already complete");
  write();
 }
-if(!isMainThread){
+if(!isMainThread&&workerData?.spec){
  const cardPools=compileStaging(workerData.spec);
  const policy=workerData.agent.policy,parameters=workerData.agent.parameters;
  parentPort.on("message",job=>{
