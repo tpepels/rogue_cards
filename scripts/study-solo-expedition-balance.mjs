@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * FULL 36-Room canonical SOlO expedition balance study.
- * Paired independent game seeds across three real MCTS policies:
- *   UCT, UCT+implicit, UCT+implicit+sampled-expectimax.
+ * Paired independent game seeds across the two primary MCTS policies:
+ *   UCT, UCT+implicit. Sampled expectimax is a separate opt-in arm.
  * Every decision is committed through the canonical decision session.
  *
  * The optional --from-study must be a FINISHED solo combat research
@@ -30,7 +30,6 @@ import {createSessionPolicy,selectSessionPolicyAction,
 export const SOLO_HEROES=HEROES.map(h=>h.id);
 const REGIONAL_MONSTERS=new Set(ALL_MONSTERS.map(m=>m.id));
 const ROOM_BY_ID=new Map(ALL_ROOMS.map(room=>[room.id,room]));
-const sumValues=obj=>Object.values(obj||{}).reduce((n,v)=>n+v,0);
 const regionalCount=obj=>Object.entries(obj||{}).reduce((n,[id,v])=>
  n+(REGIONAL_MONSTERS.has(id)?v:0),0);
 export const BALANCE_TARGETS=Object.freeze({
@@ -195,7 +194,7 @@ export function parseSoloBalanceArgs(argv){
  argv=argv.filter(x=>x!=="--dry-run");
  const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
-  "--tactical-max","--from-study","--out",
+  "--tactical-max","--from-study","--out","--arms",
   "--max-game-steps","--max-search-steps"]);
  for(let i=0;i<argv.length;i+=2){
   const k=argv[i],v=argv[i+1];
@@ -219,11 +218,17 @@ export function parseSoloBalanceArgs(argv){
   throw Error("Unknown solo heuristic");
  if(heuristic==="auto"&&!opts["--from-study"])
   throw Error("--heuristic auto requires --from-study");
+ const armNames=(opts["--arms"]??"uct,implicit").split(",");
+ if(armNames.length<2||new Set(armNames).size!==armNames.length||
+  armNames.some(a=>!ARM_NAMES.includes(a))||!armNames.includes("uct")||
+  !armNames.includes("implicit"))
+  throw Error("--arms must include uct,implicit and optionally hybrid, no repeats");
  const seed=int("--seed",20261101,1,0xffffffff);
  return {
   dryRun,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
+  arms:armNames,
   samples:int("--samples",2,1,6),
   tacticalMax:int("--tactical-max",2,1,64),
   maxGameSteps:int("--max-game-steps",20000,1,100000),
@@ -232,7 +237,9 @@ export function parseSoloBalanceArgs(argv){
   out:resolve(opts["--out"]??"results/solo-balance-"+seed)
  };
 }
-export function chooseHeuristicFromCompletedStudy(path){
+export function chooseHeuristicFromCompletedStudy(path,armPrefix="hybrid"){
+ if(!["implicit","hybrid"].includes(armPrefix))
+  throw Error("Unsupported solo research comparison "+armPrefix);
  const study=JSON.parse(readFileSync(path,"utf8"));
  if(study.schema!=="solo-mcts-overnight-v1")
   throw Error("Unknown solo overnight tuning study");
@@ -242,7 +249,9 @@ export function chooseHeuristicFromCompletedStudy(path){
  if(study.completedTrials<300)
   throw Error("Too few finished solo tuning trials for auto selection");
  const rows=study.results.filter(r=>r.mode==="cpu-calibrated"&&
-  /^hybrid-(legacy|solo-hp|solo-threat)$/.test(r.arm));
+  r.arm.startsWith(armPrefix+"-")&&
+  ["legacy","solo-hp","solo-threat"].includes(
+   r.arm.slice(armPrefix.length+1)));
  if(rows.length!==3||rows.some(r=>!Number.isFinite(r.meanFitness)||
   r.count<32||r.scenarioTypes<16))
   throw Error("Source study has insufficient solo hybrid data");
@@ -253,7 +262,7 @@ export function chooseHeuristicFromCompletedStudy(path){
   throw Error("Source solo heuristic arms are not equally exposed");
  const ranked=[...rows].sort((a,b)=>b.meanFitness-a.meanFitness||
   b.meanClear-a.meanClear||a.meanSearchMs-b.meanSearchMs);
- return {heuristic:ranked[0].arm.replace("hybrid-",""),
+ return {heuristic:ranked[0].arm.slice(armPrefix.length+1),
   source:ranked.map(r=>({arm:r.arm,
    meanFitness:r.meanFitness,meanClear:r.meanClear,
    count:r.count,searchMs:r.meanSearchMs})),
@@ -308,7 +317,8 @@ function summarizeCell(items){
  };
 }
 export function soloBalanceSummary(records,design){
- const cells=Object.fromEntries(ARM_NAMES.map(arm=>[
+ const arms=design?.arms??ARM_NAMES;
+ const cells=Object.fromEntries(arms.map(arm=>[
   arm,{
    overall:summarizeCell(records.filter(r=>r.arm===arm)),
    byHero:Object.fromEntries(SOLO_HEROES.map(hero=>[
@@ -319,7 +329,7 @@ export function soloBalanceSummary(records,design){
  const paired=[];
  const reference=new Map(records.filter(r=>r.arm==="uct")
   .map(r=>[r.hero+"|"+r.replicate,r]));
- for(const arm of ["implicit","hybrid"]){
+ for(const arm of arms.filter(a=>a!=="uct")){
   const matches=records.filter(r=>r.arm===arm).flatMap(r=>{
    const b=reference.get(r.hero+"|"+r.replicate);
    return b?[{hero:r.hero,win:r.won-b.won,
@@ -363,7 +373,7 @@ export function soloBalanceSummary(records,design){
   caveats:[
    "Full canonical Everything Goes expeditions from ordinary shuffled physical decks, exactly one Hero each.",
    "Only real terminal wins, escapes and deaths are counted; unsupported/nonterminal outcomes fail the run, not recorded as losses.",
-   "All three AI agents start each paired Hero-seed with the same initial RNG/deck, but subsequent dice sequences may diverge after different decisions.",
+   "Every selected AI arm starts each paired Hero-seed with the same initial RNG/deck, but subsequent dice sequences may diverge after different decisions.",
    "Fixed outer MCTS visits across arms do NOT imply equal CPU time; compare meanSearchSeconds and wall seconds.",
    "Causal card balance requires controlled counterfactual changes; monster/card usage is descriptive exposure, not standalone evidence of imbalance.",
    "Ordinary encounter/fight rates use ONLY regional Monsters. Warden phases are excluded.",
@@ -378,15 +388,16 @@ async function main(){
  const c=parseSoloBalanceArgs(process.argv.slice(2));
  if(c.dryRun){
   const selection=c.heuristic==="auto"?
-   chooseHeuristicFromCompletedStudy(c.sourceStudy):{
+   chooseHeuristicFromCompletedStudy(c.sourceStudy,
+   c.arms.includes("hybrid")?"hybrid":"implicit"):{
     heuristic:c.heuristic
    };
   console.log(JSON.stringify({
    experiment:"solo-full-expedition-balance",
    gameMode:"everything-goes",heroes:SOLO_HEROES,
-   policies:ARM_NAMES,heuristic:selection.heuristic,
+   policies:c.arms,heuristic:selection.heuristic,
    independentlySeededHeroStarts:c.runsPerHero*SOLO_HEROES.length,
-   totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*ARM_NAMES.length,
+   totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*c.arms.length,
    workers:c.workers,hours:c.hours,budget:c.budget,
    c:c.c,alpha:c.alpha,samples:c.samples,
    tacticalMax:c.tacticalMax,sourceStudy:c.sourceStudy,
@@ -400,7 +411,8 @@ async function main(){
   reportPath=join(c.out,"summary.json");
  const revision=git();
  const selected=c.heuristic==="auto"?
-  chooseHeuristicFromCompletedStudy(c.sourceStudy):{
+  chooseHeuristicFromCompletedStudy(c.sourceStudy,
+   c.arms.includes("hybrid")?"hybrid":"implicit"):{
    heuristic:c.heuristic,selectedFrom:null,source:null
   };
  const studyHash=c.sourceStudy?
@@ -413,7 +425,7 @@ async function main(){
   samples:c.samples,tacticalMax:c.tacticalMax,
   sourceStudy:c.sourceStudy,sourceStudyHash:studyHash,
   sourceRanking:selected.source,gameMode:"everything-goes",
-  heroes:SOLO_HEROES,arms:ARM_NAMES
+  heroes:SOLO_HEROES,arms:c.arms
  };
  const manifest={schema:"solo-full-expedition-balance-v1",design,
   signature:signature(design)};
@@ -429,7 +441,7 @@ async function main(){
  const pending=[];
  for(let replicate=0;replicate<c.runsPerHero;replicate++)
   for(const hero of SOLO_HEROES)
-   for(const arm of ARM_NAMES){
+   for(const arm of c.arms){
     const tag={hero,replicate,arm};
     if(seen.has(key(tag)))continue;
     const gameSeed=mix(c.seed^Math.imul(replicate+1,0x85ebca6b)^
@@ -457,7 +469,7 @@ async function main(){
   stopped=true;clearInterval(timer);clearTimeout(endTimer);
   const s=persist();
   console.log("Solo balance "+reason+": "+
-   s.completed+"/"+(c.runsPerHero*SOLO_HEROES.length*3)+
+   s.completed+"/"+(c.runsPerHero*SOLO_HEROES.length*c.arms.length)+
    " completed trials, "+s.remaining+" outstanding; "+reportPath);
   if(failed)process.exitCode=1;
   for(const worker of workers)worker.terminate();
@@ -481,7 +493,7 @@ async function main(){
  process.on("SIGTERM",()=>stop("SIGTERM"));
  console.log("Starting SOLO Everything Goes balance: "+c.workers+
   " workers / "+cpus().length+" visible CPUs, 8 Heroes, "+
-  c.runsPerHero+" independent seeds/Hero, 3 policies, "+
+  c.runsPerHero+" independent seeds/Hero, "+c.arms.length+" policies, "+
   c.hours+"h wall limit; heuristic "+selected.heuristic+
   "; remaining jobs "+pending.length);
  for(let i=0;i<Math.min(c.workers,pending.length);i++){
