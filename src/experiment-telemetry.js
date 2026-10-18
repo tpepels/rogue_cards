@@ -142,6 +142,8 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
      implicitHeuristicMode:event.diagnostic.implicitHeuristicMode??"legacy",
      exploration:event.diagnostic.exploration??null,
      rolloutEquipmentAdvances:event.diagnostic.rolloutEquipmentAdvances,
+     simulationPolicy:event.diagnostic.simulationPolicy??"default",
+     pragmaticSimulation:event.diagnostic.pragmaticSimulation??null,
      actionCoverage:event.diagnostic.actionCoverage,
      choices:event.diagnostic.choices}:undefined,
     before:experimentSnapshot(event.session,event.phase),
