@@ -95,12 +95,12 @@ jobs:
           npm run study:card:staging -- \
             --stage experiments/staging/wisp-hp-8.json \
             --runs-per-hero 1 --workers 2 --minutes 8 \
-            --heroes warrior,witch
+            --heroes warrior,witch \
             --out "$RUNNER_TEMP/staging-paired-smoke"
           npm run study:card:staging -- \
             --stage experiments/staging/wisp-hp-8.json \
             --runs-per-hero 1 --workers 2 --minutes 8 \
-            --heroes warrior,witch
+            --heroes warrior,witch \
             --out "$RUNNER_TEMP/staging-paired-smoke"
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
