@@ -57,6 +57,23 @@ jobs:
               r.recommendedForProduction!==false)
               throw Error("Coarse MCTS trial was incomplete or automatically promoted");
           '
+      - name: Exercise unseen-group refinement workers and final validation
+        run: |
+          node scripts/tune-solo-coarse.mjs \
+            --profile refine --workers 8 --minutes 3 \
+            --candidate-limit 4 --screen-repetitions 1 \
+            --holdout-repetitions 1 --finalists 1 \
+            --out "$RUNNER_TEMP/solo-refine-smoke"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const s=JSON.parse(readFileSync(process.env.RUNNER_TEMP+
+              "/solo-refine-smoke/summary.json","utf8"));
+            if(!s.completeScreen||!s.completeValidation||
+              s.schema!=="solo-mcts-refinement-v1")
+              throw Error("Numerical refinement did not complete both phases");
+            if(s.expectedScreen!==576||s.holdoutScenarioCount!==48)
+              throw Error("Invalid refinement sample plan");
+          '
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
