@@ -195,17 +195,19 @@ export function reportSoloTraceDirectory(directory){
  for(const item of results){
   for(const name of [item.arm,item.arm+"|"+item.hero]){
    const bucket=grouped[name]??={n:0,wins:0,vault:0,
-    rooms:0,steps:0,dice:0,hpLost:0,hpGained:0,
-    roomEntries:{},roomCompletions:{},monsterEncounters:{},
-    monsterFights:{},monsterKills:{},monsterParley:{},
+    rooms:0,steps:0,dice:0,hpLost:0,hpGained:0,minHPsum:0,
+    roomEntries:{},roomCompletions:{},roomsByStage:{},
+    monsterEncounters:{},monsterFights:{},monsterKills:{},
+    monsterParley:{},monsterParleyWins:{},
     monsterDamageTaken:{},monsterFlees:{},
     itemAcquisitions:{},itemDraws:{},itemActivations:{},
-    itemUses:{},itemDiscards:{},itemEquips:{},
-    actions:{},phaseCounts:{},statusChanges:{}};
+    itemUses:{},itemDiscards:{},itemEquips:{},roomChoices:{},
+    actions:{},phaseCounts:{},statusChanges:{},faceCounts:{}};
    bucket.n++;bucket.wins+=item.won;bucket.vault+=item.vaultReached;
    bucket.rooms+=item.roomsCleared;bucket.steps+=item.stats.decisions;
    bucket.dice+=item.stats.dice;bucket.hpLost+=item.stats.hpLost;
    bucket.hpGained+=item.stats.hpGained;
+   bucket.minHPsum+=item.stats.minHP??0;
    for(const key of Object.keys(bucket).filter(k=>
     bucket[k]!==null&&typeof bucket[k]==="object"))
     for(const [id,count] of Object.entries(item.stats[key]||{}))
