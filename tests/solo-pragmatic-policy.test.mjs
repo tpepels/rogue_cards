@@ -5,6 +5,7 @@ import {createDecisionSession,sessionActions,submitDecision}
 import {createSessionPolicy,pragmaticSoloAction,
  selectSessionPolicyAction} from "../src/session-policy.js";
 import {ALL_MONSTERS} from "../src/decks.js";
+import {pragmaticSoloPreference} from "../src/solo-pragmatic.js";
 import {playFullSoloExpedition} from "../scripts/study-solo-expedition-balance.mjs";
 import {createDecisionRecorder} from "../src/experiment-telemetry.js";
 
@@ -61,60 +62,45 @@ test("Unidentified Potions are not assumed to be safe heals",()=>{
  const res=pragmaticSoloAction(s,sessionActions(s));
  assert.equal(res,null);
 });
-test("Low HP uses legal free WIT parley; actual result remains random/canonical",()=>{
+test("Low HP WIT parley is advisory, not a forced live action",()=>{
  const s=hero(),h=s.state.heroes[0];
  monster(s,"wisp");h.hp=2;
  const legal=sessionActions(s);
- assert.ok(legal.some(a=>a.kind==="parley"));
- const policy=createSessionPolicy(),chosen=[];
- const a=selectSessionPolicyAction(s,policy,{
-  equipmentMode:"solo-pragmatic",legalActions:legal,budget:1,
-  onPolicyDecision:x=>chosen.push(x.rule),
-  onSearchResult:()=>assert.fail("No MCTS at safe shortcut")
- });
- assert.equal(a.kind,"parley");
- assert.deepEqual(chosen,["critical-hp-avoid:wisp"]);
- assert.equal(policy.shortcutCount,1);
+ const p=pragmaticSoloPreference(s,legal);
+ assert.equal(p?.action.kind,"parley");
+ assert.equal(p?.rule,"critical-hp-avoid:wisp");
+ assert.equal(pragmaticSoloAction(s,legal),null);
 });
-test("Healthy Hero fights Monster only if printed reward is useful",()=>{
+test("Printed Monster reward suggests fight without pruning parley",()=>{
  const s=hero(),h=s.state.heroes[0];
  const goblin=monster(s,"goblin");
  h.hp=h.card.hp;
  assert.ok(goblin.v2.defeatOps.some(x=>x.startsWith("DRAW:")));
- const safe=pragmaticSoloAction(s,sessionActions(s));
- assert.equal(safe?.action.kind,"fight");
- assert.equal(safe.rule,"healthy-reward-fight:goblin");
- // Rat HEAL 2 is not a useful reward at maximum Hero HP.
- monster(s,"rat");
+ assert.equal(pragmaticSoloPreference(s,sessionActions(s))?.action.kind,"fight");
  assert.equal(pragmaticSoloAction(s,sessionActions(s)),null);
+ monster(s,"rat");
+ assert.equal(pragmaticSoloPreference(s,sessionActions(s)),null);
 });
-test("Critical HP prioritizes guaranteed escape even when it spends the last Items",()=>{
+test("Costly critical-health parley remains an optional soft preference",()=>{
  const s=hero(),h=s.state.heroes[0];
  monster(s,"goblin");h.hp=2;
- // Initial 2 Items would both be discarded to pay the Goblin.
- assert.ok(sessionActions(s).some(a=>a.kind==="parley"));
  assert.equal(h.inventory.length,2);
- const forced=pragmaticSoloAction(s,sessionActions(s));
- assert.equal(forced?.action.kind,"parley");
- assert.equal(forced?.rule,"critical-hp-avoid:goblin");
- // At moderately low HP the same two-Item payment is deferred to MCTS.
- h.hp=Math.ceil(h.card.hp*.4);
+ assert.equal(pragmaticSoloPreference(s,sessionActions(s))?.action.kind,"parley");
  assert.equal(pragmaticSoloAction(s,sessionActions(s)),null);
+ h.hp=Math.ceil(h.card.hp*.4);
+ assert.equal(pragmaticSoloPreference(s,sessionActions(s)),null);
  give(s,"ex-rations");
- const result=pragmaticSoloAction(s,sessionActions(s));
- assert.equal(result?.action.kind,"parley");
- assert.equal(result?.rule,"low-hp-avoid:goblin");
+ assert.equal(pragmaticSoloPreference(s,sessionActions(s))?.action.kind,"parley");
 });
-test("No forced retreat from Monster when no legal Parley",()=>{
+test("No fabricated parley if the printed Monster forbids it",()=>{
  const s=hero(),h=s.state.heroes[0];
  monster(s,"sentinel");h.hp=2;
- // Sentinel requires two METAL Items; starter Items do not qualify.
- const actions=sessionActions(s);
- assert.ok(actions.some(a=>a.kind==="fight"));
- if(!actions.some(a=>a.kind==="parley"))
-  assert.equal(pragmaticSoloAction(s,actions),null);
+ const legal=sessionActions(s);
+ assert.ok(legal.some(a=>a.kind==="fight"));
+ if(!legal.some(a=>a.kind==="parley"))
+  assert.equal(pragmaticSoloPreference(s,legal),null);
 });
-test("Only safe trivial Attack versus Pass bypasses MCTS",()=>{
+test("Attack versus Pass remains searchable in the combat tree",()=>{
  const s=hero(),h=s.state.heroes[0];
  monster(s,"rat");s.phase="combat";
  h.hp=h.card.hp;
@@ -122,11 +108,10 @@ test("Only safe trivial Attack versus Pass bypasses MCTS",()=>{
   {phase:"combat",kind:"attack",heroIndex:0},
   {phase:"combat",kind:"pass",heroIndex:0}
  ];
- const shortcut=pragmaticSoloAction(s,pair);
- assert.equal(shortcut?.action.kind,"attack");
- assert.equal(shortcut.rule,"only-attack-or-pass");
- h.hp=2;
  assert.equal(pragmaticSoloAction(s,pair),null);
+ assert.equal(pragmaticSoloPreference(s,pair)?.action.kind,"attack");
+ h.hp=2;
+ assert.equal(pragmaticSoloPreference(s,pair),null);
 });
 test("All shortcuts are isolated to explicit SOLO policy, no hidden multi-hero change",()=>{
  const duo=createDecisionSession({seed:198,heroes:["warrior","wizard"]});
