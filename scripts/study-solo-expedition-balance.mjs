@@ -80,12 +80,28 @@ const COMPATIBLE_OBSERVATION_PATHS=new Set([
  ".github/workflows/combat-diagnostics.yml",
  ".github/workflows/solo-balance-telemetry.yml"
 ]);
-function gameDecisionLoop(source){
- const begin=source.indexOf("export function playFullSoloExpedition({");
+/**
+ * Compare only the EXECUTABLE decision loop, not textual mentions of its
+ * declaration inside helpers, tests or diagnostic strings. The previous
+ * indexOf matched its own source-code string and falsely rejected a fully
+ * compatible recording migration.
+ */
+export function canonicalSoloDecisionLoop(source){
+ if(typeof source!=="string")throw Error("Invalid balance runner source");
+ const declarations=[...source.matchAll(
+  /^export function playFullSoloExpedition\(\{/gm
+ )];
+ if(declarations.length!==1)
+  throw Error("Expected exactly one actual canonical solo function declaration");
+ const begin=declarations[0].index;
  const end=source.indexOf("\n const m=session.state.metrics;",begin);
- if(begin<0||end<=begin)
-  throw Error("Cannot establish unmodified canonical game policy loop");
- return source.slice(begin,end);
+ if(end<=begin||source.indexOf("\n }",begin)<0)
+  throw Error("Cannot establish canonical solo decision loop boundaries");
+ const body=source.slice(begin,end);
+ if(!body.includes('selectSessionPolicyAction(session,policy,{')||
+    !body.includes('submitDecision(session,action,{'))
+  throw Error("Canonical solo action selection/commit was not located");
+ return body;
 }
 export function assertBalanceObservationMigration(saved,current,changedPaths){
  if(saved?.schema!=="solo-full-expedition-balance-v1"||
@@ -598,7 +614,8 @@ async function main(){
     saved.design.revision+":scripts/study-solo-expedition-balance.mjs"],
     {encoding:"utf8"});
    const currentRunner=readFileSync(fileURLToPath(import.meta.url),"utf8");
-   if(gameDecisionLoop(previousRunner)!==gameDecisionLoop(currentRunner))
+   if(canonicalSoloDecisionLoop(previousRunner)!==
+     canonicalSoloDecisionLoop(currentRunner))
     throw Error("Cannot adopt old trials: canonical policy/game loop changed");
    if(!records.length)throw Error("No completed trials to recover");
    verifyRecordedTraces(records,c.out);
