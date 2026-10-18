@@ -684,8 +684,11 @@ export function searchDecision(session,{budget=100,seed=1,
   for(const {node,edge} of path){
    node.visits++;edge.visits++;edge.wins+=result;
   }
-  if(implicitWeight>0&&implicitFrontierDepth)
-   backupImplicit(path.slice(0,implicitFrontierDepth),
+  if(implicitWeight>0&&path.length)
+   // Back up even if every edge was already expanded and we reached a
+   // terminal without a new frontier. Recursive child values must keep
+   // flowing upward on EVERY completed canonical MCTS trial.
+   backupImplicit(path.slice(0,implicitFrontierDepth||path.length),
     implicitFrontierValue??implicitExpeditionHeuristic(sim,implicitHeuristicMode),
     implicitFrontierKey??String(stateHash(sim)));
  }
