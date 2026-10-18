@@ -65,6 +65,33 @@ const atomic=(path,value)=>{
  renameSync(tmp,path);
 };
 const key=r=>r.hero+"|"+r.replicate+"|"+r.arm;
+export function persistSoloDecisionTrace(result,tag,outputDir){
+ const events=result.events;
+ if(!events||events.length!==result.steps)
+  throw Error("Incomplete canonical event trace for "+tag.arm);
+ const first=events[0],last=events.at(-1);
+ if(first.step!==1||last.step!==result.steps||
+  last.after?.actionCount!==result.steps||
+  last.after?.heroes?.[0]?.hp!==result.finalHero.hp||
+  last.after?.stageProgress?.UPPER!==result.stageProgress.UPPER)
+  throw Error("Canonical event trace does not match expedition outcome");
+ const dir=join(outputDir,"traces");
+ mkdirSync(dir,{recursive:true});
+ const name=tag.hero+"-"+tag.replicate+"-"+tag.arm+".jsonl.gz";
+ const relative=join("traces",name),path=join(dir,name);
+ const compressed=gzipSync(Buffer.from(
+  events.map(x=>JSON.stringify(x)).join("\n")+"\n"),{level:5});
+ const digest=createHash("sha256").update(compressed).digest("hex");
+ writeFileSync(path+".tmp",compressed);
+ renameSync(path+".tmp",path);
+ delete result.events;
+ result.traceFile=relative;
+ result.traceSHA256=digest;
+ result.traceBytes=compressed.length;
+ result.traceEvents=events.length;
+ return result;
+}
+
 function classifyEnding(s){
  if(s.metrics.won)return "win";
  if(s.metrics.escaped)return "escape";
@@ -577,26 +604,10 @@ if(!isMainThread){
   if(message.type!=="play")return;
   try{
    const result=playFullSoloExpedition(message.task.args);
-   if(message.task.args.recordTelemetry){
-    const events=result.events;
-    if(!events||events.length!==result.steps)
-     throw Error("Incomplete canonical event trace for "+message.task.tag.arm);
-    const dir=join(message.task.args.traceOutputDir,"traces");
-    mkdirSync(dir,{recursive:true});
-    const name=message.task.tag.hero+"-"+message.task.tag.replicate+
-     "-"+message.task.tag.arm+".jsonl.gz";
-    const relative=join("traces",name),path=join(dir,name);
-    const compressed=gzipSync(Buffer.from(
-     events.map(x=>JSON.stringify(x)).join("\n")+"\n"),{level:5});
-    const digest=createHash("sha256").update(compressed).digest("hex");
-    writeFileSync(path+".tmp",compressed);
-    renameSync(path+".tmp",path);
-    delete result.events;
-    result.traceFile=relative;
-    result.traceSHA256=digest;
-    result.traceBytes=compressed.length;
-    result.traceEvents=events.length;
-   }else delete result.events;
+   if(message.task.args.recordTelemetry)
+    persistSoloDecisionTrace(result,message.task.tag,
+     message.task.args.traceOutputDir);
+   else delete result.events;
    parentPort.postMessage({type:"done",tag:message.task.tag,result});
   }catch(error){
    parentPort.postMessage({type:"error",tag:message.task.tag,
