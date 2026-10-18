@@ -135,7 +135,7 @@ export function playFullSoloExpedition({
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const recorder=recordTelemetry?createDecisionRecorder({
-  includeLegal:true,includeSearch:false
+  includeLegal:true,includeSearch:true
  }):null;
  const initialSnapshot=recorder?experimentSnapshot(session):null;
  const start=performance.now();
