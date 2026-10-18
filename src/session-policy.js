@@ -38,6 +38,7 @@ export function selectSessionPolicyAction(session,policy,{
  budget=2,seed=1,maxSearchSteps=4000,knowledge="fair",observedReplay=null,
  legalActions=null,searchProfile="classic",deepMinBudget=16,
  deepVisitsPerAction=4,treeMode=null,mctsOptimizations=null,onSearchProfile=null,
+ onSearchResult=null,
  rolloutCombatMode=null,rolloutCombatSamples=2,
  rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null,
  implicitHeuristicMode="legacy"
@@ -64,6 +65,8 @@ export function selectSessionPolicyAction(session,policy,{
   throw Error("Invalid performance-only MCTS optimization flags");
  if(onSearchProfile!==null&&typeof onSearchProfile!=="function")
   throw Error("onSearchProfile must be a function");
+ if(onSearchResult!==null&&typeof onSearchResult!=="function")
+  throw Error("onSearchResult must be a function");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
  const parameters=resolveSearchProfile({
@@ -112,6 +115,7 @@ export function selectSessionPolicyAction(session,policy,{
  });
  if(onSearchProfile&&found?.transitionProfile)
   onSearchProfile(found.transitionProfile);
+ if(onSearchResult&&found)onSearchResult(found);
  const recommended=found?found.recommended:legal[0];
  if(!recommended)throw Error("MCTS returned no legal recommendation");
  if(safePhases.has(session.phase)&&equipmentKinds.has(recommended.kind)){
