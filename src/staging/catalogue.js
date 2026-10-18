@@ -131,7 +131,9 @@ export function compileStaging(spec){
   _stagingCatalogue:true,stagingId:spec.id};
  for(const key of ["heroes","rooms","monsters","items"])
   Object.freeze(cardPools[key]);
- return deepFreeze(cardPools);
+ // The outer catalogue freezes without recursively freezing unedited
+ // canonical definitions that are shared as immutable source data.
+ return Object.freeze(cardPools);
 }
 export function canonicalStagingCatalogue(){
  return canonical;
