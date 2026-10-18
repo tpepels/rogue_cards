@@ -34,7 +34,7 @@ const encounter=(monster,name)=>{
  return key;
 };
 const baseDetail=()=>({
- decisions:0,dice:0,faceCounts:{},
+ decisions:0,dice:0,freshEncounterStarts:0,faceCounts:{},
  phaseCounts:{},actions:{},roomEntries:{},roomCompletions:{},
  roomsByStage:{},monsterEncounters:{},monsterFights:{},
  monsterKills:{},monsterParley:{},monsterParleyWins:{},
@@ -93,6 +93,7 @@ export function analyzeSoloEvents(record,events){
    if(currentMonster)add(b.monsterActions,currentMonster);
    for(const die of e.dice)add(b.faceCounts,die.sides+":"+die.face);
    const metric=e.metrics;
+   b.freshEncounterStarts+=delta(metric.encounterStarts);
    mapDelta(b.roomChoices,metric.roomChoices);
    mapDelta(b.monsterEncounters,metric.monsterVisits);
    mapDelta(b.monsterFights,metric.monsterFightStartsById);
@@ -150,15 +151,22 @@ export function analyzeSoloEvents(record,events){
  if(last.after.phase!=="terminal")
   throw Error("Trace does not terminate the canonical expedition");
  if(record.finalMetrics){
-  for(const [key,field] of [
-   ["cleared","roomCompletions"],["encounterStarts","monsterEncounters"],
-   ["combatStarts","monsterFights"]]){
-   if(key==="combatStarts")continue; // includes FINAL Warden phases
-   const counted=Object.values(detail[field]).reduce((n,v)=>n+v,0);
-   if(counted!==record.finalMetrics[key])
-    throw Error("Telemetry "+field+" mismatch "+counted+" != "+
-     record.finalMetrics[key]+" in "+record.hero);
-  }
+  const completedRooms=Object.values(detail.roomCompletions)
+   .reduce((n,v)=>n+v,0);
+  if(completedRooms!==record.finalMetrics.cleared)
+   throw Error("Room counter mismatch "+completedRooms+" != "+
+    record.finalMetrics.cleared+" for "+record.hero);
+  const appearances=Object.values(detail.monsterEncounters)
+   .reduce((n,v)=>n+v,0);
+  const canonicalAppearances=Object.values(record.finalMetrics.monsterVisits||{})
+   .reduce((n,v)=>n+v,0);
+  if(appearances!==canonicalAppearances)
+   throw Error("Monster appearance mismatch "+appearances+" != "+
+    canonicalAppearances+" for "+record.hero);
+  // A Will-o'-Wisp following into another Room increments
+  // monsterVisits but NOT encounterStarts, by printed rules.
+  if(detail.freshEncounterStarts!==record.finalMetrics.encounterStarts)
+   throw Error("Fresh Monster encounter starts mismatch for "+record.hero);
  }
  return {
   hero:record.hero,replicate:record.replicate,arm:record.arm,
@@ -195,7 +203,8 @@ export function reportSoloTraceDirectory(directory){
  for(const item of results){
   for(const name of [item.arm,item.arm+"|"+item.hero]){
    const bucket=grouped[name]??={n:0,wins:0,vault:0,
-    rooms:0,steps:0,dice:0,hpLost:0,hpGained:0,minHPsum:0,
+    rooms:0,steps:0,dice:0,freshEncounterStarts:0,
+    hpLost:0,hpGained:0,minHPsum:0,
     roomEntries:{},roomCompletions:{},roomsByStage:{},
     monsterEncounters:{},monsterFights:{},monsterKills:{},
     monsterParley:{},monsterParleyWins:{},
@@ -205,7 +214,9 @@ export function reportSoloTraceDirectory(directory){
     actions:{},phaseCounts:{},statusChanges:{},faceCounts:{}};
    bucket.n++;bucket.wins+=item.won;bucket.vault+=item.vaultReached;
    bucket.rooms+=item.roomsCleared;bucket.steps+=item.stats.decisions;
-   bucket.dice+=item.stats.dice;bucket.hpLost+=item.stats.hpLost;
+   bucket.dice+=item.stats.dice;
+   bucket.freshEncounterStarts+=item.stats.freshEncounterStarts;
+   bucket.hpLost+=item.stats.hpLost;
    bucket.hpGained+=item.stats.hpGained;
    bucket.minHPsum+=item.stats.minHP??0;
    for(const key of Object.keys(bucket).filter(k=>
@@ -220,7 +231,7 @@ export function reportSoloTraceDirectory(directory){
   notes:[
    "Every run is grounded in a SHA256-verified canonical compressed action log.",
    "Per-action before/after state, physical Item copies and committed die outcomes remain in traces/*.jsonl.gz.",
-   "Room/Monster counts derive exclusively from canonical metric deltas; encounters may involve fleeing or negotiations.",
+   "Room/Monster counts derive exclusively from canonical metric deltas. Repeat appearances of a pursuing Will-o'-Wisp do not increase fresh encounterStarts.",
    "Damage attributed to a Room/Monster by the active card is descriptive context, not necessarily the cause of damage.",
    "Per-decision HP changes are net changes, not necessarily total damage and healing if both happened inside one canonical action."
   ]
