@@ -176,6 +176,50 @@ the earlier 32-expedition pilot. Old results cannot retroactively
 recover per-decision telemetry and MUST NOT be used to claim exhaustive
 statistics. Run a fresh output directory from a single pinned commit.
 
+### Resuming the October Wisp-counter pilot without losing completed games
+
+In the 18 October 2026 fully traced pilot, a runner-side assertion
+mistakenly assumed `encounterStarts >= sum(monsterVisits)`. A pursuing
+Will-o'-Wisp is intentionally registered again by
+`completePrintedRoomChoice()` **without** drawing a new Monster.
+`encounterStarts` counts newly drawn encounters; `monsterVisits`
+counts appearances, including that returning Wisp. The false
+assertion now has been removed from the runner. The detailed report
+also validates both counters separately against their own canonical
+metric deltas.
+
+To resume **only the original fully traced pilot** while preserving
+its existing completed episodes:
+
+```sh
+cd ~/Projects/rogue_cards
+git pull --ff-only
+npm run test:solo:balance
+npm run study:solo:balance -- \
+  --workers 8 --hours 2 --runs-per-hero 2 \
+  --budget 8 --c 0.35 --alpha 0.4 \
+  --from-study results/mcts-solo-overnight/summary.json \
+  --seed 20261101 \
+  --out results/solo-balance-pilot-telemetry \
+  --resume-compatible-metrics-fix
+```
+
+The optional flag **does not automatically mix revisions**. It
+requires identical study parameters, a complete per-episode compressed
+trace for every saved row, matching SHA256 checksums, matching final
+Hero HP, a clean checked-out source tree, an ancestor revision, and
+only permitted **observational/instrumentation** file changes between
+revisions. It backs up the old manifest before installing a new one
+that records the old and new revisions, completed-row count, exact
+changed files, and migration time. New rows include their specific
+code revision. If any test fails, it rejects the migration; do not
+override that rejection or edit signatures manually. Instead use a
+new `--out` directory and rerun.
+
+Previous results without decision traces (including the older
+`71ddd31` pilot) cannot be migrated by this command; they remain
+historical and must stay in a separate output directory.
+
 ### Study storage and reproducibility
 
 The balance directory saves `manifest.json` (including source Git SHA,
