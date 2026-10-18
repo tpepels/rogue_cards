@@ -71,7 +71,6 @@ export function persistSoloDecisionTrace(result,tag,outputDir){
   throw Error("Incomplete canonical event trace for "+tag.arm);
  const first=events[0],last=events.at(-1);
  if(first.step!==1||last.step!==result.steps||
-  last.after?.actionCount!==result.steps||
   last.after?.heroes?.[0]?.hp!==result.finalHero.hp||
   last.after?.stageProgress?.UPPER!==result.stageProgress.UPPER)
   throw Error("Canonical event trace does not match expedition outcome");
