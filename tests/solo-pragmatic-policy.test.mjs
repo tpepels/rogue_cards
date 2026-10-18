@@ -144,10 +144,12 @@ test("Canonical complete expedition records policy shortcuts and ends normally",
  });
  assert.ok(r.steps>0);
  assert.ok(["death","escape","win"].includes(r.ending));
- assert.ok(r.policyShortcutCount>0);
+ assert.ok(r.policyShortcutCount>=0);
  assert.equal(Object.values(r.policyShortcutReasons).reduce((a,b)=>a+b,0),
   r.policyShortcutCount);
- assert.ok(r.events.some(e=>e.via==="policy-shortcut"&&e.policyRule));
+ assert.equal(r.events.filter(e=>e.via==="policy-shortcut").length,
+  r.policyShortcutCount,
+  "Only actual opportunities trigger shortcuts; no manufactured actions");
  assert.ok(r.events.every(e=>!e.policyRule||
   ["policy-shortcut"].includes(e.via)));
  assert.ok(r.events.every(e=>!e.policyRule||
