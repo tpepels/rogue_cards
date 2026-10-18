@@ -130,7 +130,12 @@ export function pragmaticSoloAction(session,legal){
  const lowHP=hp<=Math.max(4,Math.ceil(maxHP*0.40),
   Math.ceil(1.6*expectedThreat));
  const printedReward=Array.isArray(m.v2?.defeatOps)&&
-  m.v2.defeatOps.length>0;
+  m.v2.defeatOps.some(op=>{
+   if(typeof op!=="string")return true;
+   // A HEAL-only corpse reward is worthless at full HP.
+   if(op.startsWith("HEAL:")&&missing<=0)return false;
+   return true;
+  });
  // WIT parley can fail and still lead to combat. It is an attempt to
  // avoid a dangerous fight, not a guarantee of success.
  const noItemCost=m.v2?.parleyMode==="WIT"||
@@ -138,7 +143,7 @@ export function pragmaticSoloAction(session,legal){
  const parleyCost=m.v2?.parleyMode==="ITEM"?
   m.v2.parleyCost:
   ({rat:1,goblin:2,troll:2,eye:1,rust:1,
-    sentinel:2,crawler:1,mold:1})[m.id]??null;
+    sentinel:2})[m.id]??null;
  const affordable=parleyCost!==null&&
   h.inventory.length>parleyCost;
  const hurtsToParley=["wraith","cultist"].includes(m.id);
@@ -149,8 +154,15 @@ export function pragmaticSoloAction(session,legal){
   // and odds, rather than force a dangerous paid negotiation.
   return null;
  }
+ // Approximate combat attrition from visible AC (12+DEF), Monster HP
+ // and typical Monster behavior: no hidden dice or card information.
+ const threshold=12+m.def-stats.atk;
+ const hitChance=Math.max(0.05,Math.min(0.95,(21-threshold)/20));
+ const expectedHeroTurns=s.monsterHP/(3.5*hitChance);
+ const expectedFightLoss=Math.max(0,expectedHeroTurns-1)*
+  expectedThreat*0.55;
  const healthy=hp>=Math.max(6,Math.ceil(maxHP*0.65),
-  Math.ceil(expectedThreat*3));
+  Math.ceil(expectedFightLoss*1.25+3));
  if(healthy&&printedReward)
   return {action:fight,rule:"healthy-reward-fight:"+m.id};
  return null;
