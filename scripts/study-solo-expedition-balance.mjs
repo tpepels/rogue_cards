@@ -200,7 +200,7 @@ export function playFullSoloExpedition({
  hero="warrior",seed=20261101,arm="uct",
  c=0.35,alpha=0.4,heuristicMode="solo-threat",
  samples=2,tacticalMax=2,budget=8,recordTelemetry=false,
- maxGameSteps=20000,maxSearchSteps=5000
+ equipmentMode="solo-efficient",maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
   throw Error("Only canonical solo Hero and known agent arm are accepted");
@@ -231,8 +231,9 @@ export function playFullSoloExpedition({
    session.state.room?.stage==="FINAL")
    vaultSeen=true;
   phaseDecisions[phase]=(phaseDecisions[phase]||0)+1;
-  const forced=legal.length===1||
+  let forced=legal.length===1||
    forcesEquipmentProgress(session,policy,legal);
+  const upgradesBefore=policy.equippedUpgradeCount;
   const started=performance.now();
   let searchDiagnostics=null;
   const action=selectSessionPolicyAction(session,policy,{
@@ -244,9 +245,11 @@ export function playFullSoloExpedition({
    rolloutCombatMaxDecisions:tacticalMax,
    implicitWeight:arm==="uct"?0:alpha,
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
+   equipmentMode,
    ...(recorder?{onSearchResult:result=>{searchDiagnostics=result;}}:{})
   });
   const spent=performance.now()-started;
+  if(policy.equippedUpgradeCount>upgradesBefore)forced=true;
   if(!forced){searches++;searchMs+=spent;}
   if(["combat","combat-hero","parley"].includes(phase)){
    combatDecisionCount++;
@@ -335,7 +338,10 @@ export function playFullSoloExpedition({
   initialSnapshot,
   finalSnapshot:recorder?experimentSnapshot(session):null,
   events:recorder?recorder.finish():null,
-  equipmentBreaks:policy.cycleBreaks
+  equipmentBreaks:policy.cycleBreaks,
+  equippedUpgradeCount:policy.equippedUpgradeCount,
+  equipmentChoicesSuppressed:policy.equipmentChoicesSuppressed,
+  equipmentMode
  };
 }
 export function parseSoloBalanceArgs(argv){
@@ -349,7 +355,8 @@ export function parseSoloBalanceArgs(argv){
  const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
   "--tactical-max","--from-study","--out","--arms",
-  "--max-game-steps","--max-search-steps","--trace"]);
+  "--max-game-steps","--max-search-steps","--trace",
+  "--equipment-policy"]);
  for(let i=0;i<argv.length;i+=2){
   const k=argv[i],v=argv[i+1];
   if(!allowed.has(k)||v===undefined||Object.hasOwn(opts,k))
@@ -377,6 +384,9 @@ export function parseSoloBalanceArgs(argv){
   armNames.some(a=>!ARM_NAMES.includes(a))||!armNames.includes("uct")||
   !armNames.includes("implicit"))
   throw Error("--arms must include uct,implicit and optionally hybrid, no repeats");
+ const equipmentMode=opts["--equipment-policy"]??"solo-efficient";
+ if(!["legacy","solo-efficient"].includes(equipmentMode))
+  throw Error("--equipment-policy must be legacy or solo-efficient");
  const trace=opts["--trace"]??"full";
  if(!["full","off"].includes(trace))
   throw Error("--trace must be full or off");
@@ -385,7 +395,7 @@ export function parseSoloBalanceArgs(argv){
   dryRun,resumeCompatible,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
-  arms:armNames,trace,
+  arms:armNames,trace,equipmentMode,
   samples:int("--samples",2,1,6),
   tacticalMax:int("--tactical-max",2,1,64),
   maxGameSteps:int("--max-game-steps",20000,1,100000),
