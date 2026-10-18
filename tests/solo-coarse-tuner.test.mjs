@@ -6,6 +6,7 @@ import {coarseCandidates,parseCoarseArgs,coarseSummary}
 import {evaluateHybridJob} from "../scripts/tune-mcts-hybrid-core.mjs";
 import {makeSoloScenario} from "../scripts/solo-encounter-fixtures.mjs";
 import {searchDecision} from "../src/session-mcts.js";
+import {implicitHeuristicBreakdown} from "../src/mcts-implicit.js";
 import {sessionActions,observeSession} from "../src/engine/decision-session.js";
 
 test("Coarse tuner covers UCT, implicit MAX, numeric C/alpha, budgets and priors",()=>{
@@ -19,6 +20,8 @@ test("Coarse tuner covers UCT, implicit MAX, numeric C/alpha, budgets and priors
  assert.ok(arms.some(a=>a.heuristicMode==="solo-threat"));
  assert.ok(arms.some(a=>a.heuristicMode==="solo-hp"));
  assert.ok(arms.some(a=>a.heuristicMode==="legacy"));
+ assert.ok(arms.some(a=>a.implicitHpScale===0.7));
+ assert.ok(arms.some(a=>a.implicitThreatScale===1.4));
  assert.ok(arms.some(a=>a.simulationPolicy==="solo-pragmatic-tree"));
  assert.ok(arms.some(a=>a.simulationPolicy==="solo-pragmatic"));
  assert.ok(arms.some(a=>a.rolloutCombatMode==="sampled-expectimax"));
@@ -62,6 +65,7 @@ test("Numerical tree/rollout knobs are isolated to search and reject invalid inp
   treeMode:"frontier",knowledge:"oracle",strictTerminal:true,
   simulationPolicy:"solo-pragmatic",implicitWeight:0.2,
   implicitHeuristicMode:"solo-threat",exploration:0.5,
+  implicitHpScale:1.3,implicitThreatScale:1.4,
   softTreeBonus:0.3,softTreeFirstVisitProbability:0.5,
   softRolloutProbability:0.5,maxSteps:5000});
  assert.ok(sessionActions(session).some(a=>JSON.stringify(a)===
@@ -71,7 +75,21 @@ test("Numerical tree/rollout knobs are isolated to search and reject invalid inp
  assert.throws(()=>searchDecision(session,{
   budget:2,softTreeBonus:Infinity}),/Invalid softTreeBonus/);
  assert.throws(()=>searchDecision(session,{
+  budget:2,implicitHpScale:-1}),/Invalid implicitHpScale/);
+ assert.throws(()=>searchDecision(session,{
   budget:2,softRolloutProbability:-0.1}),/Invalid softRolloutProbability/);
+});
+test("Solo numeric heuristic weight scaling changes only heuristic values",()=>{
+ const {session}=makeSoloScenario("crawler__solo-warrior-critical",{
+  seed:113});
+ const base=implicitHeuristicBreakdown(session,"solo-threat");
+ const hp=implicitHeuristicBreakdown(session,"solo-threat",{hpScale:1.3});
+ const risk=implicitHeuristicBreakdown(session,"solo-threat",{threatScale:1.4});
+ assert.notEqual(base.terms.remainingHP,hp.terms.remainingHP);
+ assert.notEqual(base.terms.activeMonsterAndQueue,
+  risk.terms.activeMonsterAndQueue);
+ assert.equal(base.terms.stageProgress,hp.terms.stageProgress);
+ assert.equal(base.terms.items,risk.terms.items);
 });
 test("Tuner evaluates independent canonical solo encounter, not rollout-score proxy",{
  timeout:60000
