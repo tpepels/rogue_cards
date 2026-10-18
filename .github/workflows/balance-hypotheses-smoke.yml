@@ -6,6 +6,7 @@ on:
       - '.github/workflows/balance-hypotheses-smoke.yml'
       - 'src/staging/balance-hypotheses.js'
       - 'scripts/study-balance-hypotheses.mjs'
+      - 'scripts/study-card-staging.mjs'
       - 'tests/balance-hypotheses.test.mjs'
       - 'package.json'
   workflow_dispatch:
