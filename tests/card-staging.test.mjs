@@ -29,6 +29,8 @@ test("Staged Monster changes only its own frozen definition and not canonical",(
  assert.notEqual(staged.monsters.find(m=>m.id==="wisp"),canonical);
  assert.ok(Object.isFrozen(staged.monsters.find(m=>m.id==="wisp")));
  assert.ok(Object.isFrozen(staged));
+ assert.throws(()=>new ExpeditionState({gameMode:"original",cardPools:staged}),
+  /Everything Goes/);
  const normal=new ExpeditionState({seed:10,heroes:["warrior"],
   gameMode:"everything-goes"});
  const variant=new ExpeditionState({seed:10,heroes:["warrior"],
@@ -172,4 +174,6 @@ test("Paired report emits Hero/deck/card comparisons without overwriting canonic
  assert.equal(report.byCard.canonical.roomSeen["u-passage"],1);
  assert.equal(parseStagingArgs(["--stage","hello.json",
   "--runs-per-hero","2"]).runsPerHero,2);
+ assert.deepEqual(parseStagingArgs(["--stage","hello.json",
+  "--heroes","warrior,witch"]).heroes,["warrior","witch"]);
 });
