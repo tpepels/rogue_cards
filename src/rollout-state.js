@@ -33,6 +33,23 @@ const EXPANDED_STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
  stage,ALL_ROOMS.filter(r=>r.stage===stage)]));
 const ROOM_BY_ID=new Map(ROOMS.map(r=>[r.id,r]));
 const EXPANDED_ROOM_BY_ID=new Map(ALL_ROOMS.map(r=>[r.id,r]));
+// Immutable staged catalogues have their own hidden-pile distributions.
+// Never use canonical Room/Monster/Item odds to plan staged games.
+const STAGED_PUBLIC_POOLS=new WeakMap();
+function stagedPublicPools(catalogue){
+ let result=STAGED_PUBLIC_POOLS.get(catalogue);
+ if(result)return result;
+ result={
+  items:physicalCopies(catalogue.items),
+  rooms:Object.fromEntries(STAGES.map(stage=>[
+   stage,catalogue.rooms.filter(r=>r.stage===stage)])),
+  roomById:new Map(catalogue.rooms.map(r=>[r.id,r])),
+  monsters:Object.fromEntries(STAGES.map(stage=>[
+   stage,copies(catalogue.monsters.filter(m=>m.stage===stage))]))
+ };
+ STAGED_PUBLIC_POOLS.set(catalogue,result);
+ return result;
+}
 // Only *canonical printed cards* may be shared between rollout forks.
 // They are fixed rules data, never mutable Hero state / equipment slots.
 const PRINTED_CARDS=new WeakSet([
@@ -51,7 +68,8 @@ const PRINTED_CARDS=new WeakSet([
  */
 function cloneMutable(value,seen){
  if(value===null||typeof value!=="object")return value;
- if(PRINTED_CARDS.has(value)||isPhysicalCard(value))return value;
+ if(PRINTED_CARDS.has(value)||isPhysicalCard(value)||
+   value._stagedCard===true||value._stagingCatalogue===true)return value;
  const prior=seen.get(value);if(prior)return prior;
  let out;
  if(Array.isArray(value)){
@@ -115,10 +133,12 @@ export function prepareRolloutDecks(s,knowledge){
  // Count actual removals from the hidden deck. Returned/saved Items may
  // be reacquired without removing another physical card from the pile.
  const expanded=s.gameMode==="everything-goes";
- const itemPool=expanded?EXPANDED_ITEM_COPIES:ITEM_COPIES;
- const stageRooms=expanded?EXPANDED_STAGE_ROOMS:STAGE_ROOMS;
- const roomById=expanded?EXPANDED_ROOM_BY_ID:ROOM_BY_ID;
- const monsterCopies=expanded?EXPANDED_MONSTER_COPIES:MONSTER_COPIES;
+ const cardPools=expanded?s.cardPools:null;
+ const source=cardPools?stagedPublicPools(cardPools):null;
+ const itemPool=source?.items??(expanded?EXPANDED_ITEM_COPIES:ITEM_COPIES);
+ const stageRooms=source?.rooms??(expanded?EXPANDED_STAGE_ROOMS:STAGE_ROOMS);
+ const roomById=source?.roomById??(expanded?EXPANDED_ROOM_BY_ID:ROOM_BY_ID);
+ const monsterCopies=source?.monsters??(expanded?EXPANDED_MONSTER_COPIES:MONSTER_COPIES);
  const items=reduceSeen(itemPool,s.deckRemovedCounts);
  if(items.length!==s.deck.length)throw Error(
   "Public Item accounting differs from deck: "+
