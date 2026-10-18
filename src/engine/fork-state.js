@@ -15,7 +15,8 @@ const cards=new WeakSet([...HEROES,...ROOMS,...PRINT_ONLY_ROOMS,...OBJECTS,...OD
  WARDEN,WARDEN_FURY,VAULT]);
 function clone(value,seen){
  if(value===null||typeof value!=="object")return value;
- if(cards.has(value)||isPhysicalCard(value))return value;
+ if(cards.has(value)||isPhysicalCard(value)||value._stagedCard===true||
+    value._stagingCatalogue===true)return value;
  if(seen.has(value))return seen.get(value);
  let out;
  if(Array.isArray(value)){
