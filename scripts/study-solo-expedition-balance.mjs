@@ -100,7 +100,8 @@ export function playFullSoloExpedition({
   seed,heroes:[hero],gameMode:"everything-goes"
  });
  const policy=createSessionPolicy();
- const m=session.state.metrics;
+ // The canonical transaction engine may replace state.metrics on every
+ // committed action. Never hold a metrics reference across the run.
  let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
  let combatSearchMs=0,vaultSeen=false;
  const selectedActions={},phaseDecisions={};
@@ -145,6 +146,7 @@ export function playFullSoloExpedition({
    observeResult:false,recordHistory:false
   });
  }
+ const m=session.state.metrics;
  if(m.roundLimit||m.unresolved)throw Error("Unresolved canonical expedition");
  const ending=classifyEnding(session.state);
  const hp=Math.max(0,session.state.heroes[0].hp);
@@ -160,8 +162,12 @@ export function playFullSoloExpedition({
    corridors:visited.filter(room=>room.v2.kind==="CORRIDOR").length
   }];
  }));
- const hasAll36=["UPPER","MIDDLE","DEEP"].every(stage=>
-  byStage[stage].normal>=12);
+ // Seen Rooms are NOT necessarily completed Rooms: retained/entered
+ // rooms and final unresolved Rooms can appear in seenRooms. Only the
+ // canonical completed-Room counter supports the 36-Room denominator.
+ const hasAll36=m.cleared>=3*session.state.roomGoal;
+ if(ordinaryEncounters>0&&m.encounterStarts<ordinaryEncounters)
+  throw Error("Inconsistent live encounter counters: stale metrics?");
  return {
   schema:"solo-full-canonical-expedition-v1",
   hero,seed,arm,won:Number(ending==="win"),ending,
@@ -377,7 +383,7 @@ export function soloBalanceSummary(records,design){
    "Fixed outer MCTS visits across arms do NOT imply equal CPU time; compare meanSearchSeconds and wall seconds.",
    "Causal card balance requires controlled counterfactual changes; monster/card usage is descriptive exposure, not standalone evidence of imbalance.",
    "Ordinary encounter/fight rates use ONLY regional Monsters. Warden phases are excluded.",
-   "The 16–20 encounter target is assessed ONLY in runs that actually visited 36 normal Rooms; if full36Runs=0 the target remains unmeasured.",
+   "The 16–20 encounter target is assessed ONLY in runs that canonically COMPLETED 36 normal Rooms (metrics.cleared), not just saw them; if full36Runs=0 the target remains unmeasured.",
    "Combat-context damage is measured by the engine's Monster-ID damage counters (not general damage). Fractions are weighted by fights × starting maximum Hero HP.",
    "Only complete matched rows are used for paired agent comparisons; partial research outputs are not convergence evidence.",
    "Source nightly root-decision experiment does not prove full-game success; this evaluation measures it independently."
