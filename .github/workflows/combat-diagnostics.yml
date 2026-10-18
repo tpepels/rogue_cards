@@ -15,6 +15,7 @@ on:
       - 'scripts/solo-encounter-fixtures.mjs'
       - 'scripts/study-mcts-solo-overnight.mjs'
       - 'scripts/study-solo-expedition-balance.mjs'
+      - 'scripts/report-solo-balance-details.mjs'
       - 'src/combat-rollout-expectimax.js'
       - 'src/mcts-implicit.js'
       - 'src/mcts-hybrid-defaults.js'
