@@ -127,6 +127,15 @@ export function pragmaticSoloAction(session,legal){
   return {action:legal.find(a=>a.kind==="attack"),
    rule:"only-attack-or-pass"};
  }
+ if(session.phase==="room"&&s.room?.v2.kind==="SHRINE"&&
+   hp<=Math.ceil(maxHP*0.25)&&missing>=2){
+  // Staff heals exactly 2 HP, but replaces the Room's normal choice.
+  // Only force it at genuinely critical HP; at higher HP let MCTS
+  // compare the potentially valuable printed Room alternatives.
+  const staff=legal.find(a=>a.kind==="shrine-item"&&
+   a.mode==="heal"&&a.cardId==="staff"&&a.heroIndex===0);
+  if(staff)return {action:staff,rule:"critical-hp-shrine-heal"};
+ }
  if(session.phase!=="parley"||s.monster?.stage==="FINAL")return null;
  const fight=legal.find(a=>a.kind==="fight");
  const parley=legal.find(a=>a.kind==="parley");
@@ -156,10 +165,16 @@ export function pragmaticSoloAction(session,legal){
     sentinel:2})[m.id]??null;
  const affordable=parleyCost!==null&&
   h.inventory.length>parleyCost;
+ const criticalHP=hp<=Math.max(2,Math.ceil(maxHP*0.25));
  const hurtsToParley=["wraith","cultist"].includes(m.id);
  if(lowHP){
-  if(noItemCost||affordable&&!hurtsToParley)
-   return {action:parley,rule:"low-hp-avoid:"+m.id};
+  // At critical HP, saving the Hero is worth losing even the last
+  // two Items when the printed parley guarantees a safe dismissal.
+  // Noncritical low HP prefers retaining at least one Item.
+  if(noItemCost||(parleyCost!==null&&
+    (criticalHP||affordable)&&!hurtsToParley))
+   return {action:parley,
+    rule:(criticalHP?"critical-hp-avoid:":"low-hp-avoid:")+m.id};
   // Unable to safely avoid? Let the full search assess actual costs
   // and odds, rather than force a dangerous paid negotiation.
   return null;
