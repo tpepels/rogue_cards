@@ -36,7 +36,7 @@ const mix=n=>{
 };
 export function parseStagingArgs(argv){
  const opts={},allowed=new Set(["--stage","--agent","--out","--seed",
-  "--runs-per-hero","--workers","--minutes","--trace"]);
+  "--runs-per-hero","--workers","--minutes","--trace","--heroes"]);
  const dryRun=argv.includes("--dry-run");
  argv=argv.filter(v=>v!=="--dry-run");
  for(let i=0;i<argv.length;i+=2){
@@ -52,7 +52,12 @@ export function parseStagingArgs(argv){
    throw Error(key+" out of bounds");
   return value;
  };
- return {stagePath:resolve(opts["--stage"]),
+ const all=HEROES.map(h=>h.id);
+ const heroes=(opts["--heroes"]??all.join(",")).split(",");
+ if(!heroes.length||heroes.some(h=>!all.includes(h))||
+  new Set(heroes).size!==heroes.length)
+  throw Error("--heroes must be a unique comma-separated selection of printed Heroes");
+ return {heroes,stagePath:resolve(opts["--stage"]),
   agentPath:resolve(opts["--agent"]??agentDefault),
   out:resolve(opts["--out"]??"results/card-staging-v1"),
   seed:integer("--seed",20261121,1,0xffffffff),
@@ -87,12 +92,12 @@ export function deckComposition(catalogue){
 const cardMaps=["monsterVisits","monsterFightStartsById","monsterKillsById",
  "monsterParleyAttemptsById","damageContextById","objectAcquisitions",
  "objectActivations","roomChoices","roomRollBands","itemUses"];
-function summarizeCells(rows){
+function summarizeCells(rows,heroes){
  const cells={};
  for(const arm of ["canonical","staging"]){
   const group=rows.filter(r=>r.arm===arm);
   const heroRows={};
-  for(const hero of HEROES.map(c=>c.id))
+  for(const hero of heroes)
    heroRows[hero]=summarize(group.filter(r=>r.hero===hero));
   cells[arm]={...summarize(group),byHero:heroRows};
  }
@@ -226,7 +231,7 @@ export function compareStaging(rows,manifest){
   experimentChanges:manifest.experimentChanges,
   complete,finishedRows:rows.length,pairedExpeditions:pairs.length,
   expectedPairs:manifest.heroes.length*manifest.runsPerHero,
-  cells:summarizeCells(rows),pairedDelta:comparison,
+  cells:summarizeCells(rows,manifest.heroes),pairedDelta:comparison,
   byHero,changedCards:changedCardTargets(rows,manifest),byCard:{
    canonical:aggregateCards(rows.filter(r=>r.arm==="canonical")),
    staging:aggregateCards(rows.filter(r=>r.arm==="staging"))
@@ -331,7 +336,7 @@ async function main(){
   "implicitHpScale","implicitThreatScale","maxSearchSteps"])
   if(!Number.isFinite(agent.parameters?.[field]))
    throw Error("Missing numerical frozen agent parameter "+field);
- const heroes=HEROES.map(h=>h.id);
+ const heroes=opts.heroes;
  const manifest={schema:"rogue-cards-staging-run-v1",
   revision:git(),stageId:spec.id,stageSha256:hash(stageSource),
   agentSha256:hash(agentSource),seed:opts.seed,
@@ -367,7 +372,7 @@ async function main(){
   for(let h=0;h<heroes.length;h++)
    for(const arm of ["canonical","staging"]){
     const job={hero:heroes[h],replicate:rep,arm,
-     seed:stageSeed(opts.seed,h,rep)};
+     seed:stageSeed(opts.seed,HEROES.findIndex(x=>x.id===heroes[h]),rep)};
     if(!seen.has(key(job)))pending.push(job);
    }
  let active=0,stopped=false;const workers=[];
