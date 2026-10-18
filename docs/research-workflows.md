@@ -31,20 +31,21 @@ Dry run to inspect the design, with **no data/files created**:
 
 ```sh
 npm run study:solo:balance -- --dry-run \
-  --runs-per-hero 30 --workers 8 --hours 12 \
+  --runs-per-hero 80 --workers 8 --hours 12 \
   --budget 8 --c 0.35 --alpha 0.4 \
   --from-study results/mcts-solo-overnight/summary.json \
   --seed 20261101 --out results/solo-balance-v1
 ```
 
-Start after the tactical experiment:
+Start after the tactical experiment (80 independent seeds per Hero, so
+the minimum per-Hero evidence gate can be assessed if all jobs finish):
 
 ```sh
 npm run test:solo:balance
 systemd-inhibit --what=sleep:idle \
   --why="Rogue Cards solo 36-Room balance" \
   npm run study:solo:balance -- \
-    --runs-per-hero 30 --workers 8 --hours 12 \
+    --runs-per-hero 80 --workers 8 --hours 12 \
     --budget 8 --c 0.35 --alpha 0.4 \
     --from-study results/mcts-solo-overnight/summary.json \
     --seed 20261101 --out results/solo-balance-v1
@@ -82,8 +83,14 @@ The current solo design targets remain:
 - 10–20% max-HP loss per ordinary combat, using the engine's
   **combat-context** damage rather than all-source HP damage.
 
-These are target ranges, not passing correctness assertions. Small
-samples are inconclusive, and *card causality* requires subsequent
+These are target ranges, not passing correctness assertions. The
+80-per-Hero protocol requires up to 1,920 full games (8 Heroes × 80
+seeds × 3 policies); a 12-hour wall limit may leave the report partial,
+and the output can be resumed on the exact same Git revision. To first
+measure throughput, use a separate `--runs-per-hero 2 --out results/
+solo-balance-pilot` directory; those results do NOT meet the balance
+sample threshold. Small samples are inconclusive, and *card causality*
+requires subsequent
 paired card interventions rather than interpreting usage as power.
 
 ### Study storage and reproducibility
