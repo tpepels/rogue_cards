@@ -200,7 +200,7 @@ export function playFullSoloExpedition({
  hero="warrior",seed=20261101,arm="uct",
  c=0.35,alpha=0.4,heuristicMode="solo-threat",
  samples=2,tacticalMax=2,budget=8,recordTelemetry=false,
- equipmentMode="solo-efficient",maxGameSteps=20000,maxSearchSteps=5000
+ equipmentMode="solo-pragmatic",maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
   throw Error("Only canonical solo Hero and known agent arm are accepted");
@@ -233,7 +233,9 @@ export function playFullSoloExpedition({
   phaseDecisions[phase]=(phaseDecisions[phase]||0)+1;
   let forced=legal.length===1||
    forcesEquipmentProgress(session,policy,legal);
+  const shortcutsBefore=policy.shortcutCount;
   const upgradesBefore=policy.equippedUpgradeCount;
+  let shortcutReason=null;
   const started=performance.now();
   let searchDiagnostics=null;
   const action=selectSessionPolicyAction(session,policy,{
@@ -246,10 +248,12 @@ export function playFullSoloExpedition({
    implicitWeight:arm==="uct"?0:alpha,
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
    equipmentMode,
+   onPolicyDecision:event=>{shortcutReason=event.rule;},
    ...(recorder?{onSearchResult:result=>{searchDiagnostics=result;}}:{})
   });
   const spent=performance.now()-started;
-  if(policy.equippedUpgradeCount>upgradesBefore)forced=true;
+  if(policy.equippedUpgradeCount>upgradesBefore||
+    policy.shortcutCount>shortcutsBefore)forced=true;
   if(!forced){searches++;searchMs+=spent;}
   if(["combat","combat-hero","parley"].includes(phase)){
    combatDecisionCount++;
@@ -262,7 +266,7 @@ export function playFullSoloExpedition({
   if(recorder)recorder.handler({
    moment:"before",step:decisions,phase,actions:legal,
    chosen:action,session,searchMs:spent,
-   diagnostic:searchDiagnostics
+   diagnostic:searchDiagnostics,policyRule:shortcutReason
   });
   let committedDice=[];
   const transitionStarted=performance.now();
@@ -341,6 +345,8 @@ export function playFullSoloExpedition({
   equipmentBreaks:policy.cycleBreaks,
   equippedUpgradeCount:policy.equippedUpgradeCount,
   equipmentChoicesSuppressed:policy.equipmentChoicesSuppressed,
+  policyShortcutCount:policy.shortcutCount,
+  policyShortcutReasons:{...policy.shortcutCounts},
   equipmentMode
  };
 }
@@ -384,9 +390,9 @@ export function parseSoloBalanceArgs(argv){
   armNames.some(a=>!ARM_NAMES.includes(a))||!armNames.includes("uct")||
   !armNames.includes("implicit"))
   throw Error("--arms must include uct,implicit and optionally hybrid, no repeats");
- const equipmentMode=opts["--equipment-policy"]??"solo-efficient";
- if(!["legacy","solo-efficient"].includes(equipmentMode))
-  throw Error("--equipment-policy must be legacy or solo-efficient");
+ const equipmentMode=opts["--equipment-policy"]??"solo-pragmatic";
+ if(!["legacy","solo-efficient","solo-pragmatic"].includes(equipmentMode))
+  throw Error("--equipment-policy must be legacy, solo-efficient or solo-pragmatic");
  const trace=opts["--trace"]??"full";
  if(!["full","off"].includes(trace))
   throw Error("--trace must be full or off");
@@ -477,6 +483,7 @@ function summarizeCell(items){
   meanSearchSeconds:mean(items,r=>r.searchMs/1000),
   meanWallSeconds:mean(items,r=>r.elapsedMs/1000),
   itemUses:mean(items,r=>r.itemsUsed),
+  policyShortcuts:mean(items,r=>r.policyShortcutCount??0),
   negotiations:mean(items,r=>r.negotiations),
   elbereth:mean(items,r=>r.elberethAttempts),
   monsterVisits:monsters,monsterFights:fights,monsterKills:kills,
