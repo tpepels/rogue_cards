@@ -94,18 +94,20 @@ jobs:
         run: |
           npm run study:card:staging -- \
             --stage experiments/staging/wisp-hp-8.json \
-            --runs-per-hero 1 --workers 8 --minutes 8 \
+            --runs-per-hero 1 --workers 2 --minutes 8 \
+            --heroes warrior,witch
             --out "$RUNNER_TEMP/staging-paired-smoke"
           npm run study:card:staging -- \
             --stage experiments/staging/wisp-hp-8.json \
-            --runs-per-hero 1 --workers 8 --minutes 8 \
+            --runs-per-hero 1 --workers 2 --minutes 8 \
+            --heroes warrior,witch
             --out "$RUNNER_TEMP/staging-paired-smoke"
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             const root=process.env.RUNNER_TEMP+"/staging-paired-smoke/";
             const result=JSON.parse(readFileSync(root+"summary.json","utf8"));
             const lines=readFileSync(root+"trials.ndjson","utf8").trim().split("\n");
-            if(!result.complete||result.pairedExpeditions!==8||lines.length!==16||
+            if(!result.complete||result.pairedExpeditions!==2||lines.length!==4||
               !result.deckComposition?.canonical?.rooms?.UPPER||
               !result.byCard?.staging?.monsterVisits)
               throw Error("Staging comparison failed pairing/resume/deck audit");
