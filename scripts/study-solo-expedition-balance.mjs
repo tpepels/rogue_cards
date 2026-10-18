@@ -201,12 +201,14 @@ export function playFullSoloExpedition({
  c=0.35,alpha=0.4,heuristicMode="solo-threat",
  samples=2,tacticalMax=2,budget=8,recordTelemetry=false,
  equipmentMode="solo-pragmatic",mctsPragmaticVariant="both",
- maxGameSteps=20000,maxSearchSteps=5000
+ softTreeBonus=0.15,softTreeFirstVisitProbability=0.75,
+ softRolloutProbability=0.75,implicitHpScale=1,implicitThreatScale=1,
+ cardPools=null,maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
   throw Error("Only canonical solo Hero and known agent arm are accepted");
  const session=createDecisionSession({
-  seed,heroes:[hero],gameMode:"everything-goes"
+  seed,heroes:[hero],gameMode:"everything-goes",cardPools
  });
  const policy=createSessionPolicy();
  // The canonical transaction engine may replace state.metrics on every
@@ -252,6 +254,8 @@ export function playFullSoloExpedition({
    implicitWeight:arm==="uct"?0:alpha,
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
    equipmentMode,mctsPragmaticVariant,
+   softTreeBonus,softTreeFirstVisitProbability,softRolloutProbability,
+   implicitHpScale,implicitThreatScale,
    onPolicyDecision:event=>{shortcutReason=event.rule;},
    onSearchResult:result=>{
     if(recorder)searchDiagnostics=result;
@@ -361,7 +365,9 @@ export function playFullSoloExpedition({
   equipmentChoicesSuppressed:policy.equipmentChoicesSuppressed,
   policyShortcutCount:policy.shortcutCount,
   policyShortcutReasons:{...policy.shortcutCounts},
-  equipmentMode,mctsPragmaticVariant,pragmaticSimulation
+  equipmentMode,mctsPragmaticVariant,pragmaticSimulation,
+  stagingId:cardPools?.stagingId??null,
+  seenRoomIds:[...session.state.seenRooms]
  };
 }
 export function parseSoloBalanceArgs(argv){
