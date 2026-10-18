@@ -5,6 +5,7 @@ import {compileStaging} from "../src/staging/catalogue.js";
 import {ALL_MONSTERS,ALL_ROOMS,ALL_OBJECTS}
  from "../src/decks.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
+import {chooseRoom,legalRoomChoices} from "../src/engine/index.js";
 import {createDecisionSession,sessionActions}
  from "../src/engine/decision-session.js";
 import {forkGameState} from "../src/engine/fork-state.js";
@@ -68,6 +69,26 @@ test("Room executable opcode edits retain original printed catalogue",()=>{
   gameMode:"everything-goes",cardPools:staged});
  assert.deepEqual(state.cardPools.roomEffects["ex-u-guard-cell"].choices[1],
   ["HEAL:3"]);
+});
+test("Staged Room opcode changes affect actual HP, canonical Room does not",()=>{
+ const staged=make({roomEffects:{"ex-u-guard-cell":{
+  choices:[["ROLL_ROOM"],["HEAL:3"]]
+ }}});
+ const canonical=new ExpeditionState({seed:2,heroes:["warrior"],
+  gameMode:"everything-goes"});
+ const variant=new ExpeditionState({seed:2,heroes:["warrior"],
+  gameMode:"everything-goes",cardPools:staged});
+ const room=ALL_ROOMS.find(c=>c.id==="ex-u-guard-cell");
+ const card=staged.rooms.find(c=>c.id===room.id);
+ canonical.beginRoom(room);variant.beginRoom(card);
+ const start=canonical.heroes[0].card.hp-5;
+ canonical.heroes[0].hp=start;variant.heroes[0].hp=start;
+ assert.ok(legalRoomChoices(canonical).includes(1));
+ assert.ok(legalRoomChoices(variant).includes(1));
+ chooseRoom(canonical,1,{observeResult:false});
+ chooseRoom(variant,1,{observeResult:false});
+ assert.equal(canonical.heroes[0].hp,start);
+ assert.equal(variant.heroes[0].hp,start+3);
 });
 test("Reject unsafe edits, untracked cards and unplayable room decks",()=>{
  const cases=[
