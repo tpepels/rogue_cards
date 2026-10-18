@@ -110,7 +110,9 @@
     "test:solo:pragmatic": "node --test tests/solo-pragmatic-policy.test.mjs tests/mcts-pragmatic-simulation.test.mjs",
     "tune:solo:coarse": "node scripts/tune-solo-coarse.mjs",
     "test:solo:coarse": "node --test tests/solo-coarse-tuner.test.mjs",
-    "tune:solo:refine": "node scripts/tune-solo-coarse.mjs --profile refine"
+    "tune:solo:refine": "node scripts/tune-solo-coarse.mjs --profile refine",
+    "study:card:staging": "node scripts/study-card-staging.mjs",
+    "test:card:staging": "node --test tests/card-staging.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
