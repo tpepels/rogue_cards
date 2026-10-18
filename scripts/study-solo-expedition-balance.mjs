@@ -76,11 +76,17 @@ const COMPATIBLE_OBSERVATION_PATHS=new Set([
  "tests/solo-expedition-balance.test.mjs",
  "tests/experiment-telemetry.test.mjs",
  "src/experiment-telemetry.js",
- "src/session-policy.js",
  "package.json","README.md","docs/research-workflows.md",
  ".github/workflows/combat-diagnostics.yml",
  ".github/workflows/solo-balance-telemetry.yml"
 ]);
+function gameDecisionLoop(source){
+ const begin=source.indexOf("export function playFullSoloExpedition({");
+ const end=source.indexOf("\n const m=session.state.metrics;",begin);
+ if(begin<0||end<=begin)
+  throw Error("Cannot establish unmodified canonical game policy loop");
+ return source.slice(begin,end);
+}
 export function assertBalanceObservationMigration(saved,current,changedPaths){
  if(saved?.schema!=="solo-full-expedition-balance-v1"||
   saved.signature!==signature(saved.design))
@@ -583,6 +589,15 @@ async function main(){
     saved.design.revision,revision],{encoding:"utf8"}).trim()
     .split("\n").filter(Boolean);
    assertBalanceObservationMigration(saved,manifest,changed);
+   // Checking only filenames would permit another agent to modify
+   // gameplay inside the balance runner. Verify the full canonical
+   // game loop byte-for-byte across both revisions as well.
+   const previousRunner=execFileSync("git",["show",
+    saved.design.revision+":scripts/study-solo-expedition-balance.mjs"],
+    {encoding:"utf8"});
+   const currentRunner=readFileSync(fileURLToPath(import.meta.url),"utf8");
+   if(gameDecisionLoop(previousRunner)!==gameDecisionLoop(currentRunner))
+    throw Error("Cannot adopt old trials: canonical policy/game loop changed");
    if(!records.length)throw Error("No completed trials to recover");
    verifyRecordedTraces(records,c.out);
    const backup=manifestPath+".before-wisp-invariant-fix.json";
