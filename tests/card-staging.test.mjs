@@ -162,11 +162,13 @@ test("Paired report emits Hero/deck/card comparisons without overwriting canonic
    objectAcquisitions:{rope:1},itemUses:{},roomChoices:{"u-passage:0":1}}});
  const report=compareStaging([row("canonical",0),row("staging",1)],{
   revision:"test",stageId:"sample",stageSha256:"abc",
-  agentSha256:"def",runsPerHero:1,heroes:["warrior"]});
+  agentSha256:"def",runsPerHero:1,heroes:["warrior"],
+  experimentChanges:{cards:[{collection:"monsters",id:"wisp",set:{hp:8}}]}});
  assert.equal(report.complete,true);
  assert.equal(report.pairedDelta.won.difference,1);
  assert.equal(report.byHero.warrior.won.difference,1);
  assert.equal(report.byCard.staging.monsterVisits.wisp,2);
+ assert.equal(report.changedCards[0].pairedBothExposed,1);
  assert.equal(report.byCard.canonical.roomSeen["u-passage"],1);
  assert.equal(parseStagingArgs(["--stage","hello.json",
   "--runs-per-hero","2"]).runsPerHero,2);
