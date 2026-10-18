@@ -60,6 +60,22 @@ Test the new Items with `npm run test:everything` and use
 `python3 scripts/generate-illustrations.py --dry-run` before paying
 for art generation (artwork numbers 176-193).
 
+## Current research: solo MCTS and full-expedition balance
+
+The active research pipeline is **solo only**. First compare recursive
+implicit MAX/expectation backups and combat expectimax on canonical
+solo encounters; then use a separate, paired-seed study to measure
+**complete 36-Room solo expeditions** for all eight Heroes.
+
+See [Research workflows, commands, and legacy-script cleanup](docs/research-workflows.md).
+The current full-game study is `npm run study:solo:balance`, with
+`npm run test:solo:balance` for validation. Results are saved locally
+under `results/` and never automatically change printed cards or
+production algorithms.
+
+The older multi-Hero and historical experiments below remain available
+for reproducibility, **not** as directly comparable 2026 solo benchmarks.
+
 ## Everything Goes - comprehensive decision-ready balance experiment
 
 For 36-Room Everything Goes balance research, use
