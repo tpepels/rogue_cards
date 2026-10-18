@@ -467,8 +467,15 @@ export function searchDecision(session,{budget=100,seed=1,
      if(depth===0){
       // Honor equipment options removed by the actual decision policy.
       candidates=actions.filter(a=>pragmaticRootKeys.has(actionKey(a)));
-      if(candidates.length!==pragmaticRootKeys.size)
-       throw Error("Pragmatic root candidates are not canonical legal actions");
+      if(candidates.length!==pragmaticRootKeys.size){
+       const present=new Set(candidates.map(actionKey));
+       const missing=rootActions.filter(a=>!present.has(actionKey(a)));
+       throw Error("Pragmatic root candidates are not canonical legal actions: "+
+        JSON.stringify({phase:sim.phase,room:sim.state.room?.id??null,
+         root:rootActions.length,simLegal:actions.length,
+         retained:candidates.length,
+         missing:missing.slice(0,4),simSample:actions.slice(0,4)}));
+      }
      }else if((wasRollout?pragmaticRollout:pragmaticTree)&&
       !(forced&&actions.some(a=>a.kind==="continue"))){
       // Shared with actual play, so no hidden cards or future dice are used.
