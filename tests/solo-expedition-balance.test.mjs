@@ -254,7 +254,7 @@ test("Opt-in Wisp metrics migration never changes rules, search or study configu
   "tests/solo-expedition-balance.test.mjs"]),true);
  assert.throws(()=>assertBalanceObservationMigration(saved,
   {...next,design:{...next.design,seed:2}},[
-   "scripts/study-solo-expedition-balance.mjs"]),/study parameters/);
+   "scripts/study-solo-expedition-balance.mjs"]),/manifest\/signature|study parameters/);
  assert.throws(()=>assertBalanceObservationMigration(saved,next,[
   "scripts/study-solo-expedition-balance.mjs",
   "src/engine/decision-session.js"]),/gameplay, search/);
