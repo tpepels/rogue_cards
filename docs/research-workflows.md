@@ -25,6 +25,66 @@ The resulting `summary.json` includes actual sample counts, matched-seed
 comparisons and computed search time. If a time-boxed run ends early, the
 partial report must not be mistaken for a finished optimization.
 
+
+### Phase A.5 – Equipment-policy repair and Monster-frequency audit
+
+All physical Item and Room rules remain unchanged. NEW solo balance
+runs default to the opt-in **solo-efficient** equipment policy. At a
+safe boundary it performs an explicitly legal equip action only when
+it increases the Hero's ATK (weapon), DEF (armour), or fills an empty
+Ring/Companion slot. ATK and DEF use the exact canonical engine stats;
+no printed card bonuses are duplicated in the AI. Once no improvement
+remains, MCTS searches only non-equipment canonical actions. This
+prevents repeated equip/unequip cycles and reduces the effective
+root branching factor. The full legal actions are not modified.
+
+A filled Ring/Companion slot is not automatically swapped: passive
+effects are too context-dependent to assign an arbitrary numerical
+strength. Legacy behavior remains available with
+--equipment-policy legacy; it is not comparable under the same
+checkpoint protocol.
+
+Current structural Monster audit (79 actual everything-goes regional
+Room cards, including the print-only expansion):
+
+| Stage | Physical Rooms | Guaranteed on-entry Monster | Any directly recognized printed Monster text |
+| --- | ---: | ---: | ---: |
+| UPPER | 29 | 3 | 7 |
+| MIDDLE | 27 | 3 | 8 |
+| DEEP | 23 | 3 | 10 |
+
+Nine guaranteed Monster-trigger Rooms spread across 79 Room cards.
+Twelve uniformly drawn regional Rooms per stage yield ~4.14
+guaranteed on-entry Monster draws. An illustrative once-per-Room
+printed d6 risk-roll adds ~2.68 further Monster draws from explicit
+d6 outcomes, if every selected Room takes that roll. This is
+NOT a full probability model of the complete game. Many choices
+avoid risk, and fates, trapdoors, selected pathways, special effects,
+extra Monster draws and rerolls are not estimated by the simple
+calculation. Only 25 Rooms contain directly recognized Monster text.
+
+The earlier 32-run telemetry pilot reported 56 regional Monster
+appearances over 303 completed Rooms with UCT (~6.65 per 36
+by linear extrapolation) and 66 over 412 with implicit (~5.77 per 36).
+These are NOT estimates based on actual completed 36-Room runs:
+those remain the correct denominator for the 16–20 Monster target.
+
+Independent audit, including the saved empirical pilot:
+
+    npm run test:solo:equipment-frequency
+    npm run audit:monster-frequency -- --trials results/solo-balance-pilot-telemetry/trials.ndjson --out results/monster-frequency-audit.json
+
+Start the next paired balance pilot in a **new output directory**
+because equipment policy is a change to the research design:
+
+    npm run study:solo:balance -- --workers 8 --hours 2 --runs-per-hero 2 --budget 8 --c 0.35 --alpha 0.4 --equipment-policy solo-efficient --from-study results/mcts-solo-overnight/summary.json --seed 20261101 --out results/solo-balance-equipment-v2
+
+Saved trial rows contain selectedActions, equipmentChoicesSuppressed,
+equippedUpgradeCount and equipmentBreaks. Use the same policy for UCT
+and implicit arms. Do not merge this new policy with earlier
+manifest/checkpoint revisions, and do not edit card rules based only
+on a structural encounter-frequency estimate.
+
 ### Phase B – Full solo Everything Goes balance (new, prepared)
 
 **Important finding from the completed overnight run:** the `solo-threat`
