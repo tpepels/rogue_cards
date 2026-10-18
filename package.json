@@ -114,7 +114,8 @@
     "study:card:staging": "node scripts/study-card-staging.mjs",
     "test:card:staging": "node --test tests/card-staging.test.mjs",
     "test:balance:hypotheses": "node --test tests/balance-hypotheses.test.mjs",
-    "study:balance:hypotheses": "node scripts/study-balance-hypotheses.mjs"
+    "study:balance:hypotheses": "node scripts/study-balance-hypotheses.mjs",
+    "test:balance:next": "node --test tests/next-balance-hypotheses.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
