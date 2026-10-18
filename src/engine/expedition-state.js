@@ -61,7 +61,7 @@ export class ExpeditionState {
     nextWitDis:0,nextHitBlock:0,nextDarknessDis:0,ignoreDarknessOnce:false,
     keptUsedPotions:[],
     nextDefenseAdv:false,nextDefenseBonus:0,
-    damageVulnerability:0,scouting:0,kept:[],nextDefenseBonus:0,defDuration:0,alive:true};
+    damageVulnerability:0,scouting:0,kept:[],defDuration:0,alive:true};
   });
   this.deck=gameMode==="everything-goes"?
    this.rng.shuffle(physicalCopies([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS])):
