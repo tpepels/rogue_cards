@@ -476,3 +476,93 @@ full-encounter continuations with fixed downstream basic choices.
 The score is NOT an actual full-expedition MCTS win rate.
 Paired differences, matched sample counts, and scenario-cluster
 bootstrap intervals are reported for every relevant comparison.
+
+
+## Solo-only overnight implicit backup / sampled expectimax study
+
+This research run now requires EXACTLY one living Hero. It includes
+the eight printed Heroes, eight Monsters and three canonical initial
+health regimes (`fresh`, `injured`=60% HP, `critical`=25% HP and
+POISONED). Physical starting Items are obtained through the canonical
+engine: no manually invented gear, Monsters or dice. These are
+constructed encounter starts, not sampled expedition encounter rates.
+
+### Correct recursive implicit MAX/expectation backup
+
+Every evaluated leaf gives a frontier static `h(s)` in [0,1]. The
+implicit value at an explored decision state is MAX over its actions:
+
+    V(s) = max_a Q(s,a)
+    Q(s,a) = sum_{s'} n(s,a,s') * V(s') / sum_{s'} n(s,a,s')
+
+Here n counts sampled occurrence of PUBLIC canonical successor states.
+At a child state, V(s') is ALREADY its recursively backed value from
+its own descendants, never merely the child's unbacked static
+evaluation. The algorithm recomputes the entire selected ancestor
+path bottom-up at every completed MCTS trial, including trials that
+finish on already-expanded terminal paths. Chance outcomes are
+averaged rather than worst-case minimized: Rogue Cards is stochastic
+and has one cooperative player, not a perfect adversarial Monster.
+An actual terminal solo death is exactly V=0, even if other terminal
+metadata were accidentally stale; actual terminal victory is V=1.
+
+UCT keeps separate terminal wins and implicit values, blending them
+only at selection with alpha. The root choice remains the most-visited
+action. `src/mcts-implicit.js` stores per-action successor buckets
+with sample counts and references to backed child-node values.
+
+### Solo-only heuristic variants (explicit research arms)
+
+- `legacy`: old manually weighted expedition/party function, retained
+  exclusively as the historical SOLO reference.
+- `solo-hp`: +0.52*HP/maxHP +0.20*Room progress
+  +0.12*Monster damage fraction +0.08*Item resource fraction
+  -0.12*POISONED. No constant +0.30 'number of living Heroes'
+  term, no actor-selection term (only one Hero exists).
+- `solo-threat`: the solo-hp terms MINUS remaining Monster HP
+  fraction weighted by `0.10 + 0.12*(1-HP/maxHP)`, and
+  -0.04 per queued Monster (capped at three, while active).
+
+Both solo heuristics clamp the final score to [0,1], give a dead
+Hero EXACTLY zero and refuse to evaluate multiplayer states.
+These are transparent experimental evaluators, NOT probabilities.
+Results must determine whether either is a useful improvement.
+
+### Overnight run on eight cores (eight hours maximum)
+
+    cd ~/Projects/rogue_cards
+    git pull --ff-only
+    npm run test:mcts-solo-overnight
+    npm run study:mcts-solo-overnight -- --minutes 480 --workers 8 --budget 32 --target-ms 1200 --max-budget 96 --scenarios 192 --repetitions 12 --c 0.35 --alpha 0.4 --seed 20261018 --out results/mcts-solo-overnight
+
+One command launches the overnight experiment. It compares ten arms:
+plain UCT, three implicit-only heuristics, three expectimax intensities
+without implicit, and three hybrid heuristic variants.
+Each of these ten is evaluated under BOTH:
+
+1. **equal-visits**: identical outer 32 MCTS iterations;
+2. **cpu-calibrated**: a separately timed pilot estimates the MCTS
+   iteration budget per arm for about 1200 ms per root search.
+
+The CPU mode is an approximation, not a hard per-search wall-clock
+enforcer. Report actual mean search milliseconds for every arm.
+Paired independent encounter outcomes (same start state and unseen
+dice seed across arms) measure Hero survival, HP and Item spending.
+Successive future moves follow one fixed basic policy; these are
+NOT complete MCTS-controlled 36-Room expeditions.
+
+Output directory (saved throughout the run):
+
+- `manifest.json`: parameters, ten arms, both calibrated budgets,
+  all pilot timings. Do not change settings when resuming.
+- `trials.ndjson`: durable completed one-Hero trials. Never delete.
+- `summary.json`: ten-arm results for two search budget modes,
+  matched paired comparisons, expectimax benefit alone, implicit
+  benefit alone, heuristic-mode differences, scenario-cluster
+  bootstrap intervals, actual wall-clock times, and unfinished count.
+
+To resume after interruption, repeat the EXACT command with the same
+`--out`. Already completed trial identifiers are skipped, but the
+eight-hour countdown starts afresh on each invocation. The script
+runs no background process from ChatGPT; the local command must be
+started by the user and kept running on the powered-on computer.
