@@ -209,8 +209,11 @@ function pairedComparison(records,challenger,baselineName){
  if(!pairs.length)return null;
  const grouped=new Map();
  for(const p of pairs){
-  if(!grouped.has(p.scenarioId))grouped.set(p.scenarioId,[]);
-  grouped.get(p.scenarioId).push(p);
+  // Three HP states and multiple dice seeds are correlated within a
+  // Monster x Hero pair. Cluster the confidence interval at that level.
+  const group=p.scenarioId.replace(/-(fresh|injured|critical)$/,"");
+  if(!grouped.has(group))grouped.set(group,[]);
+  grouped.get(group).push(p);
  }
  const clusters=[...grouped.values()];
  let rng=2166136261;
@@ -229,7 +232,8 @@ function pairedComparison(records,challenger,baselineName){
  }
  boots.sort((a,b)=>a-b);
  return {challenger,baseline:baselineName,n:pairs.length,
-  independentScenarioTypes:clusters.length,
+  independentMonsterHeroGroups:clusters.length,
+  independentScenarioTypes:new Set(pairs.map(p=>p.scenarioId)).size,
   deltaFitness:mean(pairs,"deltaFitness"),
   deltaClear:mean(pairs,"deltaClear"),deltaHP:mean(pairs,"deltaHP"),
   deltaSearchMs:mean(pairs,"deltaMs"),
@@ -242,17 +246,19 @@ export function coarseSummary(records,manifest,finalists=null){
  const screen=rank(records,"screen",candidates);
  const validated=finalists?rank(records,"validate",
   candidates.filter(c=>finalists.includes(c.name))):[];
- const expectedScreen=manifest.screen.length*candidates.length;
+ const expectedScreen=manifest.screen.length*
+  (manifest.setup.screenRepetitions??1)*candidates.length;
  const expectedValidation=finalists?
   manifest.holdout.length*manifest.setup.holdoutRepetitions*finalists.length:0;
- const matchedPairs=finalists?finalists.filter(id=>
-  id!==previous.name).map(id=>
-   pairedComparison(records,id,previous.name)):[];
+ const control=manifest.setup.profile==="refine"?
+  "baseline-16":previous.name;
+ const matchedPairs=finalists?finalists.filter(id=>id!==control).map(id=>
+  pairedComparison(records,id,control)):[];
  const completeScreen=records.filter(r=>r.phase==="screen").length===
   expectedScreen;
  const completeValidation=Boolean(finalists)&&
   records.filter(r=>r.phase==="validate").length===expectedValidation;
- return {schema:"solo-mcts-coarse-final-v1",
+ return {schema:manifest.schema,
   revision:manifest.revision,setup:manifest.setup,
   candidates,screenScenarioCount:manifest.screen.length,
   holdoutScenarioCount:manifest.holdout.length,
@@ -276,13 +282,17 @@ export function coarseSummary(records,manifest,finalists=null){
 }
 async function main(){
  const opts=parseCoarseArgs(process.argv.slice(2));
- const candidates=coarseCandidates().slice(0,opts.candidateLimit);
- const split=splitGroups(opts.seed,opts.screenGroups,opts.holdoutGroups);
+ const candidates=(opts.profile==="refine"?refineCandidates():coarseCandidates())
+  .slice(0,opts.candidateLimit);
+ const split=splitGroups(opts.seed,opts.screenGroups,opts.holdoutGroups,
+  {allConditions:opts.profile==="refine"});
  if(opts.dryRun){
-  console.log(JSON.stringify({schema:"solo-mcts-coarse-final-v1",
+  console.log(JSON.stringify({schema:opts.profile==="refine"?
+    "solo-mcts-refinement-v1":"solo-mcts-coarse-final-v1",
    candidates:candidates.length,firstCandidates:candidates.slice(0,4),
    screen:split.train.length,heldOut:split.validate.length,
-   screeningJobs:candidates.length*split.train.length,
+   screeningJobs:candidates.length*split.train.length*
+    opts.screenRepetitions,
    estimateValidationJobs:(opts.finalists+2)*split.validate.length*
     opts.holdoutRepetitions,
    noCardsOrEngineDefaultsChanged:true},null,2));
@@ -294,7 +304,8 @@ async function main(){
   summaryPath=join(opts.out,"summary.json");
  const setup=Object.fromEntries(Object.entries(opts).filter(
   ([k])=>!["out","dryRun"].includes(k)));
- const expected={schema:"solo-mcts-coarse-final-v1",
+ const expected={schema:opts.profile==="refine"?
+  "solo-mcts-refinement-v1":"solo-mcts-coarse-final-v1",
   revision:sha(),setup,candidates,screen:split.train,
   holdout:split.validate};
  let manifest=expected;
@@ -333,9 +344,12 @@ async function main(){
  };
  const chooseFinalists=()=>{
   const screen=coarseSummary(records,manifest).screen;
-  const names=[previous.name,baseline.name];
+  const names=opts.profile==="refine"?
+   ["baseline-8","baseline-16","baseline-32","baseline-64"]:
+   [previous.name,baseline.name];
   for(const item of screen){
-   if(names.length>=opts.finalists+2)break;
+   if(names.length>=opts.finalists+
+    (opts.profile==="refine"?4:2))break;
    if(!names.includes(item.name))names.push(item.name);
   }
   return names;
@@ -386,7 +400,8 @@ async function main(){
   finalists=chooseFinalists();phase="validate";
   jobs=buildJobs(phase,candidates.filter(c=>finalists.includes(c.name)),
    manifest.holdout,opts.holdoutRepetitions);
- }else jobs=buildJobs(phase,candidates,manifest.screen,1);
+ }else jobs=buildJobs(phase,candidates,manifest.screen,
+  opts.screenRepetitions);
  if(!jobs.length){if(phase==="screen")nextPhase();else stop("already complete");}
  if(stopped)return;
  console.log("Coarse solo MCTS tuning: "+candidates.length+" candidates, "+
@@ -419,7 +434,7 @@ async function main(){
     appendFileSync(trialPath,JSON.stringify(row)+"\n");
     records.push(row);seen.add(key);
    }
-   if(records.length%25===0)report();
+   if(records.length%(opts.profile==="refine"?500:25)===0)report();
    assign(w);
    if(!jobs.length&&active===0)nextPhase();
   });
