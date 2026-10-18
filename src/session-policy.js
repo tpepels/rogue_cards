@@ -54,7 +54,7 @@ export function selectSessionPolicyAction(session,policy,{
  rolloutCombatMode=null,rolloutCombatSamples=2,
  rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null,
  implicitHeuristicMode="legacy",equipmentMode="legacy",
- onPolicyDecision=null
+ onPolicyDecision=null,mctsPragmaticVariant="both"
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -84,6 +84,8 @@ export function selectSessionPolicyAction(session,policy,{
   throw Error("onPolicyDecision must be a function");
  if(treeMode!==null&&!["full","frontier"].includes(treeMode))
   throw Error("Invalid explicit MCTS treeMode");
+ if(!["external-only","tree-only","rollout-only","both"].includes(
+  mctsPragmaticVariant))throw Error("Unknown MCTS pragmatic variant");
  const parameters=resolveSearchProfile({
   searchProfile,rolloutCombatMode,implicitWeight,exploration
  });
@@ -128,7 +130,7 @@ export function selectSessionPolicyAction(session,policy,{
     treeMode,mctsOptimizations,onSearchProfile,onSearchResult,
     rolloutCombatMode,rolloutCombatSamples,
     rolloutCombatMaxDecisions,implicitWeight,exploration,
-    implicitHeuristicMode,equipmentMode,
+    implicitHeuristicMode,equipmentMode,mctsPragmaticVariant,
     onPolicyDecision
    });
   }
@@ -164,7 +166,10 @@ export function selectSessionPolicyAction(session,policy,{
   rolloutCombatMode:parameters.rolloutCombatMode,rolloutCombatSamples,
   rolloutCombatMaxDecisions,implicitWeight:parameters.implicitWeight,
   exploration:parameters.exploration,implicitHeuristicMode,
-  simulationPolicy:equipmentMode==="solo-pragmatic"?"solo-pragmatic":"default",
+  simulationPolicy:equipmentMode==="solo-pragmatic"?
+   ({both:"solo-pragmatic","external-only":"solo-pragmatic-external",
+     "tree-only":"solo-pragmatic-tree",
+     "rollout-only":"solo-pragmatic-rollout"})[mctsPragmaticVariant]:"default",
   ...(mctsOptimizations??{})
  });
  if(onSearchProfile&&found?.transitionProfile)
