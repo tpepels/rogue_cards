@@ -39,7 +39,8 @@ export function selectSessionPolicyAction(session,policy,{
  legalActions=null,searchProfile="classic",deepMinBudget=16,
  deepVisitsPerAction=4,treeMode=null,mctsOptimizations=null,onSearchProfile=null,
  rolloutCombatMode=null,rolloutCombatSamples=2,
- rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null
+ rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null,
+ implicitHeuristicMode="legacy"
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -106,7 +107,7 @@ export function selectSessionPolicyAction(session,policy,{
    parameters.rolloutCombatMode!=="random"?"frontier":"full"),
   rolloutCombatMode:parameters.rolloutCombatMode,rolloutCombatSamples,
   rolloutCombatMaxDecisions,implicitWeight:parameters.implicitWeight,
-  exploration:parameters.exploration,
+  exploration:parameters.exploration,implicitHeuristicMode,
   ...(mctsOptimizations??{})
  });
  if(onSearchProfile&&found?.transitionProfile)
