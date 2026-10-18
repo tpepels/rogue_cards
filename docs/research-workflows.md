@@ -29,7 +29,9 @@ partial report must not be mistaken for a finished optimization.
 ### Phase A.5 – Equipment-policy repair and Monster-frequency audit
 
 All physical Item and Room rules remain unchanged. NEW solo balance
-runs default to the opt-in **solo-efficient** equipment policy. At a
+runs now default to the opt-in **solo-pragmatic** policy. It extends
+the earlier `solo-efficient` equipment policy with a few conservative
+human-like deterministic choices that bypass an entire MCTS search. At a
 safe boundary it performs an explicitly legal equip action only when
 it increases the Hero's ATK (weapon), DEF (armour), or fills an empty
 Ring/Companion slot. ATK and DEF use the exact canonical engine stats;
@@ -40,9 +42,36 @@ root branching factor. The full legal actions are not modified.
 
 A filled Ring/Companion slot is not automatically swapped: passive
 effects are too context-dependent to assign an arbitrary numerical
-strength. Legacy behavior remains available with
---equipment-policy legacy; it is not comparable under the same
-checkpoint protocol.
+strength. The `solo-pragmatic` policy also performs the following:
+
+- At low HP between Rooms, use a legally offered Linen Bandage or Dry
+  Ration (both printed healing Tools). Rations heal a certain 2 HP;
+  Bandages heal d6 and require enough missing HP to be worthwhile.
+  Unidentified/random Potions are never automatically treated as heals.
+- At critically low HP in a Shrine, equipped Staff may replace the
+  Room choice to heal a certain 2 HP; it is NOT a free extra reward.
+- At a Monster parley decision, consider the Hero's **current HP and
+  DEF**, the visible Monster ATK and the cost and uncertainty of the
+  actual printed parley. Low HP favors a legally available avoidance
+  attempt; at critical HP, a guaranteed dismissal is worth spending
+  even the last Items. Parley with WIT is not assumed to succeed,
+  and HP-damaging/costly ambiguous choices remain in MCTS.
+- When a Hero is reasonably healthy and has margin against expected
+  combat attrition, fight a Monster for useful printed DEFEAT operations.
+  A HEAL-only reward is not automatically useful at full HP.
+- If the only combat choices are Attack and Pass, and HP is not
+  critical, attack without a search. When additional Items/Elbereth
+  are offered, those decisions remain with MCTS.
+
+This is a **heuristic policy**, not a proven optimal strategy. If the
+outcome is ambiguous, the full search remains available. Deterministic
+decisions are recorded with the exact reason in `policyShortcutReasons`
+and as `policyRule` in each canonical action trace. All card effects,
+chance resolution, physical Item costs and legal actions remain
+canonical, and unchanged external engines use the original policy.
+Modes `legacy`, `solo-efficient` and `solo-pragmatic` are available;
+they are scientifically different policies and MUST have separate
+output manifests and paired experiments.
 
 Current structural Monster audit (79 actual everything-goes regional
 Room cards, including the print-only expansion):
@@ -77,7 +106,8 @@ Independent audit, including the saved empirical pilot:
 Start the next paired balance pilot in a **new output directory**
 because equipment policy is a change to the research design:
 
-    npm run study:solo:balance -- --workers 8 --hours 2 --runs-per-hero 2 --budget 8 --c 0.35 --alpha 0.4 --equipment-policy solo-efficient --from-study results/mcts-solo-overnight/summary.json --seed 20261101 --out results/solo-balance-equipment-v2
+    npm run test:solo:pragmatic
+    npm run study:solo:balance -- --workers 8 --hours 2 --runs-per-hero 2 --budget 8 --c 0.35 --alpha 0.4 --equipment-policy solo-pragmatic --from-study results/mcts-solo-overnight/summary.json --seed 20261101 --out results/solo-balance-pragmatic-v1
 
 Saved trial rows contain selectedActions, equipmentChoicesSuppressed,
 equippedUpgradeCount and equipmentBreaks. Use the same policy for UCT
