@@ -1,0 +1,14 @@
+{
+  "schema": "rogue-cards-staging-v1",
+  "id": "wisp-hp-8",
+  "description": "One-card hypothesis: the Will-o'-Wisp has 8 instead of 9 HP. This file never changes canonical.",
+  "cards": [
+    {
+      "collection": "monsters",
+      "id": "wisp",
+      "set": {
+        "hp": 8
+      }
+    }
+  ]
+}
