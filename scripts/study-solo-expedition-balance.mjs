@@ -189,6 +189,10 @@ export function playFullSoloExpedition({
  };
 }
 export function parseSoloBalanceArgs(argv){
+ const dryRun=argv.includes("--dry-run");
+ if(argv.filter(x=>x==="--dry-run").length>1)
+  throw Error("Duplicate --dry-run");
+ argv=argv.filter(x=>x!=="--dry-run");
  const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
   "--tactical-max","--from-study","--out",
@@ -217,7 +221,7 @@ export function parseSoloBalanceArgs(argv){
   throw Error("--heuristic auto requires --from-study");
  const seed=int("--seed",20261101,1,0xffffffff);
  return {
-  hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
+  dryRun,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",30,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
   samples:int("--samples",2,1,6),
@@ -354,6 +358,24 @@ export function soloBalanceSummary(records,design){
 }
 async function main(){
  const c=parseSoloBalanceArgs(process.argv.slice(2));
+ if(c.dryRun){
+  const selection=c.heuristic==="auto"?
+   chooseHeuristicFromCompletedStudy(c.sourceStudy):{
+    heuristic:c.heuristic
+   };
+  console.log(JSON.stringify({
+   experiment:"solo-full-expedition-balance",
+   gameMode:"everything-goes",heroes:SOLO_HEROES,
+   policies:ARM_NAMES,heuristic:selection.heuristic,
+   independentlySeededHeroStarts:c.runsPerHero*SOLO_HEROES.length,
+   totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*ARM_NAMES.length,
+   workers:c.workers,hours:c.hours,budget:c.budget,
+   c:c.c,alpha:c.alpha,samples:c.samples,
+   tacticalMax:c.tacticalMax,sourceStudy:c.sourceStudy,
+   output:c.out
+  },null,2));
+  return;
+ }
  mkdirSync(c.out,{recursive:true});
  const manifestPath=join(c.out,"manifest.json"),
   recordPath=join(c.out,"trials.ndjson"),
