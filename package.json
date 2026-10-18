@@ -107,7 +107,9 @@
     "report:solo:balance": "node scripts/report-solo-balance-details.mjs",
     "test:solo:equipment-frequency": "node --test tests/solo-equipment-frequency.test.mjs",
     "audit:monster-frequency": "node scripts/audit-monster-frequency.mjs",
-    "test:solo:pragmatic": "node --test tests/solo-pragmatic-policy.test.mjs tests/mcts-pragmatic-simulation.test.mjs"
+    "test:solo:pragmatic": "node --test tests/solo-pragmatic-policy.test.mjs tests/mcts-pragmatic-simulation.test.mjs",
+    "tune:solo:coarse": "node scripts/tune-solo-coarse.mjs",
+    "test:solo:coarse": "node --test tests/solo-coarse-tuner.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
