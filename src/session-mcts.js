@@ -217,7 +217,8 @@ export function searchDecision(session,{budget=100,seed=1,
  nativeHash=false,rolloutCombatMode="random",
  rolloutCombatSamples=2,rolloutCombatMaxDecisions=8,
  implicitWeight=0,implicitHeuristicMode="legacy",
- simulationPolicy="default",softTreeBonus=0.15,
+ simulationPolicy="default",implicitHpScale=1,implicitThreatScale=1,
+ softTreeBonus=0.15,
  softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
@@ -280,6 +281,11 @@ export function searchDecision(session,{budget=100,seed=1,
   throw Error("Unknown implicit heuristic mode");
  if(implicitHeuristicMode!=="legacy"&&session.state.heroes.length!==1)
   throw Error("Solo implicit heuristic requires exactly one Hero");
+ for(const [name,value] of Object.entries({implicitHpScale,
+  implicitThreatScale})){
+  if(!Number.isFinite(value)||value<0||value>3)
+   throw Error("Invalid "+name);
+ }
  for(const [name,value] of Object.entries({softTreeBonus,
   softTreeFirstVisitProbability,softRolloutProbability})){
   if(!Number.isFinite(value)||value<0||
@@ -740,7 +746,8 @@ export function searchDecision(session,{budget=100,seed=1,
     if(implicitWeight>0&&implicitFrontierDepth&&
        implicitFrontierValue===null&&!sim.pendingNested)
     {
-     implicitFrontierValue=implicitExpeditionHeuristic(sim,implicitHeuristicMode);
+     implicitFrontierValue=implicitExpeditionHeuristic(sim,implicitHeuristicMode,
+      {hpScale:implicitHpScale,threatScale:implicitThreatScale});
      // This hash contains only the public observation at the actual
      // frontier, not the determinized future hidden deck.
      implicitFrontierKey=String(stateHash(sim));
@@ -811,7 +818,8 @@ export function searchDecision(session,{budget=100,seed=1,
    // terminal without a new frontier. Recursive child values must keep
    // flowing upward on EVERY completed canonical MCTS trial.
    backupImplicit(path.slice(0,implicitFrontierDepth||path.length),
-    implicitFrontierValue??implicitExpeditionHeuristic(sim,implicitHeuristicMode),
+    implicitFrontierValue??implicitExpeditionHeuristic(sim,implicitHeuristicMode,
+      {hpScale:implicitHpScale,threatScale:implicitThreatScale}),
     implicitFrontierKey??String(stateHash(sim)));
  }
  if(JSON.stringify(observeSession(session))!==original||
