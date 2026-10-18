@@ -72,7 +72,7 @@ test("Low HP uses legal free WIT parley; actual result remains random/canonical"
   onSearchResult:()=>assert.fail("No MCTS at safe shortcut")
  });
  assert.equal(a.kind,"parley");
- assert.deepEqual(chosen,["low-hp-avoid:wisp"]);
+ assert.deepEqual(chosen,["critical-hp-avoid:wisp"]);
  assert.equal(policy.shortcutCount,1);
 });
 test("Healthy Hero fights Monster only if printed reward is useful",()=>{
@@ -87,14 +87,18 @@ test("Healthy Hero fights Monster only if printed reward is useful",()=>{
  monster(s,"rat");
  assert.equal(pragmaticSoloAction(s,sessionActions(s)),null);
 });
-test("Paid escape needs surplus resources: a dangerous forced discard stays in MCTS",()=>{
+test("Critical HP prioritizes guaranteed escape even when it spends the last Items",()=>{
  const s=hero(),h=s.state.heroes[0];
  monster(s,"goblin");h.hp=2;
  // Initial 2 Items would both be discarded to pay the Goblin.
  assert.ok(sessionActions(s).some(a=>a.kind==="parley"));
  assert.equal(h.inventory.length,2);
+ const forced=pragmaticSoloAction(s,sessionActions(s));
+ assert.equal(forced?.action.kind,"parley");
+ assert.equal(forced?.rule,"critical-hp-avoid:goblin");
+ // At moderately low HP the same two-Item payment is deferred to MCTS.
+ h.hp=Math.ceil(h.card.hp*.4);
  assert.equal(pragmaticSoloAction(s,sessionActions(s)),null);
- // With another physical Item, a critical Hero may choose to pay.
  give(s,"ex-rations");
  const result=pragmaticSoloAction(s,sessionActions(s));
  assert.equal(result?.action.kind,"parley");
