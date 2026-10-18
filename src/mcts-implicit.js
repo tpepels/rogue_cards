@@ -18,7 +18,8 @@ export function implicitHeuristicBreakdown(session,mode="legacy"){
  if(mode!=="legacy"&&s.heroes.length!==1)
   throw Error("Solo implicit heuristic requires exactly one Hero");
  if(session.phase==="terminal"||!s.alive()){
-  const value=Number(session.phase==="terminal"&&!!s.metrics.won);
+  // A solo wipe is always zero, even if a stale won flag were set.
+  const value=Number(s.alive()&&session.phase==="terminal"&&!!s.metrics.won);
   return {terminal:true,value,unclipped:value,terms:{},
    variables:{phase:session.phase,won:!!s.metrics.won,
     alive:s.alive()}};
