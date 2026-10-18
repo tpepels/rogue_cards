@@ -7,6 +7,8 @@ on:
       - 'scripts/report-solo-balance-details.mjs'
       - 'src/experiment-telemetry.js'
       - 'src/session-policy.js'
+      - 'scripts/audit-monster-frequency.mjs'
+      - 'tests/solo-equipment-frequency.test.mjs'
       - 'tests/solo-expedition-balance.test.mjs'
       - '.github/workflows/solo-balance-telemetry.yml'
   workflow_dispatch:
@@ -19,5 +21,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test efficient solo equipment policy and printed Monster exposure
+        run: npm run test:solo:equipment-frequency
+      - name: Audit printed regional Monster odds
+        run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
         run: npm run test:solo:balance
