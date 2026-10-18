@@ -36,7 +36,7 @@ on:
 jobs:
   trace-integrity:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 24
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -90,6 +90,26 @@ jobs:
       - name: Verify staging pilot manifest
         run: |
           npm run study:card:staging -- --stage experiments/staging/wisp-hp-8.json --runs-per-hero 1 --dry-run
+      - name: Execute real paired staging study and verify immutable resume
+        run: |
+          npm run study:card:staging -- \
+            --stage experiments/staging/wisp-hp-8.json \
+            --runs-per-hero 1 --workers 8 --minutes 8 \
+            --out "$RUNNER_TEMP/staging-paired-smoke"
+          npm run study:card:staging -- \
+            --stage experiments/staging/wisp-hp-8.json \
+            --runs-per-hero 1 --workers 8 --minutes 8 \
+            --out "$RUNNER_TEMP/staging-paired-smoke"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.RUNNER_TEMP+"/staging-paired-smoke/";
+            const result=JSON.parse(readFileSync(root+"summary.json","utf8"));
+            const lines=readFileSync(root+"trials.ndjson","utf8").trim().split("\n");
+            if(!result.complete||result.pairedExpeditions!==8||lines.length!==16||
+              !result.deckComposition?.canonical?.rooms?.UPPER||
+              !result.byCard?.staging?.monsterVisits)
+              throw Error("Staging comparison failed pairing/resume/deck audit");
+          '
       - name: Audit printed regional Monster odds
         run: npm run audit:monster-frequency
       - name: Prove complete canonical solo decision traces and detailed reports
