@@ -65,8 +65,9 @@ systemd-inhibit --what=sleep:idle \
 If the tactical run has too few evenly exposed candidate trials, the
 automatic selector **fails rather than inventing a winner**. It reads
 only the summary from the tactical study and chooses the highest
-CPU-calibrated hybrid score among `legacy`, `solo-hp` and
-`solo-threat`. For a deliberately specified profile, omit
+CPU-calibrated **implicit-only** score among `legacy`, `solo-hp` and
+`solo-threat` when using the two-arm default. It compares hybrid
+scores only when the `hybrid` arm is explicitly included. For a deliberately specified profile, omit
 `--from-study` and pass `--heuristic solo-threat` (or another
 known profile). The balance run evaluates on new starting seeds.
 
@@ -77,8 +78,8 @@ Expectimax was 6–19x more expensive per root decision but provided
 no reliable improvement in the finished 46,080-trial solo encounter
 audit. For a separate exploratory full-expedition comparison, pass
 `--arms uct,implicit,hybrid`; do NOT conflate its different compute
-cost with a fair time-budget match. All three commit every move through the
-same canonical 36-Room `everything-goes` game. All live episodes must
+cost with a fair time-budget match. Both selected policies (or all three with the opt-in)
+commit every move through the same canonical 36-Room `everything-goes` game. All live episodes must
 end in a genuine printed win, death or escape; nonterminal/stalled/
 unimplemented branches halt the run with an error and are not treated
 as losses. They use equal MCTS visit budgets, **not** equal CPU time.
@@ -100,8 +101,9 @@ The current solo design targets remain:
   **combat-context** damage rather than all-source HP damage.
 
 These are target ranges, not passing correctness assertions. The
-80-per-Hero protocol requires up to 1,920 full games (8 Heroes × 80
-seeds × 3 policies); a 12-hour wall limit may leave the report partial,
+80-per-Hero default requires 1,280 full games (8 Heroes × 80 seeds
+× 2 policies), or 1,920 with optional `--arms uct,implicit,hybrid`.
+A 12-hour wall limit may leave the report partial,
 and the output can be resumed on the exact same Git revision. To first
 measure throughput, use a separate `--runs-per-hero 2 --out results/
 solo-balance-pilot` directory; those results do NOT meet the balance
