@@ -70,6 +70,42 @@ export function coarseCandidates(){
    simulationPolicy:both,softRolloutProbability:prior});
  return Object.freeze(candidates.map(x=>Object.freeze(x)));
 }
+
+/**
+ * The follow-up targets budget 16/32/64, C/alpha and HP/threat weights.
+ * Its final holdout consists of 16 Monster x Hero groups absent from the
+ * entire original 24+24-group coarse experiment.
+ */
+export function refineCandidates(){
+ const out=[];
+ const base={c:0.35,alpha:0.4,heuristicMode:"solo-threat",
+  rolloutCombatMode:"random",simulationPolicy:"solo-pragmatic-tree",
+  budget:16};
+ const add=(name,options={})=>out.push(Object.freeze({...base,...options,name}));
+ for(const n of [8,16,32,64])add("baseline-"+n,{budget:n});
+ add("classic-uct-16",{alpha:0,c:Math.SQRT2,
+  heuristicMode:"legacy",simulationPolicy:"default"});
+ for(const c of [0.15,0.35,0.65,1])
+  for(const alpha of [0,0.2,0.4,0.6])
+   if(!(c===0.35&&alpha===0.4))
+    add("b16-c"+c+"-a"+alpha,{c,alpha});
+ for(const c of [0.2,0.5])
+  for(const alpha of [0.2,0.5])
+   add("b32-c"+c+"-a"+alpha,{budget:32,c,alpha});
+ for(const mode of ["solo-hp","legacy"])
+  add("b16-heur-"+mode,{heuristicMode:mode});
+ for(const scale of [0.7,1.3])
+  add("b16-hp-x"+scale,{implicitHpScale:scale});
+ for(const scale of [0.6,1.4])
+  add("b16-threat-x"+scale,{implicitThreatScale:scale});
+ for(const p of [0.5,1])
+  add("b16-tree-prior-"+p,{softTreeFirstVisitProbability:p});
+ add("b16-no-soft-tree-bonus",{softTreeBonus:0});
+ if(new Set(out.map(x=>x.name)).size!==out.length)
+  throw Error("Duplicate refinement candidate name");
+ return Object.freeze(out);
+}
+
 const mean=(rows,key)=>rows.length?
  rows.reduce((sum,r)=>sum+r[key],0)/rows.length:null;
 const taskKey=tag=>tag.phase+"|"+tag.candidate+"|"+
@@ -91,7 +127,7 @@ const rank=(records,phase,candidates)=>{
  return table.sort((a,b)=>(b.efficiencyScore??-Infinity)-
   (a.efficiencyScore??-Infinity)||a.name.localeCompare(b.name));
 };
-const splitGroups=(seed,screenCount,holdoutCount)=>{
+export const splitGroups=(seed,screenCount,holdoutCount,{allConditions=false}={})=>{
  const groups=[...new Set(soloScenarioIds().map(id=>
   id.replace(/-(fresh|injured|critical)$/,"")))];
  if(groups.length!==64)throw Error("Unexpected solo Hero x Monster grid");
@@ -105,18 +141,20 @@ const splitGroups=(seed,screenCount,holdoutCount)=>{
   const j=Math.floor(draw()*(i+1));
   [groups[i],groups[j]]=[groups[j],groups[i]];
  }
- return {train:groups.slice(0,screenCount).flatMap((id,i)=>[
-  id+"-"+["fresh","injured","critical"][i%3],
-  id+"-"+["fresh","injured","critical"][(i+1)%3]
- ]),validate:groups.slice(screenCount,screenCount+holdoutCount)
-  .flatMap(id=>["fresh","injured","critical"].map(x=>id+"-"+x))};
+ const conditions=["fresh","injured","critical"];
+ return {train:groups.slice(0,screenCount).flatMap((id,i)=>
+  allConditions?conditions.map(x=>id+"-"+x):[
+   id+"-"+conditions[i%3],id+"-"+conditions[(i+1)%3]
+  ]),validate:groups.slice(screenCount,screenCount+holdoutCount)
+  .flatMap(id=>conditions.map(x=>id+"-"+x))};
 };
 export function parseCoarseArgs(argv){
  const dryRun=argv.includes("--dry-run");
  argv=argv.filter(x=>x!=="--dry-run");
  const options={},allowed=new Set(["--workers","--minutes","--seed",
   "--out","--screen-groups","--holdout-groups",
-  "--holdout-repetitions","--finalists","--candidate-limit"]);
+  "--holdout-repetitions","--screen-repetitions",
+  "--finalists","--candidate-limit","--profile"]);
  for(let i=0;i<argv.length;i+=2){
   const k=argv[i],v=argv[i+1];
   if(!allowed.has(k)||v===undefined||Object.hasOwn(options,k))
@@ -129,16 +167,24 @@ export function parseCoarseArgs(argv){
    throw Error(key+" must be integer "+min+".."+max);
   return n;
  };
- const screenGroups=integer("--screen-groups",24,1,63);
- const holdoutGroups=integer("--holdout-groups",24,1,63);
+ const profile=options["--profile"]??"standard";
+ if(!["standard","refine"].includes(profile))
+  throw Error("Unknown tuner profile");
+ const screenGroups=integer("--screen-groups",profile==="refine"?48:24,1,63);
+ const holdoutGroups=integer("--holdout-groups",profile==="refine"?16:24,1,63);
+ if(profile==="refine"&&(screenGroups!==48||holdoutGroups!==16))
+  throw Error("Refine must hold back 16 unstudied Monster/Hero groups");
  if(screenGroups+holdoutGroups>64)
   throw Error("Training and held-out Hero/Monster groups must be disjoint");
- return {dryRun,workers:integer("--workers",8,1,32),
+ return {dryRun,profile,workers:integer("--workers",8,1,32),
   minutes:integer("--minutes",120,1,720),
   seed:integer("--seed",20261113,1,0xffffffff),
   screenGroups,holdoutGroups,
-  holdoutRepetitions:integer("--holdout-repetitions",2,1,20),
-  finalists:integer("--finalists",4,1,12),
+  screenRepetitions:integer("--screen-repetitions",
+   profile==="refine"?12:1,1,50),
+  holdoutRepetitions:integer("--holdout-repetitions",
+   profile==="refine"?16:2,1,50),
+  finalists:integer("--finalists",profile==="refine"?6:4,1,12),
   candidateLimit:integer("--candidate-limit",100,2,100),
   out:resolve(options["--out"]??"results/solo-coarse-final-v1")};
 }
