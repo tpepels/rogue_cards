@@ -259,6 +259,20 @@ async function main(){
  if(agent.schema!=="rogue-cards-solo-agent-profile-v1"||
   agent.status!=="frozen-for-staging-comparisons")
   throw Error("Staging requires a frozen, versioned test-agent profile");
+ // Never claim a frozen policy that the canonical solo runner does not use.
+ if(agent.policy?.arm!=="implicit"||
+  agent.policy.searchProfile!=="classic"||
+  agent.policy.treeMode!=="frontier"||
+  agent.policy.knowledge!=="fair"||
+  agent.policy.rolloutCombatMode!=="random"||
+  agent.policy.equipmentMode!=="solo-pragmatic"||
+  agent.policy.mctsPragmaticVariant!=="tree-only")
+  throw Error("Agent profile requests unsupported staging policy semantics");
+ for(const field of ["budget","c","alpha","softTreeBonus",
+  "softTreeFirstVisitProbability","softRolloutProbability",
+  "implicitHpScale","implicitThreatScale","maxSearchSteps"])
+  if(!Number.isFinite(agent.parameters?.[field]))
+   throw Error("Missing numerical frozen agent parameter "+field);
  const heroes=HEROES.map(h=>h.id);
  const manifest={schema:"rogue-cards-staging-run-v1",
   revision:git(),stageId:spec.id,stageSha256:hash(stageSource),
