@@ -21,12 +21,18 @@ import {existsSync,mkdirSync,readFileSync,writeFileSync,
 import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {HEROES} from "../src/tabletop-data.js";
+import {ALL_MONSTERS,ALL_ROOMS} from "../src/decks.js";
 import {createDecisionSession,sessionActions,submitDecision}
  from "../src/engine/decision-session.js";
 import {createSessionPolicy,selectSessionPolicyAction,
  forcesEquipmentProgress} from "../src/session-policy.js";
 
 export const SOLO_HEROES=HEROES.map(h=>h.id);
+const REGIONAL_MONSTERS=new Set(ALL_MONSTERS.map(m=>m.id));
+const ROOM_BY_ID=new Map(ALL_ROOMS.map(room=>[room.id,room]));
+const sumValues=obj=>Object.values(obj||{}).reduce((n,v)=>n+v,0);
+const regionalCount=obj=>Object.entries(obj||{}).reduce((n,[id,v])=>
+ n+(REGIONAL_MONSTERS.has(id)?v:0),0);
 export const BALANCE_TARGETS=Object.freeze({
  soloWinRate:0.40,vaultReachRate:0.50,
  monsterEncountersRange:[16,20],combatConversionRange:[0.55,0.70],
@@ -97,7 +103,7 @@ export function playFullSoloExpedition({
  const policy=createSessionPolicy();
  const m=session.state.metrics;
  let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
- let combatSearchMs=0;
+ let combatSearchMs=0,vaultSeen=false;
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const start=performance.now();
@@ -109,6 +115,9 @@ export function playFullSoloExpedition({
    throw Error("No canonical action at "+session.phase+" seed "+seed);
   const phase=session.pendingNested?
    "reaction:"+session.pendingNested.trigger?.phase:session.phase;
+  if(phase==="vault"||phase==="post-warden"||
+   session.state.room?.stage==="FINAL")
+   vaultSeen=true;
   phaseDecisions[phase]=(phaseDecisions[phase]||0)+1;
   const forced=legal.length===1||
    forcesEquipmentProgress(session,policy,legal);
@@ -140,15 +149,20 @@ export function playFullSoloExpedition({
  if(m.roundLimit||m.unresolved)throw Error("Unresolved canonical expedition");
  const ending=classifyEnding(session.state);
  const hp=Math.max(0,session.state.heroes[0].hp);
- const monsters=Object.values(m.monsterVisits||{})
-  .reduce((n,x)=>n+x,0);
- const combatStarts=m.combatStarts||0;
- const encounters=m.encounterStarts||0;
- const vaultReached=Boolean(
-  session.state.vaultState||
-  (m.sealAttempt||m.sealAvailable)||
-  ["warden","warden-fury"].some(x=>(m.monsterVisits[x]||0)>0)||
-  (session.state.endingKind&&m.won));
+ const ordinaryEncounters=regionalCount(m.monsterVisits);
+ const ordinaryFights=regionalCount(m.monsterFightStartsById);
+ const combatContextDamage=regionalCount(m.damageContextById);
+ const vaultReached=Boolean(m.vaultEntered||vaultSeen);
+ const byStage=Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>{
+  const visited=[...session.state.seenRooms].map(id=>ROOM_BY_ID.get(id)).
+   filter(room=>room?.stage===stage);
+  return [stage,{
+   normal:visited.filter(room=>room.v2.kind!=="CORRIDOR").length,
+   corridors:visited.filter(room=>room.v2.kind==="CORRIDOR").length
+  }];
+ }));
+ const hasAll36=["UPPER","MIDDLE","DEEP"].every(stage=>
+  byStage[stage].normal>=12);
  return {
   schema:"solo-full-canonical-expedition-v1",
   hero,seed,arm,won:Number(ending==="win"),ending,
@@ -157,8 +171,11 @@ export function playFullSoloExpedition({
   elapsedMs:performance.now()-start,
   maxHp,remainingHp:hp,hpLost:maxHp-hp,
   roomsCleared:m.cleared,stageProgress:{...session.state.stageProgress},
-  monsterVisits:monsters,encounterStarts:encounters,combatStarts,
-  fightsPerEncounter:encounters?combatStarts/encounters:null,
+  byStage,hasAll36:Number(hasAll36),
+  ordinaryEncounters,ordinaryFights,combatContextDamage,
+  encounterStarts:m.encounterStarts,combatStarts:m.combatStarts,
+  fightsPerEncounter:ordinaryEncounters?
+   ordinaryFights/ordinaryEncounters:null,
   damage:m.damage,kills:m.kills,drawn:m.drawn,spent:m.spent,
   elberethAttempts:m.elberethAttempts,elberethSuccesses:m.elberethSuccesses,
   elberethFlees:m.elberethFlees,negotiations:m.negotiations,
@@ -213,14 +230,23 @@ export function parseSoloBalanceArgs(argv){
 }
 export function chooseHeuristicFromCompletedStudy(path){
  const study=JSON.parse(readFileSync(path,"utf8"));
- if(study.schema!=="solo-mcts-overnight-v1"||
-  study.remaining!==0)
-  throw Error("Source study must be a FINISHED solo overnight study");
+ if(study.schema!=="solo-mcts-overnight-v1")
+  throw Error("Unknown solo overnight tuning study");
+ // A time-boxed eight-hour run can end with unfinished optional trials.
+ // Require genuinely paired, sufficiently exposed published results,
+ // rather than demanding completion of its impossible-to-exhaust grid.
+ if(study.completedTrials<300)
+  throw Error("Too few finished solo tuning trials for auto selection");
  const rows=study.results.filter(r=>r.mode==="cpu-calibrated"&&
   /^hybrid-(legacy|solo-hp|solo-threat)$/.test(r.arm));
- if(rows.length!==3||rows.some(r=>!r.meanFitness||r.count<32||
-  r.count!==rows[0].count))
-  throw Error("Source study has insufficient or unpaired solo hybrid data");
+ if(rows.length!==3||rows.some(r=>!Number.isFinite(r.meanFitness)||
+  r.count<32||r.scenarioTypes<16))
+  throw Error("Source study has insufficient solo hybrid data");
+ // Keep the sample counts comparable (a partial run might contain only
+ // one unfinished task on some arms). Larger imbalances are rejected.
+ const counts=rows.map(r=>r.count);
+ if(Math.max(...counts)-Math.min(...counts)>2)
+  throw Error("Source solo heuristic arms are not equally exposed");
  const ranked=[...rows].sort((a,b)=>b.meanFitness-a.meanFitness||
   b.meanClear-a.meanClear||a.meanSearchMs-b.meanSearchMs);
  return {heuristic:ranked[0].arm.replace("hybrid-",""),
@@ -243,19 +269,27 @@ function summarizeCell(items){
   if(row.wipeCause)causes[String(row.wipeCause)]=(causes[String(row.wipeCause)]||0)+1;
   if(row.wipeStage)stages[String(row.wipeStage)]=(stages[String(row.wipeStage)]||0)+1;
  }
- const encounterCount=items.reduce((x,r)=>x+r.encounterStarts,0);
- const combatCount=items.reduce((x,r)=>x+r.combatStarts,0);
+ const encounterCount=items.reduce((x,r)=>x+r.ordinaryEncounters,0);
+ const combatCount=items.reduce((x,r)=>x+r.ordinaryFights,0);
+ const complete36=items.filter(r=>r.hasAll36===1);
+ const eligibleCombat=items.filter(r=>r.ordinaryFights>0);
+ const fightDamage=eligibleCombat.reduce((n,r)=>
+  n+r.combatContextDamage,0);
+ const combatMaxHpDenominator=eligibleCombat.reduce((n,r)=>
+  n+r.ordinaryFights*r.maxHp,0);
  return {n,wins,winRate:n?wins/n:null,winWilson95:wilson(wins,n),
   vaultRate:mean(items,r=>r.vaultReached),
   roomsCleared:mean(items,r=>r.roomsCleared),
-  encounterStarts:mean(items,r=>r.encounterStarts),
-  combatStarts:mean(items,r=>r.combatStarts),
+  ordinaryEncounters:mean(items,r=>r.ordinaryEncounters),
+  ordinaryFights:mean(items,r=>r.ordinaryFights),
   combatConversion:encounterCount?combatCount/encounterCount:null,
-  // All damage from all sources, NOT merely combat HP loss.
+  full36Runs:complete36.length,
+  ordinaryEncountersAmongFull36:mean(complete36,r=>r.ordinaryEncounters),
+  combatContextHPFraction:combatMaxHpDenominator?
+   fightDamage/combatMaxHpDenominator:null,
+  // Preserve ALL-source damage separately, never conflate it with
+  // the combat-context HP target.
   meanDamageAllSources:mean(items,r=>r.damage),
-  damageAllSourcesPerCombatMaxHP:
-   combatCount?items.reduce((x,r)=>x+r.damage,0)/
-    items.reduce((x,r)=>x+r.combatStarts*r.maxHp,0):null,
   meanSteps:mean(items,r=>r.steps),
   meanSearchSeconds:mean(items,r=>r.searchMs/1000),
   meanWallSeconds:mean(items,r=>r.elapsedMs/1000),
@@ -310,7 +344,9 @@ export function soloBalanceSummary(records,design){
    "All three AI agents start each paired Hero-seed with the same initial RNG/deck, but subsequent dice sequences may diverge after different decisions.",
    "Fixed outer MCTS visits across arms do NOT imply equal CPU time; compare meanSearchSeconds and wall seconds.",
    "Causal card balance requires controlled counterfactual changes; monster/card usage is descriptive exposure, not standalone evidence of imbalance.",
-   "The tracked damage metric includes ALL damage sources; it is NOT a direct measure of damage per fight. Do not compare it as if it were the 10–20% combat-only target.",
+   "Ordinary encounter/fight rates use ONLY regional Monsters. Warden phases are excluded.",
+   "The 16–20 encounter target is assessed ONLY in runs that actually visited 36 normal Rooms; if full36Runs=0 the target remains unmeasured.",
+   "Combat-context damage is measured by the engine's Monster-ID damage counters (not general damage). Fractions are weighted by fights × starting maximum Hero HP.",
    "Only complete matched rows are used for paired agent comparisons; partial research outputs are not convergence evidence.",
    "Source nightly root-decision experiment does not prove full-game success; this evaluation measures it independently."
   ]
