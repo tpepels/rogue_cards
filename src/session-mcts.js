@@ -198,7 +198,7 @@ export function searchDecision(session,{budget=100,seed=1,
  deferReactionCheckpoints=false,onDemandCheckpoints=false,
  nativeHash=false,rolloutCombatMode="random",
  rolloutCombatSamples=2,rolloutCombatMaxDecisions=8,
- implicitWeight=0}={}){
+ implicitWeight=0,implicitHeuristicMode="legacy"}={}){
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -256,6 +256,10 @@ export function searchDecision(session,{budget=100,seed=1,
  if(!Number.isFinite(implicitWeight)||implicitWeight<0||
   implicitWeight>1)
   throw Error("Implicit backup weight must be in [0,1]");
+ if(!["legacy","solo-hp","solo-threat"].includes(implicitHeuristicMode))
+  throw Error("Unknown implicit heuristic mode");
+ if(implicitHeuristicMode!=="legacy"&&session.state.heroes.length!==1)
+  throw Error("Solo implicit heuristic requires exactly one Hero");
  const stateHash=fastStateHash?
   (nativeHash?s=>mctsPublicStateHash(s,true):mctsPublicStateHash):
   mctsLegacyPublicStateHash;
@@ -395,6 +399,7 @@ export function searchDecision(session,{budget=100,seed=1,
   const path=[],choiceRng=randomSource(mix(seed^Math.imul(i+1,0xc2b2ae35)));
   let historyKey=rootKey,depth=0,error=null,equipmentStreak=0;
   let implicitFrontierDepth=0,implicitFrontierValue=null;
+  let implicitFrontierKey=null;
   let rolloutCombatThisTrial=0;
   // Standard UCT: expand one new action per trial, then use the same
   // random default policy from actual legal canonical actions. "full"
@@ -612,7 +617,12 @@ export function searchDecision(session,{budget=100,seed=1,
     // are never evaluated before the canonical replay has completed.
     if(implicitWeight>0&&implicitFrontierDepth&&
        implicitFrontierValue===null&&!sim.pendingNested)
-     implicitFrontierValue=implicitExpeditionHeuristic(sim);
+    {
+     implicitFrontierValue=implicitExpeditionHeuristic(sim,implicitHeuristicMode);
+     // This hash contains only the public observation at the actual
+     // frontier, not the determinized future hidden deck.
+     implicitFrontierKey=String(stateHash(sim));
+    }
     // The exact public observation at the next boundary keys the tree.
     if(!inRollout||treeMode==="full")
      historyKey=mix(streamHistoryHash?
@@ -676,7 +686,8 @@ export function searchDecision(session,{budget=100,seed=1,
   }
   if(implicitWeight>0&&implicitFrontierDepth)
    backupImplicit(path.slice(0,implicitFrontierDepth),
-    implicitFrontierValue??implicitExpeditionHeuristic(sim));
+    implicitFrontierValue??implicitExpeditionHeuristic(sim,implicitHeuristicMode),
+    implicitFrontierKey??String(stateHash(sim)));
  }
  if(JSON.stringify(observeSession(session))!==original||
     session.state.rng.snapshot()!==actualRng)
@@ -699,7 +710,8 @@ export function searchDecision(session,{budget=100,seed=1,
   ...(rolloutCombatMode!=="random"?{
    rolloutCombatMode,rolloutCombatSearches,
    rolloutCombatSamples,rolloutCombatMaxDecisions}:{}),
-  ...(implicitWeight>0?{implicitWeight,implicitRootValue:root?.implicitValue??null}:{}),
+  ...(implicitWeight>0?{implicitWeight,implicitRootValue:root?.implicitValue??null,
+   implicitHeuristicMode}:{}),
   ...(rolloutCombatMode!=="random"||implicitWeight>0?
    {exploration:effectiveExploration}:{}),
   rootActionCount:rootActions.length,choices:decisions,
