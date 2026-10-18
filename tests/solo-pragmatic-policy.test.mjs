@@ -167,3 +167,17 @@ test("Actual committed healing shortcut is audited with its reason and zero MCTS
  assert.equal(events[0].search,undefined);
  assert.equal(events[0].after.heroes[0].hp,4);
 });
+
+test("Long solo pilot seed remains valid at the external-only search root",{
+ timeout:120000
+},()=>{
+ // 20261101 pilot, Rogue, replicate 6: exposed a mismatch between a
+ // filtered live action list and its determinized counterfactual menu.
+ const result=playFullSoloExpedition({
+  hero:"rogue",seed:1463312165,arm:"implicit",
+  heuristicMode:"solo-threat",budget:8,c:0.35,alpha:0.4,
+  equipmentMode:"solo-pragmatic",mctsPragmaticVariant:"external-only",
+  recordTelemetry:false
+ });
+ assert.ok(["win","death","escape"].includes(result.ending));
+});
