@@ -119,8 +119,20 @@ function combine(id,description,...specs){
  for(const spec of specs){
   cards.push(...(spec.cards??[]));
   for(const [name,value] of Object.entries(spec.roomEffects??{})){
-   if(Object.hasOwn(roomEffects,name))throw Error("Room hypothesis overlap "+name);
-   roomEffects[name]=value;
+   if(!Object.hasOwn(roomEffects,name)){roomEffects[name]=value;continue;}
+   // Two interventions may affect different parts of the same printed
+   // Room: more Monster dice outcomes AND a safer existing choice.
+   const old=roomEffects[name],canonical=ROOM_EFFECTS[name];
+   const mergeField=key=>{
+    const left=JSON.stringify(old[key])!==JSON.stringify(canonical[key]);
+    const right=JSON.stringify(value[key])!==JSON.stringify(canonical[key]);
+    if(left&&right&&JSON.stringify(old[key])!==JSON.stringify(value[key]))
+     throw Error("Conflicting Room hypothesis at "+name+"."+key);
+    return left?old[key]:value[key];
+   };
+   roomEffects[name]={
+    choices:mergeField("choices"),outcomes:mergeField("outcomes")
+   };
   }
   for(const [name,value] of Object.entries(spec.roomDeck??{})){
    if(Object.hasOwn(roomDeck,name))throw Error("Room deck hypothesis overlap "+name);
