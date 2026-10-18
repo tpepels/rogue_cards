@@ -215,6 +215,7 @@ export function playFullSoloExpedition({
  // committed action. Never hold a metrics reference across the run.
  let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
  let combatSearchMs=0,vaultSeen=false;
+ let vaultEntryHp=null,vaultEntryPlayable=0;
  const pragmaticSimulation={treeShortcuts:0,rolloutShortcuts:0,
   suppressedEquipmentCandidates:0,treeSoftOffered:0,treeSoftChosen:0,
   rolloutSoftOffered:0,rolloutSoftChosen:0,rules:{}};
@@ -234,8 +235,14 @@ export function playFullSoloExpedition({
   const phase=session.pendingNested?
    "reaction:"+session.pendingNested.trigger?.phase:session.phase;
   if(phase==="vault"||phase==="post-warden"||
-   session.state.room?.stage==="FINAL")
+   session.state.room?.stage==="FINAL"){
+   if(!vaultSeen){
+    vaultEntryHp=Math.max(0,session.state.heroes[0].hp);
+    vaultEntryPlayable=Number(session.state.heroes[0].hp>0&&
+     session.phase!=="terminal");
+   }
    vaultSeen=true;
+  }
   phaseDecisions[phase]=(phaseDecisions[phase]||0)+1;
   let forced=legal.length===1||
    forcesEquipmentProgress(session,policy,legal);
@@ -327,7 +334,8 @@ export function playFullSoloExpedition({
  return {
   schema:"solo-full-canonical-expedition-v1",
   hero,seed,arm,won:Number(ending==="win"),ending,
-  vaultReached:Number(vaultReached),steps:decisions,
+  vaultReached:Number(vaultReached),vaultEntryHp,vaultEntryPlayable,
+  steps:decisions,
   searches,searchMs,combatSearchMs,combatDecisions:combatDecisionCount,
   elapsedMs:performance.now()-start,
   maxHp,remainingHp:hp,hpLost:maxHp-hp,
