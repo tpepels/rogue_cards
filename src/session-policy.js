@@ -22,8 +22,60 @@ const equipmentKinds=new Set(["equip","unequip","transfer"]);
 const safePhases=new Set(["between-rooms","explore"]);
 
 export function createSessionPolicy(){
- return {consecutiveEquipment:0,cycleBreaks:0,equipmentActions:0};
+ return {consecutiveEquipment:0,cycleBreaks:0,equipmentActions:0,
+  equippedUpgradeCount:0,equipmentChoicesSuppressed:0};
 }
+
+/**
+ * Solo research policy, not a rule of the game. Choose a single useful
+ * equipment upgrade from currently legal canonical equip actions.
+ * Equipped WEAPON/ARMOUR strength is evaluated with the exact current
+ * ExpeditionState.stats() implementation, not a duplicated item list.
+ * A vacant RING/COMPANION slot can be filled once; a filled slot is not
+ * changed without a known stat improvement. No unequip/re-equip cycles.
+ *
+ * This intentionally leaves all non-equipment actions to normal MCTS.
+ * It does not inspect hidden decks, mutate the live state, or alter
+ * sessionActions()/applyAction()/printed equipment permissions.
+ */
+export function usefulSoloEquipmentAction(session,legal){
+ if(session.state.heroes.length!==1||
+  !safePhases.has(session.phase)||session.state.monster)return null;
+ const h=session.state.heroes[0],s=session.state;
+ if(!h||h.hp<=0)return null;
+ const candidates=[];
+ const currentStats=s.stats(h);
+ for(const action of legal){
+  if(action.phase!=="equipment"||action.kind!=="equip"||
+   action.heroIndex!==0)continue;
+  const card=h.inventory[action.index];
+  if(!card||card.id!==action.cardId||
+   !["weapon","armour","ring","companion"].includes(action.slot))
+   continue;
+  const before=h.slots[action.slot];
+  let utility=0;
+  if(action.slot==="weapon"||action.slot==="armour"){
+   // Only simulate a reversible PUBLIC equipment slot assignment.
+   // No state transition, die roll, item consumption, or hidden card.
+   h.slots[action.slot]=card;
+   let afterStats;
+   try{afterStats=s.stats(h);}
+   finally{
+    if(before)h.slots[action.slot]=before;
+    else delete h.slots[action.slot];
+   }
+   utility=action.slot==="weapon"?
+    afterStats.atk-currentStats.atk:
+    afterStats.def-currentStats.def;
+  }else if(!before)utility=0.5;
+  if(utility>0)candidates.push({action,utility});
+ }
+ candidates.sort((a,b)=>b.utility-a.utility||
+  a.action.slot.localeCompare(b.action.slot)||
+  a.action.index-b.action.index);
+ return candidates[0]?.action??null;
+}
+
 
 /** True only when the study has already committed to progress; MCTS
  * cannot change the next action at this boundary.
@@ -41,7 +93,7 @@ export function selectSessionPolicyAction(session,policy,{
  onSearchResult=null,
  rolloutCombatMode=null,rolloutCombatSamples=2,
  rolloutCombatMaxDecisions=8,implicitWeight=null,exploration=null,
- implicitHeuristicMode="legacy"
+ implicitHeuristicMode="legacy",equipmentMode="legacy"
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -80,6 +132,35 @@ export function selectSessionPolicyAction(session,policy,{
  // Reuse that array instead of rebuilding equipment options a second time.
  const legal=legalActions??sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
+ if(!["legacy","solo-efficient"].includes(equipmentMode))
+  throw Error("Unknown equipment policy mode");
+ if(equipmentMode==="solo-efficient"&&session.state.heroes.length!==1)
+  throw Error("Solo-efficient equipment policy requires exactly one Hero");
+ if(equipmentMode==="solo-efficient"&&safePhases.has(session.phase)){
+  const upgrade=usefulSoloEquipmentAction(session,legal);
+  if(upgrade){
+   policy.equipmentActions++;
+   policy.equippedUpgradeCount++;
+   policy.consecutiveEquipment++;
+   return upgrade;
+  }
+  // Do not offer reversible equipment actions as search candidates
+  // after all profitable canonical slot upgrades have been handled.
+  // This is a policy-level candidate restriction, not a legality change.
+  const choices=legal.filter(a=>!equipmentKinds.has(a.kind)||
+   a.phase!=="equipment");
+  if(choices.length!==legal.length){
+   policy.equipmentChoicesSuppressed+=legal.length-choices.length;
+   return selectSessionPolicyAction(session,policy,{
+    budget,seed,maxSearchSteps,knowledge,observedReplay,
+    legalActions:choices,searchProfile,deepMinBudget,deepVisitsPerAction,
+    treeMode,mctsOptimizations,onSearchProfile,onSearchResult,
+    rolloutCombatMode,rolloutCombatSamples,
+    rolloutCombatMaxDecisions,implicitWeight,exploration,
+    implicitHeuristicMode,equipmentMode:"legacy"
+   });
+  }
+ }
  const progress=legal.find(a=>a.kind==="continue");
  // At the cap the study policy ALWAYS takes the real Continue action.
  // MCTS cannot influence this result, and searchDecision does not mutate
