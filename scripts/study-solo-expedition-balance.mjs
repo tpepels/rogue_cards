@@ -154,6 +154,7 @@ export function playFullSoloExpedition({
   const forced=legal.length===1||
    forcesEquipmentProgress(session,policy,legal);
   const started=performance.now();
+  let searchDiagnostics=null;
   const action=selectSessionPolicyAction(session,policy,{
    budget,seed:mix(seed^Math.imul(decisions,0xc2b2ae35))||1,
    maxSearchSteps,knowledge:"fair",legalActions:legal,
@@ -162,7 +163,8 @@ export function playFullSoloExpedition({
    rolloutCombatSamples:samples,
    rolloutCombatMaxDecisions:tacticalMax,
    implicitWeight:arm==="uct"?0:alpha,
-   implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode
+   implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
+   ...(recorder?{onSearchResult:result=>{searchDiagnostics=result;}}:{})
   });
   const spent=performance.now()-started;
   if(!forced){searches++;searchMs+=spent;}
@@ -176,7 +178,8 @@ export function playFullSoloExpedition({
   selectedActions[action.kind]=(selectedActions[action.kind]||0)+1;
   if(recorder)recorder.handler({
    moment:"before",step:decisions,phase,actions:legal,
-   chosen:action,session,searchMs:spent,diagnostic:null
+   chosen:action,session,searchMs:spent,
+   diagnostic:searchDiagnostics
   });
   let committedDice=[];
   const transitionStarted=performance.now();
