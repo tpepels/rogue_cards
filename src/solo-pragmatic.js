@@ -62,13 +62,8 @@ export function usefulSoloEquipmentAction(session,legal){
  * positive effect at a safe between-Rooms boundary. Unidentified
  * Potions, once-per-Room reactions and random Item outcomes go to MCTS.
  *
- * "low HP -> avoid" applies at the actual parley boundary. If a
- * non-costly WIT parley is offered we try it; a paid dismissal is
- * allowed when HP is critically low and the Hero will keep at least
- * one Item where that is necessary. High-HP Heroes facing a Monster
- * with actual printed DEFEAT operations fight for those rewards.
- * Borderline cases remain MCTS decisions; there is no false
- * guaranteed-flee assumption.
+ * Combat preferences are advisory: they belong to MCTS selection and
+ * default rollouts, never the live hard-shortcut path.
  */
 export function pragmaticSoloAction(session,legal){
  if(session.state.heroes.length!==1)return null;
@@ -91,6 +86,28 @@ export function pragmaticSoloAction(session,legal){
    if(action)return {action,rule:"safe-heal:"+id};
   }
  }
+ if(session.phase==="room"&&s.room?.v2.kind==="SHRINE"&&
+   hp<=Math.ceil(maxHP*0.25)&&missing>=2){
+  // Staff heals exactly 2 HP, but replaces the Room's normal choice.
+  // Only force it at genuinely critical HP; at higher HP let MCTS
+  // compare the potentially valuable printed Room alternatives.
+  const staff=legal.find(a=>a.kind==="shrine-item"&&
+   a.mode==="heal"&&a.cardId==="staff"&&a.heroIndex===0);
+  if(staff)return {action:staff,rule:"critical-hp-shrine-heal"};
+ }
+ return null;
+}
+
+/**
+ * Soft, public-information combat preference. It never removes legal
+ * alternatives from UCT and is not a direct live-play shortcut.
+ * MCTS alone resolves cost/variance and the actual printed consequences.
+ */
+export function pragmaticSoloPreference(session,legal){
+ if(session.state.heroes.length!==1||!legal.length)return null;
+ const s=session.state,h=s.heroes[0];
+ if(!h||h.hp<=0)return null;
+ const maxHP=h.card.hp,hp=h.hp,missing=maxHP-hp;
  // PASS advances directly to the Monster response. If the only
  // alternative is an ordinary attack and the Hero can survive a
  // potential Room backlash, repeatedly searching PASS adds no value.
@@ -100,15 +117,6 @@ export function pragmaticSoloAction(session,legal){
    legal.some(a=>a.kind==="pass")){
   return {action:legal.find(a=>a.kind==="attack"),
    rule:"only-attack-or-pass"};
- }
- if(session.phase==="room"&&s.room?.v2.kind==="SHRINE"&&
-   hp<=Math.ceil(maxHP*0.25)&&missing>=2){
-  // Staff heals exactly 2 HP, but replaces the Room's normal choice.
-  // Only force it at genuinely critical HP; at higher HP let MCTS
-  // compare the potentially valuable printed Room alternatives.
-  const staff=legal.find(a=>a.kind==="shrine-item"&&
-   a.mode==="heal"&&a.cardId==="staff"&&a.heroIndex===0);
-  if(staff)return {action:staff,rule:"critical-hp-shrine-heal"};
  }
  if(session.phase!=="parley"||s.monster?.stage==="FINAL")return null;
  const fight=legal.find(a=>a.kind==="fight");
@@ -166,4 +174,3 @@ export function pragmaticSoloAction(session,legal){
   return {action:fight,rule:"healthy-reward-fight:"+m.id};
  return null;
 }
-
