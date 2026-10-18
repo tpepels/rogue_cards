@@ -200,7 +200,8 @@ export function playFullSoloExpedition({
  hero="warrior",seed=20261101,arm="uct",
  c=0.35,alpha=0.4,heuristicMode="solo-threat",
  samples=2,tacticalMax=2,budget=8,recordTelemetry=false,
- equipmentMode="solo-pragmatic",maxGameSteps=20000,maxSearchSteps=5000
+ equipmentMode="solo-pragmatic",mctsPragmaticVariant="both",
+ maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
   throw Error("Only canonical solo Hero and known agent arm are accepted");
@@ -213,7 +214,8 @@ export function playFullSoloExpedition({
  let decisions=0,searches=0,searchMs=0,combatDecisionCount=0;
  let combatSearchMs=0,vaultSeen=false;
  const pragmaticSimulation={treeShortcuts:0,rolloutShortcuts:0,
-  suppressedEquipmentCandidates:0,rules:{}};
+  suppressedEquipmentCandidates:0,treeSoftOffered:0,treeSoftChosen:0,
+  rolloutSoftOffered:0,rolloutSoftChosen:0,rules:{}};
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const recorder=recordTelemetry?createDecisionRecorder({
@@ -249,14 +251,15 @@ export function playFullSoloExpedition({
    rolloutCombatMaxDecisions:tacticalMax,
    implicitWeight:arm==="uct"?0:alpha,
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
-   equipmentMode,
+   equipmentMode,mctsPragmaticVariant,
    onPolicyDecision:event=>{shortcutReason=event.rule;},
    onSearchResult:result=>{
     if(recorder)searchDiagnostics=result;
     const p=result.pragmaticSimulation;
     if(!p)return;
     for(const key of ["treeShortcuts","rolloutShortcuts",
-     "suppressedEquipmentCandidates"])
+     "suppressedEquipmentCandidates","treeSoftOffered","treeSoftChosen",
+     "rolloutSoftOffered","rolloutSoftChosen"])
      pragmaticSimulation[key]+=p[key]??0;
     for(const [rule,count] of Object.entries(p.rules??{}))
      pragmaticSimulation.rules[rule]=(pragmaticSimulation.rules[rule]??0)+count;
@@ -358,7 +361,7 @@ export function playFullSoloExpedition({
   equipmentChoicesSuppressed:policy.equipmentChoicesSuppressed,
   policyShortcutCount:policy.shortcutCount,
   policyShortcutReasons:{...policy.shortcutCounts},
-  equipmentMode,pragmaticSimulation
+  equipmentMode,mctsPragmaticVariant,pragmaticSimulation
  };
 }
 export function parseSoloBalanceArgs(argv){
@@ -373,7 +376,7 @@ export function parseSoloBalanceArgs(argv){
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
   "--tactical-max","--from-study","--out","--arms",
   "--max-game-steps","--max-search-steps","--trace",
-  "--equipment-policy"]);
+  "--equipment-policy","--mcts-pragmatic"]);
  for(let i=0;i<argv.length;i+=2){
   const k=argv[i],v=argv[i+1];
   if(!allowed.has(k)||v===undefined||Object.hasOwn(opts,k))
@@ -404,6 +407,9 @@ export function parseSoloBalanceArgs(argv){
  const equipmentMode=opts["--equipment-policy"]??"solo-pragmatic";
  if(!["legacy","solo-efficient","solo-pragmatic"].includes(equipmentMode))
   throw Error("--equipment-policy must be legacy, solo-efficient or solo-pragmatic");
+ const mctsPragmaticVariant=opts["--mcts-pragmatic"]??"both";
+ if(!["external-only","tree-only","rollout-only","both"].includes(
+  mctsPragmaticVariant))throw Error("--mcts-pragmatic invalid variant");
  const trace=opts["--trace"]??"full";
  if(!["full","off"].includes(trace))
   throw Error("--trace must be full or off");
@@ -412,7 +418,7 @@ export function parseSoloBalanceArgs(argv){
   dryRun,resumeCompatible,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
-  arms:armNames,trace,equipmentMode,
+  arms:armNames,trace,equipmentMode,mctsPragmaticVariant,
   samples:int("--samples",2,1,6),
   tacticalMax:int("--tactical-max",2,1,64),
   maxGameSteps:int("--max-game-steps",20000,1,100000),
@@ -587,7 +593,8 @@ async function main(){
    totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*c.arms.length,
    workers:c.workers,hours:c.hours,budget:c.budget,
    c:c.c,alpha:c.alpha,samples:c.samples,
-   tacticalMax:c.tacticalMax,trace:c.trace,equipmentMode:c.equipmentMode,sourceStudy:c.sourceStudy,
+   tacticalMax:c.tacticalMax,trace:c.trace,equipmentMode:c.equipmentMode,
+   mctsPragmaticVariant:c.mctsPragmaticVariant,sourceStudy:c.sourceStudy,
    output:c.out
   },null,2));
   return;
@@ -610,7 +617,8 @@ async function main(){
   c:c.c,alpha:c.alpha,
   heuristicMode:selected.heuristic,
   samples:c.samples,tacticalMax:c.tacticalMax,
-  trace:c.trace,equipmentMode:c.equipmentMode,traceSchema:"solo-full-expedition-decision-trace-v1",
+  trace:c.trace,equipmentMode:c.equipmentMode,
+  mctsPragmaticVariant:c.mctsPragmaticVariant,traceSchema:"solo-full-expedition-decision-trace-v1",
   sourceStudy:c.sourceStudy,sourceStudyHash:studyHash,
   sourceRanking:selected.source,gameMode:"everything-goes",
   heroes:SOLO_HEROES,arms:c.arms
@@ -681,7 +689,8 @@ async function main(){
      heuristicMode:selected.heuristic,
      samples:c.samples,tacticalMax:c.tacticalMax,
      maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
-     equipmentMode:c.equipmentMode,recordTelemetry:c.trace==="full",traceOutputDir:c.out
+     equipmentMode:c.equipmentMode,mctsPragmaticVariant:c.mctsPragmaticVariant,
+     recordTelemetry:c.trace==="full",traceOutputDir:c.out
     }});
    }
  const workers=[];let active=0,stopped=false;
