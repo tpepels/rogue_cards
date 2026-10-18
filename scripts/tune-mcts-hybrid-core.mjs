@@ -64,7 +64,12 @@ export function evaluateHybridJob({
   implicitHeuristicMode:candidate.heuristicMode??"legacy",
   rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   rolloutCombatSamples:samples,
-  rolloutCombatMaxDecisions:tacticalMax
+  rolloutCombatMaxDecisions:tacticalMax,
+  simulationPolicy:candidate.simulationPolicy??"default",
+  softTreeBonus:candidate.softTreeBonus??0.15,
+  softTreeFirstVisitProbability:
+   candidate.softTreeFirstVisitProbability??0.75,
+  softRolloutProbability:candidate.softRolloutProbability??0.75
  });
  const searchMs=performance.now()-start;
  const recommended=result.recommended;
@@ -108,6 +113,11 @@ export function evaluateHybridJob({
   candidate:candidateId(candidate),c:candidate.c,alpha:candidate.alpha,
   rolloutCombatMode:candidate.rolloutCombatMode??"sampled-expectimax",
   heuristicMode:candidate.heuristicMode??"legacy",
+  simulationPolicy:candidate.simulationPolicy??"default",
+  softTreeBonus:candidate.softTreeBonus??0.15,
+  softTreeFirstVisitProbability:
+   candidate.softTreeFirstVisitProbability??0.75,
+  softRolloutProbability:candidate.softRolloutProbability??0.75,
   scenarioId,replicate,phase,seed,budget,samples,tacticalMax,
   action:mctsActionKey(recommended),
   searchMs,evalMs,rolloutCombatSearches:result.rolloutCombatSearches||0,
