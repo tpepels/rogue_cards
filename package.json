@@ -109,7 +109,8 @@
     "audit:monster-frequency": "node scripts/audit-monster-frequency.mjs",
     "test:solo:pragmatic": "node --test tests/solo-pragmatic-policy.test.mjs tests/mcts-pragmatic-simulation.test.mjs",
     "tune:solo:coarse": "node scripts/tune-solo-coarse.mjs",
-    "test:solo:coarse": "node --test tests/solo-coarse-tuner.test.mjs"
+    "test:solo:coarse": "node --test tests/solo-coarse-tuner.test.mjs",
+    "tune:solo:refine": "node scripts/tune-solo-coarse.mjs --profile refine"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
