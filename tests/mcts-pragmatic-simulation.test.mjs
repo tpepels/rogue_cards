@@ -50,3 +50,38 @@ test("Pragmatic MCTS simulation rejects a multihero game and invalid modes",()=>
   budget:1,simulationPolicy:"unknown"
  }),/Unknown MCTS simulation policy/);
 });
+
+for(const [variant,mode] of [
+ ["external-only","solo-pragmatic-external"],
+ ["tree-only","solo-pragmatic-tree"],
+ ["rollout-only","solo-pragmatic-rollout"],
+ ["both","solo-pragmatic"]
+]){
+ test("MCTS exposes isolated "+variant+" pragmatic simulation",()=>{
+  const {s,equip}=woundedEquipmentRoot();
+  const result=searchDecision(s,{
+   budget:2,seed:922,knowledge:"oracle",treeMode:"frontier",
+   rootActions:[equip],simulationPolicy:mode,
+   strictTerminal:true,maxSteps:5000,collectCoverage:false
+  });
+  const diag=result.pragmaticSimulation;
+  assert.equal(result.complete,true);
+  assert.equal(result.simulationPolicy,mode);
+  assert.equal(result.rootEveryActionTried,true);
+  if(variant==="external-only"){
+   assert.equal(diag.treeShortcuts,0);
+   assert.equal(diag.rolloutShortcuts,0);
+   assert.equal(diag.suppressedEquipmentCandidates,0);
+   assert.equal(diag.treeSoftOffered,0);
+   assert.equal(diag.rolloutSoftOffered,0);
+  }
+  if(variant==="tree-only"){
+   assert.equal(diag.rolloutShortcuts,0);
+   assert.equal(diag.rolloutSoftOffered,0);
+  }
+  if(variant==="rollout-only"){
+   assert.equal(diag.treeShortcuts,0);
+   assert.equal(diag.treeSoftOffered,0);
+  }
+ });
+}
