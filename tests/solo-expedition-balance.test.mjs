@@ -176,6 +176,11 @@ test("Actual ONE-Hero 36-Room canonical expedition with implicit MCTS",{
   assert.ok(records.some(e=>e.before.monster?.id||e.after.monster?.id));
   assert.ok(records.some(e=>e.metrics.cleared));
   assert.ok(records.every(e=>Array.isArray(e.dice)));
+  const searched=records.filter(e=>e.via==="mcts");
+  assert.ok(searched.length>0,"Some canonical decisions must be real MCTS");
+  assert.ok(searched.every(e=>e.search&&e.search.budget>=1&&
+   Array.isArray(e.search.choices)&&e.search.choices.length>0),
+   "Preserve MCTS root visits, per-action outcomes and confidence signals");
   assert.equal(records.at(-1).after.heroes[0].hp,r.finalHero.hp);
   writeFileSync(join(tmp,"trials.ndjson"),JSON.stringify({
    ...r,hero:"warrior",replicate:0,arm:"implicit"
