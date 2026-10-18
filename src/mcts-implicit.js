@@ -11,7 +11,12 @@
  * Numeric components are raw contributions before [0,1] clipping.
  * No roll, hidden deck card or future RNG is inspected.
  */
-export function implicitHeuristicBreakdown(session,mode="legacy"){
+export function implicitHeuristicBreakdown(session,mode="legacy",{
+ hpScale=1,threatScale=1
+}={}){
+ for(const [key,v] of Object.entries({hpScale,threatScale}))
+  if(!Number.isFinite(v)||v<0||v>3)
+   throw Error("Invalid implicit heuristic "+key);
  if(!["legacy","solo-hp","solo-threat"].includes(mode))
   throw Error("Unknown implicit heuristic mode "+mode);
  const s=session.state;
@@ -73,14 +78,14 @@ export function implicitHeuristicBreakdown(session,mode="legacy"){
   // surviving states; a dead Hero evaluates EXACTLY zero above.
   // Two published experimental arms differ ONLY in threat treatment.
   terms.living=0;
-  terms.remainingHP=0.52*hpRate;
+  terms.remainingHP=0.52*hpScale*hpRate;
   terms.stageProgress=0.20*progress;
   terms.monsterDamage=0.12*monsterProgress;
   terms.items=0.08*itemResources;
   terms.poison=-0.12*statusPenalty;
   terms.actorSelection=0; // one Hero: no actor-choice signal
   terms.activeMonsterAndQueue=mode==="solo-threat"?
-   -(active?(0.10+0.12*(1-hpRate))*(1-monsterProgress)+
+   -threatScale*(active?(0.10+0.12*(1-hpRate))*(1-monsterProgress)+
       0.04*queued:0):0;
  }
  const unclipped=Object.values(terms).reduce((n,v)=>n+v,0);
@@ -93,8 +98,8 @@ export function implicitHeuristicBreakdown(session,mode="legacy"){
    actorIndex:session.heroIndex,actorHit,actorMonsterHit}
  };
 }
-export function implicitExpeditionHeuristic(session,mode="legacy"){
- return implicitHeuristicBreakdown(session,mode).value;
+export function implicitExpeditionHeuristic(session,mode="legacy",options={}){
+ return implicitHeuristicBreakdown(session,mode,options).value;
 }
 /**
  * The implicit channel on an action is the EXPECTATION of the already
