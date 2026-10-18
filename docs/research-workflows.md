@@ -45,7 +45,7 @@ npm run study:solo:balance -- --dry-run \
   --runs-per-hero 80 --workers 8 --hours 12 \
   --budget 8 --c 0.35 --alpha 0.4 \
   --from-study results/mcts-solo-overnight/summary.json \
-  --seed 20261101 --out results/solo-balance-v1
+  --seed 20261101 --out results/solo-balance-v2
 ```
 
 Start after the tactical experiment (80 independent seeds per Hero, so
@@ -59,7 +59,7 @@ systemd-inhibit --what=sleep:idle \
     --runs-per-hero 80 --workers 8 --hours 12 \
     --budget 8 --c 0.35 --alpha 0.4 \
     --from-study results/mcts-solo-overnight/summary.json \
-    --seed 20261101 --out results/solo-balance-v1
+    --seed 20261101 --out results/solo-balance-v2
 ```
 
 If the tactical run has too few evenly exposed candidate trials, the
@@ -110,6 +110,69 @@ solo-balance-pilot` directory; those results do NOT meet the balance
 sample threshold. Small samples are inconclusive, and *card causality*
 requires subsequent
 paired card interventions rather than interpreting usage as power.
+
+### Complete decision-level statistics and replay audit
+
+`study:solo:balance` now defaults to `--trace full`, with one
+`traces/<hero>-<replicate>-<policy>.jsonl.gz` archive **for every finished
+expedition**. The raw file is canonical, not a reconstructed/synthetic
+playthrough. For every actual decision boundary, it records:
+
+- step, phase, full legal actions, chosen action, search time, and
+  whether the engine suspended for a nested reaction;
+- complete **before/after** public and mutable non-pile state:
+  Room identifier/stage/kind, active Monster and HP, queued Monsters,
+  all Hero HP/poison/scalar statuses, equipped slots, each physical Item
+  copy, deck counts, seen/kept/discarded Rooms and stage progress;
+- complete canonical **metrics diff** across that decision, preserving
+  all Room, Monster, Item, combat, status and Vault counters;
+- actual committed die outcomes when emitted by the decision API,
+  RNG states before/after, and a precise state delta.
+
+Each `trials.ndjson` row also stores ALL final engine metrics,
+final HP/status/physical inventory, full initial and final snapshots,
+a trace filename, SHA256 digest, compressed size and recorded decision
+count. Saved trials without a corresponding trace are rejected on
+resume in full-trace mode. The file is written atomically before the
+result row is checkpointed; failed episodes are not counted as finished.
+
+The raw log deliberately does **not** duplicate the order of every
+unseen hidden deck card. Hidden piles can be reconstructed from the
+fixed initial seed/version and recorded RNG trajectory; the log itself
+contains public pile counts and all actual exposed outcomes. It is an
+audit of committed actions, **not** a record of speculative MCTS
+rollouts.
+
+Generate a separate detailed per-run and grouped report:
+
+```sh
+npm run report:solo:balance -- --dir results/solo-balance-v2
+```
+
+This verifies every compressed trace's SHA256 and reconstructs:
+- by Hero, policy and expedition: outcome, reached depth, Rooms entered
+  and completed, stage, chosen actions, HP lost/healed, die faces,
+  poison/status transitions, Items obtained/used/equipped/discarded;
+- by specific Room, Monster and Item ID: encounters, fights, kills,
+  escapes, parleys, Item acquisitions/activations and relevant
+  committed changes;
+- comparison of reconstructed final Rooms and encounters to the
+  canonical terminal counters. Mismatches fail, not silently disappear.
+
+Produces `details.json`, alongside `summary.json` (compact
+balance KPIs), `trials.ndjson` (one row per completed expedition) and
+the detailed `traces/` directory.
+
+**Capacity note**: full traces use additional CPU time, disk and memory,
+especially with eight simultaneous workers. If a timing-only benchmark
+is needed, `--trace off` disables event capture, but such results
+cannot supply full action-level balance evidence. Trace mode is fixed
+in the resume manifest; do not mix traced and untraced trials.
+
+**Versioning note**: trace schema and instrumentation changed after
+the earlier 32-expedition pilot. Old results cannot retroactively
+recover per-decision telemetry and MUST NOT be used to claim exhaustive
+statistics. Run a fresh output directory from a single pinned commit.
 
 ### Study storage and reproducibility
 
