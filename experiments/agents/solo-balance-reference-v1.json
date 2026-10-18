@@ -1,0 +1,81 @@
+{
+  "schema": "rogue-cards-solo-agent-profile-v1",
+  "id": "solo-balance-reference-v1",
+  "status": "frozen-for-staging-comparisons",
+  "purpose": "Fixed reproducible AI test player for A/B card and deck balance experiments. NOT a claim about human solo win-rate.",
+  "policy": {
+    "arm": "implicit",
+    "searchProfile": "classic",
+    "treeMode": "frontier",
+    "knowledge": "fair",
+    "equipmentMode": "solo-pragmatic",
+    "mctsPragmaticVariant": "tree-only",
+    "heuristicMode": "solo-threat",
+    "rolloutCombatMode": "random"
+  },
+  "parameters": {
+    "budget": 32,
+    "c": 0.2,
+    "alpha": 0.5,
+    "softTreeBonus": 0.15,
+    "softTreeFirstVisitProbability": 0.75,
+    "softRolloutProbability": 0.75,
+    "implicitHpScale": 1,
+    "implicitThreatScale": 1,
+    "maxSearchSteps": 5000
+  },
+  "comparisonProfiles": {
+    "fast": {
+      "budget": 16,
+      "c": 0.2,
+      "alpha": 0.5,
+      "comment": "Half the CPU cost with a small observed loss in encounter quality."
+    },
+    "old": {
+      "budget": 8,
+      "c": 0.35,
+      "alpha": 0.4,
+      "comment": "Original comparison only; not recommended for balance A/B."
+    }
+  },
+  "evidence": {
+    "sourceRevision": "45306072eb8dc61482b77be0fb0e1a1ea21720ba",
+    "research": "solo-mcts-refinement-v1",
+    "independentMonsterHeroHoldoutGroups": 16,
+    "holdoutScenarioTypes": 48,
+    "holdoutReplicatesPerScenario": 16,
+    "canonicalEncounterTrialResults": {
+      "holdoutTrials": 768,
+      "clearRate": 0.767578125,
+      "fitness": 1.0492452713815774,
+      "meanSearchMilliseconds": 191.89154488411273
+    },
+    "comparisons": {
+      "vsBudget16SameCA": {
+        "fitnessDifference": 0.020259388706140347,
+        "clearDifference": 0.013671875,
+        "searchMillisecondsDifference": 96.66948311458266,
+        "clusterBootstrapFitness95Approx": [
+          0.0005,
+          0.0365
+        ]
+      },
+      "vsBudget64PreviousCA": {
+        "fitnessDifference": -0.004998812134502921,
+        "clearDifference": -0.00390625,
+        "searchMillisecondsDifference": -189.63779119401428,
+        "clusterBootstrapFitness95Approx": [
+          -0.0244,
+          0.0137
+        ]
+      }
+    }
+  },
+  "constraints": [
+    "Keep the same agent profile for both canonical and staging card arms.",
+    "Pair seeds, Hero, decks and game mode. Attribute only the card intervention to the measured difference.",
+    "Never automatically promote a staged card change or modify canonical card data.",
+    "These are independent encounter-root outcomes, not full-expedition or human win-rate estimates.",
+    "Changing this profile requires a new profile id and never overwrites previous experiment identity."
+  ]
+}
