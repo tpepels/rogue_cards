@@ -117,6 +117,16 @@ export function pragmaticSoloAction(session,legal){
    if(action)return {action,rule:"safe-heal:"+id};
   }
  }
+ // PASS advances directly to the Monster response. If the only
+ // alternative is an ordinary attack and the Hero can survive a
+ // potential Room backlash, repeatedly searching PASS adds no value.
+ // At critical HP or with Elbereth/Item actions, retain full MCTS.
+ if(session.phase==="combat"&&hp>2&&
+   legal.length===2&&legal.some(a=>a.kind==="attack")&&
+   legal.some(a=>a.kind==="pass")){
+  return {action:legal.find(a=>a.kind==="attack"),
+   rule:"only-attack-or-pass"};
+ }
  if(session.phase!=="parley"||s.monster?.stage==="FINAL")return null;
  const fight=legal.find(a=>a.kind==="fight");
  const parley=legal.find(a=>a.kind==="parley");
