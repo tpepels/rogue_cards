@@ -261,6 +261,7 @@ export function chooseHeuristicFromCompletedStudy(path){
 }
 function summarizeCell(items){
  const n=items.length,wins=items.reduce((x,r)=>x+r.won,0);
+ const vaultCount=items.reduce((x,r)=>x+r.vaultReached,0);
  const monsters={},fights={},kills={},parleys={},itemsAcquired={},itemsUsed={};
  const causes={},stages={};
  for(const row of items){
@@ -283,6 +284,7 @@ function summarizeCell(items){
   n+r.ordinaryFights*r.maxHp,0);
  return {n,wins,winRate:n?wins/n:null,winWilson95:wilson(wins,n),
   vaultRate:mean(items,r=>r.vaultReached),
+  vaultWilson95:wilson(vaultCount,n),
   roomsCleared:mean(items,r=>r.roomsCleared),
   ordinaryEncounters:mean(items,r=>r.ordinaryEncounters),
   ordinaryFights:mean(items,r=>r.ordinaryFights),
@@ -325,9 +327,17 @@ export function soloBalanceSummary(records,design){
     rooms:r.roomsCleared-b.roomsCleared,
     timeMs:r.searchMs-b.searchMs}]:[];
   });
+  const n=matches.length,improved=matches.filter(r=>r.win>0).length,
+   worsened=matches.filter(r=>r.win<0).length,
+   diff=n?(improved-worsened)/n:null,
+   discordance=n?(improved+worsened)/n:0,
+   se=n?Math.sqrt(Math.max(0,(discordance-diff*diff)/n)):null;
   paired.push({
-   arm,reference:"uct",pairedHeroSeeds:matches.length,
-   meanWinDifference:mean(matches,r=>r.win),
+   arm,reference:"uct",pairedHeroSeeds:n,
+   meanWinDifference:diff,
+   improved,worsened,unchanged:n-improved-worsened,
+   paired95:n?[Math.max(-1,diff-1.96*se),
+    Math.min(1,diff+1.96*se)]:null,
    meanVaultDifference:mean(matches,r=>r.vault),
    meanRoomsDifference:mean(matches,r=>r.rooms),
    meanAdditionalSearchMs:mean(matches,r=>r.timeMs),
@@ -342,6 +352,14 @@ export function soloBalanceSummary(records,design){
   completed:records.length,
   independentSeedHeroPairs:new Set(records.map(x=>x.hero+"|"+x.replicate)).size,
   rowsByArm:cells,paired,
+  evidenceGate:{
+   minIndependentRunsPerHeroPerArm:80,
+   sufficient:Object.values(cells).every(x=>
+    Object.values(x.byHero).every(h=>h.n>=80)),
+   status:Object.values(cells).every(x=>
+    Object.values(x.byHero).every(h=>h.n>=80))?
+    "DESCRIPTIVE_REVIEW_READY":"INSUFFICIENT_HERO_REPLICATION"
+  },
   caveats:[
    "Full canonical Everything Goes expeditions from ordinary shuffled physical decks, exactly one Hero each.",
    "Only real terminal wins, escapes and deaths are counted; unsupported/nonterminal outcomes fail the run, not recorded as losses.",
