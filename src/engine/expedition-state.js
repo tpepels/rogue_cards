@@ -48,6 +48,8 @@ export class ExpeditionState {
   this.gameMode=gameMode;
   if(cardPools!==null&&cardPools._stagingCatalogue!==true)
    throw Error("Only a validated staging catalogue can alter card pools");
+  if(cardPools!==null&&gameMode!=="everything-goes")
+   throw Error("Card staging currently supports Everything Goes expeditions only");
   this.cardPools=cardPools;
   this.roomGoal=gameMode==="everything-goes"?12:3;
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
