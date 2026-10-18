@@ -13,7 +13,8 @@ import {join} from "node:path";
 import {BALANCE_TARGETS,SOLO_HEROES,
  parseSoloBalanceArgs,soloBalanceSummary,
  chooseHeuristicFromCompletedStudy,playFullSoloExpedition,
- persistSoloDecisionTrace,assertBalanceObservationMigration}
+ persistSoloDecisionTrace,assertBalanceObservationMigration,
+ canonicalSoloDecisionLoop}
  from "../scripts/study-solo-expedition-balance.mjs";
 
 test("Solo balance protocol is eight Heroes, three AI arms, 36-Room goal",()=>{
@@ -263,4 +264,34 @@ test("Opt-in Wisp metrics migration never changes rules, search or study configu
    "scripts/study-solo-expedition-balance.mjs"]),/invalid/);
  assert.throws(()=>assertBalanceObservationMigration(saved,next,[
   "tests/solo-expedition-balance.test.mjs"]),/gameplay, search/);
+});
+
+
+test("Resume loop extraction ignores helper's own source literal, but detects policy changes",()=>{
+ const source=readFileSync(new URL(
+  "../scripts/study-solo-expedition-balance.mjs",import.meta.url),"utf8");
+ const actual=canonicalSoloDecisionLoop(source);
+ assert.ok(actual.startsWith("export function playFullSoloExpedition({"));
+ assert.ok(actual.includes("while(session.phase!==\"terminal\")"));
+ assert.ok(actual.includes("selectSessionPolicyAction(session,policy,{"));
+ assert.ok(actual.includes("submitDecision(session,action,{"));
+ const helperWithMoreText=source.replace(
+  "function verifyRecordedTraces(records,out){",
+  "function observationOnlyComment(){"+
+   "const note=\"export function playFullSoloExpedition({\";return note;}\n"+
+   "function verifyRecordedTraces(records,out){"
+ );
+ assert.notEqual(helperWithMoreText,source);
+ assert.equal(canonicalSoloDecisionLoop(helperWithMoreText),actual,
+  "Edits to the migration/helper section cannot invalidate policy identity");
+ const changedAction=source.replace(
+  'implicitWeight:arm==="uct"?0:alpha,',
+  'implicitWeight:arm==="uct"?0:0,'
+ );
+ assert.notEqual(changedAction,source);
+ assert.notEqual(canonicalSoloDecisionLoop(changedAction),actual,
+  "Actual changes to the MCTS choice algorithm must block migration");
+ assert.throws(()=>canonicalSoloDecisionLoop(
+  'const x="export function playFullSoloExpedition({";\n'),
+  /one actual canonical solo function/);
 });
