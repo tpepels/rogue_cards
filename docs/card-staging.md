@@ -67,7 +67,8 @@ Currently supported card fields:
 
 Output files:
 - `manifest.json` pins git revision, stage spec hash, agent hash, exact initial deck counts, Hero order and seeds. An incompatible resume is rejected.
-- `trials.ndjson` records all canonical and staging expeditions, including final canonical telemetry and touched cards.
+- `trials.ndjson` records all canonical and staging expeditions, including final canonical telemetry and observed cards.
+- With `--trace full`, each run additionally writes a compressed `traces/<arm>-<hero>-<replicate>.json.gz` containing the canonical decision log and initial/final snapshots.
 - `summary.json` provides paired mean changes and exploratory bootstrap intervals for wins, Vault reach, Rooms completed, ordinary encounters, fights, damage, HP, Items and runtime. Per-Hero and per-card information is included.
 - `comparison.md` shows the same indicators plus a deck composition table, per-Hero summary and card-exposure deltas.
 
