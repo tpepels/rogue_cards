@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {mkdtempSync,writeFileSync,rmSync,existsSync,readFileSync} from "node:fs";
 import {reportSoloTraceDirectory} from "../scripts/report-solo-balance-details.mjs";
+import {createDecisionSession} from "../src/engine/decision-session.js";
+import {completePrintedRoomChoice} from "../src/room-memory-engine.js";
+import {ALL_MONSTERS,ALL_ROOMS} from "../src/decks.js";
 import {gunzipSync} from "node:zlib";
 import {createHash} from "node:crypto";
 import {spawnSync} from "node:child_process";
@@ -10,7 +13,7 @@ import {join} from "node:path";
 import {BALANCE_TARGETS,SOLO_HEROES,
  parseSoloBalanceArgs,soloBalanceSummary,
  chooseHeuristicFromCompletedStudy,playFullSoloExpedition,
- persistSoloDecisionTrace}
+ persistSoloDecisionTrace,assertBalanceObservationMigration}
  from "../scripts/study-solo-expedition-balance.mjs";
 
 test("Solo balance protocol is eight Heroes, three AI arms, 36-Room goal",()=>{
@@ -215,4 +218,49 @@ test("Side-effect-free dry-run lists all full-solo policies without creating out
   assert.equal(design.heuristic,"solo-threat");
   assert.equal(existsSync(out),false);
  }finally{rmSync(folder,{force:true,recursive:true});}
+});
+
+
+test("Canonical pursuing Will-o'-Wisp reappears without starting a fresh encounter",()=>{
+ const s=createDecisionSession({
+  seed:20817,heroes:["rogue"],gameMode:"everything-goes"
+ }).state;
+ const wisp=ALL_MONSTERS.find(m=>m.id==="wisp");
+ const corridor=ALL_ROOMS.find(room=>
+  room.stage==="MIDDLE"&&room.v2?.kind==="CORRIDOR");
+ assert.ok(wisp&&corridor);
+ const before=s.metrics.encounterStarts;
+ s.room=corridor;
+ s.followingWisp=wisp;
+ completePrintedRoomChoice(s,corridor,0);
+ assert.equal(s.followingWisp,null);
+ assert.equal(s.monster?.id,"wisp");
+ assert.equal(s.metrics.monsterVisits.wisp,1);
+ assert.equal(s.metrics.encounterStarts,before,
+  "This is the second appearance, not a new drawn encounter");
+});
+
+test("Opt-in Wisp metrics migration never changes rules, search or study configuration",()=>{
+ const design={revision:"old",trace:"full",seed:1,
+  arms:["uct","implicit"],heuristicMode:"solo-threat"};
+ const signed=x=>createHash("sha256").update(JSON.stringify(x))
+  .digest("hex");
+ const saved={schema:"solo-full-expedition-balance-v1",
+  design,signature:signed(design)};
+ const next={design:{...design,revision:"new"},
+  signature:signed({...design,revision:"new"})};
+ assert.equal(assertBalanceObservationMigration(saved,next,[
+  "scripts/study-solo-expedition-balance.mjs",
+  "tests/solo-expedition-balance.test.mjs"]),true);
+ assert.throws(()=>assertBalanceObservationMigration(saved,
+  {...next,design:{...next.design,seed:2}},[
+   "scripts/study-solo-expedition-balance.mjs"]),/study parameters/);
+ assert.throws(()=>assertBalanceObservationMigration(saved,next,[
+  "scripts/study-solo-expedition-balance.mjs",
+  "src/engine/decision-session.js"]),/gameplay, search/);
+ assert.throws(()=>assertBalanceObservationMigration({...saved,
+  signature:"forged"},next,[
+   "scripts/study-solo-expedition-balance.mjs"]),/invalid/);
+ assert.throws(()=>assertBalanceObservationMigration(saved,next,[
+  "tests/solo-expedition-balance.test.mjs"]),/gameplay, search/);
 });
