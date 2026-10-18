@@ -143,7 +143,7 @@ export function enterNextRoom(s){
  */
 export function legalRoomChoices(s){
  if(!s.room||s.room.stage==="FINAL")return [];
- const choices=ROOM_EFFECTS[s.room.id]?.choices;
+ const choices=(s.cardPools?.roomEffects?.[s.room.id]??ROOM_EFFECTS[s.room.id])?.choices;
  if(!choices)throw Error("Room has no executable choices: "+s.room.id);
  const affordable=(ops,index)=>{
   if(s.pactUsed&&s.room.v2.choices[index]?.label.includes("PACT"))return false;
@@ -183,7 +183,7 @@ export function chooseRoom(s,index,{observeResult=true,prevalidated=false}={}){
  s.metrics.roomChoices[s.room.id+":"+index]=
   (s.metrics.roomChoices[s.room.id+":"+index]||0)+1;
  s.setActor(s.chooseRecipient("room-action"));
- for(const code of ROOM_EFFECTS[s.room.id].choices[index]){
+ for(const code of (s.cardPools?.roomEffects?.[s.room.id]??ROOM_EFFECTS[s.room.id]).choices[index]){
   // A lethal cost or printed effect ends the expedition. Subsequent
   // instructions must not create decisions or revive a wiped party.
   if(!s.alive())break;
