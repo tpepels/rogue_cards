@@ -222,7 +222,7 @@ export function parseSoloBalanceArgs(argv){
  const seed=int("--seed",20261101,1,0xffffffff);
  return {
   dryRun,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
-  runsPerHero:int("--runs-per-hero",30,1,2000),
+  runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
   samples:int("--samples",2,1,6),
   tacticalMax:int("--tactical-max",2,1,64),
