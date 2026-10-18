@@ -122,6 +122,56 @@ function aggregateCards(rows){
  }
  return {roomSeen:roomsSeen,...maps};
 }
+
+function exposure(row,collection,id){
+ const m=row.finalMetrics??{};
+ if(collection==="rooms")return Number((row.seenRoomIds??[]).includes(id));
+ if(collection==="monsters")return m.monsterVisits?.[id]??0;
+ if(collection==="items")return m.objectAcquisitions?.[id]??0;
+ if(collection==="heroes")return Number(row.hero===id);
+ if(collection==="warden"||collection==="wardenFury")
+  return m.monsterVisits?.[collection==="warden"?"warden":"warden-fury"]??0;
+ return 0;
+}
+function changedCardTargets(rows,manifest){
+ const targets=new Map();
+ const changes=manifest.experimentChanges??{};
+ const add=(collection,id)=>{
+  const key=collection+":"+id;
+  if(!targets.has(key))targets.set(key,{collection,id});
+ };
+ for(const card of changes.cards??[])add(card.collection,card.id);
+ for(const [stage,data] of Object.entries(changes.roomDeck??{}))
+  for(const id of data.exclude??[])add("rooms",id);
+ for(const id of Object.keys(changes.roomEffects??{}))add("rooms",id);
+ const byKey=new Map(rows.map(r=>[key(r),r]));
+ return [...targets.values()].map(target=>{
+  const details={...target};
+  for(const arm of ["canonical","staging"]){
+   const selected=rows.filter(r=>r.arm===arm);
+   const counts=selected.map(r=>exposure(r,target.collection,target.id));
+   details[arm]={expeditionsExposed:counts.filter(n=>n>0).length,
+    totalAppearances:counts.reduce((sum,n)=>sum+n,0),
+    ...target.collection==="monsters"?{
+     fights:selected.reduce((n,r)=>n+(r.finalMetrics?.
+      monsterFightStartsById?.[target.id]??0),0),
+     kills:selected.reduce((n,r)=>n+(r.finalMetrics?.
+      monsterKillsById?.[target.id]??0),0),
+     damage:selected.reduce((n,r)=>n+(r.finalMetrics?.
+      damageContextById?.[target.id]??0),0)
+    }:{}
+   };
+  }
+  const pairs=rows.filter(r=>r.arm==="canonical")
+   .flatMap(r=>{const other=byKey.get(key({...r,arm:"staging"}));
+    return other?[{a:exposure(r,target.collection,target.id),
+     b:exposure(other,target.collection,target.id)}]:[];});
+  details.pairedBothExposed=pairs.filter(p=>p.a>0&&p.b>0).length;
+  details.pairedAnyExposed=pairs.filter(p=>p.a>0||p.b>0).length;
+  return details;
+ });
+}
+
 const fromPair=(a,b)=>Object.fromEntries(metrics.map(field=>
  [field,(b[field]??0)-(a[field]??0)]));
 const interval=(paired,field,seed)=>{
@@ -177,7 +227,7 @@ export function compareStaging(rows,manifest){
   complete,finishedRows:rows.length,pairedExpeditions:pairs.length,
   expectedPairs:manifest.heroes.length*manifest.runsPerHero,
   cells:summarizeCells(rows),pairedDelta:comparison,
-  byHero,byCard:{
+  byHero,changedCards:changedCardTargets(rows,manifest),byCard:{
    canonical:aggregateCards(rows.filter(r=>r.arm==="canonical")),
    staging:aggregateCards(rows.filter(r=>r.arm==="staging"))
   },
@@ -206,6 +256,14 @@ function reportMarkdown(report){
    " | "+format(delta.difference)+" | "+
    (delta.bootstrap95?"["+delta.bootstrap95.map(x=>format(x)).join(", ")+"]":"insufficient pairs")+" |");
  }
+ header.push("","## Modified-card exposure","",
+  "| Card | Canonical runs exposed | Staged runs exposed | Matched runs with either exposure |",
+  "|---|---:|---:|---:|");
+ for(const target of report.changedCards??[])
+  header.push("| "+target.collection+":"+target.id+" | "+
+   target.canonical.expeditionsExposed+" | "+
+   target.staging.expeditionsExposed+" | "+
+   target.pairedAnyExposed+" |");
  header.push("","## Starting deck composition","",
   "| Deck | Canonical copies | Staging copies |",
   "|---|---:|---:|");
