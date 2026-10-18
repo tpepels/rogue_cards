@@ -43,6 +43,11 @@ export function coarseCandidates(){
    for(const c of [0.2,0.8])
     add("heur-"+mode+"-a"+alpha+"-c"+c,
      {heuristicMode:mode,c,alpha});
+ // Directly test numerical solo HP/threat heuristic terms as well.
+ for(const hpScale of [0.7,1.3])
+  add("implicit-hp-x"+hpScale,{implicitHpScale:hpScale});
+ for(const threatScale of [0.6,1.4])
+  add("implicit-threat-x"+threatScale,{implicitThreatScale:threatScale});
  // Search budget is a CPU cost, not merely an algorithm strength axis.
  for(const budget of [4,16,32])
   add("visits-"+budget,{budget});
