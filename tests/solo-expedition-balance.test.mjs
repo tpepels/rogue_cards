@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {mkdtempSync,writeFileSync,rmSync,existsSync,readFileSync} from "node:fs";
 import {reportSoloTraceDirectory} from "../scripts/report-solo-balance-details.mjs";
 import {createDecisionSession} from "../src/engine/decision-session.js";
-import {completePrintedRoomChoice} from "../src/room-memory-engine.js";
+import {roomEntry} from "../src/room-memory-engine.js";
 import {ALL_MONSTERS,ALL_ROOMS} from "../src/decks.js";
 import {gunzipSync} from "node:zlib";
 import {createHash} from "node:crypto";
@@ -232,7 +232,7 @@ test("Canonical pursuing Will-o'-Wisp reappears without starting a fresh encount
  const before=s.metrics.encounterStarts;
  s.room=corridor;
  s.followingWisp=wisp;
- completePrintedRoomChoice(s,corridor,0);
+ roomEntry(s);
  assert.equal(s.followingWisp,null);
  assert.equal(s.monster?.id,"wisp");
  assert.equal(s.metrics.monsterVisits.wisp,1);
