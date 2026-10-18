@@ -14,6 +14,8 @@
  */
 import {Worker,isMainThread,parentPort} from "node:worker_threads";
 import {cpus} from "node:os";
+import {gzipSync} from "node:zlib";
+import {createDecisionRecorder,experimentSnapshot} from "../src/experiment-telemetry.js";
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {existsSync,mkdirSync,readFileSync,writeFileSync,
@@ -91,7 +93,7 @@ function captureCounts(s){
 export function playFullSoloExpedition({
  hero="warrior",seed=20261101,arm="uct",
  c=0.35,alpha=0.4,heuristicMode="solo-threat",
- samples=2,tacticalMax=2,budget=8,
+ samples=2,tacticalMax=2,budget=8,recordTelemetry=false,
  maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
@@ -106,6 +108,10 @@ export function playFullSoloExpedition({
  let combatSearchMs=0,vaultSeen=false;
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
+ const recorder=recordTelemetry?createDecisionRecorder({
+  includeLegal:true,includeSearch:false
+ }):null;
+ const initialSnapshot=recorder?experimentSnapshot(session):null;
  const start=performance.now();
  while(session.phase!=="terminal"){
   if(decisions++>=maxGameSteps)
@@ -142,8 +148,20 @@ export function playFullSoloExpedition({
    JSON.stringify(x)===JSON.stringify(action)))
    throw Error("Selected action not in canonical legal list "+phase);
   selectedActions[action.kind]=(selectedActions[action.kind]||0)+1;
+  if(recorder)recorder.handler({
+   moment:"before",step:decisions,phase,actions:legal,
+   chosen:action,session,searchMs:spent,diagnostic:null
+  });
+  let committedDice=[];
+  const transitionStarted=performance.now();
   submitDecision(session,action,{
-   observeResult:false,recordHistory:false
+   observeResult:false,recordHistory:false,
+   ...(recorder?{onCommittedDice:dice=>{committedDice=dice;}}:{})
+  });
+  if(recorder)recorder.handler({
+   moment:"after",step:decisions,phase,actions:legal,
+   chosen:action,session,dice:committedDice,
+   transitionMs:performance.now()-transitionStarted
   });
  }
  const m=session.state.metrics;
@@ -190,6 +208,18 @@ export function playFullSoloExpedition({
   wipeCause:m.wipeCause??null,wipeStage:m.wipeStage??null,
   endingKind:session.state.endingKind??null,
   selectedActions,phaseDecisions,coverage:captureCounts(session.state),
+  finalMetrics:JSON.parse(JSON.stringify(m)),
+  finalInventory:session.state.heroes[0].inventory.map(card=>({
+   id:card.id,physicalCopy:card._physicalCopy??null
+  })),
+  finalHero:{
+   hp:session.state.heroes[0].hp,poison:!!session.state.heroes[0].poison,
+   maxHp,status:Object.fromEntries(Object.entries(session.state.heroes[0])
+    .filter(([,v])=>v===null||["string","number","boolean"].includes(typeof v)))
+  },
+  initialSnapshot,
+  finalSnapshot:recorder?experimentSnapshot(session):null,
+  events:recorder?recorder.finish():null,
   equipmentBreaks:policy.cycleBreaks
  };
 }
@@ -201,7 +231,7 @@ export function parseSoloBalanceArgs(argv){
  const opts={},allowed=new Set(["--hours","--workers","--runs-per-hero",
   "--seed","--budget","--c","--alpha","--heuristic","--samples",
   "--tactical-max","--from-study","--out","--arms",
-  "--max-game-steps","--max-search-steps"]);
+  "--max-game-steps","--max-search-steps","--trace"]);
  for(let i=0;i<argv.length;i+=2){
   const k=argv[i],v=argv[i+1];
   if(!allowed.has(k)||v===undefined||Object.hasOwn(opts,k))
@@ -229,12 +259,15 @@ export function parseSoloBalanceArgs(argv){
   armNames.some(a=>!ARM_NAMES.includes(a))||!armNames.includes("uct")||
   !armNames.includes("implicit"))
   throw Error("--arms must include uct,implicit and optionally hybrid, no repeats");
+ const trace=opts["--trace"]??"full";
+ if(!["full","off"].includes(trace))
+  throw Error("--trace must be full or off");
  const seed=int("--seed",20261101,1,0xffffffff);
  return {
   dryRun,hours:int("--hours",12,1,72),workers:int("--workers",8,1,32),
   runsPerHero:int("--runs-per-hero",80,1,2000),
   seed,budget:int("--budget",8,1,256),c,alpha,heuristic,
-  arms:armNames,
+  arms:armNames,trace,
   samples:int("--samples",2,1,6),
   tacticalMax:int("--tactical-max",2,1,64),
   maxGameSteps:int("--max-game-steps",20000,1,100000),
@@ -406,7 +439,7 @@ async function main(){
    totalPlannedExpeditions:c.runsPerHero*SOLO_HEROES.length*c.arms.length,
    workers:c.workers,hours:c.hours,budget:c.budget,
    c:c.c,alpha:c.alpha,samples:c.samples,
-   tacticalMax:c.tacticalMax,sourceStudy:c.sourceStudy,
+   tacticalMax:c.tacticalMax,trace:c.trace,sourceStudy:c.sourceStudy,
    output:c.out
   },null,2));
   return;
@@ -429,6 +462,7 @@ async function main(){
   c:c.c,alpha:c.alpha,
   heuristicMode:selected.heuristic,
   samples:c.samples,tacticalMax:c.tacticalMax,
+  trace:c.trace,traceSchema:"solo-full-expedition-decision-trace-v1",
   sourceStudy:c.sourceStudy,sourceStudyHash:studyHash,
   sourceRanking:selected.source,gameMode:"everything-goes",
   heroes:SOLO_HEROES,arms:c.arms
@@ -442,6 +476,12 @@ async function main(){
  }else atomic(manifestPath,manifest);
  const records=existsSync(recordPath)?readFileSync(recordPath,"utf8")
   .split("\n").filter(Boolean).map(JSON.parse):[];
+ if(c.trace==="full"){
+  for(const record of records){
+   if(!record.traceFile||!existsSync(join(c.out,record.traceFile)))
+    throw Error("Resume would silently lose telemetry: missing trace "+key(record));
+  }
+ }
  const seen=new Set(records.map(key));
  if(seen.size!==records.length)throw Error("Duplicate saved solo experiment rows");
  const pending=[];
@@ -456,7 +496,8 @@ async function main(){
      hero,seed:gameSeed,arm,budget:c.budget,c:c.c,alpha:c.alpha,
      heuristicMode:selected.heuristic,
      samples:c.samples,tacticalMax:c.tacticalMax,
-     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps
+     maxGameSteps:c.maxGameSteps,maxSearchSteps:c.maxSearchSteps,
+     recordTelemetry:c.trace==="full",traceOutputDir:c.out
     }});
    }
  const workers=[];let active=0,stopped=false;
@@ -535,8 +576,28 @@ if(!isMainThread){
  parentPort.on("message",message=>{
   if(message.type!=="play")return;
   try{
-   parentPort.postMessage({type:"done",tag:message.task.tag,
-    result:playFullSoloExpedition(message.task.args)});
+   const result=playFullSoloExpedition(message.task.args);
+   if(message.task.args.recordTelemetry){
+    const events=result.events;
+    if(!events||events.length!==result.steps)
+     throw Error("Incomplete canonical event trace for "+message.task.tag.arm);
+    const dir=join(message.task.args.traceOutputDir,"traces");
+    mkdirSync(dir,{recursive:true});
+    const name=message.task.tag.hero+"-"+message.task.tag.replicate+
+     "-"+message.task.tag.arm+".jsonl.gz";
+    const relative=join("traces",name),path=join(dir,name);
+    const compressed=gzipSync(Buffer.from(
+     events.map(x=>JSON.stringify(x)).join("\n")+"\n"),{level:5});
+    const digest=createHash("sha256").update(compressed).digest("hex");
+    writeFileSync(path+".tmp",compressed);
+    renameSync(path+".tmp",path);
+    delete result.events;
+    result.traceFile=relative;
+    result.traceSHA256=digest;
+    result.traceBytes=compressed.length;
+    result.traceEvents=events.length;
+   }else delete result.events;
+   parentPort.postMessage({type:"done",tag:message.task.tag,result});
   }catch(error){
    parentPort.postMessage({type:"error",tag:message.task.tag,
     error:error.stack??String(error)});
