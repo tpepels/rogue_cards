@@ -69,10 +69,11 @@ const summary=(rows,expected)=>{
     wins:group.filter(r=>r.won).length,
     winRate:rate(group,"won"),vaultRate:rate(group,"vaultReached"),
     winGivenVault:rate(reached,"won"),
-    encountersPer36:group.reduce((n,r)=>n+r.ordinaryEncounters,0)/
-     Math.max(1,group.reduce((n,r)=>n+r.roomsCleared,0))*36,
-    meanSearchSeconds:average(group,"searchMs")/1000,
-    meanElapsedSeconds:average(group,"elapsedMs")/1000,
+    encountersPer36:group.length?
+     group.reduce((n,r)=>n+r.ordinaryEncounters,0)/
+      Math.max(1,group.reduce((n,r)=>n+r.roomsCleared,0))*36:null,
+    meanSearchSeconds:group.length?average(group,"searchMs")/1000:null,
+    meanElapsedSeconds:group.length?average(group,"elapsedMs")/1000:null,
     byHero:Object.fromEntries(SOLO_HEROES.map(hero=>{
      const h=group.filter(r=>r.hero===hero);
      return [hero,{n:h.length,wins:h.filter(r=>r.won).length,
