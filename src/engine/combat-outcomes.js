@@ -20,10 +20,10 @@ export function consumeCorpse(s,m){
   else s.apply("HURT",
    [["goblin","wraith","wisp","cultist"].includes(m.id)?"d6":"2"],m);
  }else if(roll<=4){
-  if(["crawler","mold"].includes(m.id)&&m.id==="crawler")s.heal(h,2);
-  else s.heal(h,m.id==="troll"||m.id==="mold"?s.die():2);
+  if(["crawler","mold"].includes(m.id)&&m.id==="crawler")s.heal(h,2,m);
+  else s.heal(h,m.id==="troll"||m.id==="mold"?s.die():2,m);
  }else{
-  if(m.id==="rat")s.heal(h,s.die());
+  if(m.id==="rat")s.heal(h,s.die(),m);
   else if(m.id==="troll")s.draw();
   else if(["crawler","mold"].includes(m.id))h.poison=false;
   else if(["goblin","wraith","cultist"].includes(m.id))s.draw(1);
@@ -73,7 +73,7 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
    applyMonsterDefeat(s,m);
    const reward=s.cardPools?.mechanics?.killReward;
    if(reward==="draw"&&s.alive())s.draw();
-   else if(reward==="heal"&&s.alive())s.healParty(2);
+   else if(reward==="heal"&&s.alive())s.healParty(2,"mechanic:kill-reward");
    if(reward&&reward!=="canonical"){
     const name="kill-reward:"+reward;
     s.metrics.mechanicChoices[name]=(s.metrics.mechanicChoices[name]??0)+1;
@@ -93,14 +93,14 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
   }
  }
  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
- if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
+ if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal),s.room);
  // Explicit experimental grant only after a won regional combat.
  // Negotiation, fleeing, banishment and Warden phases never trigger it.
  const heal=s.cardPools?.mechanics?.postCombatHeal??0;
  if(heal&&m.stage!=="FINAL"&&!s.banished&&
    s._activeMonsterFought&&s.alive()){
   const before=s.living().reduce((n,h)=>n+h.hp,0);
-  s.healParty(heal);
+  s.healParty(heal,"diagnostic:post-combat");
   const restored=s.living().reduce((n,h)=>n+h.hp,0)-before;
   s.metrics.postCombatHealTriggers++;
   s.metrics.postCombatHealRestored+=restored;
