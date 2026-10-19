@@ -345,6 +345,8 @@ export function playFullSoloExpedition({
   maxHp,remainingHp:hp,hpLost:maxHp-hp,
   roomsCleared:m.cleared,stageProgress:{...session.state.stageProgress},
   byStage,hasAll36:Number(hasAll36),
+  corridorVisits:Object.values(byStage).reduce((sum,x)=>sum+x.corridors,0),
+  ordinaryRoomVisits:Object.values(byStage).reduce((sum,x)=>sum+x.normal,0),
   ordinaryEncounters,ordinaryFights,combatContextDamage,
   // Fresh Monster draws accepted as encounters; differs from returning
   // appearances such as a Will-o'-Wisp pursuing the Hero.
