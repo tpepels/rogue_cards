@@ -684,7 +684,7 @@ async function main(){
  process.on("SIGINT",()=>stop("SIGINT"));process.on("SIGTERM",()=>stop("SIGTERM"));
  for(let i=0;i<opts.workers;i++){
   const w=new Worker(new URL(import.meta.url),{
-   workerData:{hypotheses,agent,smoke:opts.smoke}
+   workerData:{hypotheses,agent,smoke:opts.smoke,suite:opts.suite}
   });
   workers.push(w);w.busy=false;
   w.on("message",msg=>{
@@ -732,6 +732,27 @@ if(!isMainThread){
    };
    const {events,initialSnapshot,finalSnapshot,...result}=
     playFullSoloExpedition(options);
+   if(workerData.suite==="recovery-overnight"){
+    const ledger=result.finalMetrics?.healing;
+    if(!ledger?.total)throw Error("Missing effective HP healing ledger");
+    for(const key of ["attempts","offered","restored","wasted"]){
+     const overall=ledger.total[key];
+     if(!Number.isFinite(overall)||overall<0)
+      throw Error("Invalid healing ledger total "+key);
+     for(const group of ["bySource","byCategory","byStage"]){
+      const sum=Object.values(ledger[group]??{})
+       .reduce((n,entry)=>n+(entry[key]??0),0);
+      if(sum!==overall)
+       throw Error("Healing ledger mismatch "+group+"."+key+
+        ": "+sum+" vs "+overall);
+     }
+    }
+    if(ledger.total.offered!==ledger.total.restored+ledger.total.wasted)
+     throw Error("Healing offered != restored + HP-cap waste");
+    for(const [source,entry] of Object.entries(ledger.bySource))
+     if(source.startsWith("unattributed:")&&entry.offered)
+      throw Error("Unattributed healing is forbidden: "+source);
+   }
    parentPort.postMessage({task,result});
   }catch(error){
    parentPort.postMessage({task,error:error.stack??String(error)});
