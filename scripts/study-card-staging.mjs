@@ -77,7 +77,10 @@ const metrics=["won","vaultReached","roomsCleared","ordinaryEncounters",
  "ordinaryFights","combatContextDamage","remainingHp","itemsUsed",
  "searchMs","elapsedMs"];
 export function deckComposition(catalogue){
- const tally=cards=>Object.fromEntries(cards.map(c=>[c.id,c.copies??1]));
+ const tally=cards=>cards.reduce((counts,c)=>{
+  counts[c.id]=(counts[c.id]??0)+(c.copies??1);
+  return counts;
+ },{});
  return {
   rooms:Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>
    [stage,tally(catalogue.rooms.filter(c=>c.stage===stage))])),
