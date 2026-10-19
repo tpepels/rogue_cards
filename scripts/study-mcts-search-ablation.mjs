@@ -148,6 +148,7 @@ async function main(){
  const finish=(reason,error=false)=>{
   if(stopped)return;
   stopped=true;failed=error;
+  clearInterval(ticker);
   persist();console.log("MCTS ablation "+reason+": "+rows.length+
    "/"+expected.trials+" saved");
   for(const w of workers)w.terminate();
