@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {forkGameState} from "../src/engine/fork-state.js";
-import {MONSTERS} from "../src/tabletop-data.js";
+import {MONSTERS,OBJECTS} from "../src/tabletop-data.js";
 import {compileStaging} from "../src/staging/catalogue.js";
 import {BALANCED_ROOM_IDS} from "../src/room-balance.js";
 import {recoveryOvernightHypotheses,RECOVERY_OVERNIGHT_PHYSICAL_IDS,
@@ -50,6 +50,18 @@ test("HP offered/restored/wasted is credited to actual printed Room",()=>{
  s.apply("HEAL",["3"],room);
  assert.deepEqual(s.metrics.healing.total,{
   attempts:2,offered:9,restored:2,wasted:7});
+});
+test("printed POTION is attributed as potion, never as an unknown Item",()=>{
+ const s=new ExpeditionState({seed:19,heroes:["warrior"],gameMode:"everything-goes"});
+ const potion=OBJECTS.find(c=>c.id==="laughing");
+ assert.equal(potion.type,"potion");
+ const h=s.heroes[0];h.hp=h.card.hp-1;
+ s.apply("HEAL",["3"],potion);
+ assert.equal(s.metrics.healing.bySource["potion:laughing"].offered,3);
+ assert.equal(s.metrics.healing.bySource["potion:laughing"].restored,1);
+ assert.equal(s.metrics.healing.bySource["potion:laughing"].wasted,2);
+ assert.equal(s.metrics.healing.byCategory.potion.offered,3);
+ assert.equal(s.metrics.healing.byCategory.unattributed,undefined);
 });
 test("actual staged Monster DEFEAT heal has exact source, no diagnostic grant",()=>{
  const spec=physical.find(x=>x.id==="recovery-defeat-all-3");
