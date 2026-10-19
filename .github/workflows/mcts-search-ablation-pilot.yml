@@ -1,0 +1,33 @@
+name: MCTS priors and widening pilot
+
+on:
+  push:
+    paths:
+      - .github/workflows/mcts-search-ablation-pilot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify all four search controls
+        run: npm run test:mcts:search-controls
+      - name: Compare four agents on identical seeds
+        run: node scripts/study-mcts-search-ablation.mjs --budgets 16 --runs-per-hero 1 --workers 4 --minutes 7 --out results/mcts-search-pilot
+      - name: Save reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcts-search-pilot
+          path: results/mcts-search-pilot/
+          if-no-files-found: ignore
