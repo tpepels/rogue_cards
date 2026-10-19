@@ -447,6 +447,7 @@ function safeDirectAction(session,action,directSettlements=false){
    !s.monster.v2?.defeatOps?.length&&
    s.room.stage!=="FINAL"&&!s.monsterQueue.length&&
    !s.pendingReward&&!s.pendingFightHeal&&
+   !(s.cardPools?.mechanics?.postCombatHeal>0)&&
    !(s.stashedMonsterItems?.length)&&
    !(s.tuckedRoomItems?.some(x=>x.roomId===s.room.id)));
  }
@@ -462,7 +463,8 @@ function beginDirectTransaction(session,action){
   historyLength:session.history.length,
   actedMask:s._actedCombatMask,
   hadActedMask:Object.hasOwn(s,"_actedCombatMask"),
-  actor:s.actor
+  actor:s.actor,
+  activeMonsterFought:s._activeMonsterFought
  };
  const ending=action.phase==="vault"&&action.kind==="fight"||
   action.phase==="post-warden"&&action.kind==="fight";
@@ -513,6 +515,7 @@ function beginDirectTransaction(session,action){
   if(meta.hadActedMask)s._actedCombatMask=meta.actedMask;
   else delete s._actedCombatMask;
   s.actor=meta.actor;
+  s._activeMonsterFought=meta.activeMonsterFought;
   if(settlement){
    s.monster=settlement.monster;
    s.monsterHP=settlement.monsterHP;
