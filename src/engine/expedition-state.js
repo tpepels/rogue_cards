@@ -801,7 +801,7 @@ export class ExpeditionState {
     returnOnTop:args[1]==="TOP"
    });return;
   case "FORK_ORDER":this.peek(Number(v),true);return;
-  case "CURE_OR_HEAL":if(h.poison)h.poison=false;else this.heal(h,n());return;
+  case "CURE_OR_HEAL":if(h.poison)h.poison=false;else this.heal(h,n(),card);return;
   case "HUNGRY_SWALLOW":{
    if(!this.discardable())return;
    const swallowed=this.discard(1);
