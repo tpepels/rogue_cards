@@ -46,7 +46,8 @@ const avg=(rows,key)=>rows.length?
 const jobKey=x=>[x.phase,x.variant,x.hero,x.replicate].join("|");
 const METRICS=["won","vaultReached","roomsCleared","ordinaryEncounters",
  "ordinaryFights","combatContextDamage","remainingHp","itemsUsed",
- "damage","hasAll36","vaultEntryHp","vaultEntryPlayable"];
+ "damage","hasAll36","vaultEntryHp","vaultEntryPlayable",
+ "corridorVisits","ordinaryRoomVisits"];
 export function balanceStudyArgs(argv){
  const opts={},allowed=new Set(["--out","--seed","--workers","--minutes",
   "--screen-repeats","--confirm-repeats","--finalists","--heroes",
@@ -276,11 +277,13 @@ function markdown(result){
     "No new mechanics, Warden unchanged.":
     "Encounter suite: escape/toll/reward choices use existing physical mechanics.","",
    "Control runs: "+phase.completedCanonical+"/"+phase.expectedPerVariant,"",
-   "| Hypothesis | runs | encounter/36 equiv. | wins | Vault | Rooms | 36-Room encounters |",
-   "|---|---:|---:|---:|---:|---:|---:|");
+   "| Hypothesis | runs | encounter/36 equiv. | fight fraction | corridors/run | wins | Vault | Rooms | 36-Room encounters |",
+   "|---|---:|---:|---:|---:|---:|---:|---:|---:|");
   for(const r of phase.ranked)
    lines.push("| "+r.id+" | "+r.measured.n+" | "+
     num(r.measured.encountersPer36Equivalent)+" | "+
+    num(r.measured.fightConversion,3)+" | "+
+    num(r.measured.mean.corridorVisits)+" | "+
     num(r.measured.mean.won,3)+" | "+
     num(r.measured.mean.vaultReached,3)+" | "+
     num(r.measured.mean.roomsCleared)+" | "+
