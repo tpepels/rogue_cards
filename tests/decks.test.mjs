@@ -74,15 +74,16 @@ test("ordinary equipment uses established slots and simple immediate or equipmen
  }
 });
 test("recommended decks are usable, curated and follow the advertised normal-to-weird progression",()=>{
- assert.deepEqual(PRESETS.map(p=>p.id),["classic","strange","chaos"]);
+ assert.deepEqual(PRESETS.map(p=>p.id),["balanced","classic","strange","chaos"]);
  const reports=PRESETS.map(p=>selectionSummary(selectionForPreset(p.id)));
- assert.deepEqual(reports[0].counts,{UPPER:12,MIDDLE:12,DEEP:12});
- assert.deepEqual(reports[1].counts,{UPPER:13,MIDDLE:13,DEEP:13});
- assert.deepEqual(reports[2].counts,{UPPER:29,MIDDLE:27,DEEP:23});
- assert.equal(reports[0].pacts,0);
- assert.equal(reports[1].pacts,6);
- assert.equal(reports[2].pacts,10);
- assert.deepEqual(reports.map(r=>r.warnings),[[],[],[]]);
+ assert.deepEqual(reports[0].counts,{UPPER:18,MIDDLE:18,DEEP:18});
+ assert.deepEqual(reports[1].counts,{UPPER:12,MIDDLE:12,DEEP:12});
+ assert.deepEqual(reports[2].counts,{UPPER:13,MIDDLE:13,DEEP:13});
+ assert.deepEqual(reports[3].counts,{UPPER:29,MIDDLE:27,DEEP:23});
+ assert.equal(reports[1].pacts,0);
+ assert.equal(reports[2].pacts,6);
+ assert.equal(reports[3].pacts,10);
+ assert.deepEqual(reports.map(r=>r.warnings),[[],[],[],[]]);
  for(const [i,p] of PRESETS.entries()){
   assert.equal(reports[i].counts.UPPER+reports[i].counts.MIDDLE+reports[i].counts.DEEP,p.roomCount);
   const printed=physicalDeck(selectionForPreset(p.id));
