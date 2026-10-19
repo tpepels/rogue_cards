@@ -220,6 +220,8 @@ export function playFullSoloExpedition({
  const pragmaticSimulation={treeShortcuts:0,rolloutShortcuts:0,
   suppressedEquipmentCandidates:0,treeSoftOffered:0,treeSoftChosen:0,
   rolloutSoftOffered:0,rolloutSoftChosen:0,rules:{}};
+ const searchControls={puctSelections:0,informativePriorSelections:0,
+  widenedNodes:0,widenedSelections:0,wideningActionsFiltered:0};
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const recorder=recordTelemetry?createDecisionRecorder({
@@ -267,6 +269,9 @@ export function playFullSoloExpedition({
    onPolicyDecision:event=>{shortcutReason=event.rule;},
    onSearchResult:result=>{
     if(recorder)searchDiagnostics=result;
+    const control=result.searchControls;
+    if(control)for(const key of Object.keys(searchControls))
+     searchControls[key]+=control[key]??0;
     const p=result.pragmaticSimulation;
     if(!p)return;
     for(const key of ["treeShortcuts","rolloutShortcuts",
@@ -384,6 +389,7 @@ export function playFullSoloExpedition({
   policyShortcutCount:policy.shortcutCount,
   policyShortcutReasons:{...policy.shortcutCounts},
   equipmentMode,mctsPragmaticVariant,pragmaticSimulation,
+  ...(nodePriors||progressiveWidening?{searchControls}:{}),
   stagingId:cardPools?.stagingId??null,
   seenRoomIds:[...session.state.seenRooms],
   seenRoomCounts:{...(m.roomVisitCounts??{})}
