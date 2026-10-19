@@ -203,6 +203,7 @@ export function playFullSoloExpedition({
  equipmentMode="solo-pragmatic",mctsPragmaticVariant="both",
  softTreeBonus=0.15,softTreeFirstVisitProbability=0.75,
  softRolloutProbability=0.75,implicitHpScale=1,implicitThreatScale=1,
+ nodePriors=false,progressiveWidening=false,
  cardPools=null,maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
@@ -262,7 +263,7 @@ export function playFullSoloExpedition({
    implicitHeuristicMode:arm==="uct"?"legacy":heuristicMode,
    equipmentMode,mctsPragmaticVariant,
    softTreeBonus,softTreeFirstVisitProbability,softRolloutProbability,
-   implicitHpScale,implicitThreatScale,
+   implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,
    onPolicyDecision:event=>{shortcutReason=event.rule;},
    onSearchResult:result=>{
     if(recorder)searchDiagnostics=result;
