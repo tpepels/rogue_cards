@@ -122,7 +122,8 @@ test("fair MCTS sampler preserves the other copies of a visited Room ID",()=>{
   const state=new ExpeditionState({seed:8004,heroes:["warrior"],
    gameMode:"everything-goes",cardPools:pool});
   const pile=state.rooms.UPPER;
-  const id="u-nest";
+  const id=pile.find(r=>pile.filter(other=>other.id===r.id).length>=2)?.id;
+  assert.ok(id,spec.id+" must contain a repeated printed Room");
   const originally=pile.filter(r=>r.id===id).length;
   assert.ok(originally>=2,spec.id+" should have multiple printed Rat Nests");
   const at=pile.findIndex(r=>r.id===id);
