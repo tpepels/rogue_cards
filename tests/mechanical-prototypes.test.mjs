@@ -89,8 +89,7 @@ test("Parley mechanisms expose distinct, legal alternatives",()=>{
  const a=sessionIn("negotiate-bribe","parley");
  a.state.draw();
  const before=a.state.heroes[0].inventory.length;
- submitDecision(a,sessionActions(a).find(x=>x.kind==="bribe"),{
-  recordHistory:false,observeResult:false});
+ resolveStagedNegotiation(a.state,"bribe");
  assert.equal(a.state.metrics.mechanicChoices["parley:bribe"],1);
  assert.equal(a.state.metrics.mechanicSuccesses["parley:bribe"],1);
  assert.equal(a.state.heroes[0].inventory.length,before-1);
@@ -100,8 +99,7 @@ test("Optional mid-combat escape costs an Item or permits risky WIT check",()=>{
  const a=sessionIn("retreat-tribute","combat");
  a.state.draw();
  assert.ok(sessionActions(a).some(x=>x.kind==="retreat-item"));
- submitDecision(a,sessionActions(a).find(x=>x.kind==="retreat-item"),{
-  observeResult:false,recordHistory:false});
+ resolveStagedRetreat(a.state,"retreat-item");
  assert.equal(a.state.monster,null);
  assert.equal(a.state.metrics.mechanicSuccesses["retreat-item"],1);
  const b=sessionIn("retreat-wit","combat");
@@ -150,7 +148,7 @@ test("Warden counterplay is legal only at actual Warden combat boundaries",()=>{
   assert.ok(legal.some(x=>x.kind===kind),variant);
   const selected=legal.find(x=>x.kind===kind);
   const before=a.state.monsterHP;
-  submitDecision(a,selected,{recordHistory:false,observeResult:false});
+  resolveStagedWardenTactic(a.state,selected.kind,selected.heroIndex);
   assert.equal(a.state.metrics.mechanicChoices[kind],1);
   if(kind==="warden-brace")assert.equal(a.state.monsterDis,true);
   if(kind==="warden-interrupt")assert.ok(a.state.monsterSkip>=1);
