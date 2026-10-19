@@ -13,6 +13,10 @@ jobs:
   pilot:
     runs-on: ubuntu-latest
     timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        puct_c: ['0.15', '0.35', '0.70']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,11 +27,11 @@ jobs:
       - name: Verify all four search controls
         run: npm run test:mcts:search-controls
       - name: Compare four agents on identical seeds
-        run: node scripts/study-mcts-search-ablation.mjs --budgets 16 --runs-per-hero 1 --workers 4 --minutes 7 --out results/mcts-search-pilot
+        run: node scripts/study-mcts-search-ablation.mjs --budgets 16 --runs-per-hero 1 --workers 4 --minutes 7 --puct-c ${{ matrix.puct_c }} --out results/mcts-search-pilot
       - name: Save reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mcts-search-pilot
+          name: mcts-search-pilot-puct-${{ matrix.puct_c }}
           path: results/mcts-search-pilot/
           if-no-files-found: ignore
