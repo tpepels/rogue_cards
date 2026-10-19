@@ -123,6 +123,7 @@ export class ExpeditionState {
    sealAvailable:false,
    sealAttempt:false,sealWin:false,won:false,roundLimit:false,unresolved:0,
    operationCounts:{},cardCounts:{},roomChoices:{},roomOptionAvailable:{},
+    roomVisitCounts:{},
    monsterVisits:{},monsterBehaviorBands:{},objectAcquisitions:{},objectActivations:{},
    objectRoomExposures:{},objectEquippedRoomExposures:{},
    monsterKillsById:{},monsterFightStartsById:{},
@@ -513,6 +514,7 @@ export class ExpeditionState {
    // Entering FINAL is the authoritative arrival metric, not cleared===9.
    if(room.stage==="FINAL")this.metrics.vaultEntered=true;
   this.seenRooms.add(room.id);
+   this.metrics.roomVisitCounts[room.id]=(this.metrics.roomVisitCounts[room.id]??0)+1;
   // The current Room has left the pile; any earlier peek of it is spent.
   if(this.peekedRoomIds[room.stage]?.[0]===room.id)
    this.peekedRoomIds[room.stage].shift();
