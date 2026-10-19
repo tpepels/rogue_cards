@@ -11,10 +11,10 @@ import {settleMonsterVictory} from "../src/engine/combat-outcomes.js";
 import {cardMarkup} from "../src/tabletop-view.js";
 import {ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS,selectionForPreset,selectionSummary} from "../src/decks.js";
 
-test("Everything Goes contains the entire regional print deck and the new Monsters",()=>{
+test("Everything Goes uses canonical balanced B Rooms and the full Monster pool",()=>{
  const s=createDecisionSession({seed:5,heroes:["warrior"],gameMode:"everything-goes"});
  assert.equal(s.state.roomGoal,12);
- for(const [stage,count] of [["UPPER",29],["MIDDLE",27],["DEEP",23]])
+ for(const [stage,count] of [["UPPER",18],["MIDDLE",18],["DEEP",18]])
   assert.equal(s.state.rooms[stage].length,count);
  assert.equal(EXTRA_MONSTERS.length,12);
  assert.equal(ALL_ROOMS.length,79);
