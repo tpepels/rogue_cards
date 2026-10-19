@@ -151,6 +151,11 @@ async function main(){
   clearInterval(ticker);
   persist();console.log("MCTS ablation "+reason+": "+rows.length+
    "/"+expected.trials+" saved");
+  console.log("PILOT RESULTS "+JSON.stringify(summary(rows,expected).groups.map(g=>({
+   arm:g.arm,budget:g.budget,n:g.n,winRate:g.winRate,
+   vaultRate:g.vaultRate,winGivenVault:g.winGivenVault,
+   meanSearchSeconds:g.meanSearchSeconds
+  }))));
   for(const w of workers)w.terminate();
   if(failed)process.exitCode=1;
  };
