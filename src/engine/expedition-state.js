@@ -5,6 +5,7 @@
  */
 import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../print-expansion.js";
+import {BALANCED_ROOMS} from "../room-balance.js";
 import {EXTRA_MONSTERS} from "../monster-expansion.js";
 import {ODD_ITEMS} from "../item-expansion.js";
 import {modifyOddDie,rollOddHeroD20} from "../odd-item-effects.js";
@@ -51,6 +52,10 @@ export class ExpeditionState {
   if(cardPools!==null&&gameMode!=="everything-goes")
    throw Error("Card staging currently supports Everything Goes expeditions only");
   this.cardPools=cardPools;
+  // Everything Goes now uses the balanced physical Room recipe by default.
+  this.roomDeckHasDuplicates=gameMode==="everything-goes"&&
+   (!cardPools||Object.values(cardPools.stageRoomExclusions??{}).
+    some(setting=>Array.isArray(setting?.selection)));
   this.roomGoal=gameMode==="everything-goes"?12:3;
   if(!strategies.includes(strategy))throw Error("Unknown full-expedition strategy "+strategy);
   if(!roomPolicies.includes(roomPolicy))throw Error("Unknown Room decision policy "+roomPolicy);
@@ -76,7 +81,7 @@ export class ExpeditionState {
   // (e.g. reclaiming an Item from the Bottomless Well).
   this.deckRemovedCounts={};
   const roomCards=gameMode==="everything-goes"?
-   (staged?cardPools.rooms:[...ROOMS,...PRINT_ONLY_ROOMS]):ROOMS;
+   (staged?cardPools.rooms:BALANCED_ROOMS):ROOMS;
   this.rooms=Object.fromEntries(stageNames.map(s=>[s,this.rng.shuffle(roomCards.filter(x=>x.stage===s))]));
   const monsterPool=gameMode==="everything-goes"?
    (staged?cardPools.monsters:[...MONSTERS,...EXTRA_MONSTERS]):MONSTERS;
