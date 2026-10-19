@@ -341,7 +341,7 @@ export const EXTRA_MONSTERS=Object.freeze(ROWS.map(([id,title,stage,hp,atk,def,b
  const parley=parleyMode==="WIT"?
   `ESCAPE: opposed d20+WIT vs d20+${parleyCost}. Win: leave without reward; lose: fight.`:
   `OFFER: discard ${parleyCost} Item${parleyCost===1?"":"s"} to avoid this fight. No reward.`;
- return Object.freeze({id,title,stage,hp,atk,def,behavior,art:"expansion",copies:2,
+ return Object.freeze({id,title,stage,hp:Math.max(1,Math.ceil(hp/2)),atk:Math.max(1,atk-2),def,behavior,art:"expansion",copies:2,
   type:"monster",printOnly:true,rule:"",flavor:"",
   v2:{kind:"MONSTER",number:164+i,tags,weakness,weaknessTag,weaknessFace,
    parley,parleyMode,parleyCost,behaviorOps,genericRemains,remainsOps,
