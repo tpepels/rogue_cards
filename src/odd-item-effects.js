@@ -141,7 +141,7 @@ export function activateOddTool(s,h,card){
   spend(s,h,card,"mad-compass",()=>s.peek(2,true));
  }else if(id==="odd-thorn-tonic"){
   spend(s,h,card,"thorn-tonic",()=>{
-   s.heal(h,3);h.nextWitDis=(h.nextWitDis||0)+1;
+   s.heal(h,3,card);h.nextWitDis=(h.nextWitDis||0)+1;
   });
  }else if(id==="odd-moon-lens"){
   spend(s,h,card,"moon-lens",()=>{
@@ -152,7 +152,7 @@ export function activateOddTool(s,h,card){
    const face=s.die();
    if(face<=2)s.hurt(h,1);
    else if(face<=4)s.draw();
-   else s.heal(h,2);
+   else s.heal(h,2,card);
   });
  }else if(id==="odd-echo-bell"){
   if(!s.keptRooms.length)return false;
