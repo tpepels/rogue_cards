@@ -1,0 +1,56 @@
+name: Validate full mechanical gameplay prototype matrix
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mechanical-balance-prototypes.yml'
+      - 'src/staging/catalogue.js'
+      - 'src/staging/mechanical-prototypes.js'
+      - 'src/engine/staged-mechanics.js'
+      - 'src/engine/decision-session.js'
+      - 'src/engine/expedition-state.js'
+      - 'src/engine/index.js'
+      - 'src/engine/combat-outcomes.js'
+      - 'scripts/study-balance-hypotheses.mjs'
+      - 'tests/mechanical-prototypes.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+jobs:
+  mechanics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test new rules against the canonical state machine
+        run: |
+          npm run test:balance:mechanics
+          npm run test:card:staging
+      - name: Run real A/B screening with independent holdout
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite mechanics --smoke true --variant-limit 7 --finalists 3 \
+            --heroes warrior,witch --workers 2 --minutes 12 \
+            --out "$RUNNER_TEMP/mechanical-prototypes-smoke"
+      - name: Verify documented experiment counts and isolation
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.RUNNER_TEMP+"/mechanical-prototypes-smoke/";
+            const r=JSON.parse(readFileSync(root+"summary.json","utf8"));
+            const m=JSON.parse(readFileSync(root+"manifest.json","utf8"));
+            if(r.status!=="complete"||r.suite!=="mechanics"||
+              r.screen.completedCanonical!==2||
+              r.confirm?.completedCanonical!==2||
+              r.totals.rows!==24||
+              m.hypotheses.length!==7)
+              throw Error("A/B mechanics trial/holdout failed");
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mechanical-prototypes-smoke
+          path: ${{ runner.temp }}/mechanical-prototypes-smoke
+          if-no-files-found: ignore
