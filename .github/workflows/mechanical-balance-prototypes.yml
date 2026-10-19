@@ -18,7 +18,7 @@ on:
 jobs:
   mechanics:
     runs-on: ubuntu-latest
-    timeout-minutes: 24
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,6 +34,22 @@ jobs:
             --suite mechanics --smoke true --variant-limit 7 --finalists 3 \
             --heroes warrior,witch --workers 2 --minutes 12 \
             --out "$RUNNER_TEMP/mechanical-prototypes-smoke"
+      - name: Exercise all 32 real prototypes and family-stratified holdout
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite mechanics --smoke true --variant-limit 32 --finalists 7 \
+            --heroes warrior --workers 4 --minutes 10 \
+            --out "$RUNNER_TEMP/mechanical-prototypes-all"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.RUNNER_TEMP+"/mechanical-prototypes-all/";
+            const r=JSON.parse(readFileSync(root+"summary.json","utf8"));
+            if(r.status!=="complete"||r.screen.ranked.length!==32||
+              r.confirm.ranked.length!==7||r.totals.rows!==41||
+              new Set(r.confirm.ranked.map(x=>x.family)).size!==7)
+              throw Error("Some prototypes never completed a real game or "+
+                "family-balanced holdout failed");
+          '
       - name: Verify documented experiment counts and isolation
         run: |
           node --input-type=module -e '
@@ -52,5 +68,7 @@ jobs:
         if: always()
         with:
           name: mechanical-prototypes-smoke
-          path: ${{ runner.temp }}/mechanical-prototypes-smoke
+          path: |
+            ${{ runner.temp }}/mechanical-prototypes-smoke
+            ${{ runner.temp }}/mechanical-prototypes-all
           if-no-files-found: ignore
