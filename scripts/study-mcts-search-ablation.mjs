@@ -76,6 +76,12 @@ const summary=(rows,expected)=>{
      group.reduce((n,r)=>n+r.ordinaryEncounters,0)/
       Math.max(1,group.reduce((n,r)=>n+r.roomsCleared,0))*36:null,
     meanSearchSeconds:group.length?average(group,"searchMs")/1000:null,
+    meanPuctSelections:group.length?
+     average(group,"puctSelections"):null,
+    meanInformativePriorSelections:group.length?
+     average(group,"informativePriorSelections"):null,
+    meanWidenedSelections:group.length?
+     average(group,"widenedSelections"):null,
     meanElapsedSeconds:group.length?average(group,"elapsedMs")/1000:null,
     byHero:Object.fromEntries(SOLO_HEROES.map(hero=>{
      const h=group.filter(r=>r.hero===hero);
@@ -159,7 +165,9 @@ async function main(){
   console.log("PILOT RESULTS "+JSON.stringify(summary(rows,expected).groups.map(g=>({
    arm:g.arm,budget:g.budget,n:g.n,winRate:g.winRate,
    vaultRate:g.vaultRate,winGivenVault:g.winGivenVault,
-   meanSearchSeconds:g.meanSearchSeconds
+   meanSearchSeconds:g.meanSearchSeconds,
+   informativePriors:g.meanInformativePriorSelections,
+   widenedSelections:g.meanWidenedSelections
   }))));
   for(const w of workers)w.terminate();
   if(failed)process.exitCode=1;
@@ -226,7 +234,13 @@ if(!isMainThread){
     ordinaryEncounters:r.ordinaryEncounters,
     roomsCleared:r.roomsCleared,
     searches:r.searches,searchMs:r.searchMs,elapsedMs:r.elapsedMs,
-    ending:r.ending,itemsUsed:r.itemsUsed
+    ending:r.ending,itemsUsed:r.itemsUsed,
+    puctSelections:r.searchControls?.puctSelections??0,
+    informativePriorSelections:
+     r.searchControls?.informativePriorSelections??0,
+    widenedSelections:r.searchControls?.widenedSelections??0,
+    wideningActionsFiltered:
+     r.searchControls?.wideningActionsFiltered??0
    }});
   }catch(e){parentPort.postMessage({error:e.stack||String(e)});}
  });
