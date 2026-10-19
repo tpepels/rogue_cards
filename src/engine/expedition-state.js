@@ -391,7 +391,8 @@ export class ExpeditionState {
   const category=typeof source==="string"?source.split(":")[0]:
    source?.type==="monster"?"monster":
    source?.type==="room"?"room":
-   source?.type==="item"?"item":"unattributed";
+   source?.type==="item"?"item":
+   source?.type==="potion"?"potion":"unattributed";
   const id=typeof source==="string"?source:
    source?.id?category+":"+source.id:
    "unattributed:"+(this.monster?.id??this.room?.id??"between-rooms");
