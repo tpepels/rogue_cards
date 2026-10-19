@@ -396,8 +396,8 @@ export function monsterRespond(s,h){
   }else{const d=s.die();
   if(d<=2)s.hurt(monk,2);
   else if(d<=4&&face>=5)face=4;
-  else if(d===5){face=1;s.heal(monk,2);}
-  else if(d===6){s.heal(monk,2);return;}
+  else if(d===5){face=1;s.heal(monk,2,"hero:monk");}
+  else if(d===6){s.heal(monk,2,"hero:monk");return;}
   }
   }
  }
