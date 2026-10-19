@@ -33,6 +33,8 @@ printable text / reference rules and human playtesting if adopted.
 
 - The patrols are **actual physical Monster draws**, with canonical regional
   Monster decks and normal parley/combat. They do not create new Monster cards.
+  A patrol is suppressed when that Room already has an active or queued
+  Monster, preventing accidental double encounters from one entry.
 - A successful bribe, negotiated resolution, combat retreat or surrender is
   a real encounter but **not a kill**; no corpse and no kill loot is awarded.
 - Failed negotiation or escape is not free: the Monster starts its attack
