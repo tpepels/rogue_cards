@@ -612,7 +612,8 @@ export function searchDecision(session,{budget=100,seed=1,
        publicActionPriors(sim,found.candidates,softId):null;
       const active=progressiveWidening?
        progressivelyWiden(node,found.candidates,choiceRng,{
-        preferredId:softId,prioritized:nodePriors
+        preferredId:softId,prioritized:nodePriors,
+        priorWeights:priors?.weights
        }):found.candidates;
       if(progressiveWidening&&active.length<found.candidates.length){
        widenedSelections++;
