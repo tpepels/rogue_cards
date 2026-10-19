@@ -121,6 +121,53 @@ const reduceSeen=(cards,counts)=>{
 const sameIds=(a,b)=>a.length===b.length&&
  a.every((x,i)=>x.id===b[i].id);
 /**
+ * Build a fair multiset of staged printed Room copies, using ONLY publicly
+ * observed counts. A visited Room ID does not exhaust other physical
+ * reprints of that ID. Publicly known next/bottom Rooms are reserved once.
+ */
+function weightedRoomBlueprint(s,stage,stageRooms,roomById,remaining){
+ const available=stageRooms[stage].slice();
+ const take=(id,source)=>{
+  const at=available.findIndex(card=>card.id===id);
+  if(at<0)throw Error("Public staged Room accounting inconsistent for "+
+   stage+" ("+source+": "+id+")");
+  return available.splice(at,1)[0];
+ };
+ const belongs=id=>roomById.get(id)?.stage===stage;
+ const visited=s.metrics?.roomVisitCounts??{};
+ for(const [id,count] of Object.entries(visited)){
+  if(!belongs(id))continue;
+  for(let i=0;i<count;i++)take(id,"entered");
+ }
+ const discarded=s.discardedRoomCounts??{};
+ for(const [id,count] of Object.entries(discarded)){
+  if(!belongs(id))continue;
+  for(let i=0;i<count;i++)take(id,"discarded");
+ }
+ // A held Room is no longer in its shuffled pile, even if it has not
+ // been entered. Do not sample it as a hidden alternative.
+ for(const card of [s.savedPath,s.whisperRoom,
+  ...(s._offeredRoomChoices??[])])
+  if(card?.stage===stage)take(card.id,"held");
+ const known=[];
+ for(const id of s.peekedRoomIds?.[stage]??[]){
+  if(known.length>=remaining)break;
+  // A peek reference may have been consumed by an intervening effect.
+  // Never infer an identity from the real hidden deck to repair it.
+  if(available.some(c=>c.id===id))known.push(take(id,"peeked"));
+ }
+ const bottom=[];
+ for(const id of s.publicBottomRoomIds?.[stage]??[]){
+  if(known.length+bottom.length>=remaining)break;
+  if(available.some(c=>c.id===id))bottom.push(take(id,"bottom"));
+ }
+ if(remaining-known.length-bottom.length>available.length)
+  throw Error("Insufficient public staged Room copies for "+stage+
+   ": need "+(remaining-known.length-bottom.length)+
+   ", have "+available.length);
+ return {known,bottom,available,remaining};
+}
+/**
  * Prepare *public information only* once at each decision boundary.
  * It is intentionally short-lived: the source state changes after a move.
  * Reusing it for a later decision is rejected instead of silently using
@@ -145,6 +192,17 @@ export function prepareRolloutDecks(s,knowledge){
   items.length+" vs "+s.deck.length);
  const rooms={},monsters={};
  for(const stage of STAGES){
+  // Staged ratio decks may include multiple copies of the same printed ID.
+  // The legacy Set-based sampler remains intact for unique-ID decks.
+  if(cardPools?.stageRoomExclusions?.[stage]?.selection){
+   const remaining=s.rooms[stage]?.length||0;
+   rooms[stage]=weightedRoomBlueprint(s,stage,stageRooms,roomById,remaining);
+   const count=s.monsters[stage]?.length||0;
+   const all=monsterCopies[stage];
+   const pool=reduceSeen(all,s.metrics.monsterVisits);
+   monsters[stage]={pool:pool.length>=count?pool:all,count};
+   continue;
+  }
   const seen=s.seenRooms||new Set(s.room?[s.room.id]:[]);
   const removed=s.discardedRoomIds||new Set();
   const revealed=(s.peekedRoomIds?.[stage]||[])
