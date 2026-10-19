@@ -45,7 +45,7 @@ test("a single d20 can show all Hero and Monster health values",()=>{
   assert.ok(card.hp>=1&&card.hp<=20,card.id+" needs more than a d20 for HP");
  }
  assert.ok(WARDEN_FURY.hp<WARDEN.hp);
- assert.ok(WARDEN.v2.weakness.includes("10 HP or less"));
+ assert.ok(WARDEN.v2.weakness.includes("8 HP or less"));
 });
 test("all 64 regional Rooms and the final Vault provide complete d6 choices",()=>{
  assert.equal(ROOMS.filter(r=>r.stage==="UPPER").length,24);
@@ -76,7 +76,7 @@ test("objects contain complete on-card outcomes, scrolls/rings/wands have safe f
  }
 });
 test("Monsters have distinctive four-band responses, weaknesses and defined negotiation",()=>{
- assert.equal(WARDEN.hp,20);assert.equal(WARDEN_FURY.hp,10);
+ assert.equal(WARDEN.hp,15);assert.equal(WARDEN_FURY.hp,8);assert.equal(WARDEN.atk,4);assert.equal(WARDEN_FURY.atk,6);
  assert.equal(WARDEN.stage,"FINAL");assert.equal(WARDEN_FURY.stage,"FINAL");
  for(const m of [...MONSTERS,WARDEN,WARDEN_FURY]){
   assert.equal(m.behavior.length,4,m.id);
@@ -92,7 +92,7 @@ test("Monsters have distinctive four-band responses, weaknesses and defined nego
   assert.ok(html.replace(/<[^>]*>/g,"").includes(esc(m.v2.weakness)),m.id);
   assert.ok(html.includes("1–2")&&html.includes("3–4")&&html.includes(">5</b>")&&html.includes(">6</b>"));
  }
- assert.match(WARDEN.v2.weakness,/10 HP/);
+ assert.match(WARDEN.v2.weakness,/8 HP/);
  assert.match(WARDEN_FURY.v2.weakness,/0 HP/);
  assert.match(MONSTERS.find(m=>m.id==="bat").v2.parley,/Opposed d20/);
  assert.match(MONSTERS.find(m=>m.id==="goblin").v2.parley,/RECRUIT/);
