@@ -8,6 +8,8 @@ import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "../print-expansion.js";
 import {EXTRA_MONSTERS} from "../monster-expansion.js";
 import {ODD_ITEMS} from "../item-expansion.js";
 import {ROOM_EFFECTS,ROOM_OPERATIONS} from "../room-effect-model.js";
+import {ITEM_HEALING_DEFAULTS,validItemHealing}
+ from "../item-healing.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
 const canonical={
@@ -76,7 +78,7 @@ export function compileStaging(spec){
  if(typeof spec.id!=="string"||!/^[a-z][a-z0-9-]{1,63}$/.test(spec.id))
   throw Error("Staging id must be stable kebab-case");
  const keys=new Set(["schema","id","description","cards","roomDeck","roomEffects",
-  "mechanics","monsterHealing","roomRestHealing"]);
+  "mechanics","monsterHealing","roomRestHealing","itemHealing"]);
  for(const key of Object.keys(spec))
   if(!keys.has(key))throw Error("Unrecognized staging field "+key);
  const collections=Object.fromEntries(Object.entries(canonical)
@@ -105,6 +107,25 @@ export function compileStaging(spec){
   const updated=identity(original,edit.set);
   if(scalar)collections[edit.collection]=updated;
   else collections[edit.collection][group.findIndex(c=>c.id===edit.id)]=updated;
+ }
+ // Changes ONLY printed healing quantities on existing physical Items.
+ // Printable text and executable numeric value are generated together.
+ assertObj(spec.itemHealing??{},"itemHealing");
+ for(const [id,amount] of Object.entries(spec.itemHealing??{})){
+  if(!validItemHealing(id,amount))
+   throw Error("Unsupported printed Item healing "+id+":"+amount);
+  const index=collections.items.findIndex(i=>i.id===id);
+  if(index<0)throw Error("Unknown healing Item "+id);
+  const prior=collections.items[index];
+  const original=prior.v2?.trigger;
+  const current=ITEM_HEALING_DEFAULTS[id];
+  const pattern=new RegExp("\\bheal\\s+"+current+"\\s+HP\\b","i");
+  if(!pattern.test(original))
+   throw Error("Printed healing text mismatch for "+id);
+  const next=original.replace(pattern,"heal "+amount+" HP");
+  collections.items[index]=identity(prior,{rule:next},{
+   trigger:next,healingAmount:amount
+  });
  }
  // Printed, monster-specific DEFEAT rewards; not a universal on-kill rule.
  // Only the already-supported HEAL operation is appended to existing rewards.
