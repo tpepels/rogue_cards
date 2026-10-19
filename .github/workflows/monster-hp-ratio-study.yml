@@ -1,0 +1,53 @@
+name: Verify Monster HP ratio balancing
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/monster-hp-ratio-study.yml'
+      - 'src/staging/monster-hp-ratio-hypotheses.js'
+      - 'src/staging/catalogue.js'
+      - 'src/staging/balance-hypotheses.js'
+      - 'scripts/study-balance-hypotheses.mjs'
+      - 'tests/monster-hp-ratios.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+jobs:
+  hp-fractions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify all 9 ratios and original printed-card parity
+        run: |
+          npm run test:balance:hp-ratios
+          npm run test:balance:hypotheses
+      - name: Complete genuine 9-arm HP simulation and independent confirmation
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite hp-ratios --smoke true --variant-limit 9 \
+            --finalists 3 --heroes warrior,witch \
+            --screen-repeats 1 --confirm-repeats 2 \
+            --workers 2 --minutes 12 \
+            --out "$RUNNER_TEMP/monster-hp-ratios-smoke"
+      - name: Verify all variants played and all isolated ratios independently validated
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.RUNNER_TEMP+"/monster-hp-ratios-smoke/";
+            const r=JSON.parse(readFileSync(root+"summary.json","utf8"));
+            if(r.suite!=="hp-ratios"||r.status!=="complete"||
+              r.totals.rows!==36||r.screen.ranked.length!==9||
+              r.confirm.ranked.length!==3||
+              !r.confirm.ranked.every(x=>x.family==="canonical"))
+              throw Error("Staged HP ratio A/B test or protected pure-ratio holdout failed");
+          '
+      - name: Save trial-level and comparison results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monster-hp-ratios-smoke
+          path: ${{ runner.temp }}/monster-hp-ratios-smoke/
+          if-no-files-found: ignore
