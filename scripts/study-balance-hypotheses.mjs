@@ -32,6 +32,8 @@ import {postCombatHealingHypotheses}
  from "../src/staging/combat-healing-hypotheses.js";
 import {printedRecoveryHypotheses}
  from "../src/staging/printed-recovery-hypotheses.js";
+import {recoveryOvernightHypotheses,RECOVERY_OVERNIGHT_REFERENCE_ID}
+ from "../src/staging/recovery-overnight-hypotheses.js";
 import {BALANCED_ROOMS} from "../src/room-balance.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
@@ -85,9 +87,10 @@ export function balanceStudyArgs(argv){
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
  if(!["original","encounters","warden","mechanics","hp-ratios",
-  "stat-factorial","room-ratios","combat-healing","printed-recovery"].includes(suite))
+  "stat-factorial","room-ratios","combat-healing","printed-recovery",
+   "recovery-overnight"].includes(suite))
   throw Error("--suite must be original, encounters, warden, mechanics, "+
-   "hp-ratios, stat-factorial, room-ratios, combat-healing or printed-recovery");
+   "hp-ratios, stat-factorial, room-ratios, combat-healing, printed-recovery or recovery-overnight");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:suite==="room-ratios"?3:4,1,12),
@@ -187,6 +190,13 @@ const healthShallow=rows=>{
   mechanicChoices:choices,mechanicSuccesses:successes};
 };
 const evalScore=(baseline,cell,suite="original")=>{
+ if(suite==="recovery-overnight"){
+  if(!cell.n)return -Infinity;
+  return -3*Math.abs((cell.mean.won??0)-.367)
+   -2*Math.abs((cell.mean.vaultReached??0)-.609)
+   -Math.abs((cell.winGivenVault??0)-.603)
+   -.1*Math.abs((cell.encountersPer36Equivalent??0)-18)/18;
+ }
  if(suite==="combat-healing"){
   if(!cell.n||!baseline.n)return -Infinity;
   const winGap=Math.abs((cell.mean.won??0)-.40);
@@ -315,6 +325,10 @@ function markdown(result){
     "3 ATK levels (original, -1, -2) x 3 encounter contexts. "+
     "All changes are existing card stats and printed Room effects; "+
     "Warden unchanged.":
+    result.suite==="recovery-overnight"?
+    "Existing printed healing rewards, paid REST and Items tested alone "+
+    "and together with Balanced B Rooms and unchanged Monster stats. "+
+    "Plus-five remains non-printable diagnostic only.":
     result.suite==="combat-healing"?
     "Controlled post-combat healing on canonical Balanced B: 0 HP baseline "+
     "versus +1..+10 HP after a won regional fight. No grant for parley, "+
@@ -341,6 +355,21 @@ function markdown(result){
     num(r.measured.mean.roomsCleared)+" | "+
     num(r.measured.complete36.meanEncounters)+" (n="+
     r.measured.complete36.n+") |");
+  if(result.suite==="recovery-overnight"){
+   lines.push("","### Measured HP recovery (including wasted HP)","",
+    "| Variant | Wins | Vault | Win given Vault | Healing events | HP offered | HP restored | HP wasted |",
+    "|---|---:|---:|---:|---:|---:|---:|---:|");
+   for(const row of [{id:"canonical",measured:phase.baseline},...phase.ranked])
+    lines.push("| "+row.id+" | "+num(row.measured.mean.won,3)+" | "+
+     num(row.measured.mean.vaultReached,3)+" | "+
+     num(row.measured.winGivenVault,3)+" | "+
+     num(row.measured.healing.mean.attempts)+" | "+
+     num(row.measured.healing.mean.offered)+" | "+
+     num(row.measured.healing.mean.restored)+" | "+
+     num(row.measured.healing.mean.wasted)+" |");
+   lines.push("","Full healing provenance appears in summary.json "+
+    "(healing.totals.bySource/byCategory/byStage and opportunities).");
+  }
   if(result.suite==="combat-healing"){
    lines.push("","### Effective healing per expedition","",
     "| Intervention | Wins | Vault | Encounters/36 | Fights | HP actually restored | HP wasted at cap | Triggers |",
@@ -442,6 +471,7 @@ async function main(){
   opts.suite==="room-ratios"?roomRatioHypotheses():
   opts.suite==="combat-healing"?postCombatHealingHypotheses():
   opts.suite==="printed-recovery"?printedRecoveryHypotheses():
+  opts.suite==="recovery-overnight"?recoveryOvernightHypotheses():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -459,7 +489,8 @@ async function main(){
   ...(opts.suite==="original"?{}:{suite:opts.suite}),
   revision:revision(),agentId:agent.id,agentSha256:sha(agentSource),
   hypotheses:hypotheses.map(spec=>({id:spec.id,hash:sha(spec)})),
-  canonicalDeck:deckComposition(["combat-healing","printed-recovery"].includes(opts.suite)?
+  canonicalDeck:deckComposition(["combat-healing","printed-recovery",
+   "recovery-overnight"].includes(opts.suite)?
    {...canonicalStagingCatalogue(),rooms:BALANCED_ROOMS}:
    canonicalStagingCatalogue()),
   stagedDecks,heroes:opts.heroes,seed:opts.seed,
@@ -509,6 +540,25 @@ async function main(){
   // Rank ONLY on the complete screening split. Mechanic suite holds
   // out at least one concept from every tested family when slots allow.
   const chosen=[];
+  if(opts.suite==="recovery-overnight"){
+   // Pre-register a representative finalist in every physical intervention
+   // family and reserve a slot for the non-printable reference.
+   const selected=[RECOVERY_OVERNIGHT_REFERENCE_ID];
+   const families=["recovery-supply-","recovery-rest-",
+    "recovery-defeat-","recovery-supply-rest-",
+    "recovery-rest-defeat-","recovery-supply-defeat-",
+    "recovery-hybrid-"];
+   for(const prefix of families){
+    const winner=screen.ranked.find(x=>x.id.startsWith(prefix));
+    if(winner&&!selected.includes(winner.id))selected.push(winner.id);
+   }
+   for(const row of screen.ranked){
+    if(selected.length>=opts.finalists)break;
+    if(!selected.includes(row.id))selected.push(row.id);
+   }
+   return selected.slice(0,opts.finalists)
+    .map(id=>hypotheses.find(x=>x.id===id));
+  }
   if(opts.suite==="combat-healing"){
    // The quantity sought is the *smallest* healing dose reaching 40%.
    // Confirm its adjacent doses rather than selecting four possibly
