@@ -123,6 +123,8 @@ export class ExpeditionState {
    mechanicChoices:{},mechanicSuccesses:{},patrolEncounters:0,
    monsterDraws:0,encounterStarts:0,combatStarts:0,
    postCombatHealTriggers:0,postCombatHealRestored:0,postCombatHealWasted:0,
+   healing:{total:{attempts:0,offered:0,restored:0,wasted:0},
+    bySource:{},byCategory:{},byStage:{}},
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
    roomRollBands:{},objectRollBands:{},
    itemPassiveEffects:{},
@@ -378,8 +380,39 @@ export class ExpeditionState {
    this.metrics.wipeStage=this.room?.stage||"unknown";
   }
   return before-h.hp;}
- heal(h,amt){h.hp=clamp(h.hp+Math.max(0,amt),0,h.card.hp);}
- healParty(amt){const h=this.chooseRecipient("heal");if(h.hp>0)this.heal(h,amt);}
+ /**
+  * Only canonical HP-restoration mutation. Attribute resolved offered HP
+  * and effective/wasted HP by physical source, even inside MCTS forks.
+  */
+ heal(h,amt,source=null){
+  const offered=Math.max(0,Math.floor(amt)),before=h.hp;
+  h.hp=clamp(before+offered,0,h.card.hp);
+  const restored=h.hp-before,wasted=offered-restored;
+  const category=typeof source==="string"?source.split(":")[0]:
+   source?.type==="monster"?"monster":
+   source?.type==="room"?"room":
+   source?.type==="item"?"item":"unattributed";
+  const id=typeof source==="string"?source:
+   source?.id?category+":"+source.id:
+   "unattributed:"+(this.monster?.id??this.room?.id??"between-rooms");
+  const stage=this.room?.stage??"between-rooms";
+  const cell=()=>({attempts:0,offered:0,restored:0,wasted:0});
+  const update=c=>{
+   c.attempts++;c.offered+=offered;
+   c.restored+=restored;c.wasted+=wasted;
+  };
+  const metric=this.metrics.healing??={
+   total:cell(),bySource:{},byCategory:{},byStage:{}};
+  update(metric.total);
+  update(metric.bySource[id]??=cell());
+  update(metric.byCategory[category]??=cell());
+  update(metric.byStage[stage]??=cell());
+  return restored;
+ }
+ healParty(amt,source=null){
+  const h=this.chooseRecipient("heal");
+  if(h.hp>0)this.heal(h,amt,source);
+ }
  draw(n=1){for(let i=0;i<n;i++){
    if(!this.deck.length)return;
    if(this.forfeitNextItem){this.forfeitNextItem=false;this.deck.unshift(this.deck.pop());continue;}
@@ -692,7 +725,7 @@ export class ExpeditionState {
   const mode=decision?.mode||this.heroMode(h);
   h.used.add("witch-ability");
   if(mode==="steady"){
-   if(h.poison)h.poison=false;else this.heal(h,1);
+   if(h.poison)h.poison=false;else this.heal(h,1,"hero:witch");
    return;
   }
   const d=this.die();
@@ -713,8 +746,8 @@ export class ExpeditionState {
   case "NONE":case "KEEP_ROOM_ROLL":return;
    case "ROOM_SPECIAL":case "ROOM_FATE":resolveRoomChoice(this,Number(v));return;
   case "HURT":this.hurt(h,n());return;
-  case "HEAL":this.heal(h,n());return;
-  case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n());return;
+  case "HEAL":this.heal(h,n(),card);return;
+  case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n(),card);return;
   case "POISON":if(!h.immune){
     const moth=h.slots.companion?.id==="moth";
     if(moth&&this.room?.id==="m-fungus"&&!h.used.has("moth-garden")){
@@ -938,8 +971,10 @@ export class ExpeditionState {
    }
    return;
   }
-  case "ALCHEMY_HEAL_OR_TWO":this.heal(h,can(this.lastSpent,"ALCHEMY")?this.die():2);return;
-  case "MAGIC_HEAL":if(this.lastCostCards.some(x=>can(x,"MAGIC")))this.heal(h,n());return;
+  case "ALCHEMY_HEAL_OR_TWO":
+   this.heal(h,can(this.lastSpent,"ALCHEMY")?this.die():2,card);return;
+  case "MAGIC_HEAL":
+   if(this.lastCostCards.some(x=>can(x,"MAGIC")))this.heal(h,n(),card);return;
   case "CURSED_EXTRA_DRAW":if(this.anyEquippedTag("CURSED"))this.draw();return;
   case "NEXT_WIT":this.witBonus+=n();return;
   case "NEXT_WIT_DIS":h.nextWitDis++;return;
@@ -1044,7 +1079,7 @@ export class ExpeditionState {
    if(!modes.length)return;
    const mode=this.chooseEffect("fungus-fire-source",modes,modes[0]);
    if(mode==="discard-fire")this.discard(1,{tag:"FIRE"});
-   this.heal(h,this.die());return;
+   this.heal(h,this.die(),card);return;
   }
   case "CHOIR_SILENCE":{
    const song=this.keptRooms.find(x=>x.card.id==="m-treasure");
@@ -1170,7 +1205,7 @@ export class ExpeditionState {
   if(code==="DRAW1_RECHARGE"){this.draw();this.recharge();}
   else if(code==="DRAW1")this.draw();
   else if(code==="DRAW2")this.draw(2);
-  else if(code==="HEAL2")this.heal(h,2);
+  else if(code==="HEAL2")this.heal(h,2,this.room);
   else if(code==="HURT2")this.hurt(h,2);
   else if(code==="HURT2_DEF_DIS"){this.hurt(h,2);h.nextDefenseDis=(h.nextDefenseDis||0)+1;}
   else if(code==="HURTd6")this.hurt(h,this.die());
