@@ -15,6 +15,10 @@ import {cardMarkup} from "../src/tabletop-view.js";
 
 const specs=printedRecoveryHypotheses();
 const physical=specs.filter(x=>PRINTED_RECOVERY_IDS.includes(x.id));
+// ruleMarkup() wraps HP and dice terms in <strong>; assert what players
+// actually read, rather than relying on contiguous raw HTML source.
+const visibleCardText=card=>cardMarkup(card).replace(/<[^>]*>/g,"")
+ .replace(/&amp;/g,"&").replace(/&#39;/g,"'");
 test("three physical proposals use existing mechanics and canonical Balanced B Rooms",()=>{
  assert.equal(physical.length,3);
  assert.equal(specs.length,4);
@@ -41,7 +45,7 @@ test("monster-specific printed DEFEAT retains original benefit and executes HEAL
  const m=pool.monsters.find(x=>x.id==="goblin");
  assert.equal(m.v2.defeat,MONSTER_DEFEATS.goblin.text+" Heal 2 HP.");
  assert.deepEqual(m.v2.defeatOps,["DRAW:1","HEAL:2"]);
- assert.match(cardMarkup(m),/Heal 2 HP/);
+ assert.ok(visibleCardText(m).includes("Heal 2 HP."));
  const s=new ExpeditionState({gameMode:"everything-goes",
   heroes:["warrior"],seed:130,cardPools:pool});
  const h=s.heroes[0];
@@ -62,7 +66,7 @@ test("printed REST and executed REST agree, retaining the Item cost",()=>{
  const pool=compileStaging(spec);
  const room=pool.rooms.find(x=>x.id==="ex-u-coal-store");
  assert.equal(room.v2.choices[1].effect,"Discard 1 Item to heal 6 HP.");
- assert.match(cardMarkup(room),/heal 6 HP/);
+ assert.ok(visibleCardText(room).includes("Discard 1 Item to heal 6 HP."));
  assert.deepEqual(pool.roomEffects[room.id].choices[1],
   ["COST:1","HEAL:6"]);
  const s=new ExpeditionState({gameMode:"everything-goes",
