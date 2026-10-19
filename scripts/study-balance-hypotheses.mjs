@@ -28,6 +28,9 @@ import {statFactorialAnalysis}
  from "../src/staging/monster-stat-factorial-analysis.js";
 import {roomRatioHypotheses}
  from "../src/staging/room-ratio-hypotheses.js";
+import {postCombatHealingHypotheses}
+ from "../src/staging/combat-healing-hypotheses.js";
+import {BALANCED_ROOMS} from "../src/room-balance.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -47,7 +50,8 @@ const jobKey=x=>[x.phase,x.variant,x.hero,x.replicate].join("|");
 const METRICS=["won","vaultReached","roomsCleared","ordinaryEncounters",
  "ordinaryFights","combatContextDamage","remainingHp","itemsUsed",
  "damage","hasAll36","vaultEntryHp","vaultEntryPlayable",
- "corridorVisits","ordinaryRoomVisits"];
+ "corridorVisits","ordinaryRoomVisits",
+ "postCombatHealTriggers","postCombatHealRestored","postCombatHealWasted"];
 export function balanceStudyArgs(argv){
  const opts={},allowed=new Set(["--out","--seed","--workers","--minutes",
   "--screen-repeats","--confirm-repeats","--finalists","--heroes",
@@ -79,9 +83,9 @@ export function balanceStudyArgs(argv){
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
  if(!["original","encounters","warden","mechanics","hp-ratios",
-  "stat-factorial","room-ratios"].includes(suite))
+  "stat-factorial","room-ratios","combat-healing"].includes(suite))
   throw Error("--suite must be original, encounters, warden, mechanics, "+
-   "hp-ratios, stat-factorial or room-ratios");
+   "hp-ratios, stat-factorial, room-ratios or combat-healing");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:suite==="room-ratios"?3:4,1,12),
@@ -149,6 +153,16 @@ const healthShallow=rows=>{
   mechanicChoices:choices,mechanicSuccesses:successes};
 };
 const evalScore=(baseline,cell,suite="original")=>{
+ if(suite==="combat-healing"){
+  if(!cell.n||!baseline.n)return -Infinity;
+  const winGap=Math.abs((cell.mean.won??0)-.40);
+  const vaultGap=Math.abs((cell.mean.vaultReached??0)-.50);
+  const densityGap=Math.abs((cell.encountersPer36Equivalent??0)-18)/18;
+  const wasted=cell.mean.postCombatHealWasted??0;
+  // Penalize extra healing only mildly, to prefer the smallest dose
+  // which meets the survival target without losing B's encounter density.
+  return -3*winGap-.8*vaultGap-.2*densityGap-.003*wasted;
+ }
  if(["hp-ratios","stat-factorial","room-ratios"].includes(suite)){
   if(!cell.n||!baseline.n)return -Infinity;
   // Screen for balance tradeoffs, never statistical proof:
@@ -267,6 +281,10 @@ function markdown(result){
     "3 ATK levels (original, -1, -2) x 3 encounter contexts. "+
     "All changes are existing card stats and printed Room effects; "+
     "Warden unchanged.":
+    result.suite==="combat-healing"?
+    "Controlled post-combat healing on canonical Balanced B: 0 HP baseline "+
+    "versus +1..+10 HP after a won regional fight. No grant for parley, "+
+    "retreat, banishment or Warden. All printed rewards unchanged.":
     result.suite==="room-ratios"?
     "Room ratios: three staged decks, each with 16 "+
     "non-Corridor Room copies per depth, 1–3 Corridors per depth, "+
@@ -289,6 +307,20 @@ function markdown(result){
     num(r.measured.mean.roomsCleared)+" | "+
     num(r.measured.complete36.meanEncounters)+" (n="+
     r.measured.complete36.n+") |");
+  if(result.suite==="combat-healing"){
+   lines.push("","### Effective healing per expedition","",
+    "| Intervention | Wins | Vault | Encounters/36 | Fights | HP actually restored | HP wasted at cap | Triggers |",
+    "|---|---:|---:|---:|---:|---:|---:|---:|");
+   for(const row of [{id:"0 HP (canonical B)",measured:phase.baseline},
+    ...phase.ranked])lines.push("| "+row.id+" | "+
+     num(row.measured.mean.won,3)+" | "+
+     num(row.measured.mean.vaultReached,3)+" | "+
+     num(row.measured.encountersPer36Equivalent)+" | "+
+     num(row.measured.mean.ordinaryFights)+" | "+
+     num(row.measured.mean.postCombatHealRestored)+" | "+
+     num(row.measured.mean.postCombatHealWasted)+" | "+
+     num(row.measured.mean.postCombatHealTriggers)+" |");
+  }
   if(result.suite==="mechanics"){
    lines.push("","### Mechanic choice and consequence audit","",
     "| Prototype | Family | Patrol encounters | Chosen alternative actions/run | Successes by action |",
@@ -361,7 +393,9 @@ function markdown(result){
  "- Seed matching does not guarantee identical dice after paths diverge.",
  "- Runs are model-player estimates, not actual human play duration or enjoyment.",
  "- Card exposures and per-Hero effects are in summary.json/trials.ndjson.",
- "- Do not promote any changes into canonical until human playtesting.");
+ "- The +N post-combat healing doses are numerical experiments only; "+
+ "we will design tangible Items and rewards after measuring the required dose.",
+ "- Do not promote experimental changes into canonical until human playtesting.");
  return lines.join("\n")+"\n";
 }
 async function main(){
@@ -372,6 +406,7 @@ async function main(){
   opts.suite==="hp-ratios"?monsterHpRatioHypotheses():
   opts.suite==="stat-factorial"?monsterStatFactorialHypotheses():
   opts.suite==="room-ratios"?roomRatioHypotheses():
+  opts.suite==="combat-healing"?postCombatHealingHypotheses():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -389,7 +424,9 @@ async function main(){
   ...(opts.suite==="original"?{}:{suite:opts.suite}),
   revision:revision(),agentId:agent.id,agentSha256:sha(agentSource),
   hypotheses:hypotheses.map(spec=>({id:spec.id,hash:sha(spec)})),
-  canonicalDeck:deckComposition(canonicalStagingCatalogue()),
+  canonicalDeck:deckComposition(opts.suite==="combat-healing"?
+   {...canonicalStagingCatalogue(),rooms:BALANCED_ROOMS}:
+   canonicalStagingCatalogue()),
   stagedDecks,heroes:opts.heroes,seed:opts.seed,
   screenRepeats:opts.screenRepeats,confirmRepeats:opts.confirmRepeats,
   finalists:opts.finalists,smoke:opts.smoke};
