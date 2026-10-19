@@ -43,9 +43,9 @@ node scripts/study-mcts-search-ablation.mjs \
   --out results/mcts-search-ablation-puct035-v2
 ~~~
 
-This runs four variants for each of the eight Heroes, each budget, and the same initial seed per Hero/replicate across arms (**96 expeditions with one replicate per Hero**). It records `manifest.json`, `trials.ndjson`, and `summary.json`, supports exact resumption, and refuses incompatible git revisions/settings. For a more credible comparison increase `--runs-per-hero`, keeping a separate output directory per code revision.
+This runs four variants for each of the eight Heroes, each budget, and the same initial seed per Hero/replicate across arms (**480 expeditions with five replicates per Hero**). It records `manifest.json`, `trials.ndjson`, and `summary.json`, supports exact resumption, and refuses incompatible git revisions/settings. For a more credible comparison increase `--runs-per-hero`, keeping a separate output directory per code revision.
 
-The initial GitHub Actions pilot runs only budget 16 and one replicate per Hero, with a short cap; the result may be incomplete. It is a **smoke/pilot**, not statistical confirmation. Inspect artifacts and actual completed counts.
+The initial GitHub Actions pilot used budget 16 and one replicate per Hero. The revised PUCT calibration matrix likewise uses eight Heroes × four arms at budget 16 for each of three PUCT coefficients (0.15, 0.35, 0.70). These are **smoke/pilot runs**, not statistical confirmation. Inspect artifacts and completed counts.
 
 ## Comparison criteria
 
