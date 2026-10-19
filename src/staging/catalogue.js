@@ -109,20 +109,48 @@ export function compileStaging(spec){
   if(!STAGES.includes(stage))throw Error("Unknown Room stage "+stage);
   assertObj(setting,"roomDeck."+stage);
   const keys=Object.keys(setting);
-  if(keys.some(k=>k!=="exclude"))throw Error("Room deck supports exclude only");
-  if(!Array.isArray(setting.exclude)||new Set(setting.exclude).size!==setting.exclude.length)
-   throw Error("Room exclusion must contain unique card ids");
+  if(keys.some(k=>!["exclude","selection"].includes(k))||
+    ("exclude" in setting&&"selection" in setting))
+   throw Error("Room deck supports either exclude or selection");
   const available=collections.rooms.filter(r=>r.stage===stage);
-  const pool=new Set(available.map(r=>r.id));
-  if(setting.exclude.some(id=>!pool.has(id)))
-   throw Error("Unknown/wrong-stage excluded Room");
-  roomDeck[stage]=[...setting.exclude];
+  const pool=new Map(available.map(r=>[r.id,r]));
+  if("selection" in setting){
+   if(!Array.isArray(setting.selection)||
+      setting.selection.length<12||setting.selection.length>96||
+      setting.selection.some(id=>typeof id!=="string"||!pool.has(id)))
+    throw Error("Room selection requires 12..96 valid same-stage Room ids");
+   // Repeated printed ids mean independently drawn hypothetical reprints,
+   // never new card rules. The Room engine resolves by the original id.
+   const duplicates=new Map();
+   for(const id of setting.selection)
+    duplicates.set(id,(duplicates.get(id)??0)+1);
+   if([...duplicates.values()].some(n=>n>12))
+    throw Error("More than 12 reprints of one Room in staged selection");
+   if(setting.selection.filter(id=>pool.get(id).v2.kind!=="CORRIDOR").length<12)
+    throw Error("Room selection requires at least 12 non-Corridor Rooms");
+   roomDeck[stage]={selection:[...setting.selection]};
+  }else{
+   if(!Array.isArray(setting.exclude)||
+      new Set(setting.exclude).size!==setting.exclude.length||
+      setting.exclude.some(id=>!pool.has(id)))
+    throw Error("Room exclusion must contain unique same-stage Room ids");
+   roomDeck[stage]={exclude:[...setting.exclude]};
+  }
  }
- collections.rooms=collections.rooms.filter(r=>
-  !(roomDeck[r.stage]??[]).includes(r.id));
+ collections.rooms=STAGES.flatMap(stage=>{
+  const selection=roomDeck[stage]?.selection;
+  const available=collections.rooms.filter(r=>r.stage===stage);
+  if(selection){
+   const pool=new Map(available.map(r=>[r.id,r]));
+   return selection.map(id=>pool.get(id));
+  }
+  const excluded=new Set(roomDeck[stage]?.exclude??[]);
+  return available.filter(r=>!excluded.has(r.id));
+ });
  for(const stage of STAGES)
-  if(collections.rooms.filter(c=>c.stage===stage).length<roomCount[stage])
-   throw Error(stage+" has fewer than 12 Rooms after exclusion");
+  if(collections.rooms.filter(c=>c.stage===stage&&
+    c.v2.kind!=="CORRIDOR").length<roomCount[stage])
+   throw Error(stage+" has fewer than 12 non-Corridor Rooms");
  const effects={};
  assertObj(spec.roomEffects??{},"roomEffects");
  for(const [id,definition] of Object.entries(spec.roomEffects??{})){
