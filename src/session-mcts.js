@@ -23,7 +23,7 @@ import {pragmaticSoloAction,pragmaticSoloPreference,
  usefulSoloEquipmentAction} from "./solo-pragmatic.js";
 import {implicitExpeditionHeuristic,implicitUCTExploitation,
  backupImplicit,implicitSelectedMean} from "./mcts-implicit.js";
-import {progressivelyWiden,selectPUCT} from "./mcts-search-controls.js";
+import {progressivelyWiden,selectPUCT,publicActionPriors} from "./mcts-search-controls.js";
 // sampleRolloutDecks allocates fresh arrays for each call. These are owned
 // by the current hypothetical game and can be assigned without copying.
 
@@ -221,9 +221,11 @@ export function searchDecision(session,{budget=100,seed=1,
  simulationPolicy="default",implicitHpScale=1,implicitThreatScale=1,
  softTreeBonus=0.15,
  softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75,
- nodePriors=false,progressiveWidening=false}={}){
+ nodePriors=false,progressiveWidening=false,puctC=0.35}={}){
  if(typeof nodePriors!=="boolean"||typeof progressiveWidening!=="boolean")
   throw Error("MCTS nodePriors/progressiveWidening must be boolean");
+ if(!Number.isFinite(puctC)||puctC<0||puctC>5)
+  throw Error("MCTS PUCT exploration coefficient must be in [0,5]");
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -347,7 +349,8 @@ export function searchDecision(session,{budget=100,seed=1,
  const tree=new Map(),rootKey="root:"+stateHash(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0,rolloutCombatSearches=0;
- let puctSelections=0,widenedNodes=0,widenedSelections=0,
+ let puctSelections=0,informativePriorSelections=0,
+  widenedNodes=0,widenedSelections=0,
   wideningActionsFiltered=0;
  let pragmaticTreeShortcuts=0,pragmaticRolloutShortcuts=0,
   pragmaticSuppressedEquipment=0,pragmaticTreeSoft=0,
@@ -605,6 +608,8 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):
        (pragmaticRule?found.candidates[0]:null);
+      const priors=nodePriors?
+       publicActionPriors(sim,found.candidates,softId):null;
       const active=progressiveWidening?
        progressivelyWiden(node,found.candidates,choiceRng,{
         preferredId:softId,prioritized:nodePriors
@@ -615,13 +620,17 @@ export function searchDecision(session,{budget=100,seed=1,
        if(node.visits===0)widenedNodes++;
       }
       const selected=forcedCandidate||(nodePriors?
-       selectPUCT(node,active,choiceRng,effectiveExploration,{
-        preferredId:softId,totalLegalActions:found.candidates.length,
+       selectPUCT(node,active,choiceRng,puctC,{
+        preferredId:softId,totalLegalActions:priors.weights.size,
+        priorWeights:priors.weights,
         implicitWeight,implicitExploitation:implicitUCTExploitation
        }):
        select(node,active,choiceRng,effectiveExploration,selectionScratch,
         implicitWeight,softId,softTreeBonus,softTreeFirstVisitProbability));
-      if(nodePriors&&!forcedCandidate)puctSelections++;
+      if(nodePriors&&!forcedCandidate){
+       puctSelections++;
+       if(priors.nonUniform)informativePriorSelections++;
+      }
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
@@ -879,7 +888,9 @@ export function searchDecision(session,{budget=100,seed=1,
   ...(rolloutCombatMode!=="random"||implicitWeight>0?
    {exploration:effectiveExploration}:{}),
   ...(nodePriors||progressiveWidening?{
-   searchControls:{nodePriors,progressiveWidening,puctSelections,
+   searchControls:{nodePriors,progressiveWidening,
+    ...(nodePriors?{puctC,informativePriorSelections}:{}),
+    puctSelections,
     widenedNodes,widenedSelections,wideningActionsFiltered}
   }:{}),
   rootActionCount:rootActions.length,choices:decisions,
