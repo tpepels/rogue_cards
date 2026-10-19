@@ -110,7 +110,8 @@ export class ExpeditionState {
   this.pendingRoomFace=null;this.pendingDamage=0;this.pendingDefenseAdv=false;
   this.pendingD20=0;this.pendingD20Modifier=0;this.pendingD20Dis=false;
   this.lastSpent=null;this.lastCostCards=[];this.lastDamage=0;this.lastCause=null;this.pendingReward=0;
-  this.pendingFightHeal=null;this.banished=false;this.poisonRoom=false;this.trapGuard=false;
+  this.pendingFightHeal=null;this._activeMonsterFought=false;
+  this.banished=false;this.poisonRoom=false;this.trapGuard=false;
   this.extraMonsterAdv=false;this.heroFirstAdv=false;this.witBonus=0;
   this.moonLensFace=null;this.redString=null;this._oddDieGuard=false;
   this.potionIdentities=new Map();this.pendingRetainedPotion=null;
@@ -121,6 +122,7 @@ export class ExpeditionState {
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
    mechanicChoices:{},mechanicSuccesses:{},patrolEncounters:0,
    monsterDraws:0,encounterStarts:0,combatStarts:0,
+   postCombatHealTriggers:0,postCombatHealRestored:0,postCombatHealWasted:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
    roomRollBands:{},objectRollBands:{},
    itemPassiveEffects:{},
