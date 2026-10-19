@@ -11,6 +11,7 @@ import {physicalCopies,isPhysicalCard} from "./engine/physical-cards.js";
 import {randomSource} from "./playtest.js";
 import {ROOMS,MONSTERS,OBJECTS,HEROES,VAULT,WARDEN,WARDEN_FURY} from "./tabletop-data.js";
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "./print-expansion.js";
+import {BALANCED_ROOMS} from "./room-balance.js";
 import {EXTRA_MONSTERS} from "./monster-expansion.js";
 import {ODD_ITEMS} from "./item-expansion.js";
 
@@ -30,7 +31,7 @@ const STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
  stage,ROOMS.filter(r=>r.stage===stage)]));
 const ALL_ROOMS=Object.freeze([...ROOMS,...PRINT_ONLY_ROOMS]);
 const EXPANDED_STAGE_ROOMS=Object.fromEntries(STAGES.map(stage=>[
- stage,ALL_ROOMS.filter(r=>r.stage===stage)]));
+ stage,BALANCED_ROOMS.filter(r=>r.stage===stage)]));
 const ROOM_BY_ID=new Map(ROOMS.map(r=>[r.id,r]));
 const EXPANDED_ROOM_BY_ID=new Map(ALL_ROOMS.map(r=>[r.id,r]));
 // Immutable staged catalogues have their own hidden-pile distributions.
@@ -194,7 +195,7 @@ export function prepareRolloutDecks(s,knowledge){
  for(const stage of STAGES){
   // Staged ratio decks may include multiple copies of the same printed ID.
   // The legacy Set-based sampler remains intact for unique-ID decks.
-  if(cardPools?.stageRoomExclusions?.[stage]?.selection){
+  if(s.roomDeckHasDuplicates||cardPools?.stageRoomExclusions?.[stage]?.selection){
    const remaining=s.rooms[stage]?.length||0;
    rooms[stage]=weightedRoomBlueprint(s,stage,stageRooms,roomById,remaining);
    const count=s.monsters[stage]?.length||0;
