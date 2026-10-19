@@ -23,6 +23,7 @@ import {pragmaticSoloAction,pragmaticSoloPreference,
  usefulSoloEquipmentAction} from "./solo-pragmatic.js";
 import {implicitExpeditionHeuristic,implicitUCTExploitation,
  backupImplicit,implicitSelectedMean} from "./mcts-implicit.js";
+import {progressivelyWiden,selectPUCT} from "./mcts-search-controls.js";
 // sampleRolloutDecks allocates fresh arrays for each call. These are owned
 // by the current hypothetical game and can be assigned without copying.
 
@@ -219,7 +220,10 @@ export function searchDecision(session,{budget=100,seed=1,
  implicitWeight=0,implicitHeuristicMode="legacy",
  simulationPolicy="default",implicitHpScale=1,implicitThreatScale=1,
  softTreeBonus=0.15,
- softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75}={}){
+ softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75,
+ nodePriors=false,progressiveWidening=false}={}){
+ if(typeof nodePriors!=="boolean"||typeof progressiveWidening!=="boolean")
+  throw Error("MCTS nodePriors/progressiveWidening must be boolean");
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -343,6 +347,8 @@ export function searchDecision(session,{budget=100,seed=1,
  const tree=new Map(),rootKey="root:"+stateHash(session),rng=randomSource(seed);
  let wins=0,completed=0,incomplete=0,maximumDepth=0;
  let rolloutEquipmentAdvances=0,rolloutCombatSearches=0;
+ let puctSelections=0,widenedNodes=0,widenedSelections=0,
+  wideningActionsFiltered=0;
  let pragmaticTreeShortcuts=0,pragmaticRolloutShortcuts=0,
   pragmaticSuppressedEquipment=0,pragmaticTreeSoft=0,
   pragmaticRolloutSoft=0,pragmaticTreeSoftOffered=0,
@@ -574,7 +580,7 @@ export function searchDecision(session,{budget=100,seed=1,
     }else{
      const key=historyKey+":"+stateHash(sim);
      let node=tree.get(key),selectedEdge;
-     if(!node&&lazyColdEdges){
+     if(!node&&lazyColdEdges&&!nodePriors&&!progressiveWidening){
       // On the first visit all actions are unvisited. The original
       // nodeFor/select therefore draws uniformly from the legal list.
       // Allocate only that chosen edge, and materialize the other zero-
@@ -599,9 +605,23 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):
        (pragmaticRule?found.candidates[0]:null);
-      const selected=forcedCandidate||
-       select(node,found.candidates,choiceRng,effectiveExploration,selectionScratch,
-        implicitWeight,softId,softTreeBonus,softTreeFirstVisitProbability);
+      const active=progressiveWidening?
+       progressivelyWiden(node,found.candidates,choiceRng,{
+        preferredId:softId,prioritized:nodePriors
+       }):found.candidates;
+      if(progressiveWidening&&active.length<found.candidates.length){
+       widenedSelections++;
+       wideningActionsFiltered+=found.candidates.length-active.length;
+       if(node.visits===0)widenedNodes++;
+      }
+      const selected=forcedCandidate||(nodePriors?
+       selectPUCT(node,active,choiceRng,effectiveExploration,{
+        preferredId:softId,totalLegalActions:found.candidates.length,
+        implicitWeight,implicitExploitation:implicitUCTExploitation
+       }):
+       select(node,active,choiceRng,effectiveExploration,selectionScratch,
+        implicitWeight,softId,softTreeBonus,softTreeFirstVisitProbability));
+      if(nodePriors&&!forcedCandidate)puctSelections++;
       choice=selected.action;
       selectedId=selected.id;
       selectedEdge=selected.edge;
@@ -858,6 +878,10 @@ export function searchDecision(session,{budget=100,seed=1,
    implicitHeuristicMode}:{}),
   ...(rolloutCombatMode!=="random"||implicitWeight>0?
    {exploration:effectiveExploration}:{}),
+  ...(nodePriors||progressiveWidening?{
+   searchControls:{nodePriors,progressiveWidening,puctSelections,
+    widenedNodes,widenedSelections,wideningActionsFiltered}
+  }:{}),
   rootActionCount:rootActions.length,choices:decisions,
   recommended:chosen?.action??null,
   actionCoverage:{phaseOpportunities,phaseSelections,
