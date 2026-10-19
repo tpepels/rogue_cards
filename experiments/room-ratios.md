@@ -61,7 +61,7 @@ node scripts/study-balance-hypotheses.mjs \
   --suite room-ratios --variant-limit 3 --finalists 3 \
   --screen-repeats 8 --confirm-repeats 16 \
   --workers 8 --minutes 600 \
-  --out results/room-ratios-v1
+  --out results/room-ratios-v2
 ```
 
 Use the same command and output directory to resume an incomplete
@@ -78,3 +78,12 @@ Success targets: 16–20 ordinary encounters per 36 counted Rooms,
 55–70% encounter-to-fight conversion, ~40% solo wins and ~50% of runs
 reaching the Vault. Simulated win rates do not directly represent
 human playtest enjoyment or expedition duration.
+
+## Repeat-copy rollout accounting
+
+Staged Room selections may repeat a printed ID. The fair MCTS sampler
+subtracts public Room-visit counts, public discards and held paths one
+physical copy at a time, then reserves shown/top and known/bottom cards.
+Canonical unique-ID decks use their original public sampler.
+A previous 0-trial `results/room-ratios-v1` manifest was created before this
+fix; use the `v2` output path instead of resuming against another Git revision.
