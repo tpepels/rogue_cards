@@ -28,6 +28,8 @@ export const MECHANIC_OPTIONS=Object.freeze({
  retreat:["none","item","wit"],
  morale:["none","half","quarter"],
  killReward:["canonical","draw","heal"],
+ // Diagnostic-only healing after a won regional combat (not printable rules).
+ postCombatHeal:[0,1,2,3,4,5,6,7,8,10],
  wardenTactic:["none","brace","interrupt","breach"]
 });
 const validateMechanics=source=>{
