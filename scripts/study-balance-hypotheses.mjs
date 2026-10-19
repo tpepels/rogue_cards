@@ -111,9 +111,20 @@ const healSummary=rows=>{
    dest[key]+=src?.[key]??0;
  };
  const opportunityMaps={roomOptions:{},itemOpportunities:{}};
+ const healingItemIds=["ex-bandages","ex-rations","odd-thorn-tonic"];
+ const itemStats=Object.fromEntries(healingItemIds.map(id=>
+  [id,{acquired:0,uses:0,optionEvents:0,offered:0,restored:0,wasted:0}]));
  for(const row of rows){
   const healing=row.finalMetrics?.healing??{};
   merge(aggregate.total,healing.total);
+  for(const id of healingItemIds){
+   const cell=itemStats[id];
+   cell.acquired+=row.finalMetrics?.objectAcquisitions?.[id]??0;
+   cell.uses+=row.finalMetrics?.itemUses?.[id]?.total??0;
+   cell.optionEvents+=row.finalMetrics?.itemOpportunities?.[id]?.total??0;
+   for(const metric of ["offered","restored","wasted"])
+    cell[metric]+=healing.bySource?.["item:"+id]?.[metric]??0;
+  }
   for(const group of ["bySource","byCategory","byStage"])
    for(const [id,cell] of Object.entries(healing[group]??{}))
     merge(aggregate[group][id]??=zero(),cell);
@@ -132,7 +143,7 @@ const healSummary=rows=>{
  }
  return {mean:Object.fromEntries(["attempts","offered","restored","wasted"]
   .map(key=>[key,rows.length?aggregate.total[key]/rows.length:null])),
-  totals:aggregate,opportunities:opportunityMaps};
+  totals:aggregate,opportunities:opportunityMaps,itemStats};
 };
 const health=(rows)=>{
  const n=rows.length;
@@ -371,8 +382,19 @@ function markdown(result){
      num(row.measured.healing.mean.offered)+" | "+
      num(row.measured.healing.mean.restored)+" | "+
      num(row.measured.healing.mean.wasted)+" |");
-   lines.push("","Full healing provenance appears in summary.json "+
-    "(healing.totals.bySource/byCategory/byStage and opportunities).");
+   lines.push("","### Individual Item contribution per expedition","",
+    "| Variant | Bandages restored | Rations restored | Thorn Tonic restored | Bandages used | Rations used | Tonic used |",
+    "|---|---:|---:|---:|---:|---:|---:|");
+   for(const row of [{id:"canonical",measured:phase.baseline},...phase.ranked]){
+    const stats=row.measured.healing.itemStats,n=row.measured.n||1;
+    const ids=["ex-bandages","ex-rations","odd-thorn-tonic"];
+    lines.push("| "+row.id+" | "+
+     ids.map(id=>num(stats[id].restored/n)).join(" | ")+" | "+
+     ids.map(id=>num(stats[id].uses/n)).join(" | ")+" |");
+   }
+   lines.push("","Full HP source, stage, cap-waste and availability figures "+
+    "appear in summary.json (healing.totals and healing.itemStats). "+
+    "Item optionEvents count observations, not unique decisions.");
   }
   if(result.suite==="combat-healing"){
    lines.push("","### Effective healing per expedition","",
