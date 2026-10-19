@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {randomSource} from "../src/engine/random.js";
-import {MCTS_SEARCH_ARMS,puctPrior,progressivelyWiden,selectPUCT}
+import {MCTS_SEARCH_ARMS,puctPrior,progressivelyWiden,selectPUCT,
+ publicActionPriors}
  from "../src/mcts-search-controls.js";
 import {createDecisionSession,sessionActions,observeSession}
  from "../src/engine/decision-session.js";
@@ -21,6 +22,40 @@ test("PUCT priors are normalized and favor preferred actions",()=>{
  assert.ok(p[3]>p[4]);
  assert.equal(selectPUCT({visits:0},actions,randomSource(1),0.2,
   {preferredId:"action-3",totalLegalActions:20}).id,"action-3");
+});
+test("explicit priors include missing-HP Item and REST decisions",()=>{
+ const session={phase:"between-rooms",heroIndex:0,
+  state:{heroes:[{hp:3,card:{hp:12}}],room:null}};
+ const healing=[
+  {id:"rations",action:{kind:"item-trigger",mode:"healing-tool"}},
+  {id:"continue",action:{kind:"continue"}},
+  {id:"equip",action:{kind:"equip"}}
+ ];
+ const a=publicActionPriors(session,healing);
+ assert.equal(a.nonUniform,true);
+ assert.ok(a.weights.get("rations")>a.weights.get("continue"));
+ assert.ok(Math.abs([...a.weights.values()].reduce((n,x)=>n+x,0)-1)<1e-12);
+ session.state.heroes[0].hp=12;
+ const healthy=publicActionPriors(session,healing);
+ assert.ok(healthy.weights.get("rations")<healthy.weights.get("continue"));
+ session.state.heroes[0].hp=3;
+ session.phase="room";
+ session.state.room={id:"ex-u-coal-store"};
+ const roomOptions=[
+  {id:"scavenge",action:{kind:"room-choice",index:0}},
+  {id:"rest",action:{kind:"room-choice",index:1}}
+ ];
+ const rested=publicActionPriors(session,roomOptions);
+ assert.ok(rested.weights.get("rest")>rested.weights.get("scavenge"));
+});
+test("PUCT exploration is tunable and rejects invalid values",()=>{
+ const session=createDecisionSession({seed:7281,heroes:["warrior"],
+  gameMode:"everything-goes"});
+ assert.throws(()=>searchDecision(session,{budget:1,nodePriors:true,puctC:-1}),
+  /PUCT exploration/);
+ const r=searchDecision(session,{budget:3,seed:1234,strictTerminal:false,
+  maxSteps:3000,treeMode:"frontier",nodePriors:true,puctC:0.55});
+ assert.equal(r.searchControls.puctC,0.55);
 });
 test("widening expands monotonically but never narrows small action sets",()=>{
  const node={visits:0},rng=randomSource(2);
