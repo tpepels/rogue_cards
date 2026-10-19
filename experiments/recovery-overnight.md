@@ -13,19 +13,20 @@ The previous study completed 320 screening and 640 confirmation runs. With the o
 
 For any **complete** run, confirm that summed `bySource`, `byCategory` and `byStage` totals equal the `total`. `attempts` are resolutions, `offered` is numeric HP (including actual d6 results), `restored` is the effective increase before reaching the printed Hero cap, and `wasted=offered-restored`. The source ledger is *not* an estimate based on opcode counts.
 
-## Hypotheses (26 physical + one diagnostic)
+## Hypotheses (50 physical + one diagnostic)
 
-Three variables, evaluated alone and in combinations:
+Four variables, evaluated alone and in combinations. **Both the number of Items and the amount of HP per Item are independent experimental variables:**
 
 | Dimension | Current | Test ranges |
 |---|---|---|
-| Healing consumables | Bandages 3, Rations 3, Thorn Tonic 2 copies | 5/4/3, 9/6/5, 14/9/7, 20/12/10 |
+| Healing Item copies | Bandages 3, Rations 3, Thorn Tonic 2 | 5/4/3, 9/6/5, 14/9/7, 20/12/10 |
+| Healing HP per Item | Bandages d6; Rations 2; Thorn Tonic 3 | Mild 4/3/4, strong 6/4/5, high 8/6/7, stochastic d6+2/4/5; plus individually changed Bandages, Rations and Tonic |
 | Existing REST choices | Coal Store 3 HP (Item cost), Barracks 4 HP (Item cost), Watchpost 2 HP (free) | 5/6/4, 7/8/6, 9/10/8, 10/10/10 |
 | Existing Monster DEFEAT rewards | Original individual printed reward only | +2, +3 or +d6 HP attached to individual non-healing Monsters, optionally only UPPER, UPPER+MIDDLE, or all stages |
 
 All values are *proposed physical card values*, not a new universal rule. Every Monster retains its original DEFEAT reward. No new card IDs, extra Room or Corridor copies, alternative action types or simulated hidden healing are introduced.
 
-The 26 candidates include pure intervention arms and supply × REST, supply × DEFEAT, REST × DEFEAT and three-way interactions. Strong/high-copy arms are **exploratory upper bounds**, not an endorsement of printing an enormous Item deck. The `recovery-diagnostic-five` arm repeats the numerical **unprintable** +5 reference.
+The 50 candidates include original single-path and multi-path recovery arms, **seven standalone Item-strength tests, 12 crossed Item quantity × strength cells**, and five Item-strength combinations with printed Room/Monster healing. In particular, stronger Items with original counts and additional Item copies at original strength are distinguishable from stronger *and* more numerous Items. The Bandages d6+2 variant preserves variability, while fixed HP variants test reliability. Strong/high-copy arms are **exploratory upper bounds**, not an endorsement of printing an enormous Item deck. The `recovery-diagnostic-five` arm repeats the numerical **unprintable** +5 reference.
 
 ## Overnight comparison
 
@@ -46,7 +47,7 @@ node scripts/study-balance-hypotheses.mjs \
   --out results/recovery-overnight-v1
 ~~~
 
-At these settings: **896 screening** expeditions (27 hypotheses + control × 8 Heroes × 4) and **1664 independent confirmation** expeditions (12 finalists + control × 8 × 16), **2560** scheduled total if the screen and confirmation both finish. The study saves individual raw trials in `trials.ndjson`, the exact code/agent/candidate manifest in `manifest.json`, statistics in `summary.json` and the review table in `comparison.md`. It checkpoints incrementally and resumes via the **identical command, options, Git revision and output directory**.
+At these settings: **1664 screening** expeditions (51 hypotheses + control × 8 Heroes × 4) and **1664 independent confirmation** expeditions (12 finalists + control × 8 × 16), **3328** scheduled total. The fixed set of confirmation finalists always reserves representation for Item-HP alone, the Item quantity × HP grid, and Item-HP crossed with REST, Monster rewards and both. A 12-hour limit may stop the process early; it safely checkpoints for exact revision/command resume. The study saves individual raw trials in `trials.ndjson`, the exact code/agent/candidate manifest in `manifest.json`, statistics in `summary.json` and the review table in `comparison.md`. It checkpoints incrementally and resumes via the **identical command, options, Git revision and output directory**.
 
 To verify the plan without playing:
 
@@ -76,7 +77,10 @@ Screening favors similarity to the earlier reference in (i) overall wins near 36
 
 - `src/engine/expedition-state.js` — canonical heal ledger.
 - `src/engine/combat-outcomes.js`, `src/engine/index.js`, `src/odd-item-effects.js` — direct healing source attribution.
-- `src/staging/recovery-overnight-hypotheses.js` — 26 printed candidates + 1 numerical reference.
+- `src/item-healing.js` — validates physical Item HP values and resolves numeric/d6 effects.
+- `src/staging/catalogue.js` — stages Item print text and executable healing value together, without canonical mutation.
+- `src/engine/index.js`, `src/odd-item-effects.js` — use the staged Item HP amount for actual healing.
+- `src/staging/recovery-overnight-hypotheses.js` — 50 printed candidates + 1 numerical reference.
 - `scripts/study-balance-hypotheses.mjs` — resumable `--suite recovery-overnight`, detailed per-source accounting.
 - `tests/recovery-overnight.test.mjs` — Item/Room/Monster attribution, HP waste, deep-fork independence, full study plan.
 - `.github/workflows/recovery-overnight-smoke.yml` — targeted tests, dry-run, and real-game smoke.
@@ -86,7 +90,7 @@ Screening favors similarity to the earlier reference in (i) overall wins near 36
 - [x] Extract confirmed weakness in previous printed recovery study.
 - [x] Define explicit actual healing (offered/restored/wasted) and source accounting.
 - [x] Instrument central health mutation plus representative direct mechanic paths.
-- [x] Define 26 mixed testable hypotheses and +5 numeric comparator.
+- [x] Define 50 mixed printable healing hypotheses and +5 numeric comparator, including Item dose × quantity.
 - [x] Add strict regression tests and verify syntax.
 - [ ] Complete real CI smoke on latest revision.
 - [ ] Run full overnight screen and independent confirmation.
