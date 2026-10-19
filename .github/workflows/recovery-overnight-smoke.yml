@@ -25,7 +25,7 @@ jobs:
           node scripts/study-balance-hypotheses.mjs \
             --suite recovery-overnight --finalists 12 \
             --screen-repeats 4 --confirm-repeats 16 --dry-run
-      - name: Smoke the actual canonical state machine and resume format
+      - name: Smoke canonical gameplay and strict per-source healing ledger
         run: |
           node scripts/study-balance-hypotheses.mjs \
             --suite recovery-overnight --variant-limit 4 --finalists 3 \
