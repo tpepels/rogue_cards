@@ -198,7 +198,18 @@ export function legalCombatActions(s,heroIndex){
  if(!s.monster||s.monsterHP<=0)return [];
  const hero=s.heroes[heroIndex];
  if(!hero||hero.hp<=0)return [];
+ const mechanics=s.cardPools?.mechanics??{};
+ const warden=s.monster.stage==="FINAL";
+ const tactic={brace:"warden-brace",interrupt:"warden-interrupt",
+  breach:"warden-breach"}[mechanics.wardenTactic];
  return [{kind:"attack",heroIndex},{kind:"pass",heroIndex},
+   ...(!warden&&mechanics.retreat==="item"&&s.discardable()?
+    [{kind:"retreat-item",heroIndex}]:[]),
+   ...(!warden&&mechanics.retreat==="wit"?
+    [{kind:"retreat-wit",heroIndex}]:[]),
+   ...(warden&&tactic&&
+    (tactic!=="warden-interrupt"||s.discardable())?
+    [{kind:tactic,heroIndex}]:[]),
    ...(!["sentinel","warden","warden-fury"].includes(s.monster.id)&&s.elberethAttempts<2?
     [{kind:"elbereth",heroIndex,mode:"ward"},
      ...(s.discardable()?[{kind:"elbereth",heroIndex,mode:"flee"}]:[])]:[]),
@@ -386,7 +397,11 @@ export function legalActions(s,{phase=null,heroIndex=0,roomId=null,
     h.hp>0&&h.inventory.some(c=>c.v2.kind==="POTION")):
    ["wraith","cultist"].includes(m)?s.anyEquippedTag("CURSED"):
    ["bat","wisp"].includes(m);
-  return [{phase,kind:"fight"},...(canPay?[{phase,kind:"parley"}]:[])];
+  const mode=s.cardPools?.mechanics?.negotiation??"canonical";
+  return [{phase,kind:"fight"},...(canPay?[{phase,kind:"parley"}]:[]),
+   ...(["wit","both"].includes(mode)?[{phase,kind:"negotiate"}]:[]),
+   ...(["item","both"].includes(mode)&&s.discardable()?
+     [{phase,kind:"bribe"}]:[])];
  }
  if(phase==="vault"){
   if(s.room?.stage!=="FINAL"||!s.alive())return [];
