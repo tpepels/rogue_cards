@@ -4,7 +4,7 @@
 import {WARDEN,WARDEN_FURY} from "../tabletop-data.js";
 export function beginWarden(s){
  s.monster=s.cardPools?.warden??WARDEN;
- s.monsterHP=Math.max(11,s.monster.hp-s.vaultModifiers.wardenDamage);
+ s.monsterHP=Math.max((s.cardPools?.wardenFury??WARDEN_FURY).hp+1,s.monster.hp-s.vaultModifiers.wardenDamage);
  s.monsterFirstAttackPending=true;
  if(s.vaultModifiers.wardenFirstAdv)s.monsterAdv=true;
  if(s.vaultModifiers.heroFirstAdv)s.heroFirstAdv=true;
