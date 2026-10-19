@@ -370,6 +370,7 @@ All of the above are **proposed interfaces**, not commands available in today's 
 | Date | Change | Evidence / next step |
 |---|---|---|
 | 2026-10-19 | Roadmap created. Phase 0 next. | Existing engine/MCTS/staging/study pipeline provides a starting point; no unified autonomous optimizer exists yet. |
+| 2026-10-19 | Pre-UBA printable recovery experiments staged using existing DEFEAT, REST, and Item mechanics. | See `experiments/printed-recovery.md`. +5 remains a numerical diagnostic benchmark; canonical cards unchanged. Complete the study before starting Phase 0. |
 | 2026-10-19 | Balanced B selected as the current physical Room baseline. | Must unify the default staging baseline with gameplay/print; see Phase 0. |
 | 2026-10-19 | Diagnostic after-fight healing study used to estimate required recovery capacity. | **Not** permission to add automatic healing to the final game; use findings to redesign printed rewards/choices. |
 
