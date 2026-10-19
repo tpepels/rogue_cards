@@ -47,9 +47,14 @@ test("canonical Balanced B is 48 ordinary Rooms and six Corridors",()=>{
  const preset=PRESETS.find(p=>p.id==="balanced");
  assert.ok(preset);
  const physical=physicalDeck(selectionForPreset("balanced"));
- assert.equal(physical.filter(c=>c.type==="room").length,54);
+ const regional=physical.filter(c=>c.type==="room"&&
+  ["UPPER","MIDDLE","DEEP"].includes(c.stage));
+ assert.equal(regional.length,54);
+ // The fixed Amulet Vault is also type="room", but stage FINAL.
+ assert.equal(physical.filter(c=>c.type==="room").length,55);
+ assert.equal(physical.filter(c=>c.id==="vault"&&c.stage==="FINAL").length,1);
  for(const [id,n] of Object.entries(BALANCED_ROOM_COUNTS))
-  assert.equal(physical.filter(c=>c.type==="room"&&c.id===id).length,n);
+  assert.equal(regional.filter(c=>c.id===id).length,n);
 });
 test("healing hypotheses keep canonical B deck and only vary staged HP grant",()=>{
  assert.deepEqual(POST_COMBAT_HEAL_DOSES,[1,2,3,4,5,6,7,8,10]);
