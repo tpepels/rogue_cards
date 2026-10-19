@@ -69,7 +69,16 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
   s.metrics.kills++;
   s.metrics.monsterKillsById[m.id]=(s.metrics.monsterKillsById[m.id]||0)+1;
   // Apply only the reward actually printed on the defeated Monster.
-  if(m.stage!=="FINAL"&&s.alive())applyMonsterDefeat(s,m);
+  if(m.stage!=="FINAL"&&s.alive()){
+   applyMonsterDefeat(s,m);
+   const reward=s.cardPools?.mechanics?.killReward;
+   if(reward==="draw"&&s.alive())s.draw();
+   else if(reward==="heal"&&s.alive())s.healParty(2);
+   if(reward&&reward!=="canonical"){
+    const name="kill-reward:"+reward;
+    s.metrics.mechanicChoices[name]=(s.metrics.mechanicChoices[name]??0)+1;
+   }
+  }
  }
  const stolen=s.stashedMonsterItems||[];
  if(stolen.length){
