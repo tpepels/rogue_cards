@@ -65,13 +65,15 @@ export function publicActionPriors(session,candidates,preferredId=null){
 }
 
 export function progressivelyWiden(node,candidates,rng,{
- preferredId=null,prioritized=false,k=2,alpha=0.55
+ preferredId=null,prioritized=false,priorWeights=null,k=2,alpha=0.55
 }={}){
  if(candidates.length<=3)return candidates;
  if(!Number.isFinite(k)||k<1||!Number.isFinite(alpha)||
     alpha<=0||alpha>1)throw Error("Invalid progressive widening parameters");
  if(!node.wideningOrder){
   const ordered=rng.shuffle(candidates).map(c=>c.id);
+  if(prioritized&&priorWeights)
+   ordered.sort((a,b)=>(priorWeights.get(b)??0)-(priorWeights.get(a)??0));
   if(prioritized&&preferredId){
    const i=ordered.indexOf(preferredId);
    if(i>=0){ordered.splice(i,1);ordered.unshift(preferredId);}
