@@ -3,6 +3,7 @@ import {HEROES,ROOMS,MONSTERS,OBJECTS,VAULT,WARDEN_CARDS} from "./tabletop-data.
 import {PRINT_ONLY_ROOMS,PRINT_ONLY_ITEMS} from "./print-expansion.js";
 import {EXTRA_MONSTERS} from "./monster-expansion.js";
 import {ODD_ITEMS} from "./item-expansion.js";
+import {BALANCED_ROOMS,BALANCED_ROOM_COUNTS} from "./room-balance.js";
 export const ALL_ROOMS=Object.freeze([...ROOMS,...PRINT_ONLY_ROOMS]);
 export const ALL_MONSTERS=Object.freeze([...MONSTERS,...EXTRA_MONSTERS]);
 export const ALL_OBJECTS=Object.freeze([...OBJECTS,...PRINT_ONLY_ITEMS,...ODD_ITEMS]);
@@ -23,8 +24,11 @@ const STRANGE=[...rooms("UPPER","ex-u-guard-cell ex-u-slick-passage ex-u-coal-st
 const BASICS=items("ex-bandages ex-lockpicks ex-rations ex-dagger ex-mace ex-spear ex-jerkin ex-helm ex-buckler key rope torch crowbar chalk needle sword staff mail shield spore-jar coin scroll-flame scroll-frost scroll-unlock scroll-reveal wand-sparks wand-frost antidote smoky amber milky mushroom fizzy");
 const MAGICAL=items("ex-bandages ex-lockpicks ex-rations ex-dagger ex-mace ex-spear ex-jerkin ex-helm ex-buckler key rope torch crowbar chalk needle sword staff mail shield spore-jar coin mirror skull dog raven moth scroll-flame scroll-frost scroll-lightning scroll-unlock scroll-reveal scroll-banish scroll-mischief scroll-last wand-sparks wand-undo wand-morph wand-turn wand-frost ring-luck ring-eye ring-bargain antidote smoky milky amber fizzy mushroom midnight laughing");
 const EVERYWHERE=SELECTABLE.map(cardKey);
+const BALANCED_SELECTION=[...new Set(BALANCED_ROOMS.map(cardKey)),
+ ...ALL_MONSTERS.map(cardKey),...ALL_OBJECTS.map(cardKey)];
 const CLASSIC_MONSTERS=monsters("rat goblin bat troll eye mold wraith rust sentinel");
 export const PRESETS=Object.freeze([
+ {id:"balanced",name:"Balanced Crawl",subtitle:"The standard combat-focused 36-Room expedition.",description:"The tested B distribution: 48 non-Corridor Room copies, six Corridors, all Monsters and Objects. Rooms retain their printed effects; several Rooms have extra copies.",roomCount:54,selection:Object.freeze(BALANCED_SELECTION),roomCopies:BALANCED_ROOM_COUNTS},
  {id:"classic",name:"Classic Crawl",subtitle:"Doors, traps, loot, monsters.",description:"Twelve Rooms per depth. No Pacts. Straightforward Rooms and practical gear, with enough magic to attempt the Vault.",roomCount:36,selection:Object.freeze([...SIMPLE,...BASICS,...CLASSIC_MONSTERS])},
  {id:"strange",name:"Strange Paths",subtitle:"A normal dungeon with occasional bargains.",description:"Thirteen Rooms per depth, six possible Pacts and a broader mix of equipment and spells. The recommended starting experience.",roomCount:39,selection:Object.freeze([...STRANGE,...MAGICAL,...MONSTERS.map(cardKey)])},
  {id:"chaos",name:"Everything Goes",subtitle:"Every oddity, every possible pact.",description:"All canonical cards plus the ordinary expansion, including every route, curse, bargain and unusual combination.",roomCount:ALL_ROOMS.length,selection:Object.freeze(EVERYWHERE)}
@@ -48,16 +52,22 @@ export const selectableByKey=key=>pool.get(key)||null;
 export const selectionForPreset=id=>{
  const preset=PRESETS.find(x=>x.id===id);
  if(!preset)throw new Error("Unknown deck: "+id);
- return new Set(preset.selection);
+ const chosen=new Set(preset.selection);
+ if(preset.roomCopies)chosen.roomCopies=preset.roomCopies;
+ return chosen;
 };
 export function physicalDeck(selection){
  const wanted=selection instanceof Set?selection:new Set(selection);
  const chosen=SELECTABLE.filter(c=>wanted.has(cardKey(c)));
- return [...FIXED_CARDS,...chosen].flatMap(c=>Array.from({length:c.copies},()=>c));
+ return [...FIXED_CARDS,...chosen].flatMap(c=>Array.from({length:
+   c.type==="room"&&wanted.roomCopies?
+    (wanted.roomCopies[c.id]??c.copies):c.copies},()=>c));
 }
 export function selectionSummary(selection){
  const chosen=SELECTABLE.filter(c=>selection.has(cardKey(c)));
- const counts=Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>[stage,chosen.filter(c=>c.type==="room"&&c.stage===stage).length]));
+ const counts=Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>[
+  stage,chosen.filter(c=>c.type==="room"&&c.stage===stage).
+   reduce((n,c)=>n+(selection.roomCopies?.[c.id]??c.copies),0)]));
  const mobs=Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>[stage,chosen.filter(c=>c.type==="monster"&&c.stage===stage).length]));
  const objects=chosen.filter(c=>c.type==="item"||c.type==="potion");
  const starters=HEROES.filter(h=>!objects.some(o=>o.id===h.v2.starter)).map(h=>h.title);
