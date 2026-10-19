@@ -284,7 +284,10 @@ export function phaseSummary(records,phase,manifest,selected){
     deckComposition:{canonical:manifest.canonicalDeck,
      staging:manifest.stagedDecks[spec.id]},
     experimentChanges:{cards:spec.cards??[],mechanics:spec.mechanics??{},
-     roomEffects:spec.roomEffects??{},roomDeck:spec.roomDeck??{}}});
+     roomEffects:spec.roomEffects??{},roomDeck:spec.roomDeck??{},
+     monsterHealing:spec.monsterHealing??{},
+     roomRestHealing:spec.roomRestHealing??{},
+     itemHealing:spec.itemHealing??{}}});
   output.push({id:spec.id,description:spec.description,
    score:evalScore(baseline,measurable,manifest.suite),
    family:manifest.suite==="mechanics"?mechanicalFamily(spec.id):
@@ -547,9 +550,11 @@ async function main(){
    const selected=hypotheses.some(x=>x.id===RECOVERY_OVERNIGHT_REFERENCE_ID)?
     [RECOVERY_OVERNIGHT_REFERENCE_ID]:[];
    const families=["recovery-supply-","recovery-rest-",
-    "recovery-defeat-","recovery-supply-rest-",
-    "recovery-rest-defeat-","recovery-supply-defeat-",
-    "recovery-hybrid-"];
+    "recovery-defeat-","recovery-supply-defeat-",
+    "recovery-hybrid-",
+    "recovery-item-values-","recovery-item-quantity-",
+    "recovery-item-value-rest-","recovery-item-value-defeat-",
+    "recovery-item-value-hybrid-"];
    for(const prefix of families){
     const winner=screen.ranked.find(x=>x.id.startsWith(prefix));
     if(winner&&!selected.includes(winner.id))selected.push(winner.id);
