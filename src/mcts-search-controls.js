@@ -3,6 +3,8 @@
  * Keep the default UCT path in session-mcts.js unchanged.
  * No game state, hidden deck, legal action, or canonical rule is modified.
  */
+import {ROOM_EFFECTS} from "./room-effect-model.js";
+
 export const MCTS_SEARCH_ARMS=Object.freeze([
  Object.freeze({id:"baseline",nodePriors:false,progressiveWidening:false}),
  Object.freeze({id:"priors",nodePriors:true,progressiveWidening:false}),
@@ -16,6 +18,50 @@ export function puctPrior(candidateId,preferredId,total){
  // The preferred move gets three times the weight of each alternative.
  if(!preferredId||total===1)return 1/total;
  return (candidateId===preferredId?3:1)/(total+2);
+}
+
+/**
+ * Prior over *all* currently legal public actions. Biases are deliberately
+ * small, explicit, and do not consult future dice, private piles or outcomes.
+ * Unlike pragmaticSoloPreference, this covers healing / Room decisions too.
+ * These are test-policy hints, NOT additional card effects or hard actions.
+ */
+export function publicActionPriors(session,candidates,preferredId=null){
+ const s=session.state,h=s.heroes[session.heroIndex>=0?
+  session.heroIndex:0];
+ const hp=h?.hp??0,maxHp=Math.max(1,h?.card.hp??1),
+  missing=Math.max(0,maxHp-hp),fraction=missing/maxHp;
+ const room=s.room,roomEffects=room?
+  (s.cardPools?.roomEffects?.[room.id]??ROOM_EFFECTS[room.id]):null;
+ const weights=new Map();
+ for(const candidate of candidates){
+  const a=candidate.action,id=candidate.id;
+  let weight=1;
+  if(a.kind==="item-trigger"&&a.mode==="healing-tool")
+   weight=missing<2?0.35:1+2.0*fraction;
+  else if(a.kind==="item-trigger"&&a.mode==="drink")
+   weight=missing<2?0.7:1+0.45*fraction;
+  else if(a.kind==="shrine-item"&&a.mode==="heal")
+   weight=missing<2?0.4:1+1.5*fraction;
+  else if(a.kind==="room-choice"&&roomEffects){
+   const ops=roomEffects.choices[a.index]??[];
+   if(ops.some(op=>/^HEAL(?::|$)/.test(op)))
+    weight=missing<2?0.55:1+1.2*fraction;
+   if(ops.some(op=>/^COST:/.test(op)))
+    weight*=0.8;
+  }else if(session.phase==="combat"&&a.kind==="attack"&&hp>2)
+   weight=1.3;
+  else if(session.phase==="combat"&&a.kind==="pass"&&hp>2)
+   weight=0.55;
+  if(id===preferredId)weight*=3;
+  weights.set(id,weight);
+ }
+ const sum=[...weights.values()].reduce((n,x)=>n+x,0);
+ if(!(sum>0))throw Error("Invalid public-action prior normalization");
+ for(const [id,weight] of weights)
+  weights.set(id,weight/sum);
+ const mass=[...weights.values()];
+ return {weights,nonUniform:Math.max(...mass)-Math.min(...mass)>1e-10};
 }
 
 export function progressivelyWiden(node,candidates,rng,{
@@ -42,7 +88,7 @@ export function progressivelyWiden(node,candidates,rng,{
 
 export function selectPUCT(node,candidates,rng,c,{
  preferredId=null,totalLegalActions=candidates.length,
- implicitWeight=0,implicitExploitation=null
+ implicitWeight=0,implicitExploitation=null,priorWeights=null
 }={}){
  if(!candidates.length)throw Error("PUCT has no active candidates");
  if(!Number.isFinite(c)||c<0)throw Error("Invalid PUCT exploration constant");
@@ -55,7 +101,8 @@ export function selectPUCT(node,candidates,rng,c,{
     implicitExploitation(edge,implicitWeight):edge.wins/edge.visits):0.5;
   // Multiplying by action count retains a comparable exploration scale
   // when a large action set's uniform P would otherwise be tiny.
-  const prior=puctPrior(candidate.id,preferredId,totalLegalActions);
+  const prior=priorWeights?.get(candidate.id)??
+   puctPrior(candidate.id,preferredId,totalLegalActions);
   const score=q+c*totalLegalActions*prior*Math.sqrt(n)/(1+edge.visits);
   if(score>best+1e-12){best=score;tied=[candidate];}
   else if(Math.abs(score-best)<=1e-12)tied.push(candidate);
