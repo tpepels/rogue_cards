@@ -17,6 +17,8 @@ import {compileStaging,canonicalStagingCatalogue}
 import {balanceHypotheses} from "../src/staging/balance-hypotheses.js";
 import {nextEncounterHypotheses,independentWardenHypotheses}
  from "../src/staging/next-balance-hypotheses.js";
+import {mechanicalPrototypes,mechanicalFamily}
+ from "../src/staging/mechanical-prototypes.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -66,8 +68,8 @@ export function balanceStudyArgs(argv){
  const confirmRepeats=num("--confirm-repeats",smoke?1:6,1,500);
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
- if(!["original","encounters","warden"].includes(suite))
-  throw Error("--suite must be original, encounters or warden");
+ if(!["original","encounters","warden","mechanics"].includes(suite))
+  throw Error("--suite must be original, encounters, warden or mechanics");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:4,1,12),
@@ -88,6 +90,14 @@ const health=(rows)=>{
  const full=rows.filter(r=>r.hasAll36===1);
  const vault=rows.filter(r=>r.vaultReached===1);
  const warden=rows.filter(r=>(r.finalMetrics?.monsterVisits?.warden??0)>0);
+ const mechanicTotals={};
+ const mechanismSuccess={};
+ for(const row of rows){
+  for(const [kind,count] of Object.entries(row.finalMetrics?.mechanicChoices??{}))
+   mechanicTotals[kind]=(mechanicTotals[kind]??0)+count;
+  for(const [kind,count] of Object.entries(row.finalMetrics?.mechanicSuccesses??{}))
+   mechanismSuccess[kind]=(mechanismSuccess[kind]??0)+count;
+ }
  const fury=rows.filter(r=>(r.finalMetrics?.monsterVisits?.["warden-fury"]??0)>0);
  const wins=x=>x.filter(r=>r.won===1).length;
  return {n,mean:Object.fromEntries(METRICS.map(k=>[k,avg(rows,k)])),
@@ -95,6 +105,9 @@ const health=(rows)=>{
   encountersPer36Equivalent:rooms?36*encounters/rooms:null,
   fightConversion:encounters?battles/encounters:null,
   winGivenVault:vault.length?wins(vault)/vault.length:null,
+  mechanicTotals,mechanicSuccesses:mechanismSuccess,
+  patrolEncounters:rows.reduce((n,r)=>n+(r.finalMetrics?.patrolEncounters??0),0),
+  meanMechanicDecisions:n?Object.values(mechanicTotals).reduce((a,b)=>a+b,0)/n:0,
   wardenEngagement:{n:warden.length,winRate:warden.length?
    wins(warden)/warden.length:null,furyEntered:fury.length,
    deaths:warden.filter(r=>r.won!==1).length},
@@ -113,6 +126,18 @@ const healthShallow=rows=>({n:rows.length,
  rooms:avg(rows,"roomsCleared"),encounters:avg(rows,"ordinaryEncounters"),
  fights:avg(rows,"ordinaryFights"),hp:avg(rows,"remainingHp")});
 const evalScore=(baseline,cell,suite="original")=>{
+ if(suite==="mechanics"){
+  if(!cell.n||!baseline.n)return -Infinity;
+  // Seek encounter density AND genuinely chosen alternative actions;
+  // penalize attrition separately. Always confirm on fresh seeds.
+  const density=cell.encounterPerRoom??0;
+  const meaningful=Math.min(2,cell.meanMechanicDecisions)/2;
+  const winDrop=Math.max(0,baseline.mean.won-cell.mean.won);
+  const vaultDrop=Math.max(0,baseline.mean.vaultReached-cell.mean.vaultReached);
+  const roomDrop=Math.max(0,baseline.mean.roomsCleared-cell.mean.roomsCleared)/36;
+  return -2*Math.abs(density-0.5)+0.25*meaningful-
+    1.75*winDrop-1.25*vaultDrop-roomDrop;
+ }
  if(suite==="warden"){
   if(!cell.n||!baseline.n)return -Infinity;
   // Full expeditions: changing Warden-only stats should improve finish
@@ -161,10 +186,12 @@ export function phaseSummary(records,phase,manifest,selected){
      manifest.screenRepeats:manifest.confirmRepeats,
     deckComposition:{canonical:manifest.canonicalDeck,
      staging:manifest.stagedDecks[spec.id]},
-    experimentChanges:{cards:spec.cards??[],
+    experimentChanges:{cards:spec.cards??[],mechanics:spec.mechanics??{},
      roomEffects:spec.roomEffects??{},roomDeck:spec.roomDeck??{}}});
   output.push({id:spec.id,description:spec.description,
-   score:evalScore(baseline,measurable,manifest.suite),measured:measurable,
+   score:evalScore(baseline,measurable,manifest.suite),
+   family:manifest.suite==="mechanics"?mechanicalFamily(spec.id):null,
+   measured:measurable,
    paired:paired.length,pairedDeltas:report.pairedDelta,
    byHero:report.byHero,changedCards:report.changedCards,
    byCard:report.byCard,deckComposition:report.deckComposition});
@@ -192,7 +219,9 @@ function markdown(result){
  for(const phase of [result.screen,result.confirm].filter(Boolean)){
   lines.push("## "+phase.phase+" ("+(phase.complete?"complete":"partial")+")","",
    result.suite==="warden"?
-    "Warden-only: all regional Room and ordinary Monster cards are unchanged.": 
+    "Warden-only: all regional Room and ordinary Monster cards are unchanged.":
+    result.suite==="mechanics"?
+    "32 structural rule prototypes; all interventions use the canonical state machine.":
     "Encounter suite: escape/toll/reward choices use existing physical mechanics.","",
    "Control runs: "+phase.completedCanonical+"/"+phase.expectedPerVariant,"",
    "| Hypothesis | runs | encounter/36 equiv. | wins | Vault | Rooms | 36-Room encounters |",
@@ -205,6 +234,17 @@ function markdown(result){
     num(r.measured.mean.roomsCleared)+" | "+
     num(r.measured.complete36.meanEncounters)+" (n="+
     r.measured.complete36.n+") |");
+  if(result.suite==="mechanics"){
+   lines.push("","### Mechanic choice and consequence audit","",
+    "| Prototype | Family | Patrol encounters | Chosen alternative actions/run | Successes by action |",
+    "|---|---|---:|---:|---|");
+   for(const item of phase.ranked)
+    lines.push("| "+item.id+" | "+item.family+" | "+
+     item.measured.patrolEncounters+" | "+
+     num(item.measured.meanMechanicDecisions)+" | "+
+     Object.entries(item.measured.mechanicSuccesses).map(([k,v])=>
+      k+"="+v).join("; ")+" |");
+  }
   if(result.suite==="warden"){
    lines.push("","### Independent Warden comparison","",
     "| Variant | Wins given Vault | Wins given actual Warden fight | Fury entered |",
@@ -238,6 +278,7 @@ async function main(){
  const opts=balanceStudyArgs(process.argv.slice(2));
  const hypotheses=(opts.suite==="warden"?independentWardenHypotheses():
   opts.suite==="encounters"?nextEncounterHypotheses():
+  opts.suite==="mechanics"?mechanicalPrototypes():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -299,9 +340,22 @@ async function main(){
  };
  const choose=()=>{
   const screen=phaseSummary(rows,"screen",manifest,hypotheses);
-  // Ranking is based on the entire fixed screening set only.
-  return screen.ranked.slice(0,opts.finalists).map(r=>
-   hypotheses.find(h=>h.id===r.id));
+  // Rank ONLY on the complete screening split. Mechanic suite holds
+  // out at least one concept from every tested family when slots allow.
+  const chosen=[];
+  if(opts.suite==="mechanics"){
+   const families=[...new Set(screen.ranked.map(x=>x.family))];
+   for(const family of families){
+    if(chosen.length>=opts.finalists)break;
+    const head=screen.ranked.find(r=>r.family===family);
+    if(head)chosen.push(head);
+   }
+  }
+  for(const row of screen.ranked){
+   if(chosen.length>=opts.finalists)break;
+   if(!chosen.some(x=>x.id===row.id))chosen.push(row);
+  }
+  return chosen.map(r=>hypotheses.find(h=>h.id===r.id));
  };
  const completeScreen=phaseSummary(rows,"screen",manifest,hypotheses).complete;
  if(completeScreen){
