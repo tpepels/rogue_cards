@@ -57,7 +57,7 @@ export function selectSessionPolicyAction(session,policy,{
  onPolicyDecision=null,mctsPragmaticVariant="both",
  softTreeBonus=0.15,softTreeFirstVisitProbability=0.75,
  softRolloutProbability=0.75,implicitHpScale=1,implicitThreatScale=1,
- nodePriors=false,progressiveWidening=false
+ nodePriors=false,progressiveWidening=false,puctC=0.35
 }={}){
  // Performance A/B flags cannot change the search budget, legal actions,
  // game rules, chance knowledge, or UCT algorithm.
@@ -135,7 +135,7 @@ export function selectSessionPolicyAction(session,policy,{
     rolloutCombatMaxDecisions,implicitWeight,exploration,
     implicitHeuristicMode,equipmentMode,mctsPragmaticVariant,
     softTreeBonus,softTreeFirstVisitProbability,softRolloutProbability,
-    implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,
+    implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,puctC,
     onPolicyDecision
    });
   }
@@ -172,7 +172,7 @@ export function selectSessionPolicyAction(session,policy,{
   rolloutCombatMaxDecisions,implicitWeight:parameters.implicitWeight,
   exploration:parameters.exploration,implicitHeuristicMode,
   softTreeBonus,softTreeFirstVisitProbability,softRolloutProbability,
-  implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,
+  implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,puctC,
   simulationPolicy:equipmentMode==="solo-pragmatic"?
    ({both:"solo-pragmatic","external-only":"solo-pragmatic-external",
      "tree-only":"solo-pragmatic-tree",
