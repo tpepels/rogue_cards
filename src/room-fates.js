@@ -75,7 +75,7 @@ const returnTucked=(s,item)=>{if(!item)return;
  if(index>=0)s.discardPile.splice(index,1);
  const h=s.chooseRecipient("return-tucked-item");h.inventory.push(item);
  s.consumed.delete(item);s.equip(h,item);};
-const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n);
+const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n,s.room);
 // Called by ROOM_FATE on the printed choice. Item costs are checked here.
 export function resolveFateChoice(s,choice){
  const id=s.room.id;
