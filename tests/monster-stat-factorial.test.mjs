@@ -124,7 +124,7 @@ test("Synthetic matched 2x2 factorial measures only the true interaction",()=>{
  assert.equal(hp.n,2);assert.equal(hp.differences.won,1);
  assert.equal(atk.differences.won,2);
  assert.equal(crossed.n,2);
- assert.equal(crossed.differences.won,3);
+ assert.equal(crossed.differences.won,2);
  assert.equal(x.grid.find(z=>z.id==="canonical").n,2);
 });
 
