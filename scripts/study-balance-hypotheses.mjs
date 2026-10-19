@@ -26,6 +26,8 @@ import {monsterStatFactorialHypotheses,statFactorialCell,
  from "../src/staging/monster-stat-factorial-hypotheses.js";
 import {statFactorialAnalysis}
  from "../src/staging/monster-stat-factorial-analysis.js";
+import {roomRatioHypotheses}
+ from "../src/staging/room-ratio-hypotheses.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -76,12 +78,12 @@ export function balanceStudyArgs(argv){
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
  if(!["original","encounters","warden","mechanics","hp-ratios",
-  "stat-factorial"].includes(suite))
+  "stat-factorial","room-ratios"].includes(suite))
   throw Error("--suite must be original, encounters, warden, mechanics, "+
-   "hp-ratios or stat-factorial");
+   "hp-ratios, stat-factorial or room-ratios");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
-  finalists:num("--finalists",smoke?1:4,1,12),
+  finalists:num("--finalists",smoke?1:suite==="room-ratios"?3:4,1,12),
   variantLimit:num("--variant-limit",smoke?2:99,1,99),
   out:resolve(opts["--out"]??"results/balance-assumptions-v1"),
   agentPath:resolve(opts["--agent"]??AGENT_PATH)};
@@ -146,7 +148,7 @@ const healthShallow=rows=>{
   mechanicChoices:choices,mechanicSuccesses:successes};
 };
 const evalScore=(baseline,cell,suite="original")=>{
- if(suite==="hp-ratios"||suite==="stat-factorial"){
+ if(["hp-ratios","stat-factorial","room-ratios"].includes(suite)){
   if(!cell.n||!baseline.n)return -Infinity;
   // Screen for balance tradeoffs, never statistical proof:
   // wins near 40%, Vault near 50%, 55-70% fights/encounter
@@ -264,6 +266,10 @@ function markdown(result){
     "3 ATK levels (original, -1, -2) x 3 encounter contexts. "+
     "All changes are existing card stats and printed Room effects; "+
     "Warden unchanged.":
+    result.suite==="room-ratios"?
+    "Room ratios: three staged decks, each with 16 "+
+    "non-Corridor Room copies per depth, 1–3 Corridors per depth, "+
+    "and eight shared support Rooms. Printed effects and all stats unchanged.":
     result.suite==="hp-ratios"?
     "Integer HP rounded up: 1/2, 2/3 and 3/4 of each ordinary Monster. "+
     "Each ratio tested with canonical/mild/strong existing Room encounters. "+
@@ -347,6 +353,8 @@ function markdown(result){
  "are not observed 36-Room runs. Use the complete36 column separately.",
  "- A staged Room opcode is a tested hypothetical rules rewrite, not "+
  "current printable card text.",
+ "- Room-ratio variants can reuse printed Rooms as hypothetical extra copies, "+
+ "without changing any Room rules.",
  "- Seed matching does not guarantee identical dice after paths diverge.",
  "- Runs are model-player estimates, not actual human play duration or enjoyment.",
  "- Card exposures and per-Hero effects are in summary.json/trials.ndjson.",
@@ -360,6 +368,7 @@ async function main(){
   opts.suite==="mechanics"?mechanicalPrototypes():
   opts.suite==="hp-ratios"?monsterHpRatioHypotheses():
   opts.suite==="stat-factorial"?monsterStatFactorialHypotheses():
+  opts.suite==="room-ratios"?roomRatioHypotheses():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -388,7 +397,8 @@ async function main(){
    heroes:opts.heroes,screenTrials:(hypotheses.length+1)*opts.heroes.length*
     opts.screenRepeats,confirmTrials:(opts.finalists+1)*
     opts.heroes.length*opts.confirmRepeats,
-   physicallyCanonicalCardsChanged:false},null,2));
+   physicallyCanonicalCardsChanged:false,
+   ...(opts.suite==="room-ratios"?{deckRatios:stagedDecks}:{})},null,2));
   return;
  }
  mkdirSync(opts.out,{recursive:true});
