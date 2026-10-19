@@ -21,7 +21,7 @@ export function resolveRoomChoice(s,choice){
    if(!s.alive())return; // Lethal SQUEEZE cannot reveal further Routes.
    s.draw();
   }
-  if(id==="u-mossy"&&choice===0)s.heal(h,1);
+  if(id==="u-mossy"&&choice===0)s.heal(h,1,s.room);
   // Rolled corridor outcomes already specify whether and how to enter a
   // revealed Room. Do not add an unprinted second fork afterwards.
   if(choice===1){s.roomRoll();return;}
@@ -37,12 +37,12 @@ export function resolveRoomChoice(s,choice){
   // The physical offering lives beneath the kept Room, not in discard.
   const index=s.discardPile.lastIndexOf(item);
   if(index>=0)s.discardPile.splice(index,1);
-  s.heal(h,3);keep(item);
+  s.heal(h,3,s.room);keep(item);
  }else throw Error("Bottomless Well OFFER requires an Item");
  break;
  case "m-clock":s.draw(2);keep();break;
  case "u-rat-favor":s.draw(2);if(s.alive())s.discard();keep();break;
- case "u-leech-pool":s.heal(h,3);keep();break;
+ case "u-leech-pool":s.heal(h,3,s.room);keep();break;
  case "m-hungry-door":
   if(!s.discardable())throw Error("Hungry Door requires 1 Item");
   s.discard(1);if(s.alive())s.draw(3);keep();break;
@@ -108,7 +108,7 @@ export function roomEntry(s){
    s.keptRooms.splice(s.keptRooms.indexOf(entry),1);
    if(entry.card.id==="m-well"){
     if(s.returnChoices?.["m-well"]==="leave")
-     s.heal(s.chooseRecipient("well-healing"),3);
+     s.heal(s.chooseRecipient("well-healing"),3,entry.card);
     else{s.resolveKeptRoll(entry.card);
      if(entry.item){const h=s.chooseRecipient("well-returned-item");
       h.inventory.push(entry.item);
