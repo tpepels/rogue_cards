@@ -15,6 +15,9 @@ import {ExpeditionState} from "./expedition-state.js";
 import {createGame,observeGame,legalActions,applyAction,
  takeMonsterResponse,finishCurrentRoom} from "./index.js";
 import {resolveParley} from "./parley.js";
+import {drawStagedPatrol,resolveStagedNegotiation,
+ resolveStagedRetreat,moraleAvailable,resolveStagedMorale,
+ resolveStagedWardenTactic} from "./staged-mechanics.js";
 import {consumeCorpse,resolveSpecialRemains,settleMonsterVictory}
  from "./combat-outcomes.js";
 import {seal} from "./vault.js";
@@ -59,6 +62,8 @@ const canonical=session=>{
   phase:"retained",roomId:returnRoomId});
  if(phase==="room")return legalActions(s,{phase:"room"});
  if(phase==="parley")return legalActions(s,{phase:"parley"});
+ if(phase==="mercy")return [
+  {phase:"mercy",kind:"spare"},{phase:"mercy",kind:"press"}];
  if(phase==="combat-hero")return legalActions(s,{phase:"combat-hero"});
  if(phase==="combat")return legalActions(s,{phase:"combat",heroIndex});
  if(phase==="monster-response")return legalActions(s,{
@@ -120,6 +125,7 @@ function awaitingMonster(session){
  const s=session.state;
  if(!s.monster&&s.monsterQueue.length){
   s.monster=s.monsterQueue.shift();s.monsterHP=s.monster.hp;
+  s._moraleOffered=false;
   s.monsterFirstAttackPending=true;
   if(s.queuedForcedWisp===s.monster){
    s.mustFightFollowingWisp=true;s.queuedForcedWisp=null;
@@ -167,6 +173,7 @@ function finishEntry(session){
  // The printed entry Monster draw happens before the Room's choice.
  const prompt=/Draw an? (UPPER|MIDDLE|DEEP) Monster/.exec(s.room.v2.prompt);
  if(prompt)s.drawMonster();
+ drawStagedPatrol(s);
  if(done(session))return;
  session.phase="explore";session.heroIndex=nextHero(s,0);
  if(session.heroIndex<0)done(session);
@@ -217,6 +224,10 @@ function afterAttack(session){
  }
  if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
   endMonster(session);return;
+ }
+ if(moraleAvailable(s)){
+  s._moraleOffered=true;
+  session.phase="mercy";return;
  }
  // An action may kill its acting Hero without defeating the Monster.
  // The Monster still responds against the living party member, as the
@@ -285,7 +296,10 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
  }else if(phase==="parley"){
-  if(selected.kind==="parley"&&resolveParley(s)){
+  const resolved=selected.kind==="parley"?resolveParley(s):
+   ["negotiate","bribe"].includes(selected.kind)?
+    resolveStagedNegotiation(s,selected.kind):false;
+  if(resolved){
    if(!done(session)&&!awaitingMonster(session))roomSettled(session);
   }else if(!done(session)){
    s.metrics.combatStarts++;
@@ -297,9 +311,18 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
  }else if(phase==="combat-hero"){
   session.heroIndex=selected.heroIndex;session.phase="combat";
  }else if(phase==="combat"){
-  applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
+  if(["retreat-item","retreat-wit"].includes(selected.kind))
+   resolveStagedRetreat(s,selected.kind);
+  else if(selected.kind.startsWith("warden-"))
+   resolveStagedWardenTactic(s,selected.kind,selected.heroIndex);
+  else applyAction(s,selected,{observeResult:false,prevalidated:verifiedAction});
   s._actedCombatMask|=1<<selected.heroIndex;
   afterAttack(session);
+ }else if(phase==="mercy"){
+  const spared=resolveStagedMorale(s,selected.kind);
+  if(spared){
+   if(!done(session)&&!awaitingMonster(session))roomSettled(session);
+  }else session.phase="monster-response";
  }else if(phase==="monster-response"){
   takeMonsterResponse(s,selected.heroIndex,{observeResult:false});afterMonsterResponse(session);
  }else if(phase==="corpse"){
