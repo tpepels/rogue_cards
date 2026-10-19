@@ -97,6 +97,7 @@ export class ExpeditionState {
   // Publicly revealed future Rooms from printed scout/peek effects.
   this.peekedRoomIds=Object.fromEntries(stageNames.map(stage=>[stage,[]]));
   this.monsterQueue=[];this.monster=null;this.monsterHP=0;this.monsterSkip=0;
+  this._moraleOffered=false;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites=new Map();
   this.damageElement=null;this.actor=this.heroes[0];this.room=null;
   this.pendingRoomFace=null;this.pendingDamage=0;this.pendingDefenseAdv=false;
@@ -111,6 +112,7 @@ export class ExpeditionState {
   this.discardPile=[];this.ratFavor=false;
   this.usedCrown=false;this.temporaryCompanions=[];
   this.metrics={cleared:0,battles:0,kills:0,rounds:0,damage:0,drawn:0,spent:0,
+   mechanicChoices:{},mechanicSuccesses:{},patrolEncounters:0,
    monsterDraws:0,encounterStarts:0,combatStarts:0,
    objectDraws:{},itemOpportunities:{},itemUses:{},itemResults:{},
    roomRollBands:{},objectRollBands:{},
@@ -521,6 +523,7 @@ export class ExpeditionState {
    for(const o of Object.values(h.slots))
     if(o)this.metrics.objectEquippedRoomExposures[o.id]=(this.metrics.objectEquippedRoomExposures[o.id]||0)+1;
   }this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
+   this._moraleOffered=false;
   this.pendingFightHeal=null;this.extraMonsterAdv=false;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites.clear();
   this.heroes.forEach(h=>{
@@ -595,6 +598,7 @@ export class ExpeditionState {
     this.pendingMonsterOpeningDamage=0;
    }
    this.banished=false;
+   this._moraleOffered=false;
    this.monsterFirstAttackPending=true;
    this.elberethAttempts=0;this.elberethSkipResponse=false;
    if(m.stage!=="FINAL"&&this.useRetainedPotion("laughter",m.id))
