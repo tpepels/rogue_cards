@@ -474,6 +474,20 @@ async function main(){
   // Rank ONLY on the complete screening split. Mechanic suite holds
   // out at least one concept from every tested family when slots allow.
   const chosen=[];
+  if(opts.suite==="combat-healing"){
+   // The quantity sought is the *smallest* healing dose reaching 40%.
+   // Confirm its adjacent doses rather than selecting four possibly
+   // disconnected arms because of noisy screening rank positions.
+   const ordered=hypotheses.slice().sort((a,b)=>
+    a.mechanics.postCombatHeal-b.mechanics.postCombatHeal);
+   const crossing=ordered.findIndex(spec=>
+    (screen.ranked.find(x=>x.id===spec.id)?.measured.mean.won??0)>=.40);
+   const center=crossing>=0?crossing:ordered.length-1;
+   const pick=[center-1,center,center+1,center+2,center-2,
+    center+3,center-3,center+4];
+   const ids=[...new Set(pick.filter(i=>i>=0&&i<ordered.length))];
+   return ids.slice(0,opts.finalists).map(i=>ordered[i]);
+  }
   if(opts.suite==="stat-factorial")
    return chooseStatFactorialFinalists(screen.ranked,opts.finalists,hypotheses)
     .map(r=>hypotheses.find(h=>h.id===r.id));
