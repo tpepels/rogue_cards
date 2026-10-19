@@ -29,7 +29,7 @@ jobs:
         run: |
           node scripts/study-balance-hypotheses.mjs \
             --suite recovery-overnight --variant-limit 4 --finalists 3 \
-            --seed 20261022 --heroes warrior,knight --screen-repeats 1 \
+            --seed 20261023 --heroes warrior,knight --screen-repeats 1 \
             --confirm-repeats 1 --smoke true --workers 2 \
             --minutes 5 --out results/recovery-smoke
       - name: Preserve any output on failure
