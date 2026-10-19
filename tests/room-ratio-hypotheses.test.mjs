@@ -5,6 +5,10 @@ import {ROOMS,MONSTERS,WARDEN,WARDEN_FURY}
  from "../src/tabletop-data.js";
 import {PRINT_ONLY_ROOMS} from "../src/print-expansion.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
+import {prepareRolloutDecks,sampleRolloutDecks} from "../src/rollout-state.js";
+import {createDecisionSession,sessionActions}
+ from "../src/engine/decision-session.js";
+import {searchDecision} from "../src/session-mcts.js";
 import {compileStaging,canonicalStagingCatalogue}
  from "../src/staging/catalogue.js";
 import {ROOM_RATIO_TARGETS,roomRatioHypotheses}
@@ -110,4 +114,68 @@ test("room-ratios CLI dry-run exposes all three designs",()=>{
  assert.equal(json.suite,"room-ratios");
  assert.equal(Object.keys(json.deckRatios).length,3);
  assert.equal(json.screenTrials,4*8*4);
+});
+
+test("fair MCTS sampler preserves the other copies of a visited Room ID",()=>{
+ for(const spec of roomRatioHypotheses()){
+  const pool=compileStaging(spec);
+  const state=new ExpeditionState({seed:8004,heroes:["warrior"],
+   gameMode:"everything-goes",cardPools:pool});
+  const pile=state.rooms.UPPER;
+  const id="u-nest";
+  const originally=pile.filter(r=>r.id===id).length;
+  assert.ok(originally>=2,spec.id+" should have multiple printed Rat Nests");
+  const at=pile.findIndex(r=>r.id===id);
+  state.beginRoom(pile.splice(at,1)[0],{deferEntry:true});
+  assert.equal(state.metrics.roomVisitCounts[id],1);
+  const blueprint=prepareRolloutDecks(state,"fair");
+  assert.equal(blueprint.rooms.UPPER.available.filter(r=>r.id===id).length,
+   originally-1);
+  const sample=sampleRolloutDecks(state,{
+   knowledge:"fair",deckSeed:717,blueprint});
+  assert.equal(sample.rooms.UPPER.length,pile.length);
+  assert.equal(sample.rooms.UPPER.filter(r=>r.id===id).length,
+   originally-1);
+  assert.equal(state.rooms.UPPER.length,pile.length);
+ }
+});
+test("publicly revealed duplicates and discarded copies remain separate",()=>{
+ const spec=roomRatioHypotheses()[2];
+ const pool=compileStaging(spec);
+ const state=new ExpeditionState({seed:9120,heroes:["warrior"],
+  gameMode:"everything-goes",cardPools:pool});
+ const pile=state.rooms.UPPER,id="u-nest";
+ assert.ok(pile.filter(r=>r.id===id).length>=2);
+ const card=pile.splice(pile.findIndex(r=>r.id===id),1)[0];
+ state.beginRoom(card,{deferEntry:true});
+ const remaining=pile.filter(r=>r.id===id).length;
+ state.peekedRoomIds.UPPER=[id];
+ const prepared=prepareRolloutDecks(state,"fair");
+ assert.equal(prepared.rooms.UPPER.known[0].id,id);
+ assert.equal(prepared.rooms.UPPER.available.filter(r=>r.id===id).length,
+  remaining-1);
+ const sampled=sampleRolloutDecks(state,{
+  knowledge:"fair",deckSeed:128,blueprint:prepared});
+ assert.equal(sampled.rooms.UPPER.filter(r=>r.id===id).length,remaining);
+});
+test("an actual searchDecision can search a staged repeated-Room deck",()=>{
+ for(const spec of roomRatioHypotheses()){
+  const pool=compileStaging(spec);
+  const session=createDecisionSession({seed:6201,heroes:["warrior"],
+   gameMode:"everything-goes",cardPools:pool});
+  const pile=session.state.rooms.UPPER;
+  const room=pile.splice(pile.findIndex(r=>r.id==="u-shrine"),1)[0];
+  assert.ok(room);
+  session.state.beginRoom(room);
+  session.phase="room";
+  const legal=sessionActions(session);
+  assert.ok(legal.length>=2);
+  const before=session.state.rng.snapshot();
+  const result=searchDecision(session,{budget:2,seed:1104,
+   knowledge:"fair",maxSteps:3000,strictTerminal:false,
+   treeMode:"frontier"});
+  assert.equal(result.budget,2);
+  assert.ok(legal.some(x=>x.kind===result.recommended.kind));
+  assert.equal(session.state.rng.snapshot(),before);
+ }
 });
