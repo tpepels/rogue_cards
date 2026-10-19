@@ -41,6 +41,19 @@ const ideas=[
  ["dungeon-diplomacy","Four-Room patrol + all parley approaches + surrender + Warden breach.",{patrolEvery:4,patrolOpening:"skip",negotiation:"both",morale:"half",wardenTactic:"breach"}],
  ["dungeon-tactics","Negotiation, item retreat, Monster surrender and Warden interrupt without new patrols.",{negotiation:"both",retreat:"item",morale:"half",wardenTactic:"interrupt"}]
 ];
+// Stage-two confirmation intentionally covers distinct mechanisms,
+// not just the top N nearly identical combinations from screening.
+export function mechanicalFamily(id){
+ if(id.startsWith("patrol-")&&
+   ["patrol-four-safe","patrol-three-safe","patrol-two-safe",
+    "patrol-three-dis","patrol-three-raw"].includes(id))return "patrol";
+ if(id.startsWith("negotiate-"))return "diplomacy";
+ if(id.startsWith("retreat-"))return "retreat";
+ if(id.startsWith("morale-"))return "morale";
+ if(id.startsWith("kill-"))return "rewards";
+ if(id.startsWith("warden-"))return "warden";
+ return "combinations";
+}
 export function mechanicalPrototypes(){
  const ids=new Set();
  const result=ideas.map(([id,description,mechanics])=>{
