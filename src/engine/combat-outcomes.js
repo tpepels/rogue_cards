@@ -94,7 +94,7 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
  }
  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
  if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal));
- // Explicit experimental grant only after a W0N regional combat.
+ // Explicit experimental grant only after a won regional combat.
  // Negotiation, fleeing, banishment and Warden phases never trigger it.
  const heal=s.cardPools?.mechanics?.postCombatHeal??0;
  if(heal&&m.stage!=="FINAL"&&!s.banished&&
