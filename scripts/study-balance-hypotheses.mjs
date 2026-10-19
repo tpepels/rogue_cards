@@ -186,6 +186,7 @@ const healthShallow=rows=>{
   winRate:avg(rows,"won"),vaultReach:avg(rows,"vaultReached"),
   rooms:avg(rows,"roomsCleared"),encounters:avg(rows,"ordinaryEncounters"),
   fights:avg(rows,"ordinaryFights"),hp:avg(rows,"remainingHp"),
+  healing:healSummary(rows).mean,
   patrolEncounters:rows.reduce((n,r)=>n+(r.finalMetrics?.patrolEncounters??0),0),
   mechanicChoices:choices,mechanicSuccesses:successes};
 };
