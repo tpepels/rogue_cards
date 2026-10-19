@@ -121,10 +121,21 @@ const health=(rows)=>{
   byHero:Object.fromEntries([...new Set(rows.map(x=>x.hero))].map(hero=>[
    hero,healthShallow(rows.filter(r=>r.hero===hero))]))};
 };
-const healthShallow=rows=>({n:rows.length,
- winRate:avg(rows,"won"),vaultReach:avg(rows,"vaultReached"),
- rooms:avg(rows,"roomsCleared"),encounters:avg(rows,"ordinaryEncounters"),
- fights:avg(rows,"ordinaryFights"),hp:avg(rows,"remainingHp")});
+const healthShallow=rows=>{
+ const choices={},successes={};
+ for(const row of rows){
+  for(const [kind,n] of Object.entries(row.finalMetrics?.mechanicChoices??{}))
+   choices[kind]=(choices[kind]??0)+n;
+  for(const [kind,n] of Object.entries(row.finalMetrics?.mechanicSuccesses??{}))
+   successes[kind]=(successes[kind]??0)+n;
+ }
+ return {n:rows.length,
+  winRate:avg(rows,"won"),vaultReach:avg(rows,"vaultReached"),
+  rooms:avg(rows,"roomsCleared"),encounters:avg(rows,"ordinaryEncounters"),
+  fights:avg(rows,"ordinaryFights"),hp:avg(rows,"remainingHp"),
+  patrolEncounters:rows.reduce((n,r)=>n+(r.finalMetrics?.patrolEncounters??0),0),
+  mechanicChoices:choices,mechanicSuccesses:successes};
+};
 const evalScore=(baseline,cell,suite="original")=>{
  if(suite==="mechanics"){
   if(!cell.n||!baseline.n)return -Infinity;
