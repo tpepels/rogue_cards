@@ -19,6 +19,8 @@ import {nextEncounterHypotheses,independentWardenHypotheses}
  from "../src/staging/next-balance-hypotheses.js";
 import {mechanicalPrototypes,mechanicalFamily}
  from "../src/staging/mechanical-prototypes.js";
+import {monsterHpRatioHypotheses,monsterHpRatioFamily}
+ from "../src/staging/monster-hp-ratio-hypotheses.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -68,8 +70,8 @@ export function balanceStudyArgs(argv){
  const confirmRepeats=num("--confirm-repeats",smoke?1:6,1,500);
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
- if(!["original","encounters","warden","mechanics"].includes(suite))
-  throw Error("--suite must be original, encounters, warden or mechanics");
+ if(!["original","encounters","warden","mechanics","hp-ratios"].includes(suite))
+  throw Error("--suite must be original, encounters, warden, mechanics or hp-ratios");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:4,1,12),
@@ -137,6 +139,21 @@ const healthShallow=rows=>{
   mechanicChoices:choices,mechanicSuccesses:successes};
 };
 const evalScore=(baseline,cell,suite="original")=>{
+ if(suite==="hp-ratios"){
+  if(!cell.n||!baseline.n)return -Infinity;
+  // Screen for balance tradeoffs, never statistical proof:
+  // wins near 40%, Vault near 50%, 55-70% fights/encounter
+  // and 16-20 encounters per 36 Rooms. Holdout uses new seeds.
+  const win=Math.abs((cell.mean.won??0)-0.40);
+  const vault=Math.abs((cell.mean.vaultReached??0)-0.50);
+  const density=Math.abs((cell.encountersPer36Equivalent??0)-18)/18;
+  const conversion=cell.fightConversion??0;
+  const conversionGap=conversion<.55?.55-conversion:
+   conversion>.70?conversion-.70:0;
+  const roomDrop=Math.max(0,(baseline.mean.roomsCleared??0)-
+   (cell.mean.roomsCleared??0))/36;
+  return -2*win-1.2*vault-0.7*density-0.5*conversionGap-roomDrop;
+ }
  if(suite==="mechanics"){
   if(!cell.n||!baseline.n)return -Infinity;
   // Seek encounter density AND genuinely chosen alternative actions;
@@ -201,7 +218,8 @@ export function phaseSummary(records,phase,manifest,selected){
      roomEffects:spec.roomEffects??{},roomDeck:spec.roomDeck??{}}});
   output.push({id:spec.id,description:spec.description,
    score:evalScore(baseline,measurable,manifest.suite),
-   family:manifest.suite==="mechanics"?mechanicalFamily(spec.id):null,
+   family:manifest.suite==="mechanics"?mechanicalFamily(spec.id):
+    manifest.suite==="hp-ratios"?monsterHpRatioFamily(spec.id):null,
    measured:measurable,
    paired:paired.length,pairedDeltas:report.pairedDelta,
    byHero:report.byHero,changedCards:report.changedCards,
@@ -233,6 +251,10 @@ function markdown(result){
     "Warden-only: all regional Room and ordinary Monster cards are unchanged.":
     result.suite==="mechanics"?
     "32 structural rule prototypes; all interventions use the canonical state machine.":
+    result.suite==="hp-ratios"?
+    "Integer HP rounded up: 1/2, 2/3 and 3/4 of each ordinary Monster. "+
+    "Each ratio tested with canonical/mild/strong existing Room encounters. "+
+    "No new mechanics, Warden unchanged.":
     "Encounter suite: escape/toll/reward choices use existing physical mechanics.","",
    "Control runs: "+phase.completedCanonical+"/"+phase.expectedPerVariant,"",
    "| Hypothesis | runs | encounter/36 equiv. | wins | Vault | Rooms | 36-Room encounters |",
@@ -255,6 +277,17 @@ function markdown(result){
      num(item.measured.meanMechanicDecisions)+" | "+
      Object.entries(item.measured.mechanicSuccesses).map(([k,v])=>
       k+"="+v).join("; ")+" |");
+  }
+  if(result.suite==="hp-ratios"){
+   lines.push("","### HP trade-offs (including ordinary fight conversion)","",
+    "| Variant | Context | Fight conversion | Average fights | Average incoming combat damage | Wins given Vault |",
+    "|---|---|---:|---:|---:|---:|");
+   for(const item of phase.ranked)
+    lines.push("| "+item.id+" | "+item.family+" | "+
+     num(item.measured.fightConversion,3)+" | "+
+     num(item.measured.mean.ordinaryFights)+" | "+
+     num(item.measured.mean.combatContextDamage)+" | "+
+     num(item.measured.winGivenVault,3)+" |");
   }
   if(result.suite==="warden"){
    lines.push("","### Independent Warden comparison","",
@@ -290,6 +323,7 @@ async function main(){
  const hypotheses=(opts.suite==="warden"?independentWardenHypotheses():
   opts.suite==="encounters"?nextEncounterHypotheses():
   opts.suite==="mechanics"?mechanicalPrototypes():
+  opts.suite==="hp-ratios"?monsterHpRatioHypotheses():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -354,6 +388,16 @@ async function main(){
   // Rank ONLY on the complete screening split. Mechanic suite holds
   // out at least one concept from every tested family when slots allow.
   const chosen=[];
+  if(opts.suite==="hp-ratios"){
+   // Independently confirm ALL three isolated HP ratios first,
+   // irrespective of the encounter-context screening rankings.
+   for(const spec of hypotheses.filter(x=>
+    monsterHpRatioFamily(x.id)==="canonical")){
+    if(chosen.length>=opts.finalists)break;
+    const row=screen.ranked.find(x=>x.id===spec.id);
+    if(row)chosen.push(row);
+   }
+  }
   if(opts.suite==="mechanics"){
    const families=[...new Set(screen.ranked.map(x=>x.family))];
    for(const family of families){
