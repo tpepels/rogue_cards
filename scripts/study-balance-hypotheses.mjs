@@ -543,7 +543,8 @@ async function main(){
   if(opts.suite==="recovery-overnight"){
    // Pre-register a representative finalist in every physical intervention
    // family and reserve a slot for the non-printable reference.
-   const selected=[RECOVERY_OVERNIGHT_REFERENCE_ID];
+   const selected=hypotheses.some(x=>x.id===RECOVERY_OVERNIGHT_REFERENCE_ID)?
+    [RECOVERY_OVERNIGHT_REFERENCE_ID]:[];
    const families=["recovery-supply-","recovery-rest-",
     "recovery-defeat-","recovery-supply-rest-",
     "recovery-rest-defeat-","recovery-supply-defeat-",
