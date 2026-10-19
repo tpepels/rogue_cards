@@ -27,6 +27,15 @@ const rest={
  heavy:[9,10,8],
  extreme:[10,10,10]
 };
+const itemStrength={
+ mild:{"ex-bandages":4,"ex-rations":3,"odd-thorn-tonic":4},
+ strong:{"ex-bandages":6,"ex-rations":4,"odd-thorn-tonic":5},
+ high:{"ex-bandages":8,"ex-rations":6,"odd-thorn-tonic":7},
+ diceplus:{"ex-bandages":"d6+2","ex-rations":4,"odd-thorn-tonic":5},
+ bandages6:{"ex-bandages":6},
+ rations4:{"ex-rations":4},
+ tonic6:{"odd-thorn-tonic":6}
+};
 const configs=[
  // Three orthogonal resource-only arms
  ["supply-modest","modest",null,null,null],
@@ -60,11 +69,23 @@ const configs=[
  ["hybrid-early","heavy","heavy","early",3],
  ["hybrid-all-three","medium","medium","all",3],
  ["hybrid-all-d6","heavy","heavy","all","d6"],
- ["hybrid-maximum","extreme","extreme","all","d6"]
+ ["hybrid-maximum","extreme","extreme","all","d6"],
+ ...["mild","strong","high","diceplus","bandages6","rations4","tonic6"]
+  .map(tier=>["item-values-"+tier,null,null,null,null,tier]),
+ ...["modest","medium","heavy","extreme"].flatMap(quantity=>
+  ["mild","strong","high"].map(strength=>[
+   "item-quantity-"+quantity+"-"+strength,
+   quantity,null,null,null,strength
+  ])),
+ ["item-value-rest-heavy",null,"heavy",null,null,"strong"],
+ ["item-value-defeat-early",null,null,"early",3,"strong"],
+ ["item-value-defeat-all",null,null,"all","d6","diceplus"],
+ ["item-value-hybrid-early","medium","medium","early",3,"strong"],
+ ["item-value-hybrid-maximum","heavy","heavy","all","d6","high"]
 ];
 const names=new Set(configs.map(x=>x[0]));
 if(names.size!==configs.length)throw Error("Duplicate overnight arm");
-const makeSpec=([suffix,items,rooms,region,reward])=>{
+const makeSpec=([suffix,items,rooms,region,reward,strength])=>{
  const cards=items?[
   ["ex-bandages",supply[items][0]],
   ["ex-rations",supply[items][1]],
@@ -78,11 +99,13 @@ const makeSpec=([suffix,items,rooms,region,reward])=>{
  return Object.freeze({
   schema:"rogue-cards-staging-v1",id:"recovery-"+suffix,
   description:"Printed recovery: Items="+(items||"unchanged")+
+   "; Item HP="+(strength||"canonical")+
    "; REST="+(rooms||"unchanged")+"; Monster DEFEAT="+
    (region||"unchanged")+(region?":"+reward:"")+
    "; original Balanced B Rooms and current Monster stats.",
   roomDeck:BALANCED_HEAL_ROOM_DECK,
   ...(cards.length?{cards}:{}),
+  ...(strength?{itemHealing:itemStrength[strength]}:{}),
   ...(rooms?{roomRestHealing}:{}),
   ...(region?{monsterHealing}:{})
  });
