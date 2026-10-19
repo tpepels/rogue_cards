@@ -278,7 +278,7 @@ function actRoom(s,{prepared=false,choiceOverride=null}={}){
  }
  if(room.id==="m-fungus"&&n===0&&s.has("spore-jar")&&s.strategy==="survival"){
   const owner=s.own("spore-jar"),card=itemIn(s,owner,"spore-jar");
-  s.consume(owner,card);s.heal(owner,s.die());return;
+  s.consume(owner,card);s.heal(owner,s.die(),card);return;
  }
  for(const op of ops){
   const [kind,...args]=op.split(":");s.apply(kind,args,room);
