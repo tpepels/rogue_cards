@@ -3,6 +3,7 @@
  * Every effect below is directly driven by printed Item timing.
  * No blanket roll bonuses, global Item loot or extra encounter procedure.
  */
+import {resolvePrintedItemHealing} from "./item-healing.js";
 const owned=(h,id)=>h?.inventory.find(c=>c.id===id)||null;
 const spend=(s,h,card,context,perform)=>s.directItem(h,card,context,()=>{
  s.consume(h,card);perform?.();return true;
@@ -141,7 +142,7 @@ export function activateOddTool(s,h,card){
   spend(s,h,card,"mad-compass",()=>s.peek(2,true));
  }else if(id==="odd-thorn-tonic"){
   spend(s,h,card,"thorn-tonic",()=>{
-   s.heal(h,3,card);h.nextWitDis=(h.nextWitDis||0)+1;
+   s.heal(h,resolvePrintedItemHealing(s,card),card);h.nextWitDis=(h.nextWitDis||0)+1;
   });
  }else if(id==="odd-moon-lens"){
   spend(s,h,card,"moon-lens",()=>{
