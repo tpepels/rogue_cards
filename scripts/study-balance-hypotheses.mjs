@@ -100,6 +100,37 @@ function seedFor(config,phase,hero,replicate){
  return stageSeed(base,HEROES.findIndex(h=>h.id===hero),replicate);
 }
 const lite=row=>Object.fromEntries(METRICS.map(k=>[k,row[k]??null]));
+const healSummary=rows=>{
+ const zero=()=>({attempts:0,offered:0,restored:0,wasted:0});
+ const aggregate={total:zero(),bySource:{},byCategory:{},byStage:{}};
+ const merge=(dest,src)=>{
+  for(const key of ["attempts","offered","restored","wasted"])
+   dest[key]+=src?.[key]??0;
+ };
+ const opportunityMaps={roomOptions:{},itemOpportunities:{}};
+ for(const row of rows){
+  const healing=row.finalMetrics?.healing??{};
+  merge(aggregate.total,healing.total);
+  for(const group of ["bySource","byCategory","byStage"])
+   for(const [id,cell] of Object.entries(healing[group]??{}))
+    merge(aggregate[group][id]??=zero(),cell);
+  for(const [field,metricKey] of [["roomOptions","roomOptionAvailable"],
+   ["itemOpportunities","itemOpportunities"]]){
+   for(const [id,cell] of Object.entries(row.finalMetrics?.[metricKey]??{})){
+    if(typeof cell==="number")
+     opportunityMaps[field][id]=(opportunityMaps[field][id]??0)+cell;
+    else if(cell&&typeof cell==="object"){
+     const dst=opportunityMaps[field][id]??={};
+     for(const [kind,n] of Object.entries(cell))
+      if(typeof n==="number")dst[kind]=(dst[kind]??0)+n;
+    }
+   }
+  }
+ }
+ return {mean:Object.fromEntries(["attempts","offered","restored","wasted"]
+  .map(key=>[key,rows.length?aggregate.total[key]/rows.length:null])),
+  totals:aggregate,opportunities:opportunityMaps};
+};
 const health=(rows)=>{
  const n=rows.length;
  const rooms=rows.reduce((sum,row)=>sum+row.roomsCleared,0);
@@ -119,6 +150,7 @@ const health=(rows)=>{
  const fury=rows.filter(r=>(r.finalMetrics?.monsterVisits?.["warden-fury"]??0)>0);
  const wins=x=>x.filter(r=>r.won===1).length;
  return {n,mean:Object.fromEntries(METRICS.map(k=>[k,avg(rows,k)])),
+   healing:healSummary(rows),
   encounterPerRoom:rooms?encounters/rooms:null,
   encountersPer36Equivalent:rooms?36*encounters/rooms:null,
   fightConversion:encounters?battles/encounters:null,
