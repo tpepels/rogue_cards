@@ -12,6 +12,7 @@ import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {fateChoiceLegal} from "../room-fates.js";
 import {completePrintedRoomChoice} from "../room-memory-engine.js";
 import {itemOptions} from "../item-access.js";
+import {resolvePrintedItemHealing} from "../item-healing.js";
 import {activateOddTool} from "../odd-item-effects.js";
 import {sealCost} from "./vault.js";
 import {playerAttack,monsterRespond,executeItemOption,engraveElbereth}
@@ -537,7 +538,7 @@ export function applyAction(s,action,{observeResult=true,prevalidated=false}={})
    if(!activateOddTool(s,h,o.card))throw Error("Unusable unusual Item "+o.card.id);
   }else if(o.mode==="healing-tool"){
    s.directItem(h,o.card,o.mode,()=>{
-    const amount=o.card.id==="ex-bandages"?s.die():2;
+    const amount=resolvePrintedItemHealing(s,o.card);
     s.consume(h,o.card);s.heal(h,amount,o.card);return true;
    });
   }else if(o.mode==="recharge"){
