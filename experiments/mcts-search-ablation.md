@@ -13,7 +13,9 @@
 | `widening` | Off | On |
 | `combined` | On | On |
 
-- **Priors:** PUCT uses only currently legal actions and the already-existing pragmatic soft recommendation (a 3× relative weight for the one recommended action). With no recommendation, action priors are uniform. It is not a neural model. Existing implicit UCT value estimates remain active.
+- **Priors (revised after first pilot):** PUCT now uses a normalized **public-information prior** over legal actions. It weights known healing Items, printed Room REST outcomes, combat ATTACK vs PASS and the existing pragmatic combat/parley hint (3× its base weight). It does not inspect hidden cards/dice and is not a neural model. Without relevant observable features, the prior remains uniform. Existing implicit values remain active.
+- **Exploration:** PUCT has a **separate** coefficient `--puct-c`, default **0.35**, deliberately not inherited from UCT `c=0.20`. The latter remains constant for the baseline/widening arms. The PUCT constant is **not yet statistically tuned**; the CI pilot explores 0.15, 0.35 and 0.70 on matched seeds.
+- **Widening combined with priors:** new actions are admitted in descending public prior order; widening-only still uses seeded randomized ordering. Prior usage and widening counts are logged.
 - **Widening:** for nodes with >3 legal actions, admit up to `ceil(2 * (N+1)^0.55)` actions as visits increase. The queue is deterministically seeded and randomized; the prioritized combination puts the existing pragmatic preference first. Nodes with <=3 actions are not restricted.
 - **Combined:** PUCT selects within the progressively opened subset. Neither changes legal actions, chance sampling, actual card rules, or the hero's hidden-information view.
 - The default `searchDecision()` flags remain `nodePriors=false` and `progressiveWidening=false`. This preserves previous MCTS agent identity.
@@ -34,10 +36,11 @@ npm run study:mcts:search-controls -- --dry-run
 ~~~bash
 node scripts/study-mcts-search-ablation.mjs \
   --budgets 16,32,64 \
-  --runs-per-hero 1 \
+  --runs-per-hero 5 \
+  --puct-c 0.35 \
   --workers 8 \
   --minutes 600 \
-  --out results/mcts-search-ablation-v1
+  --out results/mcts-search-ablation-puct035-v2
 ~~~
 
 This runs four variants for each of the eight Heroes, each budget, and the same initial seed per Hero/replicate across arms (**96 expeditions with one replicate per Hero**). It records `manifest.json`, `trials.ndjson`, and `summary.json`, supports exact resumption, and refuses incompatible git revisions/settings. For a more credible comparison increase `--runs-per-hero`, keeping a separate output directory per code revision.
@@ -81,3 +84,5 @@ The initial GitHub Actions pilot runs only budget 16 and one replicate per Hero,
 - The baseline won none of these eight seeds. Both widening variants won on the Priest seed, while priors alone won none. The paired win difference relative to baseline is **+1 / 8** for widening and combined, and **0 / 8** for priors, with no baseline-only wins. **This is far too few samples to show a reliable difference or declare a stronger agent.** Mean per-decision time differs with state trajectories and search volume, not just node-selection overhead.
 - **Provisional observation:** widening is worth further investigation; no strong evidence yet that PUCT priors improve this agent, nor that adding priors to widening helps.
 - **Next:** hold rules and baseline fixed, validate at budgets 16, 32 and 64 with more independent seeds and Hero-level uncertainty. Only a properly powered independent study can justify a new frozen agent profile.
+
+- 2026-10-19: **Found methodological weakness in the first pilot.** Priors were mostly uniform outside combat and parley, and copied `c=0.2` from the UCT experiment despite a different selection equation. The original eight-seed pilot **does not validate PUCT**. Revised public priors, explicit `--puct-c` and activity telemetry were committed. Keep the old experiment archive separate and rerun fresh independent comparisons on new revision/seeds; do not resume older pilot files.
