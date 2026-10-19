@@ -46,7 +46,7 @@ const SPEC=Object.freeze({
 export const V2_MONSTERS=Object.freeze(BASE.map(([id,title,art,stage,hp,atk,def,behavior],i)=>{
  const s=SPEC[id];if(!s)throw new Error("Missing Monster ecology: "+id);
  const defeat=MONSTER_DEFEATS[id];if(!defeat)throw Error("Missing Monster DEFEAT: "+id);
- return {id,title,art,stage,hp,atk,def,behavior,copies:stage==="UPPER"?3:2,type:"monster",
+ return {id,title,art,stage,hp:Math.max(1,Math.ceil(hp/2)),atk:Math.max(1,atk-2),def,behavior,copies:stage==="UPPER"?3:2,type:"monster",
   flavor:"",v2:{kind:"MONSTER",number:i+1,tags:s.tags,
    weakness:s.weakness,parley:s.parley,remains:s.remains,
    defeat:defeat.text,defeatOps:defeat.ops}};
