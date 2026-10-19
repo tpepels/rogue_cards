@@ -10,7 +10,7 @@
  * hook. Exhaustive correctness across all possible timing interactions
  * still requires stateful test coverage; this file does not certify it.
  */
-import {VAULT} from "../tabletop-data.js";
+import {VAULT,WARDEN_FURY} from "../tabletop-data.js";
 import {ExpeditionState} from "./expedition-state.js";
 import {createGame,observeGame,legalActions,applyAction,
  takeMonsterResponse,finishCurrentRoom} from "./index.js";
@@ -198,7 +198,7 @@ function endMonster(session){
  const s=session.state,m=s.monster;
  if(!m)throw Error("No Monster to end");
  // The Warden has a printed midpoint, not the normal kill/Corpse window.
- if(m.id==="warden"&&s.monsterHP<=10){
+ if(m.id==="warden"&&s.monsterHP<=(s.cardPools?.wardenFury??WARDEN_FURY).hp){
   session.phase="post-warden";session.heroIndex=0;return;
  }
  if(s.monsterHP>0)return;
@@ -222,7 +222,7 @@ function afterAttack(session){
   if(!awaitingMonster(session))roomSettled(session);
   return;
  }
- if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
+ if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=(s.cardPools?.wardenFury??WARDEN_FURY).hp){
   endMonster(session);return;
  }
  if(moraleAvailable(s)){
@@ -245,7 +245,7 @@ function afterMonsterResponse(session){
   if(!awaitingMonster(session))roomSettled(session);
   return;
  }
- if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=10){
+ if(s.monsterHP<=0||s.monster.id==="warden"&&s.monsterHP<=(s.cardPools?.wardenFury??WARDEN_FURY).hp){
   endMonster(session);return;
  }
  const available=s.heroes.some((h,i)=>h.hp>0&&
