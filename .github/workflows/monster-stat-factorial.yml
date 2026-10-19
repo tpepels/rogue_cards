@@ -1,0 +1,66 @@
+name: Verify combined Monster HP and ATK factorial
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/monster-stat-factorial.yml'
+      - 'src/staging/monster-stat-factorial-hypotheses.js'
+      - 'src/staging/monster-stat-factorial-analysis.js'
+      - 'src/staging/catalogue.js'
+      - 'src/staging/monster-hp-ratio-hypotheses.js'
+      - 'scripts/study-balance-hypotheses.mjs'
+      - 'tests/monster-stat-factorial.test.mjs'
+      - 'package.json'
+  workflow_dispatch:
+jobs:
+  factorial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate the full factorial and earlier HP-only study
+        run: |
+          npm run test:balance:stat-factorial
+          npm run test:balance:hp-ratios
+      - name: Run real full-game A/B for all 35 treatments
+        run: |
+          npm run study:balance:hypotheses -- \
+            --suite stat-factorial --smoke true --variant-limit 35 \
+            --finalists 9 --heroes warrior \
+            --screen-repeats 1 --confirm-repeats 1 \
+            --workers 4 --minutes 12 \
+            --out "$RUNNER_TEMP/monster-stat-factorial-smoke"
+      - name: Verify screen, disjoint holdout, protected main effects and interaction analysis
+        run: |
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const p=process.env.RUNNER_TEMP+"/monster-stat-factorial-smoke/";
+            const r=JSON.parse(readFileSync(p+"summary.json","utf8"));
+            const m=JSON.parse(readFileSync(p+"manifest.json","utf8"));
+            const ids=r.selectedForConfirmation;
+            if(r.status!=="complete"||r.suite!=="stat-factorial"||
+              r.totals.rows!==46||r.screen.ranked.length!==35||
+              r.confirm.ranked.length!==9||ids.length!==9||
+              r.screen.factorial.contexts.canonical.interactions.length!==6||
+              r.confirm.factorial.contexts.strong.interactions.length!==6||
+              m.hypotheses.length!==35)
+              throw Error("Factorial A/B and matching contrast audit failed");
+            const pure=[
+              "monster-stats-hp-half-atk-minus-0-canonical",
+              "monster-stats-hp-two-thirds-atk-minus-0-canonical",
+              "monster-stats-hp-three-quarters-atk-minus-0-canonical",
+              "monster-stats-hp-full-atk-minus-1-canonical",
+              "monster-stats-hp-full-atk-minus-2-canonical"
+            ];
+            if(!pure.every(id=>ids.includes(id)))
+              throw Error("Main effects excluded from holdout");
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monster-stat-factorial-smoke
+          path: ${{ runner.temp }}/monster-stat-factorial-smoke/
+          if-no-files-found: ignore
