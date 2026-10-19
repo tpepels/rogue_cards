@@ -85,6 +85,8 @@ export class ExpeditionState {
   // Publicly revealed corridor alternatives permanently removed from the
   // physical Room deck (not merely Rooms that were actually entered).
   this.discardedRoomIds=new Set();
+  // A staged Room deck can repeat printed IDs; count discarded copies.
+  this.discardedRoomCounts={};
    this.keptRooms=[];this.enteredDeep=false;this.skipRoom=false;this.forfeitNextItem=false;
    this.savedPath=null;this.savedPathGrace=0;this.whisperRoom=null;this.nextLadder=false;
    this.stageProgress={UPPER:0,MIDDLE:0,DEEP:0};
@@ -507,9 +509,11 @@ export class ExpeditionState {
      }else this.rooms[room.stage].push(alternative);
     }}
    this.room=room;this.skipRoom=false;this.moonLensFace=null;
-   if(this.publicBottomRoomIds?.[room.stage])
-    this.publicBottomRoomIds[room.stage]=
-     this.publicBottomRoomIds[room.stage].filter(id=>id!==room.id);
+   if(this.publicBottomRoomIds?.[room.stage]){
+     // A visit consumes only one public bottom-deck reprint.
+     const at=this.publicBottomRoomIds[room.stage].indexOf(room.id);
+     if(at>=0)this.publicBottomRoomIds[room.stage].splice(at,1);
+    }
    // Trapdoors can reach the Vault before nine ordinary Rooms.
    // Entering FINAL is the authoritative arrival metric, not cleared===9.
    if(room.stage==="FINAL")this.metrics.vaultEntered=true;
@@ -1253,7 +1257,11 @@ export class ExpeditionState {
    else if(mode==="d-gilded"){
     // Only GAMBLE actually discards the other Room.
     if(other.some(x=>x.v2.kind==="TREASURE"))this.draw();
-    for(const card of other)this.discardedRoomIds.add(card.id);
+    for(const card of other){
+     this.discardedRoomIds.add(card.id);
+     this.discardedRoomCounts[card.id]=
+      (this.discardedRoomCounts[card.id]??0)+1;
+    }
    }else{
     // Printed corridors return the unchosen revealed route to the bottom.
     pile.push(...other);
