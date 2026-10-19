@@ -19,6 +19,29 @@ const canonical={
 const names=new Set(["heroes","rooms","monsters","items",
  "vault","warden","wardenFury"]);
 const roomCount=Object.fromEntries(STAGES.map(stage=>[stage,12]));
+/** Supported physical-rule hypotheses. Every setting is declarative and
+ * executed by the SAME pausable expedition engine used by tree rollouts. */
+export const MECHANIC_OPTIONS=Object.freeze({
+ patrolEvery:[0,4,3,2],
+ patrolOpening:["normal","skip","dis"],
+ negotiation:["canonical","wit","item","both"],
+ retreat:["none","item","wit"],
+ morale:["none","half","quarter"],
+ killReward:["canonical","draw","heal"],
+ wardenTactic:["none","brace","interrupt","breach"]
+});
+const validateMechanics=source=>{
+ assertObj(source,"mechanics");
+ const out={};
+ for(const [key,value] of Object.entries(source)){
+  const allowed=MECHANIC_OPTIONS[key];
+  if(!allowed||!allowed.includes(value))
+   throw Error("Unknown or unsafe staged mechanic "+key+"="+value);
+  out[key]=value;
+ }
+ return Object.freeze(out);
+};
+
 const allowed={
  heroes:new Set(["hp","atk","def","wit"]),
  monsters:new Set(["hp","atk","def","copies"]),
@@ -50,7 +73,7 @@ export function compileStaging(spec){
   throw Error("Unknown staging schema");
  if(typeof spec.id!=="string"||!/^[a-z][a-z0-9-]{1,63}$/.test(spec.id))
   throw Error("Staging id must be stable kebab-case");
- const keys=new Set(["schema","id","description","cards","roomDeck","roomEffects"]);
+ const keys=new Set(["schema","id","description","cards","roomDeck","roomEffects","mechanics"]);
  for(const key of Object.keys(spec))
   if(!keys.has(key))throw Error("Unrecognized staging field "+key);
  const collections=Object.fromEntries(Object.entries(canonical)
@@ -126,7 +149,8 @@ export function compileStaging(spec){
  }
  // Every staged card deck is a read-only full set, shared by real and
  // hypothetical states. The canonical global arrays are never modified.
- const cardPools={...collections,roomEffects:deepFreeze(effects),
+ const cardPools={...collections,mechanics:validateMechanics(spec.mechanics??{}),
+  roomEffects:deepFreeze(effects),
   stageRoomExclusions:deepFreeze(roomDeck),
   _stagingCatalogue:true,stagingId:spec.id};
  for(const key of ["heroes","rooms","monsters","items"])
