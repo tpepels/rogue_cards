@@ -139,12 +139,14 @@ function awaitingMonster(session){
  session.heroIndex=nextHero(s,0);
  if(session.heroIndex<0)return !!done(session);
  s._actedCombatMask=0;
+ s._activeMonsterFought=false;
  session.phase=s.monster.stage==="FINAL"||s.mustFightFollowingWisp?
   "combat-hero":"parley";
  s.mustFightFollowingWisp=false;
  session.monsterRound=0;
  s.metrics.battles++;
  if(session.phase==="combat-hero"){
+  s._activeMonsterFought=true;
   s.metrics.combatStarts++;
   const id=s.monster.id;
   s.metrics.monsterFightStartsById[id]=
@@ -302,6 +304,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   if(resolved){
    if(!done(session)&&!awaitingMonster(session))roomSettled(session);
   }else if(!done(session)){
+   s._activeMonsterFought=true;
    s.metrics.combatStarts++;
    const id=s.monster.id;
    s.metrics.monsterFightStartsById[id]=
