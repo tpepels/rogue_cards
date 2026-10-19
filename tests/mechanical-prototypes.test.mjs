@@ -23,7 +23,7 @@ const canonical=canonicalStagingCatalogue();
 const state=(id,seed=13)=>{
  const s=new ExpeditionState({seed,heroes:["warrior"],gameMode:"everything-goes",
   cardPools:byName[id]});
- s.beginRoom(s.rooms.UPPER[0]);
+ s.beginRoom(s.cardPools.rooms.find(x=>x.id==="ex-u-slick-passage"));
  return s;
 };
 function monster(s,id="rat"){
@@ -36,7 +36,7 @@ function sessionIn(id,phase,seed=13){
  const session=createDecisionSession({seed,heroes:["warrior"],
   gameMode:"everything-goes",cardPools:byName[id]});
  const s=session.state;
- s.beginRoom(s.rooms.UPPER[0]);
+ s.beginRoom(s.cardPools.rooms.find(x=>x.id==="ex-u-slick-passage"));
  if(phase==="vault"){
   s.beginRoom(s.cardPools.vault);
   beginWarden(s);
