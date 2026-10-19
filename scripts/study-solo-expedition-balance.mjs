@@ -314,11 +314,15 @@ export function playFullSoloExpedition({
  const combatContextDamage=regionalCount(m.damageContextById);
  const vaultReached=Boolean(m.vaultEntered||vaultSeen);
  const byStage=Object.fromEntries(["UPPER","MIDDLE","DEEP"].map(stage=>{
-  const visited=[...session.state.seenRooms].map(id=>ROOM_BY_ID.get(id)).
-   filter(room=>room?.stage===stage);
+  const visits=Object.entries(m.roomVisitCounts??{}).flatMap(([id,count])=>{
+   const room=ROOM_BY_ID.get(id);
+   return room?.stage===stage?[{room,count}]:[];
+  });
   return [stage,{
-   normal:visited.filter(room=>room.v2.kind!=="CORRIDOR").length,
-   corridors:visited.filter(room=>room.v2.kind==="CORRIDOR").length
+   normal:visits.filter(x=>x.room.v2.kind!=="CORRIDOR").
+    reduce((sum,x)=>sum+x.count,0),
+   corridors:visits.filter(x=>x.room.v2.kind==="CORRIDOR").
+    reduce((sum,x)=>sum+x.count,0)
   }];
  }));
  // Seen Rooms are NOT necessarily completed Rooms: retained/entered
@@ -375,7 +379,8 @@ export function playFullSoloExpedition({
   policyShortcutReasons:{...policy.shortcutCounts},
   equipmentMode,mctsPragmaticVariant,pragmaticSimulation,
   stagingId:cardPools?.stagingId??null,
-  seenRoomIds:[...session.state.seenRooms]
+  seenRoomIds:[...session.state.seenRooms],
+  seenRoomCounts:{...(m.roomVisitCounts??{})}
  };
 }
 export function parseSoloBalanceArgs(argv){
