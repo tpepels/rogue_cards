@@ -30,6 +30,8 @@ import {roomRatioHypotheses}
  from "../src/staging/room-ratio-hypotheses.js";
 import {postCombatHealingHypotheses}
  from "../src/staging/combat-healing-hypotheses.js";
+import {printedRecoveryHypotheses}
+ from "../src/staging/printed-recovery-hypotheses.js";
 import {BALANCED_ROOMS} from "../src/room-balance.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
@@ -83,9 +85,9 @@ export function balanceStudyArgs(argv){
  const seed=num("--seed",20261215,1,0xffffffff);
  const suite=opts["--suite"]??"original";
  if(!["original","encounters","warden","mechanics","hp-ratios",
-  "stat-factorial","room-ratios","combat-healing"].includes(suite))
+  "stat-factorial","room-ratios","combat-healing","printed-recovery"].includes(suite))
   throw Error("--suite must be original, encounters, warden, mechanics, "+
-   "hp-ratios, stat-factorial, room-ratios or combat-healing");
+   "hp-ratios, stat-factorial, room-ratios, combat-healing or printed-recovery");
  return {heroes,seed,suite,smoke,screenRepeats,confirmRepeats,dryRun,
   workers:num("--workers",8,1,32),minutes:num("--minutes",120,1,720),
   finalists:num("--finalists",smoke?1:suite==="room-ratios"?3:4,1,12),
@@ -407,6 +409,7 @@ async function main(){
   opts.suite==="stat-factorial"?monsterStatFactorialHypotheses():
   opts.suite==="room-ratios"?roomRatioHypotheses():
   opts.suite==="combat-healing"?postCombatHealingHypotheses():
+  opts.suite==="printed-recovery"?printedRecoveryHypotheses():
   balanceHypotheses()).slice(0,opts.variantLimit);
  if(opts.finalists>hypotheses.length)
   throw Error("--finalists cannot exceed --variant-limit");
@@ -424,7 +427,7 @@ async function main(){
   ...(opts.suite==="original"?{}:{suite:opts.suite}),
   revision:revision(),agentId:agent.id,agentSha256:sha(agentSource),
   hypotheses:hypotheses.map(spec=>({id:spec.id,hash:sha(spec)})),
-  canonicalDeck:deckComposition(opts.suite==="combat-healing"?
+  canonicalDeck:deckComposition(["combat-healing","printed-recovery"].includes(opts.suite)?
    {...canonicalStagingCatalogue(),rooms:BALANCED_ROOMS}:
    canonicalStagingCatalogue()),
   stagedDecks,heroes:opts.heroes,seed:opts.seed,
