@@ -1,0 +1,41 @@
+name: Verify overnight healing source accounting
+
+on:
+  push:
+    paths:
+      - .github/workflows/recovery-overnight-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  healing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify source attribution and printable candidates
+        run: npm run test:balance:recovery-overnight
+      - name: Validate full overnight experiment plan
+        run: |
+          node scripts/study-balance-hypotheses.mjs \
+            --suite recovery-overnight --finalists 12 \
+            --screen-repeats 4 --confirm-repeats 16 --dry-run
+      - name: Smoke the actual canonical state machine and resume format
+        run: |
+          node scripts/study-balance-hypotheses.mjs \
+            --suite recovery-overnight --variant-limit 4 --finalists 3 \
+            --heroes warrior,knight --screen-repeats 1 \
+            --confirm-repeats 1 --smoke true --workers 2 \
+            --minutes 5 --out results/recovery-smoke
+      - name: Preserve any output on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: overnight-healing-smoke
+          path: results/recovery-smoke/
+          if-no-files-found: ignore
