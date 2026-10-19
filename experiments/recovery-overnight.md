@@ -43,8 +43,8 @@ node scripts/study-balance-hypotheses.mjs \
   --confirm-repeats 16 \
   --workers 8 \
   --minutes 720 \
-  --seed 20261021 \
-  --out results/recovery-overnight-v1
+  --seed 20261026 \
+  --out results/recovery-overnight-v2-item-doses
 ~~~
 
 At these settings: **1664 screening** expeditions (51 hypotheses + control × 8 Heroes × 4) and **1664 independent confirmation** expeditions (12 finalists + control × 8 × 16), **3328** scheduled total. The fixed set of confirmation finalists always reserves representation for Item-HP alone, the Item quantity × HP grid, and Item-HP crossed with REST, Monster rewards and both. A 12-hour limit may stop the process early; it safely checkpoints for exact revision/command resume. The study saves individual raw trials in `trials.ndjson`, the exact code/agent/candidate manifest in `manifest.json`, statistics in `summary.json` and the review table in `comparison.md`. It checkpoints incrementally and resumes via the **identical command, options, Git revision and output directory**.
@@ -66,7 +66,7 @@ Screening favors similarity to the earlier reference in (i) overall wins near 36
 **Review confirmed outcomes**, not screening rankings:
 
 1. Effective HP *by actual card source and stage* and HP wasted at max health.
-2. Healing supply available vs taken, Items drawn/activated/left over, Room REST offered vs chosen, and Monster kills actually receiving healing.
+2. Compare Item copy counts × printed HP values (including per-Item effective/overcap HP), Items acquired/used and Room REST offered vs chosen; separate access from strength.
 3. Vault reach, conditional victory, all Heroes individually, causes of early death.
 4. Preservation of ordinary encounters and fight conversion; no artificial reduction in confrontation to improve wins.
 5. Card/deck size and physical/print usability; the highest numerical recovery does not necessarily make for a good physical game.
@@ -96,3 +96,10 @@ Screening favors similarity to the earlier reference in (i) overall wins near 36
 - [ ] Run full overnight screen and independent confirmation.
 - [ ] Inspect by-Hero and by-source recovery results.
 - [ ] Select a physically viable finalist and test further (without auto-promoting canonical cards).
+
+### Item potency extension (2026-10-19)
+
+- Staging `itemHealing` changes only existing physical Bandages, Rations and Thorn Tonic recovery amounts. Both the printable face and the executed effect come from the same validated data. No added universal recovery rule.
+- 50 physical arms now include seven isolated Item-HP variants, a 4 × 3 Item-copy × Item-HP matrix, and five combinations with paid REST and/or individual Monster rewards.
+- Per-arm actual healing for each Item, total healing by source, wasted HP, Item uses and opportunity observations are retained separately in `summary.json` and `comparison.md`.
+- The revised v2 experiment uses a **fresh output directory and seed**. Never append v2 trials to a prior v1 output or resume across Git revisions.
