@@ -36,7 +36,7 @@ function parse(argv){
   const k=argv[i];
   if(k==="--dry-run"){opts[k]="true";continue;}
   if(!["--out","--budgets","--runs-per-hero","--workers","--minutes",
-    "--seed"].includes(k)||opts[k]!==undefined||!argv[i+1])
+    "--seed","--puct-c"].includes(k)||opts[k]!==undefined||!argv[i+1])
    throw Error("Unknown, duplicate or missing option "+k);
   opts[k]=argv[++i];
  }
@@ -50,7 +50,10 @@ function parse(argv){
  if(!budgets.length||budgets.some(n=>!Number.isSafeInteger(n)||
    n<2||n>256)||new Set(budgets).size!==budgets.length)
   throw Error("Bad comma-separated --budgets");
- return {budgets,
+ const puctC=Number(opts["--puct-c"]??"0.35");
+ if(!Number.isFinite(puctC)||puctC<0||puctC>5)
+  throw Error("Bad --puct-c (expected 0..5)");
+ return {budgets,puctC,
   repeats:number("--runs-per-hero",1,1,500),
   workers:number("--workers",8,1,32),
   minutes:number("--minutes",600,1,10080),
@@ -112,7 +115,8 @@ async function main(){
  const sha=execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim();
  const expected={schema:"rogue-cards-mcts-search-ablation-manifest-v1",
   revision:sha,agentId:agent.id,agentParameters:agent.parameters,
-  budgets:opts.budgets,repeats:opts.repeats,seed:opts.seed,heroes:SOLO_HEROES,
+  budgets:opts.budgets,repeats:opts.repeats,seed:opts.seed,
+  puctC:opts.puctC,heroes:SOLO_HEROES,
   arms:MCTS_SEARCH_ARMS.map(a=>a.id),
   trials:opts.budgets.length*opts.repeats*SOLO_HEROES.length*MCTS_SEARCH_ARMS.length};
  if(opts.dryRun){console.log(JSON.stringify(expected,null,2));return;}
@@ -174,7 +178,9 @@ async function main(){
   persist();console.log("MCTS ablation "+rows.length+"/"+expected.trials);
  },60000);
  for(let i=0;i<opts.workers;i++){
-  const w=new Worker(new URL(import.meta.url),{workerData:{agent}});
+  const w=new Worker(new URL(import.meta.url),{
+   workerData:{agent,puctC:opts.puctC}
+  });
   workers.push(w);
   w.on("message",msg=>{
    if(stopped)return;
@@ -210,7 +216,8 @@ if(!isMainThread){
     implicitThreatScale:p.implicitThreatScale,
     maxSearchSteps:p.maxSearchSteps,
     nodePriors:profile.nodePriors,
-    progressiveWidening:profile.progressiveWidening
+    progressiveWidening:profile.progressiveWidening,
+    puctC:workerData.puctC
    });
    parentPort.postMessage({result:{
     budget:job.budget,hero:job.hero,replicate:job.replicate,
