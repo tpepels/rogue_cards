@@ -498,7 +498,7 @@ export function applyAction(s,action,{observeResult=true,prevalidated=false}={})
    item=h.inventory.find(c=>c.id===selected.cardId);
   if(!item)throw Error("Missing printed Shrine replacement Item");
   s.directItem(h,item,"shrine-skip-choice",()=>{
-   if(selected.mode==="heal")s.heal(h,2);
+   if(selected.mode==="heal")s.heal(h,2,item);
    else if(!s.recharge())throw Error("No exhausted Wand to recharge");
    return true;
   });
@@ -538,7 +538,7 @@ export function applyAction(s,action,{observeResult=true,prevalidated=false}={})
   }else if(o.mode==="healing-tool"){
    s.directItem(h,o.card,o.mode,()=>{
     const amount=o.card.id==="ex-bandages"?s.die():2;
-    s.consume(h,o.card);s.heal(h,amount);return true;
+    s.consume(h,o.card);s.heal(h,amount,o.card);return true;
    });
   }else if(o.mode==="recharge"){
    if(o.card.id!=="lantern-heart")throw Error("Unsupported free Item recharge");
