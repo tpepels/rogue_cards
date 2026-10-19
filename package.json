@@ -117,7 +117,8 @@
     "study:balance:hypotheses": "node scripts/study-balance-hypotheses.mjs",
     "test:balance:next": "node --test tests/next-balance-hypotheses.test.mjs",
     "test:balance:mechanics": "node --test tests/mechanical-prototypes.test.mjs",
-    "test:balance:hp-ratios": "node --test tests/monster-hp-ratios.test.mjs"
+    "test:balance:hp-ratios": "node --test tests/monster-hp-ratios.test.mjs",
+    "test:balance:stat-factorial": "node --test tests/monster-stat-factorial.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
