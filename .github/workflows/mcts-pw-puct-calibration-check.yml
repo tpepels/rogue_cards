@@ -44,3 +44,18 @@ jobs:
             --dry-run --screen-repeats 2 --confirm-repeats 12 \
             --screen-budget 16 --confirm-budgets 32,64 > /tmp/mcts-new-plan.json
           node -e 'const x=require("/tmp/mcts-new-plan.json");if(x.screenPlanned!==448||x.confirmPlanned!==768)process.exit(1);'
+      - name: Run actual calibrated MCTS workers and verify a partial checkpoint
+        run: |
+          node scripts/study-mcts-search-ablation.mjs --calibrate \
+            --minutes 1 --workers 2 --screen-repeats 1 --confirm-repeats 1 \
+            --screen-budget 2 --confirm-budgets 2 --seed 20261020 \
+            --out "$RUNNER_TEMP/pw-worker-smoke"
+          node --input-type=module -e '
+            import {readFileSync,existsSync} from "node:fs";
+            const p=process.env.RUNNER_TEMP+"/pw-worker-smoke/screen/";
+            if(!existsSync(p+"trials.ndjson"))throw Error("No real PW/PUCT trial was completed");
+            const rows=readFileSync(p+"trials.ndjson","utf8").trim().split("\\n").filter(Boolean);
+            if(!rows.length)throw Error("Calibration workers returned no completed games");
+            for(const line of rows){const x=JSON.parse(line);if(!["win","death","escape"].includes(x.ending))throw Error("Nonterminal calibration row");}
+            console.log("Completed valid canonical calibration trials:",rows.length);
+          '
