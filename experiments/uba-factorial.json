@@ -1,0 +1,9 @@
+{
+  "schema": "uba-factorial-v1",
+  "description": "Two physical Room compositions × two Monster HP settings × two printed Bandage healing amounts. Agent fixed separately.",
+  "space": [
+    {"key": "room-composition", "kind": "room-transfer", "stage": "UPPER", "from": "u-shrine", "to": "u-nest", "values": [0, 1]},
+    {"key": "monster-hp", "kind": "card-stat", "collection": "monsters", "field": "hp", "offset": true, "values": [0, -1]},
+    {"key": "bandage-healing", "kind": "item-healing", "id": "ex-bandages", "values": [2, 4]}
+  ]
+}

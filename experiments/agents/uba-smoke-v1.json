@@ -1,0 +1,17 @@
+{
+  "schema": "uba-agent-profile-v1",
+  "id": "uba-smoke-v1",
+  "budget": 1,
+  "maxSearchSteps": 5000,
+  "knowledge": "fair",
+  "searchProfile": "classic",
+  "treeMode": "frontier",
+  "exploration": 0.2,
+  "implicitWeight": 0.5,
+  "implicitHeuristicMode": "legacy",
+  "equipmentMode": "party-efficient",
+  "rolloutCombatMode": "random",
+  "progressiveWidening": false,
+  "nodePriors": false,
+  "puctC": 0.35
+}

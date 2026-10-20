@@ -48,7 +48,7 @@ export function seal(s){
   const owner=s.heroes.find(x=>x.hp>0&&x.inventory.some(o=>o.id==="crown-relic"));
   if(owner){s.setActor(owner);const crown=itemIn(s,owner,"crown-relic");
    s.directItem(owner,crown,"rescue-failed-roll",()=>{
-    s.consume(owner,crown);s.hurt(owner,s.die());return true;});
+    s.consume(owner,crown);s.hurt(owner,s.die(),crown);return true;});
    good=true;}
  }
  s.metrics.sealWin=good;return good;

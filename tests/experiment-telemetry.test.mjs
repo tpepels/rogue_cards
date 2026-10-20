@@ -55,7 +55,7 @@ test("printed card and resource snapshots include ownership, depth and status",(
  assert.equal(sample.itemDeck,s.state.deck.length);
  assert.equal(sample.heroes[0].id,"warrior");
  assert.equal(sample.heroes[0].inventory.length,2);
- assert.equal(sample.roomPiles.UPPER,29);
+ assert.equal(sample.roomPiles.UPPER,18);
 });
 test("deep experiment dry-run makes no artifacts and includes matched arms",()=>{
  const p=execFileSync(process.execPath,[

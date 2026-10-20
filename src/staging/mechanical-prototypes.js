@@ -5,7 +5,7 @@
  */
 import {compileStaging} from "./catalogue.js";
 const one=(id,description,mechanics)=>({
- schema:"rogue-cards-staging-v1",id,description,mechanics
+ schema:"rogue-cards-staging-v1",id,description,mechanics,roomBaseline:"full"
 });
 const ideas=[
  ["patrol-four-safe","Periodic Monster after every fourth regional Room; first response skipped.",{patrolEvery:4,patrolOpening:"skip"}],

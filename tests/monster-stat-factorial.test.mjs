@@ -15,7 +15,7 @@ import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {balanceStudyArgs} from "../scripts/study-balance-hypotheses.mjs";
 
-const canonical=canonicalStagingCatalogue();
+const canonical=canonicalStagingCatalogue({roomBaseline:"full"});
 const arms=monsterStatFactorialHypotheses();
 const lookup=Object.fromEntries(arms.map(x=>[x.id,x]));
 const pool=id=>compileStaging(lookup[id]);
@@ -51,7 +51,7 @@ test("Every Monster is changed exactly as required and no other printed stats mo
   assert.equal(staged.wardenFury.hp,canonical.wardenFury.hp);
   assert.deepEqual(staged.mechanics,{});
   assert.deepEqual(staged.items.map(x=>x.id),canonical.items.map(x=>x.id));
-  assert.deepEqual(staged.rooms.map(x=>x.id),canonical.rooms.map(x=>x.id));
+  assert.deepEqual(staged.rooms.map(x=>x.id).sort(),canonical.rooms.map(x=>x.id).sort());
   for(const original of canonical.monsters){
    const modified=staged.monsters.find(x=>x.id===original.id);
    assert.equal(modified.hp,scaledMonsterHp(original.hp,

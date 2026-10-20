@@ -86,6 +86,9 @@ export class ExpeditionState {
   const monsterPool=gameMode==="everything-goes"?
    (staged?cardPools.monsters:[...MONSTERS,...EXTRA_MONSTERS]):MONSTERS;
   this.monsters=Object.fromEntries(stageNames.map(s=>[s,copyDeck(this.rng,monsterPool.filter(x=>x.stage===s))]));
+  // Public removals from the current shuffled cycle, including drawn queued
+  // Monsters. Lifetime encounter visits cannot identify a refilled pile.
+  this.monsterDrawCycleCounts=Object.fromEntries(stageNames.map(s=>[s,{}]));
   this.seenRooms=new Set();
   // Publicly revealed corridor alternatives permanently removed from the
   // physical Room deck (not merely Rooms that were actually entered).
@@ -141,10 +144,14 @@ export class ExpeditionState {
    damageContextById:{},monsterParleyAttemptsById:{},
    monsterParleyWinsById:{},
    wipeCause:null,wipeStage:null};
-  for(const h of this.heroes){
+  const starters=this.heroes.map(h=>{
    const index=this.deck.findIndex(c=>c.id===h.card.v2.starter);
    if(index<0)throw Error("Missing starter "+h.card.v2.starter);
    const starter=this.deck.splice(index,1)[0];
+   return starter;
+  });
+  for(const [i,h] of this.heroes.entries()){
+   const starter=starters[i];
    this.noteDeckRemoval(starter);this.add(h,starter);
    const random=this.deck.pop();this.noteDeckRemoval(random);
    this.add(h,random);this.metrics.objectDraws[random.id]=(this.metrics.objectDraws[random.id]||0)+1;
@@ -175,14 +182,14 @@ export class ExpeditionState {
     ["treasure","magic"].includes(this.strategy)&&
     face<=(sides===20?8:2)&&h.hp>count+4;
    if(!take||h.hp<=count)break;
-   this.hurt(h,count);if(!this.alive())break;
+   this.hurt(h,count,"rule:push-your-luck");if(!this.alive())break;
    face=this.die(sides);
    this.rerollHistory.push({room:this.room?.id||null,cost:count,face});
    if(onOne&&face===1&&this.room?.stage!=="FINAL")this.drawMonster();
   }
   return face;
  }
- fallThrough(destination,{damage=0,monster=false,treasure=0}={}){
+ fallThrough(destination,{damage=0,monster=false,treasure=0,source=null}={}){
   if(this._trapDamageContext&&this._trapPrevention>0){
    damage=Math.max(0,damage-this._trapPrevention);
    this._trapPrevention=0;
@@ -217,7 +224,8 @@ export class ExpeditionState {
   const from=order.indexOf(this.room?.stage),to=order.indexOf(destination);
   if(from<0||to<=from)throw Error("Trapdoor must descend to a deeper stage");
   for(let i=from;i<to;i++)if(order[i]!=="FINAL")this.stageProgress[order[i]]=this.roomGoal;
-  this.pendingTrapLanding={stage:destination,damage,monster};
+  this.pendingTrapLanding={stage:destination,damage,monster,
+   source:source??"rule:trapdoor-fall"};
   this.trapdoorHistory.push({from:this.room.stage,to:destination,damage,monster,treasure});
   if(treasure)this.draw(treasure);
  }
@@ -317,7 +325,19 @@ export class ExpeditionState {
  noteDeckRemoval(card){
   if(card)this.deckRemovedCounts[card.id]=(this.deckRemovedCounts[card.id]||0)+1;
  }
+ // A transaction-local tape, installed only by submitDecision's committed
+ // observer. Never attach callbacks or retained tapes to the live state.
+ noteTelemetry(type,data={}){
+  if(!this._telemetryEvents)return;
+  this._telemetryEvents.push({schema:"uba-event-v1",type,
+   stage:this.room?.stage??"between-rooms",depth:this.metrics.cleared,
+   roomId:this.room?.id??null,roomCopy:this.room?._physicalCopy??null,
+   monsterId:this.monster?.id??null,...data});
+ }
+ telemetryHp(){return this.heroes.map(h=>({id:h.card.id,hp:h.hp}));}
  add(h,card){if(!card)return;h.inventory.push(card);this.equip(h,card);
+  if(this._telemetryEvents)this.noteTelemetry("inventory-add",{heroId:h.card.id,itemId:card.id,
+   copy:card._physicalCopy??null});
   this.objectsEverOwned.add(card.id);
   this.metrics.objectAcquisitions[card.id]=(this.metrics.objectAcquisitions[card.id]||0)+1;
  }
@@ -339,6 +359,8 @@ export class ExpeditionState {
  remove(h,card){
   const pos=h.inventory.indexOf(card);if(pos<0)return false;
   h.inventory.splice(pos,1);
+  if(this._telemetryEvents)this.noteTelemetry("inventory-remove",{heroId:h.card.id,itemId:card.id,
+   copy:card._physicalCopy??null});
   for(const [key,v] of Object.entries(h.slots))if(v===card)delete h.slots[key];
   this.exhausted.delete(card);this.consumed.add(card);
   for(const c of h.inventory)this.equip(h,c);
@@ -366,8 +388,31 @@ export class ExpeditionState {
   this.consumed.delete(item);this.add(this.chooseRecipient("salvage"),item);
   return item;
  }
- hurt(h,amt){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
+ hurt(h,amt,source=null,contributions=null){const n=protectHero(this,h,Math.max(0,amt));const before=h.hp;h.hp=clamp(h.hp-n,0,h.card.hp);
   this.metrics.damage+=before-h.hp;
+  if(this._telemetryEvents){
+   const explicit=typeof source==="string"?source:
+    source?.id?source.type+":"+source.id:this._telemetrySource;
+   const context=this.monster?"monster:"+this.monster.id:
+    this.room?"room:"+this.room.id:"between-rooms";
+   const components=contributions?.filter(x=>x.offered>0).map(x=>({
+    source:typeof x.source==="string"?x.source:
+     x.source?.id?x.source.type+":"+x.source.id:"unattributed:damage-contribution",
+    sourceCopy:x.source?._physicalCopy??null,offered:x.offered}));
+   const composite=components?.length>1;
+   this.noteTelemetry("damage",{
+   heroId:h.card.id,beforeHp:before,afterHp:h.hp,damage:before-h.hp,
+   offered:Math.max(0,amt),prevented:Math.max(0,amt-n),
+   source:composite?"composite:"+[...new Set(components.map(x=>x.source))].sort().join("+"):
+    explicit??"unattributed:context:"+context,context,
+   sourceCopy:composite?null:source!==null?(source?._physicalCopy??null):this._telemetrySourceCopy??null,
+   attribution:composite?"composite":typeof source==="string"?"printed-rule":source?"printed-card":this._telemetrySource?"printed-operation":"context",
+   ...(composite?{sourceContributions:components,contributionBasis:"before-hit-reactions",
+    // Protection and HP caps apply once to the entire hit. The printed
+    // rules define no causal allocation of that mitigation among sources.
+    effectiveDamageByContributor:null}:{}),
+   operation:this._telemetryOperation??null});
+  }
   if(before>h.hp){
    // Attribution is the visible *context* of the HP loss, not a causal
    // assertion: Item backfire inside combat also occurs in this context.
@@ -392,7 +437,7 @@ export class ExpeditionState {
    source?.type==="monster"?"monster":
    source?.type==="room"?"room":
    source?.type==="item"?"item":
-   source?.type==="potion"?"potion":"unattributed";
+   source?.type==="potion"?"potion":source?.type==="hero"?"hero":"unattributed";
   const id=typeof source==="string"?source:
    source?.id?category+":"+source.id:
    "unattributed:"+(this.monster?.id??this.room?.id??"between-rooms");
@@ -408,6 +453,9 @@ export class ExpeditionState {
   update(metric.bySource[id]??=cell());
   update(metric.byCategory[category]??=cell());
   update(metric.byStage[stage]??=cell());
+  if(this._telemetryEvents)this.noteTelemetry("healing",{heroId:h.card.id,beforeHp:before,afterHp:h.hp,
+   source:id,sourceCopy:typeof source==="object"?source?._physicalCopy??null:null,
+   category,offered,restored,wasted,operation:this._telemetryOperation??null});
   return restored;
  }
  healParty(amt,source=null){
@@ -521,6 +569,8 @@ export class ExpeditionState {
   r.poisonCured+=Number(before.poison&&!after.poison);
   r.recharges+=Math.max(0,before.exhausted-after.exhausted);
   r.scouts+=Math.max(0,after.scouted-before.scouted);
+  if(this._telemetryEvents)this.noteTelemetry("item-use",{heroId:h.card.id,itemId:card.id,
+   copy:card._physicalCopy??null,mode});
  }
  // Covers direct printed actions as well as die rolls, with exactly one
  // result record for the action. Costs are still settled by actual dispatch.
@@ -550,6 +600,7 @@ export class ExpeditionState {
      }else this.rooms[room.stage].push(alternative);
     }}
    this.room=room;this.skipRoom=false;this.moonLensFace=null;
+   if(this._telemetryEvents)this.noteTelemetry("room-entry",{hp:this.telemetryHp()});
    if(this.publicBottomRoomIds?.[room.stage]){
      // A visit consumes only one public bottom-deck reprint.
      const at=this.publicBottomRoomIds[room.stage].indexOf(room.id);
@@ -572,11 +623,13 @@ export class ExpeditionState {
   }this.poisonRoom=false;this.monsterQueue=[];this.pendingReward=0;this.lastCostCards=[];
    this._moraleOffered=false;
   this.pendingFightHeal=null;this.extraMonsterAdv=false;
+  delete this._pendingFightHealSource;
   this.monsterAdv=false;this.monsterDis=false;this.forcedBehavior=0;this.rewrites.clear();
   this.heroes.forEach(h=>{
    h.used.clear();h.immune=false;h.poison=false;
    // NEXT effects stay on the card/hero until consumed, even across Rooms.
    h.damageVulnerability=0;
+   delete h._damageVulnerabilitySources;
    });
    // The phase controller pauses HERE, before any retained Room executes
    // its delayed printed trigger. All legacy expedition calls use the same
@@ -594,11 +647,13 @@ export class ExpeditionState {
    if(this.pendingTrapLanding?.stage===this.room.stage){
     const landing=this.pendingTrapLanding;this.pendingTrapLanding=null;
     if(landing.damage)
-     this.hurt(this.chooseRecipient("trapdoor-falling-damage"),landing.damage);
+     this.hurt(this.chooseRecipient("trapdoor-falling-damage"),landing.damage,
+      landing.source??"rule:trapdoor-fall");
     if(this.alive()&&landing.monster&&this.room.stage!=="FINAL")this.drawMonster();
    }
   }
   endRoom(){
+  if(this._telemetryEvents)this.noteTelemetry("room-exit",{hp:this.telemetryHp()});
   for(const entry of [...this.tuckedRoomItems]){
    if(entry.roomId!==this.room?.id)continue;
    this.tuckedRoomItems.splice(this.tuckedRoomItems.indexOf(entry),1);
@@ -618,10 +673,17 @@ export class ExpeditionState {
  nextMonster(region=this.room?.stage){
   if(!region||region==="FINAL")return null;
   const pile=this.monsters[region];
-  if(!pile.length)this.monsters[region]=copyDeck(this.rng,
+  if(!pile.length){this.monsters[region]=copyDeck(this.rng,
    (this.cardPools?.monsters??(this.gameMode==="everything-goes"?
     [...MONSTERS,...EXTRA_MONSTERS]:MONSTERS)).filter(c=>c.stage===region));
-  return this.monsters[region].pop();
+   (this.monsterDrawCycleCounts??={})[region]={};
+  }
+  const card=this.monsters[region].pop();
+  const removed=((this.monsterDrawCycleCounts??={})[region]??={});
+  removed[card.id]=(removed[card.id]??0)+1;
+  if(card&&this._telemetryEvents)this.noteTelemetry("monster-draw",{cardId:card.id,
+   copy:card._physicalCopy??null,drawStage:region});
+  return card;
  }
  drawMonster(){
    if(this.skipNextMonster&&this.room?.id==="u-nest"){
@@ -653,6 +715,8 @@ export class ExpeditionState {
   }else this.monsterQueue.push(m);
   this.metrics.monsterVisits[m.id]=(this.metrics.monsterVisits[m.id]||0)+1;
   this.metrics.encounterStarts++;
+  if(this._telemetryEvents)this.noteTelemetry("encounter-start",{cardId:m.id,
+   copy:m._physicalCopy??null,queued:this.monster!==m,hp:this.telemetryHp()});
  }
  activate(h,card,{face=null,consume=true,mode="printed",record=true}={}){
   if(!h.inventory.includes(card))throw Error("Object not owned "+card.id);
@@ -678,7 +742,7 @@ export class ExpeditionState {
   if(/ONCE PER ROOM/i.test(card.v2.trigger))h.used.add(card);
   if(face==null)face=this.die();
   if(card.id==="ring-echo"&&face<=2&&this.anyEquippedTag("CURSED")){
-   this.hurt(h,this.die());face=6;
+   this.hurt(h,this.die(),card);face=6;
   }
   this.lastDamage=0;this.damageElement=null;
   const objectBand=d6Band(card,face);
@@ -715,7 +779,7 @@ export class ExpeditionState {
   thief.used.add("hero");
   if(mode==="steady"){this.draw();this.discard();return;}
   const d=this.die();
-  if(d<=2)this.hurt(thief,2);
+  if(d<=2)this.hurt(thief,2,thief.card);
   else if(d<=4){this.draw();this.discard();}
   else{this.draw(2);this.discard();}
  }
@@ -741,12 +805,25 @@ export class ExpeditionState {
     def:h.card.def+({mail:2,shield:1,"cursed-mail":3,"ex-jerkin":1,"ex-helm":1,"ex-buckler":2}[a?.id]||0)+(h.graveSalt&&this.monster?2:0)};
  }
  apply(kind,args,card){
+  if(!this._telemetryEvents)return this.applyOperation(kind,args,card);
+  const previous=[this._telemetrySource,this._telemetryOperation,this._telemetrySourceCopy];
+  this._telemetrySource=card?.id?card.type+":"+card.id:null;
+  this._telemetryOperation=kind;this._telemetrySourceCopy=card?._physicalCopy??null;
+  try{return this.applyOperation(kind,args,card);}
+  finally{
+   [this._telemetrySource,this._telemetryOperation,this._telemetrySourceCopy]=previous;
+   if(previous[0]===undefined)delete this._telemetrySource;
+   if(previous[1]===undefined)delete this._telemetryOperation;
+   if(previous[2]===undefined)delete this._telemetrySourceCopy;
+  }
+ }
+ applyOperation(kind,args,card){
   this.metrics.operationCounts[kind]=(this.metrics.operationCounts[kind]||0)+1;
   const h=this.actor||this.chooseActor(),v=args[0],n=()=>this.amount(v||0);
   switch(kind){
   case "NONE":case "KEEP_ROOM_ROLL":return;
    case "ROOM_SPECIAL":case "ROOM_FATE":resolveRoomChoice(this,Number(v));return;
-  case "HURT":this.hurt(h,n());return;
+  case "HURT":this.hurt(h,n(),card);return;
   case "HEAL":this.heal(h,n(),card);return;
   case "HEAL_ALL":for(const a of this.heroes)this.heal(a,n(),card);return;
   case "POISON":if(!h.immune){
@@ -765,7 +842,7 @@ export class ExpeditionState {
    const mode=canPay?this.chooseEffect("optional-item-payment:"+this.room?.id,
     ["discard","lose-hp"],"discard"):"lose-hp";
    if(mode==="discard")this.discard(cost);
-   else this.hurt(h,args[1]==="d6"?this.die():Number(args[1]));
+   else this.hurt(h,args[1]==="d6"?this.die():Number(args[1]),card);
    return;
   }
   case "MIMIC_TUCK":{
@@ -810,7 +887,7 @@ export class ExpeditionState {
    const mode=this.chooseEffect("hungry-door-swallowed-item",
     ["abandon","recover"],"abandon");
    if(mode==="recover"){
-    this.hurt(h,2);
+    this.hurt(h,2,card);
     if(this.alive()){
      const found=this.discardPile.lastIndexOf(swallowed);
      if(found>=0)this.discardPile.splice(found,1);
@@ -838,23 +915,23 @@ export class ExpeditionState {
    if(prediction===actual){
     this.peek(2);this.witBonus+=2;
    }else{
-    this.hurt(this.actor||this.chooseActor(),2);
+    this.hurt(this.actor||this.chooseActor(),2,card);
     (this.actor||this.chooseActor()).nextWitDis++;
    }
    return;
   }
-  case "PASSAGE_PRY":this.hurt(h,this.has("key")?1:2);if(this.alive())this.draw();return;
+  case "PASSAGE_PRY":this.hurt(h,this.has("key")?1:2,card);if(this.alive())this.draw();return;
   case "KEEP_ROOM":this.keptRooms.push({card:this.room});return;
   case "DOUBLE_BID":this.roomRoll();if(this.alive())this.roomRoll();return;
   case "LAMP_EAT":if(this.discardable(1,"FIRE"))this.discard(1,{tag:"FIRE"});
-    else this.hurt(h,2);h.nextDis++;return;
-  case "CRYPT_WHISPER":this.hurt(h,2);
-    if(this.alive())this.roomCheck("CHECK_WIT",0,"NONE","HURT1");return;
+    else this.hurt(h,2,card);h.nextDis++;return;
+  case "CRYPT_WHISPER":this.hurt(h,2,card);
+    if(this.alive())this.roomCheck("CHECK_WIT",0,"NONE","HURT1",card);return;
   case "DISCARD":this.discard(n());return;
   case "COST":if(!this.discardable(n()))throw Error("Unaffordable Room choice");
    this.lastCostCards=[];for(let i=0;i<n();i++)this.lastCostCards.push(this.discard());return;
   case "PAY_ITEM_OR_HP":if(this.discardable(Number(v))){this.discard(Number(v));}
-   else this.hurt(h,Number(args[1]));return;
+   else this.hurt(h,Number(args[1]),card);return;
   case "TRADE":if(this.discardable(Number(v))){this.discard(Number(v));this.draw(Number(args[1]));}return;
   case "PEEK":this.peek(n());return;
   case "PEEK_SWAP":this.peek(n(),true);return;
@@ -875,7 +952,11 @@ export class ExpeditionState {
   case "NEXT_ATK":h.nextAtk+=n();return;
   case "NEXT_DAMAGE":h.nextDamage+=n();return;
   case "DEF_ADV":h.nextDefenseAdv=true;return;
-  case "VULNERABLE":h.damageVulnerability+=n();return;
+  case "VULNERABLE":{
+   const amount=n();h.damageVulnerability+=amount;
+   (h._damageVulnerabilitySources??=[]).push({source:card??"unattributed:damage-vulnerability",offered:amount});
+   return;
+  }
   case "BLOCK":this.pendingDamage=v==="ALL"?0:Math.max(0,this.pendingDamage-n());return;
   case "REFLECT":this.pendingReflect=true;this.pendingDamage=0;if(this.monster)this.monsterHP-=n();return;
   case "MONSTER_DIS":this.monsterDis=true;return;
@@ -930,7 +1011,11 @@ export class ExpeditionState {
   case "GOBLIN_EXTRA":if(this.equipped(h,"goblin-pet"))this.draw();return;
   case "BREAK_WAND":if(card&&h.inventory.includes(card))this.consume(h,card);return;
   case "FIGHT_REWARD":this.pendingReward+=n();return;
-  case "FIGHT_HEAL":this.pendingFightHeal=v;return;
+  case "FIGHT_HEAL":
+   this.pendingFightHeal=v;
+   if(card)this._pendingFightHealSource=card;
+   else delete this._pendingFightHealSource;
+   return;
   case "FIGHT":return;
   case "BANISH":if(this.monster){this.monster=null;this.monsterHP=0;this.banished=true;this.metrics.banishments++;}return;
   case "RECHARGE":this.recharge();return;
@@ -1042,18 +1127,19 @@ export class ExpeditionState {
   case "TRAPDOOR":this.fallThrough(v,{
     damage:args[1]?this.amount(args[1]):0,
     monster:args[2]==="MONSTER",
-    treasure:args[2]?.startsWith("DRAW")?Number(args[2].slice(4)):0
+    treasure:args[2]?.startsWith("DRAW")?Number(args[2].slice(4)):0,
+    source:card
    });return;
   case "CURSED_DETOUR":this.cursedDetour();return;
   case "ROLL_ROOM":this.roomRoll();return;
   case "ROLL_ROOM_RISK":this.roomRoll({risk:"2"});return;
   case "ROLL_ROOM_RISK_D6":this.roomRoll({risk:"d6"});return;
   case "ROLL_ROOM_COST_REROLL":this.roomRoll({risk:"item"});return;
-  case "CHECK_ATK":case "CHECK_WIT":this.roomCheck(kind,Number(v),args[1],args[2]);return;
+  case "CHECK_ATK":case "CHECK_WIT":this.roomCheck(kind,Number(v),args[1],args[2],card);return;
   case "PUPPET_BRIBE":{
    let granted=false;
    if(this.anyEquippedTag("CURSED")){
-    this.hurt(h,this.die());this.roomRoll(6);granted=true;}
+    this.hurt(h,this.die(),card);this.roomRoll(6);granted=true;}
    else if(this.discardable()){this.discard();this.peek();granted=true;}
    if(granted&&this.alive())this.keptRooms.push({card:this.room});
    return;
@@ -1123,7 +1209,7 @@ export class ExpeditionState {
   const result={bonus:this.witBonus||0,dis:(h.nextWitDis||0)>0};
   this.witBonus=0;h.nextWitDis=0;return result;
  }
- roomCheck(kind,dc,success,fail){
+ roomCheck(kind,dc,success,fail,source=null){
   const h=this.chooseRecipient("opposed-room-check:"+kind);this.actor=h;
   let wit=kind==="CHECK_WIT";
   const witModifiers=wit?this.takeWitModifiers(h):{bonus:0,dis:false};
@@ -1153,9 +1239,9 @@ export class ExpeditionState {
    if(decision?.kind!=="skip"){
    priest.used.add("hero");
    if(mode==="steady"&&priest.hp>1){
-    this.hurt(priest,1);blessBonus=2;
+    this.hurt(priest,1,priest.card);blessBonus=2;
    }else{const d=this.die();
-    if(d<=2)this.hurt(priest,Math.ceil(this.die()/2));
+    if(d<=2)this.hurt(priest,Math.ceil(this.die()/2),priest.card);
     else if(d<=4)blessBonus=2;
     else{adv=true;h.poison=false;}
    }
@@ -1195,21 +1281,21 @@ export class ExpeditionState {
       this._decisionHook({phase:"failed-d20",
        heroIndex:this.heroes.indexOf(h),cardId:crown.id}).kind==="item-trigger")){
     this.directItem(h,crown,"rescue-failed-roll",()=>{
-     this.consume(h,crown);this.hurt(h,this.die());return true;
+     this.consume(h,crown);this.hurt(h,this.die(),crown);return true;
     });
     ok=true;
    }
   }
   const code=ok?success:fail;
   if(code==="NONE")return;
-  if(code==="HURT1"){this.hurt(h,1);return;}
+  if(code==="HURT1"){this.hurt(h,1,source);return;}
   if(code==="DRAW1_RECHARGE"){this.draw();this.recharge();}
   else if(code==="DRAW1")this.draw();
   else if(code==="DRAW2")this.draw(2);
-  else if(code==="HEAL2")this.heal(h,2,this.room);
-  else if(code==="HURT2")this.hurt(h,2);
-  else if(code==="HURT2_DEF_DIS"){this.hurt(h,2);h.nextDefenseDis=(h.nextDefenseDis||0)+1;}
-  else if(code==="HURTd6")this.hurt(h,this.die());
+  else if(code==="HEAL2")this.heal(h,2,source);
+  else if(code==="HURT2")this.hurt(h,2,source);
+  else if(code==="HURT2_DEF_DIS"){this.hurt(h,2,source);h.nextDefenseDis=(h.nextDefenseDis||0)+1;}
+  else if(code==="HURTd6")this.hurt(h,this.die(),source);
   else throw Error("Unknown check consequence "+code);
  }
  /**
@@ -1372,7 +1458,7 @@ export class ExpeditionState {
     ["keep","reroll"],"keep"):"keep";
    delete this._observedRoomRollFace;
    if(mode==="reroll"){
-    this.hurt(payer,2);
+    this.hurt(payer,2,this.room);
     if(!this.alive())return false;
     const second=this.die();
     this._pendingRoomReroll={first:face,new:second,roomId:this.room.id};
@@ -1390,7 +1476,7 @@ export class ExpeditionState {
    if(canPay&&this.chooseEffect("room-push-luck:"+this.room.id,
     ["keep","push"],willing?"push":"keep")==="push"){
     if(risk==="item"){if(this.discardable()){this.discard();face=Math.max(face,this.die());}}
-    else {this.hurt(this.actor,risk==="d6"?this.die():2);face=Math.max(face,this.die());}
+    else {this.hurt(this.actor,risk==="d6"?this.die():2,this.room);face=Math.max(face,this.die());}
    }
   }
   // A physical Rope can shift a hazard die by exactly one. No Room can

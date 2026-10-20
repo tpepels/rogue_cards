@@ -55,7 +55,8 @@ test("Knight five cancels a hit and six also controls the next response",()=>{
 });
 test("Knight saves INTERCEPT when Warded Shield fully prevents damage",()=>{
  const {s,h}=battle("knight");
- const remaining=predetermined(s,[3,15,1,4]);
+ // Rat ATK 1 needs 16 to hit the Knight's shield-raised AC 17.
+ const remaining=predetermined(s,[3,16,1,4]);
  monsterRespond(s,h);
  assert.equal(remaining(),0);
  assert.ok(!h.used.has("hero"));

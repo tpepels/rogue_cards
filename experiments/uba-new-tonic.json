@@ -1,0 +1,12 @@
+{
+  "schema": "uba-card-proposal-v1",
+  "action": "add",
+  "card": {
+    "type": "item",
+    "template": "consumable-v1",
+    "id": "uba-rescue-tonic",
+    "title": "Rescue Tonic",
+    "copies": 2,
+    "ops": ["HEAL:4"]
+  }
+}

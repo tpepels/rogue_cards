@@ -1,0 +1,63 @@
+{
+  "schema": "uba-goals-v1",
+  "id": "balanced-recovery-targets-v1",
+  "base": "balanced-recovery-v1",
+  "objectives": {
+    "soloVault": {"target": 0.6, "range": [0.5, 0.7], "weight": 1},
+    "soloConditionalWin": {"target": 0.6, "range": [0.5, 0.7], "weight": 1},
+    "soloWin": {"target": 0.36, "range": [0.26, 0.46], "weight": 0.5},
+    "duoWin": {"target": 0.55, "range": [0.45, 0.65], "weight": 1},
+    "encounters36": {"range": [16, 20], "weight": 1},
+    "fightConversion": {"range": [0.55, 0.7], "weight": 1},
+    "heroFairness": {"range": [0, 0.25], "weight": 1},
+    "healingWaste": {"range": [0, 0.35], "weight": 0.5},
+    "choiceDiversity": {"range": [0.2, 1], "weight": 0.25},
+    "complexity": {"range": [0, 12], "weight": 0.5}
+  },
+  "constraints": {
+    "postCombatHeal": 0,
+    "minimumHeroWinRate": 0.1,
+    "minimumPairWinRate": 0.2,
+    "maxPhysicalChanges": 80,
+    "requireAllHeroes": true,
+    "requireAllPairs": true
+  },
+  "validation": {
+    "confidence": 0.95,
+    "minTrialsPerParty": 32,
+    "minVaultEntriesPerSize": 32,
+    "minIndependentSeeds": 32,
+    "profiles": ["reference-v1", "weak-v1"],
+    "maxWinRegression": 0.05,
+    "multipleComparisons": "bonferroni",
+    "requireTargetIntervals": true
+  },
+  "search": {
+    "population": 8,
+    "generations": 3,
+    "screenRuns": 1,
+    "refineRuns": 4,
+    "finalists": 3,
+    "holdoutRuns": 32,
+    "mutationRate": 0.3,
+    "randomFraction": 0.25,
+    "space": [
+      {"key": "upper-encounters", "kind": "room-transfer", "stage": "UPPER", "from": "u-shrine", "to": "u-nest", "values": [0, 1]},
+      {"key": "middle-encounters", "kind": "room-transfer", "stage": "MIDDLE", "from": "m-altar", "to": "m-statue", "values": [0, 1]},
+      {"key": "deep-encounters", "kind": "room-transfer", "stage": "DEEP", "from": "d-mirror", "to": "d-bones", "values": [0, 1]},
+      {"key": "monster-hp", "kind": "card-stat", "collection": "monsters", "field": "hp", "offset": true, "values": [-2, -1, 0]},
+      {"key": "monster-atk", "kind": "card-stat", "collection": "monsters", "field": "atk", "offset": true, "values": [-1, 0, 1]},
+      {"key": "bandage-healing", "kind": "item-healing", "id": "ex-bandages", "values": [2, 3, 4]},
+      {"key": "ration-copies", "kind": "card-stat", "collection": "items", "id": "ex-rations", "field": "copies", "values": [1, 2, 3]},
+      {"key": "warden-hp", "kind": "card-stat", "collection": "warden", "field": "hp", "offset": true, "values": [-2, 0, 2]}
+    ]
+  },
+  "denominators": {
+    "vault": "all started terminal expeditions",
+    "conditionalWin": "wins among expeditions entering the Vault",
+    "encounters36": "mean per-expedition ordinary encounters * 36 / Rooms cleared; excludes zero-Room runs",
+    "complete36Encounters": "observed encounters only among expeditions clearing at least 36 ordinary Rooms",
+    "fightConversion": "ordinary fights started / ordinary Monster encounters",
+    "humanPlayTime": "human playtest input only; never simulation wall time"
+  }
+}

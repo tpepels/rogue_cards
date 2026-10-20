@@ -10,7 +10,8 @@
 import {canonicalStagingCatalogue,compileStaging} from "./catalogue.js";
 
 const REGIONS=["UPPER","MIDDLE","DEEP"];
-const rooms=canonicalStagingCatalogue().rooms;
+// Recipe construction needs every original Room, including ones absent in B.
+const rooms=canonicalStagingCatalogue({roomBaseline:"full"}).rooms;
 const byId=new Map(rooms.map(r=>[r.id,r]));
 const entry=new Set([
  "u-nest","u-mimic","ex-u-guard-cell",

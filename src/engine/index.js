@@ -536,6 +536,17 @@ export function applyAction(s,action,{observeResult=true,prevalidated=false}={})
   if(!o)throw Error("Selected Item opportunity no longer exists");
   if(o.mode==="odd-tool"){
    if(!activateOddTool(s,h,o.card))throw Error("Unusable unusual Item "+o.card.id);
+  }else if(o.mode==="declarative-tool"){
+   if(!o.card._stagedCard||!Array.isArray(o.card.v2.declarativeOps))
+    throw Error("Unsupported declarative Item");
+   s.directItem(h,o.card,o.mode,()=>{
+    s.setActor(h);s.consume(h,o.card);
+    for(const raw of o.card.v2.declarativeOps){
+     if(!s.alive())break;
+     const [operation,...args]=raw.split(":");s.apply(operation,args,o.card);
+    }
+    return true;
+   });
   }else if(o.mode==="healing-tool"){
    s.directItem(h,o.card,o.mode,()=>{
     const amount=resolvePrintedItemHealing(s,o.card);

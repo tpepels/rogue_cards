@@ -12,6 +12,7 @@ function battle(heroes=["thief"],monster=rat){
  s.room=room;s.monster=monster;s.monsterHP=monster.hp;
  return {s,h:s.heroes[0]};
 }
+const hitFace=s=>combatAC(s.stats(s.heroes[0]).def)-s.monster.atk;
 function dice(s,faces){
  const remaining=[...faces];let d20=0;
  s.die=sides=>{
@@ -50,12 +51,12 @@ test("Hero natural 1 misses with bonuses; natural 20 adds a damage d6",()=>{
  assert.equal(sampled().d20,1);
 });
 test("Monster attack uses one d20 versus Hero AC, not an opposed roll",()=>{
- const hit=battle();const roll=dice(hit.s,[14]);
+ const hit=battle();const roll=dice(hit.s,[hitFace(hit.s)]);
  hit.s.forcedBehavior=3;
  monsterRespond(hit.s,hit.h);
  assert.equal(hit.h.hp,hit.h.card.hp-3);
  assert.equal(roll().d20,1);
- const miss=battle();const missRoll=dice(miss.s,[13]);
+ const miss=battle();const missRoll=dice(miss.s,[hitFace(miss.s)-1]);
  miss.s.forcedBehavior=3;monsterRespond(miss.s,miss.h);
  assert.equal(miss.h.hp,miss.h.card.hp);
  assert.equal(missRoll().d20,1);
@@ -77,7 +78,7 @@ test("defensive ADV/DIS affects Monster attack dice and cancels when both exist"
 
  const cancel=battle();cancel.h.nextDefenseAdv=true;
  cancel.h.nextDefenseDis=1;
- roll=dice(cancel.s,[14]);cancel.s.forcedBehavior=3;
+ roll=dice(cancel.s,[hitFace(cancel.s)]);cancel.s.forcedBehavior=3;
  monsterRespond(cancel.s,cancel.h);
  assert.equal(cancel.h.hp,cancel.h.card.hp-3);
  assert.equal(roll().d20,1);
@@ -142,7 +143,7 @@ test("DEF bonuses raise AC while a printed DEF penalty lowers it",()=>{
  assert.equal(high().d20,1);
 
  const penalized=battle();penalized.h.nextDefensePenalty=2;
- const low=dice(penalized.s,[12]);
+ const low=dice(penalized.s,[hitFace(penalized.s)-2]);
  penalized.s.forcedBehavior=3;
  monsterRespond(penalized.s,penalized.h);
  assert.equal(penalized.h.hp,penalized.h.card.hp-3);

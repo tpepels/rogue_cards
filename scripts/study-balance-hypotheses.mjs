@@ -12,7 +12,7 @@ import {execFileSync} from "node:child_process";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {HEROES} from "../src/tabletop-data.js";
-import {compileStaging,canonicalStagingCatalogue}
+import {compileStaging}
  from "../src/staging/catalogue.js";
 import {balanceHypotheses} from "../src/staging/balance-hypotheses.js";
 import {nextEncounterHypotheses,independentWardenHypotheses}
@@ -34,7 +34,6 @@ import {printedRecoveryHypotheses}
  from "../src/staging/printed-recovery-hypotheses.js";
 import {recoveryOvernightHypotheses,RECOVERY_OVERNIGHT_REFERENCE_ID}
  from "../src/staging/recovery-overnight-hypotheses.js";
-import {BALANCED_ROOMS} from "../src/room-balance.js";
 import {deckComposition,stageSeed,compareStaging}
  from "./study-card-staging.mjs";
 import {playFullSoloExpedition} from "./study-solo-expedition-balance.mjs";
@@ -56,6 +55,15 @@ const METRICS=["won","vaultReached","roomsCleared","ordinaryEncounters",
  "damage","hasAll36","vaultEntryHp","vaultEntryPlayable",
  "corridorVisits","ordinaryRoomVisits",
  "postCombatHealTriggers","postCombatHealRestored","postCombatHealWasted"];
+const controlBaseline=hypotheses=>{
+ const baselines=new Set(hypotheses.map(spec=>spec.roomBaseline??"balanced"));
+ if(baselines.size>1)throw Error("One study cannot mix different Room baselines");
+ return [...baselines][0]??"balanced";
+};
+export function studyControlCatalogue(hypotheses){
+ return compileStaging({schema:"rogue-cards-staging-v1",id:"canonical-control",
+  roomBaseline:controlBaseline(hypotheses)});
+}
 export function balanceStudyArgs(argv){
  const opts={},allowed=new Set(["--out","--seed","--workers","--minutes",
   "--screen-repeats","--confirm-repeats","--finalists","--heroes",
@@ -511,20 +519,18 @@ async function main(){
   throw Error("Study requires the frozen solo implicit/tree-only agent");
  const stagedDecks=Object.fromEntries(hypotheses.map(x=>[
   x.id,deckComposition(compileStaging(x))]));
+ const roomBaseline=controlBaseline(hypotheses);
  const manifest={schema:"rogue-cards-hypothesis-study-v1",
   ...(opts.suite==="original"?{}:{suite:opts.suite}),
   revision:revision(),agentId:agent.id,agentSha256:sha(agentSource),
   hypotheses:hypotheses.map(spec=>({id:spec.id,hash:sha(spec)})),
-  canonicalDeck:deckComposition(["combat-healing","printed-recovery",
-   "recovery-overnight"].includes(opts.suite)?
-   {...canonicalStagingCatalogue(),rooms:BALANCED_ROOMS}:
-   canonicalStagingCatalogue()),
+  roomBaseline,canonicalDeck:deckComposition(studyControlCatalogue(hypotheses)),
   stagedDecks,heroes:opts.heroes,seed:opts.seed,
   screenRepeats:opts.screenRepeats,confirmRepeats:opts.confirmRepeats,
   finalists:opts.finalists,smoke:opts.smoke};
  if(opts.dryRun){
   console.log(JSON.stringify({schema:manifest.schema,revision:manifest.revision,
-   agent:agent.id,suite:opts.suite,
+   agent:agent.id,suite:opts.suite,roomBaseline,
    hypotheses:manifest.hypotheses.map(h=>h.id),
    heroes:opts.heroes,screenTrials:(hypotheses.length+1)*opts.heroes.length*
     opts.screenRepeats,confirmTrials:(opts.finalists+1)*
@@ -738,6 +744,7 @@ async function main(){
 if(!isMainThread){
  const pools=Object.fromEntries(workerData.hypotheses.map(spec=>[
   spec.id,compileStaging(spec)]));
+ const control=studyControlCatalogue(workerData.hypotheses);
  const policy=workerData.agent.policy,parameters=workerData.agent.parameters;
  parentPort.on("message",task=>{
   try{
@@ -755,7 +762,7 @@ if(!isMainThread){
     implicitThreatScale:parameters.implicitThreatScale,
     maxSearchSteps:parameters.maxSearchSteps,
     recordTelemetry:false,
-    cardPools:task.variant==="canonical"?null:pools[task.variant]
+    cardPools:task.variant==="canonical"?control:pools[task.variant]
    };
    const {events,initialSnapshot,finalSnapshot,...result}=
     playFullSoloExpedition(options);

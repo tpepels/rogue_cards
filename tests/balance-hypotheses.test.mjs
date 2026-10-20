@@ -6,11 +6,19 @@ import {canonicalStagingCatalogue,compileStaging}
  from "../src/staging/catalogue.js";
 import {balanceHypotheses,encounterRoomSelection}
  from "../src/staging/balance-hypotheses.js";
-import {balanceStudyArgs,phaseSummary}
+import {balanceStudyArgs,phaseSummary,studyControlCatalogue}
  from "../scripts/study-balance-hypotheses.mjs";
 
+test("Archival and current studies execute the catalogue they report as their control",()=>{
+ const archived=studyControlCatalogue(balanceHypotheses());
+ assert.deepEqual(archived.rooms.map(c=>c.id).sort(),
+  canonicalStagingCatalogue({roomBaseline:"full"}).rooms.map(c=>c.id).sort());
+ const current=studyControlCatalogue([{id:"current"}]);
+ assert.deepEqual(current.rooms,canonicalStagingCatalogue().rooms);
+ assert.throws(()=>studyControlCatalogue([{roomBaseline:"full"},{}]),/baseline/i);
+});
 test("Hypothesis grid compiles, contains varied assumptions, and never mutates canonical",()=>{
- const canonical=canonicalStagingCatalogue(),
+ const canonical=canonicalStagingCatalogue({roomBaseline:"full"}),
   wisp=canonical.monsters.find(m=>m.id==="wisp").hp,
   room=JSON.stringify(ROOM_EFFECTS["ex-u-guard-cell"]);
  const items=balanceHypotheses(),names=items.map(x=>x.id);
@@ -40,12 +48,12 @@ test("Encounter hypotheses change only canonical executable Room opcodes",()=>{
    ROOM_EFFECTS[id].outcomes[i].length));
  }
  const result=compileStaging(stronger);
- assert.ok(result.rooms.length===canonicalStagingCatalogue().rooms.length);
+ assert.ok(result.rooms.length===canonicalStagingCatalogue({roomBaseline:"full"}).rooms.length);
  assert.equal(ROOM_EFFECTS["ex-u-guard-cell"],original);
 });
 test("Assumptions isolate Monster ATK, Item supply, deck exclusion and interaction",()=>{
  const list=balanceHypotheses(),get=id=>list.find(x=>x.id===id);
- const canon=canonicalStagingCatalogue();
+ const canon=canonicalStagingCatalogue({roomBaseline:"full"});
  const low=compileStaging(get("monsters-atk-minus-1"));
  for(const orig of canon.monsters){
   const edited=low.monsters.find(x=>x.id===orig.id);
@@ -60,8 +68,10 @@ test("Assumptions isolate Monster ATK, Item supply, deck exclusion and interacti
  assert.equal(more.items.find(x=>x.id==="ex-bandages").copies,5);
  const combined=compileStaging(get("encounter-strong-atk-recovery"));
  const id="ex-u-coal-store";
- assert.notDeepEqual(combined.roomEffects[id].choices,
-  ROOM_EFFECTS[id].choices);
+ // Recovery v1 promoted the expansion REST values; the shrine still
+ // carries this historical intervention's additional recovery operation.
+ assert.notDeepEqual(combined.roomEffects["u-shrine"].choices,
+  ROOM_EFFECTS["u-shrine"].choices);
  assert.notDeepEqual(combined.roomEffects[id].outcomes,
   ROOM_EFFECTS[id].outcomes);
  assert.equal(combined.monsters.find(x=>x.id==="wisp").atk,
@@ -102,6 +112,7 @@ test("Dry-run validates the real hypotheses without committing trials",()=>{
  ],{encoding:"utf8"});
  assert.equal(run.status,0,run.stderr);
  const json=JSON.parse(run.stdout);
+ assert.equal(json.roomBaseline,"full","archival suites disclose their full-catalogue control");
  assert.equal(json.screenTrials,64); // (3+1)*8*2
  assert.equal(json.confirmTrials,72); // (2+1)*8*3
  assert.equal(json.physicallyCanonicalCardsChanged,false);

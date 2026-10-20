@@ -35,7 +35,7 @@ test("Staged Monster changes only its own frozen definition and not canonical",(
   gameMode:"everything-goes"});
  const variant=new ExpeditionState({seed:10,heroes:["warrior"],
   gameMode:"everything-goes",cardPools:staged});
- assert.equal(normal.monsters.MIDDLE.find(m=>m.id==="wisp").hp,9);
+ assert.equal(normal.monsters.MIDDLE.find(m=>m.id==="wisp").hp,original);
  assert.equal(variant.monsters.MIDDLE.find(m=>m.id==="wisp").hp,8);
  assert.equal(canonical.hp,original);
 });

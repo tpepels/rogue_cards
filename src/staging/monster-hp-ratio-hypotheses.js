@@ -32,6 +32,7 @@ export function monsterHpRatioHypotheses(){
    const suffix=context==="canonical"?"":"-"+context;
    const spec={
     schema:"rogue-cards-staging-v1",
+    roomBaseline:"full",
     id:"monster-hp-"+ratio.id+suffix,
     description:"All ordinary Monsters have ceil(HP * "+
      ratio.numerator+"/"+ratio.denominator+

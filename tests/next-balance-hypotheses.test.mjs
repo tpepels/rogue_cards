@@ -60,14 +60,14 @@ test("Two Warden phases read precisely staged HP and retain Fury carry-over",()=
  beginWarden(state);
  assert.equal(state.monster.id,"warden");
  assert.equal(state.monsterHP,16);
- assert.equal(state.monster.atk,6);
- state.monsterHP=10;
+ assert.equal(state.monster.atk,canonical.warden.atk);
+ state.monsterHP=8;
  const fury=applyWardenChoice(state,"fight");
  assert.equal(fury.complete,false);
  assert.equal(state.monster.id,"warden-fury");
  assert.equal(state.monsterHP,8);
- assert.equal(canonical.warden.hp,20);
- assert.equal(canonical.wardenFury.hp,10);
+ assert.equal(canonical.warden.hp,15);
+ assert.equal(canonical.wardenFury.hp,8);
 });
 test("Staged Monster pile still uses staged cards when exhausted and refilled",()=>{
  const stage=compileStaging({schema:"rogue-cards-staging-v1",
@@ -81,7 +81,7 @@ test("Staged Monster pile still uses staged cards when exhausted and refilled",(
  const all=[first,...s.monsters.MIDDLE];
  assert.equal(all.filter(m=>m.id==="wisp").length,3);
  assert.ok(all.filter(m=>m.id==="wisp").every(m=>m.hp===7));
- assert.equal(canonical.monsters.find(m=>m.id==="wisp").hp,9);
+ assert.equal(canonical.monsters.find(m=>m.id==="wisp").hp,5);
 });
 test("Opt-in Room offers an actual affordable Item-vs-Monster choice",()=>{
  const pools=compileStaging(encounter.find(x=>x.id==="voluntary-loot-or-toll"));

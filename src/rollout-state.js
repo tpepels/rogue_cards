@@ -200,7 +200,7 @@ export function prepareRolloutDecks(s,knowledge){
    rooms[stage]=weightedRoomBlueprint(s,stage,stageRooms,roomById,remaining);
    const count=s.monsters[stage]?.length||0;
    const all=monsterCopies[stage];
-   const pool=reduceSeen(all,s.metrics.monsterVisits);
+   const pool=reduceSeen(all,s.monsterDrawCycleCounts?.[stage]??s.metrics.monsterVisits);
    monsters[stage]={pool:pool.length>=count?pool:all,count};
    continue;
   }
@@ -225,7 +225,7 @@ export function prepareRolloutDecks(s,knowledge){
   rooms[stage]={known,bottom,available,remaining};
   const count=s.monsters[stage]?.length||0;
   const all=monsterCopies[stage];
-  const pool=reduceSeen(all,s.metrics.monsterVisits);
+  const pool=reduceSeen(all,s.monsterDrawCycleCounts?.[stage]??s.metrics.monsterVisits);
   monsters[stage]={pool:pool.length>=count?pool:all,count};
  }
  return {source:s,knowledge,items,rooms,monsters};

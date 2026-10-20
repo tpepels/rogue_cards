@@ -10,7 +10,7 @@ import {ODD_ITEMS} from "../item-expansion.js";
 import {ROOM_EFFECTS,ROOM_OPERATIONS} from "../room-effect-model.js";
 import {ITEM_HEALING_DEFAULTS,validItemHealing}
  from "../item-healing.js";
-import {BALANCED_RECOVERY_V1_MONSTER_IDS} from "../monster-defeats.js";
+import {BALANCED_ROOM_IDS,BALANCED_ROOMS} from "../room-balance.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
 const canonical={
@@ -72,21 +72,27 @@ const identity=(card,fields,printedChanges={})=>deepFreeze({
  _stagedCard:true,
  v2:card.v2?{...structuredClone(card.v2),...structuredClone(printedChanges)}:undefined
 });
-export function compileStaging(spec){
+export function compileStaging(spec,{roomBaseline=spec?.roomBaseline??"balanced",extraCards={},
+ extraRoomEffects={},printOperations=null}={}){
  assertObj(spec,"Staging specification");
  if(spec.schema!=="rogue-cards-staging-v1")
   throw Error("Unknown staging schema");
  if(typeof spec.id!=="string"||!/^[a-z][a-z0-9-]{1,63}$/.test(spec.id))
   throw Error("Staging id must be stable kebab-case");
- const keys=new Set(["schema","id","description","cards","roomDeck","roomEffects",
-  "mechanics","monsterHealing","roomRestHealing","itemHealing"]);
+ const keys=new Set(["schema","id","description","roomBaseline","cards","roomDeck","roomEffects",
+  "mechanics","monsterHealing","roomRestHealing","roomRestCosts","itemHealing"]);
  for(const key of Object.keys(spec))
   if(!keys.has(key))throw Error("Unrecognized staging field "+key);
  const collections=Object.fromEntries(Object.entries(canonical)
   .map(([k,v])=>[k,Array.isArray(v)?v.slice():v]));
+ if(!["balanced","full"].includes(roomBaseline))throw Error("Unknown Room baseline "+roomBaseline);
+ for(const name of ["rooms","monsters","items"])
+  collections[name].push(...(extraCards[name]??[]));
  const modifications=new Set();
  for(const edit of spec.cards??[]){
   assertObj(edit,"Card edit");
+  if(Object.keys(edit).some(k=>!["collection","id","set"].includes(k)))
+   throw Error("Unknown Card edit field");
   if(!names.has(edit.collection))throw Error("Unknown collection "+edit.collection);
   const group=collections[edit.collection];
   const scalar=!Array.isArray(group);
@@ -102,13 +108,22 @@ export function compileStaging(spec){
    if(!allowed[edit.collection].has(field))
     throw Error("Unsafe or unsupported printed card field "+key+"."+field);
    if(!Number.isSafeInteger(value)||value<0||value>100||
-      ((field==="copies"||field==="hp")&&value<1))
+      (field==="hp"&&value<1))
     throw Error("Invalid staged numeric value "+key+"."+field);
   }
   const updated=identity(original,edit.set);
   if(scalar)collections[edit.collection]=updated;
   else collections[edit.collection][group.findIndex(c=>c.id===edit.id)]=updated;
  }
+ for(const hero of collections.heroes)
+  if(!collections.items.some(c=>c.id===hero.v2.starter&&c.copies>0))
+   throw Error("Missing Hero starter Item "+hero.v2.starter);
+ for(const stage of STAGES)
+  if(!collections.monsters.some(c=>c.stage===stage&&c.copies>0))
+   throw Error("Empty Monster stage "+stage);
+ // Remove definitions before the engine's legacy copies||1 expansion.
+ collections.monsters=collections.monsters.filter(c=>c.copies>0);
+ collections.items=collections.items.filter(c=>c.copies>0);
  // Changes ONLY printed healing quantities on existing physical Items.
  // Printable text and executable numeric value are generated together.
  assertObj(spec.itemHealing??{},"itemHealing");
@@ -133,7 +148,7 @@ export function compileStaging(spec){
  // Only the already-supported HEAL operation is appended to existing rewards.
  assertObj(spec.monsterHealing??{},"monsterHealing");
  for(const [id,amount] of Object.entries(spec.monsterHealing??{})){
-  if(![2,3,"d6"].includes(amount))
+  if(amount!=="d6"&&(!Number.isSafeInteger(amount)||amount<0||amount>20))
    throw Error("Unsupported printed Monster healing amount "+id+":"+amount);
   const i=collections.monsters.findIndex(m=>m.id===id);
   if(i<0)throw Error("Unknown regional Monster for healing "+id);
@@ -144,16 +159,11 @@ export function compileStaging(spec){
   // d6 effect introduced by official Balanced Recovery v1. Do not stack
   // two independent heals on the same Monster, which would misrepresent
   // both the candidate's printed text and the historical study.
-  const promoted=BALANCED_RECOVERY_V1_MONSTER_IDS.includes(id);
-  if(promoted&&(!m.v2.defeat.endsWith(" Heal d6 HP.")||
-    m.v2.defeatOps.at(-1)!=="HEAL:d6"))
-   throw Error("Canonical recovery card changed: "+id);
-  const baseText=promoted?
-   m.v2.defeat.slice(0,-" Heal d6 HP.".length):m.v2.defeat;
-  const baseOps=promoted?m.v2.defeatOps.slice(0,-1):m.v2.defeatOps;
+  const baseText=m.v2.defeat.replace(/\bheal\s+(?:\d+|d6(?:\+\d+)?)\s+HP\.?/ig,"").trim();
+  const baseOps=m.v2.defeatOps.filter(op=>!op.startsWith("HEAL:"));
   collections.monsters[i]=identity(m,{},{
-   defeat:baseText+" Heal "+amount+" HP.",
-   defeatOps:[...baseOps,"HEAL:"+amount]
+   defeat:(baseText+(amount?" Heal "+amount+" HP.":"")).trim(),
+   defeatOps:[...baseOps,...(amount?["HEAL:"+amount]:[])]
   });
  }
  const roomDeck={};
@@ -198,15 +208,24 @@ export function compileStaging(spec){
    return selection.map(id=>pool.get(id));
   }
   const excluded=new Set(roomDeck[stage]?.exclude??[]);
-  return available.filter(r=>!excluded.has(r.id));
+  const byId=new Map(available.map(r=>[r.id,r]));
+  const defaults=roomBaseline==="full"?available:
+   [...BALANCED_ROOM_IDS.filter(id=>byId.get(id)?.stage===stage).map(id=>byId.get(id)),
+    ...(extraCards.rooms??[]).filter(c=>c.stage===stage)
+     .flatMap(c=>Array.from({length:c.copies},()=>c))];
+  return defaults.filter(r=>!excluded.has(r.id));
  });
+ // Explicit physical selections also tell fair resampling to use multisets.
+ for(const stage of STAGES)roomDeck[stage]={
+  ...roomDeck[stage],selection:collections.rooms.filter(c=>c.stage===stage).map(c=>c.id)
+ };
  for(const stage of STAGES)
   if(collections.rooms.filter(c=>c.stage===stage&&
     c.v2.kind!=="CORRIDOR").length<roomCount[stage])
    throw Error(stage+" has fewer than 12 non-Corridor Rooms");
  // Improve healing on EXISTING printed REST choices, retaining their Item cost.
  // Both the printed choice and executable opcode are generated together.
- const effects={};
+ const effects={...extraRoomEffects};
  assertObj(spec.roomRestHealing??{},"roomRestHealing");
  const supportedRests=new Set(["ex-u-coal-store","ex-m-old-barracks",
   "ex-d-watchpost"]);
@@ -235,6 +254,23 @@ export function compileStaging(spec){
    outcomes:structuredClone(model.outcomes)
   });
  }
+ assertObj(spec.roomRestCosts??{},"roomRestCosts");
+ for(const [id,cost] of Object.entries(spec.roomRestCosts??{})){
+  if(!supportedRests.has(id)||!Number.isSafeInteger(cost)||cost<0||cost>5)
+   throw Error("Unsupported printed Room REST cost "+id+":"+cost);
+  const card=collections.rooms.find(c=>c.id===id);
+  if(!card)throw Error("Missing Room REST in selected deck "+id);
+  const model=effects[id]??ROOM_EFFECTS[id];
+  const ops=model.choices[1].filter(op=>!op.startsWith("COST:"));
+  const next=[...(cost?["COST:"+cost]:[]),...ops];
+  const text=card.v2.choices[1].effect.replace(/^Discard \d+ Items? to /i,"");
+  const effect=cost?"Discard "+cost+" Item"+(cost===1?"":"s")+" to "+text:
+   text.charAt(0).toUpperCase()+text.slice(1);
+  const rewritten=identity(card,{},{choices:card.v2.choices.map((c,i)=>i===1?{...c,effect}:c)});
+  collections.rooms=collections.rooms.map(c=>c.id===id?rewritten:c);
+  effects[id]=deepFreeze({choices:model.choices.map((row,i)=>i===1?next:[...row]),
+   outcomes:structuredClone(model.outcomes)});
+ }
  assertObj(spec.roomEffects??{},"roomEffects");
  for(const [id,definition] of Object.entries(spec.roomEffects??{})){
   if(Object.hasOwn(effects,id))
@@ -244,7 +280,7 @@ export function compileStaging(spec){
   assertObj(definition,"Room effect "+id);
   if(Object.keys(definition).some(k=>!["choices","outcomes"].includes(k)))
    throw Error("Unknown Room effect field "+id);
-  const prior=ROOM_EFFECTS[id];
+  const prior=extraRoomEffects[id]??ROOM_EFFECTS[id];
   if(!prior)throw Error("No canonical executable Room operations "+id);
   const choices=definition.choices??prior.choices,
    outcomes=definition.outcomes??prior.outcomes;
@@ -259,7 +295,22 @@ export function compileStaging(spec){
   }
   effects[id]=deepFreeze({choices:structuredClone(choices),
    outcomes:structuredClone(outcomes)});
+  if(printOperations){
+   const updated=identity(card,{},{
+    choices:card.v2.choices.map((c,i)=>JSON.stringify(choices[i])===JSON.stringify(prior.choices[i])?
+     c:{...c,effect:printOperations(choices[i])}),
+    ...(card.v2.roll?{roll:{...card.v2.roll,outcomes:card.v2.roll.outcomes.map((c,i)=>
+     JSON.stringify(outcomes[i])===JSON.stringify(prior.outcomes[i])?c:
+      {...c,effect:printOperations(outcomes[i])})}}:{})
+   });
+   collections.rooms=collections.rooms.map(c=>c.id===id?updated:c);
+  }
  }
+ if(collections.wardenFury.hp>=collections.warden.hp)
+  throw Error("Warden Phase II threshold must be below Phase I HP");
+ if(collections.wardenFury.hp!==canonical.wardenFury.hp)
+  collections.warden=identity(collections.warden,{},{weakness:
+   collections.warden.v2.weakness.replace(/At \d+ HP/,"At "+collections.wardenFury.hp+" HP")});
  // Every staged card deck is a read-only full set, shared by real and
  // hypothetical states. The canonical global arrays are never modified.
  const cardPools={...collections,mechanics:validateMechanics(spec.mechanics??{}),
@@ -272,6 +323,7 @@ export function compileStaging(spec){
  // canonical definitions that are shared as immutable source data.
  return Object.freeze(cardPools);
 }
-export function canonicalStagingCatalogue(){
- return canonical;
+export function canonicalStagingCatalogue({roomBaseline="balanced"}={}){
+ if(!["balanced","full"].includes(roomBaseline))throw Error("Unknown Room baseline "+roomBaseline);
+ return Object.freeze({...canonical,rooms:roomBaseline==="full"?Object.freeze(canonical.rooms.slice()):BALANCED_ROOMS});
 }

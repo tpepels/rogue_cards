@@ -68,6 +68,10 @@ solo encounters; then use a separate, paired-seed study to measure
 **complete 36-Room solo expeditions** for all eight Heroes.
 
 See [Research workflows, commands, and legacy-script cleanup](docs/research-workflows.md).
+The [Ultimate Balance Act CLI](docs/ultimate-balance-act.md) now provides joint
+physical candidate evaluation, automatic bounded optimization, independent
+confirmation and new-card compensation. Its [phase tracker](experiments/ultimate-balance-act.md)
+records acceptance evidence and statistical gates that remain open.
 The current full-game study is `npm run study:solo:balance`, with
 `npm run test:solo:balance` for validation. Results are saved locally
 under `results/` and never automatically change printed cards or

@@ -131,7 +131,7 @@ export function activateOddTool(s,h,card){
  const id=card.id;
  if(id==="odd-fever-candle"){
   spend(s,h,card,"fever-candle",()=>{
-   s.witBonus+=3;s.hurt(h,1);
+   s.witBonus+=3;s.hurt(h,1,card);
   });
  }else if(id==="odd-sun-charm"){
   spend(s,h,card,"sun-charm",()=>{
@@ -151,7 +151,7 @@ export function activateOddTool(s,h,card){
  }else if(id==="odd-bone-dice"){
   spend(s,h,card,"bone-dice",()=>{
    const face=s.die();
-   if(face<=2)s.hurt(h,1);
+   if(face<=2)s.hurt(h,1,card);
    else if(face<=4)s.draw();
    else s.heal(h,2,card);
   });

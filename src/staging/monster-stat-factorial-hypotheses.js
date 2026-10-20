@@ -57,6 +57,7 @@ export function monsterStatFactorialHypotheses(){
     }).filter(Boolean);
     const spec={
      schema:"rogue-cards-staging-v1",
+     roomBaseline:"full",
      id:statFactorialId(hp.id,atk,context),
      description:"Monster HP="+hp.numerator+"/"+hp.denominator+
       " (ceil; min 1), Monster ATK -"+atk+" (min 0), "+

@@ -102,7 +102,8 @@ export function nextEncounterHypotheses(){
    "All viable Rooms add an extra Monster encounter with attack DIS.",
    {roomEffects:withRollEncounters({countPerRegion:999,bonus:["MONSTER_DIS"]})})
  ];
- for(const v of variants)compileStaging(v);
+ // These archived encounter edits include Rooms omitted from Balanced B.
+ for(const v of variants){v.roomBaseline="full";compileStaging(v);}
  return Object.freeze(variants);
 }
 export function independentWardenHypotheses(){

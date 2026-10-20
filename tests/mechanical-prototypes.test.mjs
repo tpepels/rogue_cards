@@ -55,12 +55,12 @@ test("32 preregistered prototypes have unique names and valid immutable rule set
  for(const category of ["patrol","diplomacy","retreat","morale",
   "rewards","warden","combinations"])
   assert.ok(families.has(category),category);
- assert.equal(canonical.monsters.find(x=>x.id==="rat").hp,6);
+ assert.equal(canonical.monsters.find(x=>x.id==="rat").hp,3);
  for(const pool of Object.values(byName)){
   assert.equal(pool._stagingCatalogue,true);
   assert.ok(Object.isFrozen(pool.mechanics));
-  assert.equal(pool.monsters.find(x=>x.id==="rat").hp,6);
-  assert.equal(pool.warden.hp,20);
+  assert.equal(pool.monsters.find(x=>x.id==="rat").hp,3);
+  assert.equal(pool.warden.hp,15);
  }
 });
 test("Invalid mechanical rule options are rejected without changing canonical",()=>{
@@ -118,7 +118,7 @@ test("Surrender at half HP is an actual decision phase rather than free death",(
  assert.equal(s.monster,null);
  assert.equal(s.metrics.mechanicSuccesses["surrender:spare"],1);
  assert.equal(s.metrics.kills,0);
- assert.equal(canonical.monsters.find(x=>x.id==="rat").hp,6);
+ assert.equal(canonical.monsters.find(x=>x.id==="rat").hp,3);
 });
 test("Staged kills reward resource decisions only for ordinary nonbanished kills",()=>{
  const s=state("kill-loot");

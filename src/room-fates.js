@@ -68,14 +68,14 @@ const tuckItem=s=>{
  return item;
 };
 const take=(s,n=1)=>s.draw(n);
-const dead=(s,n)=>s.hurt(s.chooseRecipient("fate-damage"),n);
+const dead=(s,n,source)=>s.hurt(s.chooseRecipient("fate-damage"),n,source);
 // Returned tucked objects were already counted when first drawn from the deck.
 const returnTucked=(s,item)=>{if(!item)return;
  const index=s.discardPile.lastIndexOf(item);
  if(index>=0)s.discardPile.splice(index,1);
  const h=s.chooseRecipient("return-tucked-item");h.inventory.push(item);
  s.consumed.delete(item);s.equip(h,item);};
-const restore=(s,n)=>s.heal(s.chooseRecipient("fate-healing"),n,s.room);
+const restore=(s,n,source)=>s.heal(s.chooseRecipient("fate-healing"),n,source);
 // Called by ROOM_FATE on the printed choice. Item costs are checked here.
 export function resolveFateChoice(s,choice){
  const id=s.room.id;
@@ -92,13 +92,13 @@ export function resolveFateChoice(s,choice){
  case "u-cartographer":if(choice===1)s.peek(3,true);break;
  case "u-hollow-knight":if(choice===1)take(s,2);break;
  case "u-scribe-dust":if(choice===0)burnItem(s);else take(s,2);break;
- case "u-bone-seed":if(choice===0)tucked=tuckItem(s);else restore(s,3);break;
+ case "u-bone-seed":if(choice===0)tucked=tuckItem(s);else restore(s,3,s.room);break;
  case "m-ferryman-oath":if(choice===0)tucked=tuckItem(s);else take(s,2);break;
  case "m-choir-nails":if(choice===1)take(s,1);break;
  case "m-hourglass":break;
- case "m-drowned-banner":if(choice===0)dead(s,2);else take(s,2);break;
+ case "m-drowned-banner":if(choice===0)dead(s,2,s.room);else take(s,2);break;
  case "d-sleeping-crown":if(choice===1)burnItem(s,"MAGIC");break;
- case "d-last-witness":if(choice===0)dead(s,2);else take(s,2);break;
+ case "d-last-witness":if(choice===0)dead(s,2,s.room);else take(s,2);break;
  default:throw Error("Unknown fate Room "+id);
  }
  if(s.alive()){
@@ -120,11 +120,11 @@ export function fateStageEntry(s,stage){
   complete(s,entry);
   if(id==="u-cartographer"){
    if(entry.choice===0)s.peek(2,true);
-   else dead(s,2);
+   else dead(s,2,entry.card);
   }else if(entry.choice===0){
    returnTucked(s,entry.item);
    take(s,2);
-  }else dead(s,2);
+  }else dead(s,2,entry.card);
   if(!s.alive())return;
  }
 }
@@ -174,15 +174,15 @@ export function fateVaultEntry(s){
      // The physically tucked Item is sacrificed, not lost from the deck.
      if(entry.item)s.discardPile.push(entry.item);
      v.smuggleAvailable=true;
-    }else{returnTucked(s,entry.item);restore(s,3);}
+    }else{returnTucked(s,entry.item);restore(s,3,entry.card);}
    }
-   else dead(s,3);
+   else dead(s,3,entry.card);
    break;
   case "m-hourglass":v.omen=c===0?"high":"low";break;
   case "m-drowned-banner":
    if(c===0){
     const face=s.die();
-    if(face<=2)for(const hero of s.living())s.hurt(hero,1);
+    if(face<=2)for(const hero of s.living())s.hurt(hero,1,entry.card);
     else if(face<=4)v.wardenDamage+=3;
     else{
      v.wardenDamage+=s.die();
@@ -199,7 +199,7 @@ export function fateVaultEntry(s){
   case "d-last-witness":
    if(c===0){v.omenAdjust=true;v.bargainAvailable=true;
     s.endingMemory="The witness escapes with the Amulet.";}
-   else{dead(s,2);s.endingMemory="The witness remains lost beneath the dungeon.";}
+   else{dead(s,2,entry.card);s.endingMemory="The witness remains lost beneath the dungeon.";}
    break;
   }
   if(!s.alive())return;

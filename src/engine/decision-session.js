@@ -201,9 +201,12 @@ function endMonster(session){
  if(!m)throw Error("No Monster to end");
  // The Warden has a printed midpoint, not the normal kill/Corpse window.
  if(m.id==="warden"&&s.monsterHP<=(s.cardPools?.wardenFury??WARDEN_FURY).hp){
+  if(s._telemetryEvents)s.noteTelemetry("warden-midpoint",{hp:s.telemetryHp(),monsterHp:s.monsterHP});
   session.phase="post-warden";session.heroIndex=0;return;
  }
  if(s.monsterHP>0)return;
+ if(s._telemetryEvents)s.noteTelemetry("fight-end",{hp:s.telemetryHp(),
+  monsterHp:s.monsterHP,banished:s.banished});
  if(m.id==="warden-fury"){
   settleMonsterVictory(s,m,{warden:true});
   s.metrics.won=true;s.endingKind="amulet_taken";done(session);return;
@@ -309,6 +312,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
    const id=s.monster.id;
    s.metrics.monsterFightStartsById[id]=
     (s.metrics.monsterFightStartsById[id]||0)+1;
+   if(s._telemetryEvents)s.noteTelemetry("fight-start",{hp:s.telemetryHp()});
    s._actedCombatMask=0;session.phase="combat-hero";session.heroIndex=-1;
   }
  }else if(phase==="combat-hero"){
@@ -344,6 +348,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   }else{
    if(selected.kind==="seal")s.monsterAdv=true;
    beginWarden(s);s.metrics.battles++;s.metrics.combatStarts++;
+   if(s._telemetryEvents)s.noteTelemetry("fight-start",{hp:s.telemetryHp(),warden:true});
    s._actedCombatMask=0;
    session.phase="combat-hero";session.heroIndex=-1;
    session.monsterRound=0;
@@ -353,6 +358,7 @@ function submitDecisionDirect(session,action,{observeResult=true,recordHistory=t
   if(result.complete||done(session))done(session);
   else{
    s.metrics.battles++;s.metrics.combatStarts++;session.monsterRound=0;
+   if(s._telemetryEvents)s.noteTelemetry("fight-start",{hp:s.telemetryHp(),warden:true});
    s._actedCombatMask=0;
    session.heroIndex=-1;session.phase="combat-hero";
   }
@@ -568,7 +574,7 @@ export function submitDecision(session,action,{
  transactional=true,observeResult=true,recordHistory=true,
  verifiedLegalActions=null,fastPileClones=false,
  reuseEmptyReplaySwitches=false,directSettlements=false,
- fastMetricClones=false,profileEvent=null,onCommittedDice=null
+ fastMetricClones=false,profileEvent=null,onCommittedDice=null,onCommittedEvents=null
 }={}){
  if(typeof transactional!=="boolean"||typeof observeResult!=="boolean"||
     typeof recordHistory!=="boolean"||typeof fastPileClones!=="boolean")
@@ -581,6 +587,8 @@ export function submitDecision(session,action,{
   throw Error("fastMetricClones must be boolean");
  if(onCommittedDice!==null&&typeof onCommittedDice!=="function")
   throw Error("onCommittedDice must be a function");
+ if(onCommittedEvents!==null&&typeof onCommittedEvents!=="function")
+  throw Error("onCommittedEvents must be a function");
  if(profileEvent!==null&&typeof profileEvent!=="function")
   throw Error("profileEvent must be a function");
  if(afterReactionReplay!==null&&typeof afterReactionReplay!=="function")
@@ -618,12 +626,17 @@ export function submitDecision(session,action,{
  if(transactional&&!switches.length&&
     safeDirectAction(session,action,directSettlements)){
   const rollback=beginDirectTransaction(session,action);
+  const eventTape=onCommittedEvents?[]:null;
+  if(eventTape)session.state._telemetryEvents=eventTape;
   try{
    const result=submitDecisionDirect(session,action,{
     observeResult,recordHistory,verifiedAction:verifiedRoot});
    if(onCommittedDice)onCommittedDice([]);
+   delete session.state._telemetryEvents;
+   if(eventTape)onCommittedEvents(eventTape);
    return result;
   }catch(error){rollback();throw error}
+  finally{delete session.state._telemetryEvents;}
  }
  const waiting=session.pendingNested;
  let root,responses;
@@ -646,6 +659,8 @@ export function submitDecision(session,action,{
  // Nested choices replay the same root action; pending replays are not
  // emitted, and the RNG is restored before the real state is updated.
  const diceTape=onCommittedDice?[]:null;
+ const eventTape=onCommittedEvents?[]:null;
+ if(eventTape)fork.state._telemetryEvents=eventTape;
  const originalDie=fork.state.rng.die;
  if(diceTape)fork.state.rng.die=sides=>{
   const face=originalDie(sides);
@@ -680,6 +695,7 @@ export function submitDecision(session,action,{
    observeResult,recordHistory,verifiedAction:verifiedRoot});
   if(position!==responses.length)throw Error("Pending decision replay diverged");
   delete fork.state._decisionHook;
+  delete fork.state._telemetryEvents;
   if(diceTape)fork.state.rng.die=originalDie;
   // Preserve the canonical game-state object identity across accepted
   // decisions. Forked Hero/Item aliases remain consistent *within* it.
@@ -689,6 +705,7 @@ export function submitDecision(session,action,{
   fork.state=real;
   Object.assign(session,fork,{pendingNested:null});
   if(diceTape)onCommittedDice(diceTape);
+  if(eventTape)onCommittedEvents(eventTape);
   // submitDecisionDirect already produced this canonical observation
   // after all printed effects settled; enumerating actions again here
   // was duplicate work on every committed decision.

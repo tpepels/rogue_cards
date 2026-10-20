@@ -5,10 +5,11 @@
 import {ROOM_EFFECTS} from "../room-effect-model.js";
 import {canonicalStagingCatalogue,compileStaging} from "./catalogue.js";
 
-const original=canonicalStagingCatalogue();
+// This preregistered archival suite predates the Balanced B control.
+const original=canonicalStagingCatalogue({roomBaseline:"full"});
 const copy=x=>structuredClone(x);
 const newSpec=(id,description,changes={})=>({
- schema:"rogue-cards-staging-v1",id,description,...changes
+ schema:"rogue-cards-staging-v1",id,description,roomBaseline:"full",...changes
 });
 const card=(collection,id,set)=>({collection,id,set});
 const stages=["UPPER","MIDDLE","DEEP"];

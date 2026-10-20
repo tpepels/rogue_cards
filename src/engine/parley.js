@@ -85,10 +85,10 @@ export function resolveParley(s){
  case "troll":success=pay(2);break;
  case "eye":success=pay(1);break;
  case "wraith":success=s.anyEquippedTag("CURSED");
-  if(success)s.hurt(h,s.die());break;
+  if(success)s.hurt(h,s.die(),m);break;
  case "rust":success=pay(1,"METAL");if(success)s.draw();break;
  case "cultist":success=s.anyEquippedTag("CURSED");
-  if(success){s.hurt(h,s.die());s.draw()}break;
+  if(success){s.hurt(h,s.die(),m);s.draw()}break;
  case "sentinel":success=pay(2,"METAL");break;
  default:throw Error("Monster missing parley "+m.id);
  }

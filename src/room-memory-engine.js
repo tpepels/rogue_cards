@@ -17,7 +17,7 @@ export function resolveRoomChoice(s,choice){
    s.keptRooms.push({card:s.room,choice:1});s.forkRooms("plain");return;
   }
   if(id==="u-smuggler"&&choice===0){
-   s.hurt(h,1);
+   s.hurt(h,1,s.room);
    if(!s.alive())return; // Lethal SQUEEZE cannot reveal further Routes.
    s.draw();
   }
@@ -67,7 +67,7 @@ export function completePrintedRoomChoice(s,room,choice){
   s.keptRooms.splice(s.keptRooms.indexOf(kept),1);
   if(kept.choice===0)s.draw();
   else if(s.discardable())s.discard();
-  else s.hurt(s.chooseRecipient("beetle-bazaar-payment"),2);
+  else s.hurt(s.chooseRecipient("beetle-bazaar-payment"),2,kept.card);
  }
 }
 export function protectHero(s,h,damage){
@@ -116,7 +116,7 @@ export function roomEntry(s){
    }else if(s.discardable(1,"ALCHEMY")&&s.chooseEffect("leech-pool-debt",
     ["lose-hp","discard-alchemy"],"discard-alchemy")==="discard-alchemy")
      s.discard(1,{tag:"ALCHEMY"});
-   else s.hurt(s.chooseRecipient("leech-pool-debt"),2);
+   else s.hurt(s.chooseRecipient("leech-pool-debt"),2,entry.card);
   }
  }
  if(room.stage==="FINAL"){
@@ -149,7 +149,7 @@ export function roomEntry(s){
     const payer=[...s.living()].sort((a,b)=>b.hp-a.hp)[0];
     if(payer?.hp>2&&s.chooseEffect("last-bell-vault-payment",
       ["skip","pay"],"pay")==="pay"){
-      s.hurt(payer,2);
+      s.hurt(payer,2,entry.card);
       if(s.alive())s.telegraphWarden({mayReroll:true});
     }
    }

@@ -9,7 +9,7 @@ import {ROOM_EFFECTS} from "../src/room-effect-model.js";
 import {ExpeditionState} from "../src/engine/expedition-state.js";
 import {balanceStudyArgs} from "../scripts/study-balance-hypotheses.mjs";
 
-const original=canonicalStagingCatalogue();
+const original=canonicalStagingCatalogue({roomBaseline:"full"});
 const prototypes=monsterHpRatioHypotheses();
 const byId=Object.fromEntries(prototypes.map(x=>[x.id,x]));
 const staged=id=>compileStaging(byId[id]);
@@ -48,7 +48,7 @@ test("Every ordinary regional Monster receives ceiling integer HP, minimum one; 
   assert.equal(variant.wardenFury.hp,original.wardenFury.hp);
   assert.deepEqual(variant.mechanics,{});
   assert.deepEqual(variant.roomEffects,{});
-  assert.deepEqual(variant.rooms.map(x=>x.id),original.rooms.map(x=>x.id));
+  assert.deepEqual(variant.rooms.map(x=>x.id).sort(),original.rooms.map(x=>x.id).sort());
   assert.deepEqual(variant.items.map(x=>x.id),original.items.map(x=>x.id));
   assert.deepEqual(variant.heroes.map(x=>x.id),original.heroes.map(x=>x.id));
  }

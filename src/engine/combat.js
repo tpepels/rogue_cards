@@ -30,10 +30,10 @@ export function blessBeforeD20(s,target){
  if(mode===null)return {bonus:0,adv:false};
  priest.used.add("hero");
  if(mode==="steady"&&priest.hp>1){
-  s.hurt(priest,1);return {bonus:2,adv:false};
+  s.hurt(priest,1,priest.card);return {bonus:2,adv:false};
  }
  const d=s.die();
- if(d<=2){s.hurt(priest,Math.ceil(s.die()/2));return {bonus:0,adv:false};}
+ if(d<=2){s.hurt(priest,Math.ceil(s.die()/2),priest.card);return {bonus:0,adv:false};}
  if(d<=4)return {bonus:2,adv:false};
  target.poison=false;return {bonus:0,adv:true};
 }
@@ -114,7 +114,7 @@ function playerRoll(s,h,bonus,def){
   if(crown&&s.monster&&(s._decisionHook||s.monster.stage==="FINAL"||
     h.hp<h.card.hp*.3)&&wantsItem(s,h,crown,"failed-d20")){
    s.directItem(h,crown,"rescue-failed-roll",()=>{
-     s.consume(h,crown);s.hurt(h,s.die());return true;});
+     s.consume(h,crown);s.hurt(h,s.die(),crown);return true;});
     hit=true;return {hit,critical:true,natural};
   }
  }
@@ -133,7 +133,7 @@ export function playerAttack(s,h){
   h.used.add("hero");
   if(mode==="steady"){s.monsterHP-=2;return;}
   const d=s.die();
-  if(d<=2)s.hurt(h,Math.ceil(s.die()/2));else if(d<=4)s.monsterHP-=s.die()+2;
+  if(d<=2)s.hurt(h,Math.ceil(s.die()/2),h.card);else if(d<=4)s.monsterHP-=s.die()+2;
   else{s.monsterHP-=s.die()+s.die();s.monsterSkip++;}
   return;
   }
@@ -154,20 +154,20 @@ export function playerAttack(s,h){
  }
  if(h.slots.ring?.id==="ring-hunger")s.notePassive(h.slots.ring,"attack",2);
  const r=playerRoll(s,h,stat.atk+(h.recruitedGoblin?1:0),m.def);
- if(s.room?.id==="d-bones"&&r.natural===1)s.hurt(h,2);
+ if(s.room?.id==="d-bones"&&r.natural===1)s.hurt(h,2,s.room);
  if(!r.hit||h.hp<=0)return;
  s.noteOptions(itemOptions(s,h,"on-hit"));
  let dmg=s.die()+(r.critical?s.die():0);
  dmg+=h.nextDamage+s.basicAttackBonus(h);h.nextDamage=0;
- if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1);
+ if(h.slots.weapon?.id==="cursed-blade")s.hurt(h,1,h.slots.weapon);
  // A cursed weapon can kill its wielder before BLOOD RUSH is offered.
  if(h.hp>0&&h.card.id==="warrior"&&!h.used.has("hero")){
   const mode=promptedHeroMode(s,h,"after-hit");
   if(mode!==null){
   h.used.add("hero");
-  if(mode==="steady"&&h.hp>1){s.hurt(h,1);dmg+=2;}
+  if(mode==="steady"&&h.hp>1){s.hurt(h,1,h.card);dmg+=2;}
   else{const d=s.die();
-   if(d<=2)s.hurt(h,2);else if(d<=4)dmg+=2;else dmg+=s.die();
+   if(d<=2)s.hurt(h,2,h.card);else if(d<=4)dmg+=2;else dmg+=s.die();
   }
   }
  }
@@ -238,7 +238,7 @@ export function executeItemOption(s,h,option){
  }
  if(mode==="overcharge"){
   return s.directItem(h,card,mode,()=>{
-   s.metrics.overcharges++;s.hurt(h,s.die());
+   s.metrics.overcharges++;s.hurt(h,s.die(),card);
    // Overcharge has the printed highest result, even if this kills the Hero.
    // Its roll outcome must not be counted as a *second* activation.
    s.activate(h,card,{face:6,record:false,mode});
@@ -255,6 +255,10 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  poison=false,acid=false}={}){
  if(h.hp<=0)return; s.setActor(h);
  let defenseAdv=h.nextDefenseAdv,hurtExtra=h.damageVulnerability;
+ const vulnerabilitySources=[...(h._damageVulnerabilitySources??[])];
+ if(hurtExtra&&!vulnerabilitySources.length)
+  vulnerabilitySources.push({source:"unattributed:damage-vulnerability",offered:hurtExtra});
+ delete h._damageVulnerabilitySources;
  const extraDefDis=h.nextDefenseDis||0,defPenalty=h.nextDefensePenalty||0;
  h.nextDefenseAdv=false;h.damageVulnerability=0;
  h.nextDefenseDis=0;h.nextDefensePenalty=0;
@@ -266,6 +270,8 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   s.pendingDamage=0;s.pendingReflect=false;s.activate(h,mirror);
   if(s.pendingReflect){s.pendingReflect=false;return;}
   defenseAdv=defenseAdv||h.nextDefenseAdv;hurtExtra+=h.damageVulnerability;
+  vulnerabilitySources.push(...(h._damageVulnerabilitySources??[]));
+  delete h._damageVulnerabilitySources;
   h.nextDefenseAdv=false;h.damageVulnerability=0;
  }
  if(h.slots.armour){
@@ -303,7 +309,12 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  // natural 20 (not a nonexistent Hero defence natural 1).
  let damage=s.die()+(atk===20?s.die():0)+damageBonus+hurtExtra+
   (atk===20&&h.slots.armour?.id==="cursed-mail"?2:0);
+ const mailPenalty=atk===20&&h.slots.armour?.id==="cursed-mail"?2:0;
+ const contributions=[{source:s.monster,offered:damage-hurtExtra-mailPenalty},
+  ...vulnerabilitySources,
+  ...(mailPenalty?[{source:h.slots.armour,offered:mailPenalty}]:[])];
  s.pendingDamage=damage;
+ let damageSource=s.monster;
  if(h.slots.armour?.id==="shield"&&!h.used.has(h.slots.armour)&&
     wantsItem(s,h,h.slots.armour,"after-hit"))
   s.activate(h,h.slots.armour);
@@ -321,11 +332,11 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
   if(mode!==null){
   knight.used.add("hero");
   if(mode==="steady"&&knight.hp>1){
-   s.hurt(knight,1);s.pendingDamage=Math.max(0,s.pendingDamage-3);
+   s.hurt(knight,1,knight.card);s.pendingDamage=Math.max(0,s.pendingDamage-3);
   }else{const d=s.die();
   if(d<=2){
-   if(knight===h)s.pendingDamage=2;
-   else{s.hurt(knight,2);s.pendingDamage=0;}
+   if(knight===h){s.pendingDamage=2;damageSource=knight.card;}
+   else{s.hurt(knight,2,knight.card);s.pendingDamage=0;}
   } else if(d<=4)s.pendingDamage=Math.max(0,s.pendingDamage-s.die());
   else if(d===5)s.pendingDamage=0;
   else{s.pendingDamage=0;s.forcedBehavior=1;}
@@ -334,7 +345,8 @@ function monsterAttack(s,h,{adv=false,dis=false,bonus=0,damageBonus=0,
  }
  let done=0;
  s._resolvingWardenHit=["warden","warden-fury"].includes(s.monster?.id);
- try{done=s.hurt(h,s.pendingDamage);}
+ try{done=s.hurt(h,s.pendingDamage,damageSource,
+  damageSource?.type==="monster"?contributions:null);}
  finally{s._resolvingWardenHit=false;}
  if(poison&&done>0&&!h.immune)h.poison=true;
  return done>0;
@@ -392,9 +404,9 @@ export function monsterRespond(s,h){
   if(mode!==null){
   monk.used.add("hero");
   if(mode==="steady"&&face>=5&&monk.hp>2){
-   s.hurt(monk,2);face=4;
+   s.hurt(monk,2,monk.card);face=4;
   }else{const d=s.die();
-  if(d<=2)s.hurt(monk,2);
+  if(d<=2)s.hurt(monk,2,monk.card);
   else if(d<=4&&face>=5)face=4;
   else if(d===5){face=1;s.heal(monk,2,"hero:monk");}
   else if(d===6){s.heal(monk,2,"hero:monk");return;}
@@ -419,7 +431,7 @@ export function monsterRespond(s,h){
    a.nextDefenseDis=(a.nextDefenseDis||0)+1;
   }else if(op==="steal"){
    if(s.discardable())s.discard();
-   else s.hurt(a,2);
+   else s.hurt(a,2,m);
   }else if(op==="heal-hit"){
    if(hit())s.monsterHP=Math.min(m.hp,s.monsterHP+1);
   }else if(op!=="none")throw Error("Unknown Monster response "+op);
@@ -429,7 +441,7 @@ export function monsterRespond(s,h){
   if(band===1)hit();
   else if(band===2){
    const stolen=s.discard();
-   if(!stolen)s.hurt(a,2);
+   if(!stolen)s.hurt(a,2,m);
    else{
     const i=s.discardPile.lastIndexOf(stolen);
     if(i>=0)s.discardPile.splice(i,1);
@@ -471,7 +483,7 @@ export function monsterRespond(s,h){
    const pay=s.discardable(1,"METAL")&&s.chooseEffect(
     "rust-monster-corrode",["lose-hp","discard-metal"],
     "discard-metal")==="discard-metal";
-   if(pay)s.discard(1,{tag:"METAL"});else s.hurt(a,3);
+   if(pay)s.discard(1,{tag:"METAL"});else s.hurt(a,3,m);
   }else if(band===3)hit({adv:true});
   break;
  case "cultist":if(band===0)s.monsterAdv=true;else if(band===1)hit({bonus:6-m.atk});
@@ -485,7 +497,7 @@ export function monsterRespond(s,h){
  case "warden":if(band===1)s.living().forEach(x=>monsterAttack(s,x));else if(band===2)a.nextDis++;
   else if(band===3)hit({adv:true});break;
  case "warden-fury":if(band===0)s.living().forEach(x=>monsterAttack(s,x));else if(band===1)hit({drain:true});
-  else if(band===2)s.living().forEach(x=>s.hurt(x,1));else hit({adv:true,damageBonus:2});break;
+  else if(band===2)s.living().forEach(x=>s.hurt(x,1,m));else hit({adv:true,damageBonus:2});break;
  default:throw Error("Unimplemented Monster behaviour "+m.id);
  }
  // Resolve poison-sensitive Item reactions in printed order. An earlier

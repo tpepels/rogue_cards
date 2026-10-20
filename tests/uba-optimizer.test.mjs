@@ -1,0 +1,65 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {proposePopulation,chooseRefinements} from '../src/balance/optimizer.js';
+import {DEFAULT_GOALS} from '../src/balance/goals.js';
+import {createCandidate} from '../src/balance/candidate.js';
+import {mkdtempSync,rmSync,readFileSync,writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {optimizeBalance} from '../src/balance/optimizer.js';
+
+test('automatic generation is deterministic, bounded, jointly varies dimensions and caches hashes',()=>{
+ const opts={space:DEFAULT_GOALS.search.space,seed:31,generation:0,population:6};
+ const a=proposePopulation(opts),b=proposePopulation(opts);
+ assert.deepEqual(a,b);
+ assert.equal(a.length,6);
+ assert.equal(new Set(a.map(x=>x.candidate.hash)).size,6);
+ assert.ok(a.some(x=>x.candidate.staging.cards?.length&&x.candidate.staging.itemHealing&&x.candidate.staging.roomDeck));
+ const next=proposePopulation({...opts,generation:1,archive:a.map(x=>({...x,fitness:{eligible:true,score:1,objectives:[1]}}))});
+ assert.ok(next.every(x=>!a.some(old=>old.candidate.hash===x.candidate.hash)));
+});
+test('adaptive allocation retains Pareto compromises and reserves samples for uncertainty',()=>{
+ const entries=[
+ {candidate:{hash:'a'},fitness:{eligible:true,score:0.8,objectives:[1,0]}},
+ {candidate:{hash:'b'},fitness:{eligible:true,score:0.7,objectives:[0,1]}},
+ {candidate:{hash:'c'},fitness:{eligible:true,score:0.1,objectives:[0,0]}}
+ ];
+ assert.deepEqual(chooseRefinements(entries,2).map(x=>x.candidate.hash),['a','b']);
+});
+
+test('a neutral allele cannot duplicate the separately evaluated baseline',()=>{
+ const base=createCandidate(),space=[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[0,-1]}];
+ const entries=proposePopulation({base,space,seed:1,population:4});
+ assert.ok(entries.every(e=>e.candidate.hash!==base.hash));
+ assert.equal(entries.length,1);
+});
+
+test('optimizer resumes its exact proposed population and finished trials after a zero allocation',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-resume-'));
+ const options={out,profile:'random-v1',parties:[['warrior']],workers:1,validate:false,
+  search:{population:2,generations:2,screenRuns:1,refineRuns:1,finalists:1,
+   space:[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[0,-1,-2]}]}};
+ try{
+  const first=await optimizeBalance({...options,maxTrials:0});
+  assert.equal(first.complete,false);
+  const hashes=first.current.population.map(e=>e.candidate.hash);
+  const resumed=await optimizeBalance(options);
+  assert.equal(resumed.complete,true);
+  assert.deepEqual(resumed.archive.slice(0,hashes.length).map(e=>e.candidate.hash),hashes);
+  const again=await optimizeBalance({...options,workers:2});
+  assert.deepEqual(again.archive,resumed.archive);
+  await assert.rejects(optimizeBalance({...options,seed:7}),/Incompatible/);
+ }finally{rmSync(out,{recursive:true,force:true});}
+});
+
+test('optimizer rejects modified selection checkpoints before using their archive',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-checksum-'));
+ const options={out,profile:'random-v1',parties:[['warrior']],validate:false,maxTrials:0,
+  search:{population:1,generations:1,space:[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[-1]}]}};
+ try{
+  await optimizeBalance(options);
+  const path=join(out,'optimizer-state.json'),state=JSON.parse(readFileSync(path));state.generation=1;
+  writeFileSync(path,JSON.stringify(state));
+  await assert.rejects(optimizeBalance(options),/checkpoint checksum/);
+ }finally{rmSync(out,{recursive:true,force:true});}
+});

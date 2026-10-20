@@ -97,13 +97,16 @@ export function itemOptions(s,h,phase){
   }else if(phase==="room-roll"){
    if(id==="ring-echo"&&equipped(h,card))push(card,"room-reroll");
   }else if(phase==="between-rooms"){
+   if(card._stagedCard&&kind==="TOOL"&&Array.isArray(card.v2.declarativeOps))
+    push(card,"declarative-tool");
    if(["odd-fever-candle","odd-sun-charm","odd-thorn-tonic","odd-bone-dice"].includes(id)||
       id==="odd-echo-bell"&&s.keptRooms.length>0||
       id==="odd-red-string"&&s.living().length===2&&!s.redString)
      push(card,"odd-tool");
    if(kind==="POTION")push(card,"drink");
    if(id==="needle"&&(h.poison||h.hp<h.card.hp))push(card,"recover");
-   if(["ex-bandages","ex-rations"].includes(id)&&h.hp<h.card.hp)push(card,"healing-tool");
+   if(["ex-bandages","ex-rations"].includes(id)&&!card.v2.declarativeOps&&
+      h.hp<h.card.hp)push(card,"healing-tool");
   }else if(phase==="passive"){
    if(passive.has(id)&&(["staff","cursed-blade","mail","cursed-mail"].includes(id)?
       equipped(h,card):

@@ -1,0 +1,149 @@
+{
+  "schema": "uba-acceptance-evidence-v1",
+  "date": "2026-10-20",
+  "tests": {
+    "command": "npm test",
+    "total": 533,
+    "passed": 533,
+    "failed": 0,
+    "log": "/tmp/uba-delivery-tests.log"
+  },
+  "interpretation": "Engineering pilots only. No candidate or agent default promoted; powered acceptance gates remain open.",
+  "experiments": [
+    {
+      "kind": "factorial",
+      "out": "results/uba-final-factorial",
+      "manifest": "e0a0ec460f187b8d19cb6b55093f09c12cb7ce0e5df4dad15cd4219df6774222",
+      "sourceHash": "db3e6102f8d0d602cc3c82256e2be21e062023b4d0ad294c0f28d71ac7407324",
+      "planned": 288,
+      "completed": 288,
+      "complete": true,
+      "profile": "random-v1",
+      "parties": 36
+    },
+    {
+      "kind": "evolutionary",
+      "out": "results/uba-final-optimizer",
+      "complete": true,
+      "candidates": 9,
+      "trials": 828,
+      "baselineScreenScore": 0.4514717991478951,
+      "bestScreenScore": 0.5884905569512734,
+      "finalists": [
+        "95df8850890e90e113322072c4772b7d3be6075980be4a550dc9f53709ebc382",
+        "1467d7a3d30da74f5180f32fede2272770ad511369dfab237c504f018069a778"
+      ],
+      "profile": "random-v1"
+    },
+    {
+      "kind": "random-control",
+      "out": "results/uba-final-random-control",
+      "complete": true,
+      "candidates": 9,
+      "trials": 828,
+      "baselineScreenScore": 0.4514717991478951,
+      "bestScreenScore": 0.6542405545903259,
+      "finalists": [
+        "7960af2202fa5a3400fe4c9a62812b27fc465f9f155d181f833e6aaff2e218ea",
+        "1467d7a3d30da74f5180f32fede2272770ad511369dfab237c504f018069a778"
+      ],
+      "profile": "random-v1"
+    },
+    {
+      "kind": "card-impact",
+      "out": "results/uba-final-impact",
+      "complete": true,
+      "patches": 2,
+      "protectedCards": [
+        "items:uba-rescue-tonic"
+      ],
+      "conclusion": "Candidate patches found; evidence remains uncertain or rejected. No canonical cards adopted."
+    },
+    {
+      "kind": "validation",
+      "out": "results/uba-final-validation",
+      "complete": true,
+      "decisions": [
+        {
+          "hash": "95df8850890e90e113322072c4772b7d3be6075980be4a550dc9f53709ebc382",
+          "status": "uncertain",
+          "reasons": 27,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "kind": "mcts-factorial",
+      "out": "results/uba-final-mcts-factorial",
+      "complete": true,
+      "planned": 16,
+      "completed": 16,
+      "profile": "uba-smoke-v1",
+      "budget": 1,
+      "parties": [
+        "warrior",
+        "wizard+priest"
+      ],
+      "sourceHash": "db3e6102f8d0d602cc3c82256e2be21e062023b4d0ad294c0f28d71ac7407324",
+      "manifest": "388a1d9373a76b9c52a8315838c1c959425c992e90e15217daf0aed8543c3552",
+      "snapshotReplayVerified": true,
+      "interpretation": "Representative low-budget fixed-MCTS engineering factorial; power and full-party coverage insufficient for balance claims."
+    },
+    {
+      "kind": "delivery-factorial",
+      "out": "results/uba-delivery-factorial",
+      "complete": true,
+      "planned": 288,
+      "completed": 288,
+      "manifest": "34e832b5fab0d097e57951e1ae870180dc2ee919c8901a30c68f61811f2b305e",
+      "sourceHash": "e77702827f7adc8c69bee17be5b9fee577fec1bf89be7c536da39bdfa3cc772a"
+    },
+    {
+      "kind": "delivery-optimizer",
+      "out": "results/uba-delivery-optimizer",
+      "complete": true,
+      "candidates": 3,
+      "trials": 432,
+      "checkpointIntegrity": "0d50b681d0e684d36a4ba2c764f31219476b141d4a45710aaee5bceedbab966e",
+      "finalists": [
+        "83d2567d63663ba4b3aaaf27afe45f5a1f4e624fdec66740a8d945c52effcea9"
+      ]
+    },
+    {
+      "kind": "delivery-validation",
+      "out": "results/uba-delivery-validation",
+      "complete": true,
+      "decisions": [
+        {
+          "hash": "83d2567d63663ba4b3aaaf27afe45f5a1f4e624fdec66740a8d945c52effcea9",
+          "status": "uncertain",
+          "reasons": 37,
+          "failures": []
+        }
+      ]
+    },
+    {
+      "kind": "source-complete-optimizer",
+      "out": "results/uba-complete-optimizer",
+      "complete": true,
+      "candidates": 9,
+      "trials": 828
+    },
+    {
+      "kind": "source-complete-impact",
+      "out": "results/uba-complete-impact",
+      "complete": true,
+      "patches": 2,
+      "protectedCards": [
+        "items:uba-rescue-tonic"
+      ]
+    }
+  ],
+  "telemetry": {
+    "canonicalTrials": 20,
+    "positiveHpEvents": 369,
+    "unknownSources": 0,
+    "legalHealingOpportunities": "available/selected/resolved; offered/restored/wasted from committed effects only",
+    "missingHpSourcesInvalidateTrials": true
+  }
+}

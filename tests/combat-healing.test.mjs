@@ -28,6 +28,9 @@ const setup=(dose,monsterId="goblin")=>{
  state._activeMonsterFought=true;
  state.banished=false;
  state.heroes[0].hp=state.heroes[0].card.hp-6;
+ // Pin Goblin's independent printed d6 DEFEAT recovery. These diagnostics
+ // must account for Balanced Recovery v1 before measuring the extra grant.
+ state.die=()=>1;
  return {state,monster,pool};
 };
 test("canonical Balanced B is 48 ordinary Rooms and six Corridors",()=>{
@@ -73,7 +76,7 @@ test("post-combat grant restores effective HP and logs wasted HP at cap",()=>{
  const {state,monster}=setup(2);
  const hp=state.heroes[0].hp;
  settleMonsterVictory(state,monster);
- assert.equal(state.heroes[0].hp,hp+2);
+ assert.equal(state.heroes[0].hp,hp+1+2);
  assert.equal(state.metrics.postCombatHealTriggers,1);
  assert.equal(state.metrics.postCombatHealRestored,2);
  assert.equal(state.metrics.postCombatHealWasted,0);
@@ -81,15 +84,15 @@ test("post-combat grant restores effective HP and logs wasted HP at cap",()=>{
  const capped=setup(10);
  settleMonsterVictory(capped.state,capped.monster);
  assert.equal(capped.state.heroes[0].hp,capped.state.heroes[0].card.hp);
- assert.equal(capped.state.metrics.postCombatHealRestored,6);
- assert.equal(capped.state.metrics.postCombatHealWasted,4);
+ assert.equal(capped.state.metrics.postCombatHealRestored,5);
+ assert.equal(capped.state.metrics.postCombatHealWasted,5);
 });
 test("no bonus for negotiation, banishment, or Warden victory",()=>{
  const noFight=setup(3);
  noFight.state._activeMonsterFought=false;
  const hp=noFight.state.heroes[0].hp;
  settleMonsterVictory(noFight.state,noFight.monster);
- assert.equal(noFight.state.heroes[0].hp,hp);
+ assert.equal(noFight.state.heroes[0].hp,hp+1);
  assert.equal(noFight.state.metrics.postCombatHealTriggers,0);
  const banished=setup(3);
  banished.state.banished=true;

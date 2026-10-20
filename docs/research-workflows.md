@@ -363,3 +363,6 @@ Changes made:
 Future removals should require a dependency/reference audit and a
 green regression suite; do not delete old tests or artifacts merely
 because their naming predates the current rulebook.
+# Ultimate Balance Act
+
+The unified CLI now supports declarative mixed candidates, parallel resumable trials, bounded Pareto optimization, independent confirmation and card-impact compensation. See [UBA usage and limitations](ultimate-balance-act.md) and the [authoritative phase tracker](../experiments/ultimate-balance-act.md). Existing historical suites retain explicit archival Room baselines.

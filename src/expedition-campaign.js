@@ -383,7 +383,7 @@ function useItemsInCombat(s,h){
  if(s.monster.stage==="FINAL"&&h.hp>6&&s.strategy==="magic"){
   const wand=itemOptions(s,h,"combat").find(o=>o.mode==="overcharge")?.card;
   if(wand){s.directItem(h,wand,"overcharge",()=>{
-   s.metrics.overcharges++;s.hurt(h,s.die());
+   s.metrics.overcharges++;s.hurt(h,s.die(),wand);
    s.activate(h,wand,{face:6,record:false});
    if(h.inventory.includes(wand))s.consume(h,wand);
    return true;});return true;}

@@ -46,7 +46,7 @@ export function resolveSpecialRemains(s,m,kind){
  }
  if(m.id==="goblin"&&kind==="search"){
   const face=s.die();
-  if(face<=2)s.hurt(h,1);
+  if(face<=2)s.hurt(h,1,m);
   else if(face<=4)s.draw();
   else{s.draw();s.peek(1)}
   return;
@@ -93,7 +93,8 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
   }
  }
  if(s.pendingReward&&s.alive())s.draw(s.pendingReward);
- if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal),s.room);
+ if(s.pendingFightHeal&&s.alive())s.healParty(s.amount(s.pendingFightHeal),
+  s._pendingFightHealSource??"unattributed:rule:delayed-fight-healing");
  // Explicit experimental grant only after a won regional combat.
  // Negotiation, fleeing, banishment and Warden phases never trigger it.
  const heal=s.cardPools?.mechanics?.postCombatHeal??0;
@@ -108,6 +109,7 @@ export function settleMonsterVictory(s,m,{warden=false}={}){
  }
  s._activeMonsterFought=false;
  s.pendingReward=0;s.pendingFightHeal=null;
+ delete s._pendingFightHealSource;
  for(const h of s.heroes){h.graveSalt=false;h.trickKnifeUsed=false;}
  s.monster=null;s.monsterHP=0;
 }

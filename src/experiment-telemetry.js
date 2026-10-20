@@ -11,6 +11,10 @@ const countById=cards=>{
 };
 const sorted=map=>Object.fromEntries(Object.entries(map||{}).sort(([a],[b])=>
  a.localeCompare(b)));
+// Optional observations are explicit nulls so raw results can be content
+// hashed/checkpointed without JSON.stringify silently discarding fields.
+const finiteJSON=value=>JSON.parse(JSON.stringify(value,(_key,v)=>
+ v===undefined||typeof v==="number"&&!Number.isFinite(v)?null:v));
 /** Audit all remaining mutable state without exposing executable closures.
  * Immutable printed card objects become stable identifiers, and aliases
  * become references. The hidden decks themselves remain seed-replayable.
@@ -92,6 +96,33 @@ export function experimentSnapshot(s,phase){
   }))
  };
 }
+/** Compact public/resource boundary snapshot for balance traces. Hidden
+ * pile identities and the full internal-state tree are deliberately absent.
+ * Status collections and all primitive engine/Hero flags remain observable.
+ */
+export function compactExperimentSnapshot(s,phase){
+ const state=s.state;
+ return finiteJSON({
+  phase:phase??s.phase,pendingReaction:!!s.pendingNested,
+  reaction:s.pendingNested?.trigger??null,actionCount:s.actionCount,
+  room:state.room?{id:state.room.id,copy:state.room._physicalCopy??null,
+   stage:state.room.stage,kind:state.room.v2.kind}:null,
+  monster:state.monster?{id:state.monster.id,hp:state.monsterHP,
+   stage:state.monster.stage}:null,
+  stageProgress:{...state.stageProgress},roomsCleared:state.metrics.cleared,
+  roomPiles:Object.fromEntries(Object.entries(state.rooms).map(([k,v])=>[k,v.length])),
+  monsterPiles:Object.fromEntries(Object.entries(state.monsters).map(([k,v])=>[k,v.length])),
+  itemDeck:state.deck.length,discardedItems:countById(state.discardPile),
+  engineScalars:Object.fromEntries(Object.entries(state)
+   .filter(([,v])=>v===null||["string","number","boolean"].includes(typeof v))),
+  keptRooms:state.keptRooms.map(x=>({id:x.card.id,choice:x.choice??null,mode:x.mode??null})),
+  heroes:state.heroes.map(h=>({id:h.card.id,hp:h.hp,maxHp:h.card.hp,
+   inventory:h.inventory.map(item),
+   slots:Object.fromEntries(Object.entries(h.slots).map(([k,v])=>[k,item(v)])),
+   statuses:serial(Object.fromEntries(Object.entries(h)
+    .filter(([k])=>!["card","inventory","slots","hp"].includes(k))))}))
+ });
+}
 function equal(a,b){return JSON.stringify(a)===JSON.stringify(b);}
 export function diffTree(before,after){
  if(equal(before,after))return undefined;
@@ -109,7 +140,10 @@ export function diffTree(before,after){
  return {was:before??null,now:after??null};
 }
 export const cloneMetrics=s=>JSON.parse(JSON.stringify(s.metrics));
-export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}){
+export function createDecisionRecorder({includeLegal=true,includeSearch=true,
+ snapshotMode="full"}={}){
+ if(!["full","compact"].includes(snapshotMode))throw Error("Unknown telemetry snapshot mode");
+ const snapshot=snapshotMode==="compact"?compactExperimentSnapshot:experimentSnapshot;
  const events=[];let pending=null;
  const handler=event=>{
   if(event.moment==="before"){
@@ -146,7 +180,7 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
      pragmaticSimulation:event.diagnostic.pragmaticSimulation??null,
      actionCoverage:event.diagnostic.actionCoverage,
      choices:event.diagnostic.choices}:undefined,
-    before:experimentSnapshot(event.session,event.phase),
+    before:snapshot(event.session,event.phase),
     metricBefore:cloneMetrics(event.session.state),
     rngBefore:event.session.state.rng.snapshot()
    };
@@ -154,7 +188,7 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
   }
   if(event.moment!=="after"||!pending||pending.step!==event.step)
    throw Error("Unpaired actual decision event");
-  const after=experimentSnapshot(event.session);
+  const after=snapshot(event.session);
   const record={
    step:pending.step,phase:pending.phase,
    legalCount:pending.legalCount,legal:pending.legal,
@@ -167,9 +201,10 @@ export function createDecisionRecorder({includeLegal=true,includeSearch=true}={}
    metrics:diffTree(pending.metricBefore,cloneMetrics(event.session.state))||{},
    dice:event.dice||[],rngBefore:pending.rngBefore,
    rngAfter:event.session.state.rng.snapshot(),
+   effects:event.effects??[],
    committed:!event.session.pendingNested
   };
-  events.push(record);pending=null;
+  events.push(finiteJSON(record));pending=null;
  };
  return {handler,events,finish:()=>{
   if(pending)throw Error("Unpaired decision at end of expedition");

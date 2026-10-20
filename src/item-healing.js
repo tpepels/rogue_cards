@@ -9,7 +9,7 @@ export const ITEM_HEALING_DEFAULTS=Object.freeze({
  "odd-thorn-tonic":5
 });
 export const ITEM_HEALING_OPTIONS=Object.freeze({
- "ex-bandages":Object.freeze(["d6","d6+2",4,6,8]),
+ "ex-bandages":Object.freeze(["d6","d6+2",2,3,4,6,8]),
  "ex-rations":Object.freeze([2,3,4,5,6]),
  "odd-thorn-tonic":Object.freeze([3,4,5,6,7,8])
 });
