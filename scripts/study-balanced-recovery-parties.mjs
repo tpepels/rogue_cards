@@ -6,7 +6,7 @@
  *
  * Shared impartial policy for both party sizes: frontier implicit UCT,
  * legacy (party-aware) heuristic, fair hidden information, same budget and
- * no solo-only equipment shortcuts. State transitions are the actual
+ * identical party-efficient equipment shortcuts. State transitions are the actual
  * decision-session engine, not replayed results or synthetic wins.
  *
  * Safe to resume only at precisely the same git revision/configuration.
@@ -194,7 +194,7 @@ export function playParty({heroes,seed,budget,maxGameSteps=20000}){
    maxSearchSteps:5000,knowledge:"fair",legalActions:legal,
    searchProfile:"classic",treeMode:"frontier",
    exploration:0.2,implicitWeight:0.5,
-   implicitHeuristicMode:"legacy",equipmentMode:"legacy",
+   implicitHeuristicMode:"legacy",equipmentMode:"party-efficient",
    rolloutCombatMode:"random"
   });
   if(!forced){searches++;searchMs+=performance.now()-begin;}
@@ -235,7 +235,7 @@ async function run(){
  const manifest={schema:"balanced-recovery-parties-manifest-v1",revision,
   gameMode:"everything-goes",printedEdition:"Balanced Recovery v1",
   agent:{search:"frontier implicit UCT",budget:o.budget,c:0.2,alpha:0.5,
-   knowledge:"fair",heuristicMode:"legacy",equipmentMode:"legacy",
+   knowledge:"fair",heuristicMode:"legacy",equipmentMode:"party-efficient",
    rolloutCombatMode:"random"},
   seed:o.seed,runsPerParty:o.runs,parties:BALANCED_PARTIES,
   total:o.runs*BALANCED_PARTIES.length};
