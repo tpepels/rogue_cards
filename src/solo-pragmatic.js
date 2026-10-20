@@ -53,6 +53,47 @@ export function usefulSoloEquipmentAction(session,legal){
 }
 
 
+/**
+ * Party-compatible deterministic equipment pruning for fair solo-vs-duo
+ * studies. Same public equip test as usefulSoloEquipmentAction, applied
+ * independently to each living party member. No Hero turn is skipped:
+ * returning an equip action still commits the printed equip transition.
+ * Never affects the default/solo-only policies.
+ */
+export function usefulPartyEquipmentAction(session,legal){
+ if(!safePhases.has(session.phase)||session.state.monster)return null;
+ const s=session.state,candidates=[];
+ for(const action of legal){
+  if(action.phase!=="equipment"||action.kind!=="equip")continue;
+  const h=s.heroes[action.heroIndex];
+  if(!h||h.hp<=0)continue;
+  const card=h.inventory[action.index];
+  if(!card||card.id!==action.cardId||
+   !["weapon","armour","ring","companion"].includes(action.slot))continue;
+  const before=h.slots[action.slot];
+  let utility=0;
+  if(action.slot==="weapon"||action.slot==="armour"){
+   const old=s.stats(h);
+   h.slots[action.slot]=card;
+   let next;
+   try{next=s.stats(h);}
+   finally{
+    if(before)h.slots[action.slot]=before;
+    else delete h.slots[action.slot];
+   }
+   utility=action.slot==="weapon"?
+    next.atk-old.atk:next.def-old.def;
+  }else if(!before)utility=0.5;
+  if(utility>0)candidates.push({action,utility});
+ }
+ candidates.sort((a,b)=>b.utility-a.utility||
+  a.action.heroIndex-b.action.heroIndex||
+  a.action.slot.localeCompare(b.action.slot)||
+  a.action.index-b.action.index);
+ return candidates[0]?.action??null;
+}
+
+
 
 /**
  * Conservative, opt-in solo human-play shortcuts. Each action is selected
