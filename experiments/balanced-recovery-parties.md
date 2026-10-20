@@ -14,7 +14,7 @@ Heroes and whether any duo combination is disproportionately powerful.
   pairs from those eight Heroes. No duplicates and no one-off handpicked duo.
 - **Exactly one identical baseline agent** for each party: public/fair
   frontier MCTS, `c=0.2`, implicit `alpha=0.5`, **party-compatible
-  legacy heuristic**, `equipmentMode=legacy` (no solo-only shortcut),
+  legacy heuristic**, `equipmentMode=party-efficient` (identical public-equipment upgrade shortcut for both party sizes),
   random rollout combat. Default budget 8, configurable.
 - **Paired starts, not paired random events:** initial chance seed repeats
   across the 36 parties for each replicate. Different actions consume RNG
