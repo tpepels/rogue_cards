@@ -43,7 +43,7 @@ test("monster-specific printed DEFEAT retains original benefit and executes HEAL
  const spec=physical.find(x=>x.id==="printed-recovery-light");
  const pool=compileStaging(spec);
  const m=pool.monsters.find(x=>x.id==="goblin");
- assert.equal(m.v2.defeat,MONSTER_DEFEATS.goblin.text+" Heal 2 HP.");
+ assert.equal(m.v2.defeat,MONSTER_DEFEATS.goblin.text.replace(/ Heal d6 HP\.$/,"")+" Heal 2 HP.");
  assert.deepEqual(m.v2.defeatOps,["DRAW:1","HEAL:2"]);
  assert.ok(visibleCardText(m).includes("Heal 2 HP."));
  const s=new ExpeditionState({gameMode:"everything-goes",
@@ -58,7 +58,7 @@ test("monster-specific printed DEFEAT retains original benefit and executes HEAL
  assert.equal(s.metrics.postCombatHealTriggers,0);
  assert.equal(s.metrics.kills,1);
  assert.deepEqual(MONSTERS.find(x=>x.id==="goblin").v2.defeatOps,
-  ["DRAW:1"]);
+  ["DRAW:1","HEAL:d6"]);
 });
 
 test("printed REST and executed REST agree, retaining the Item cost",()=>{
