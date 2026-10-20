@@ -91,3 +91,39 @@ test("real MCTS decisions remain legal and actual state stays untouched",()=>{
   assert.equal(session.state.rng.snapshot(),rng,arm.id);
  }
 });
+
+test("PW tuning validates k, alpha and ordering",()=>{
+ const session=createDecisionSession({seed:7281,heroes:["warrior"],gameMode:"everything-goes"});
+ for(const bad of [
+  {pwK:0},{pwAlpha:0},{pwAlpha:1.5},{pwOrder:"garbage"},{pwRootFull:"yes"}
+ ])assert.throws(()=>searchDecision(session,{budget:2,progressiveWidening:true,...bad}),
+  /widening|pwRootFull/);
+ const s=searchDecision(session,{budget:5,seed:1234,
+  knowledge:"fair",treeMode:"frontier",strictTerminal:false,maxSteps:3000,
+  progressiveWidening:true,pwK:3,pwAlpha:0.75,
+  pwOrder:"public-prior",pwRootFull:true});
+ assert.equal(s.searchControls.pwK,3);
+ assert.equal(s.searchControls.pwAlpha,0.75);
+ assert.equal(s.searchControls.pwOrder,"public-prior");
+ assert.equal(s.searchControls.pwRootFull,true);
+ assert.equal(s.searchControls.rootActionsTried,s.rootActionCount);
+});
+test("PW-only can use public ranking and reconcile changing legal actions",()=>{
+ const node={visits:0};
+ const ranked=new Map(actions.map((a,i)=>[a.id,(i===19?10:1)/(actions.length+9)]));
+ const first=progressivelyWiden(node,actions,randomSource(1),{
+  order:"public-prior",priorWeights:ranked,k:2,alpha:0.55});
+ assert.equal(first.length,2);
+ assert.ok(first.some(a=>a.id==="action-19"));
+ const revised=actions.filter(a=>a.id!=="action-19")
+  .concat([{id:"brand-new",action:{kind:"pass"},edge:{visits:0,wins:0}}]);
+ const active=progressivelyWiden(node,revised,randomSource(2),{
+  order:"public-prior",priorWeights:new Map(revised.map(a=>[a.id,1/revised.length]))});
+ assert.equal(active.length,2);
+ assert.ok(active.every(a=>revised.includes(a)));
+ assert.ok(active.every(a=>a.id!=="action-19"));
+ assert.ok(node.wideningOrder.includes("brand-new"));
+ const legacy=progressivelyWiden({visits:0},actions,randomSource(2),{
+  preferredId:"action-17",prioritized:true});
+ assert.ok(legacy.some(a=>a.id==="action-17"));
+});
