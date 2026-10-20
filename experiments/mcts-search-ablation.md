@@ -86,3 +86,77 @@ The initial GitHub Actions pilot used budget 16 and one replicate per Hero. The 
 - **Next:** hold rules and baseline fixed, validate at budgets 16, 32 and 64 with more independent seeds and Hero-level uncertainty. Only a properly powered independent study can justify a new frozen agent profile.
 
 - 2026-10-19: **Found methodological weakness in the first pilot.** Priors were mostly uniform outside combat and parley, and copied `c=0.2` from the UCT experiment despite a different selection equation. The original eight-seed pilot **does not validate PUCT**. Revised public priors, explicit `--puct-c` and activity telemetry were committed. Keep the old experiment archive separate and rerun fresh independent comparisons on new revision/seeds; do not resume older pilot files.
+
+
+## 2026-10-20: final, calibrated follow-up (one command, separate from UBA)
+
+The earlier fixed A/B/C/D experiment is frozen and retains its own
+manifest, flags, archived output and research identity. The new
+`--calibrate` mode deliberately creates **a new experiment**.
+Do not resume the old 480-trial output after changing source files.
+
+```bash
+# Only after the currently running 480-trial study finishes or is stopped:
+cd ~/Projects/rogue_cards
+git pull --ff-only
+npm run test:mcts:calibration
+
+node scripts/study-mcts-search-ablation.mjs --calibrate \
+  --workers 8 --minutes 720 \
+  --screen-repeats 2 --confirm-repeats 12 \
+  --screen-budget 16 --confirm-budgets 32,64 \
+  --seed 20261020 \
+  --out results/mcts-pw-puct-final-calibrated
+```
+
+One run has **two sequential phases** and checkpointing. Running exactly
+the same command again resumes incomplete tasks. All games are the current
+physical canonical 36-Room edition, with the same previously frozen
+solo-threat MCTS study agent, fair knowledge, and all eight Heroes.
+**No UBA optimizer or candidate-card changes are involved.**
+
+- Screening: 28 agents, 2 seeds × 8 Heroes × budget 16 =
+  **448 expeditions**. Covers original baseline, PUCT constants
+  0.15/0.35/0.70, six PW settings and those same six PW settings with
+  each PUCT constant. PW settings include `k=2/3`,
+  `alpha=0.35/0.55/0.75`, and random/soft-first/public-prior action
+  order. Newly calibrated PW configurations admit all canonical root
+  actions; non-root widening still uses the adjustable growth formula.
+  Public-prior action ordering without PUCT is deliberately labeled
+  as such (same public information, ordinary UCT child selection).
+- Screening ranks variants with **predeclared** 80% victory / 20% Vault
+  success minus 3 percentage points per doubling of search time.
+  This heuristic is for choosing candidates, **not proof of strength**.
+  It locks baseline, top PUCT, top PW and top combined configuration.
+- Confirmation: on **fresh, disjoint seeds**, those four locked
+  configurations run 12 seeds × 8 Heroes × budgets 32/64 =
+  **768 expeditions**. The full run is therefore **1,216 expeditions**.
+  Reports compare win rates, Vault access, runtime, PW root action
+  coverage and four paired comparisons including combined vs PUCT.
+  Confidence intervals on paired differences use a conservative
+  Bonferroni-adjusted two-way paired bootstrap.
+
+Outputs: `manifest.json`, `screen/trials.ndjson`,
+`screen/summary.json`, `selection.json`,
+`confirm/trials.ndjson`, `confirm/summary.json`,
+`summary.json` and `comparison.md`. The chosen parameters and stage
+plans are revision-locked. Incomplete or failed trials never count
+as losses. **No MCTS defaults are changed or promoted automatically.**
+
+**Decision rule:** Favor PUCT only if it provides an adequately supported
+held-out improvement at acceptable runtime. Add PW only if combined
+search outperforms the *tuned PUCT-only* method meaningfully, ideally
+at comparable compute. If it does not, keep PUCT-only. A solo result
+does not by itself validate a shared solo-and-duo UBA agent.
+
+**Physical versus search parameters:** `pwK` and `pwAlpha` are
+the growth coefficients in `ceil(k*(node.visits+1)^alpha)`.
+`pwOrder` determines which *currently legal* actions receive early
+tree access; `pwRootFull` avoids accidentally preventing full
+exploration at the decision root. Legacy PW behavior is still used
+by the old command until `--calibrate` is requested.
+
+**Limit:** The study distinguishes performance at a fixed *rollout
+budget*, reports time ratios, and discourages adoption if extra time
+outweighs the improvement. It is not a strict equal-wall-time
+tournament; run one if priors and combined remain close.
