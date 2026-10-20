@@ -221,11 +221,18 @@ export function searchDecision(session,{budget=100,seed=1,
  simulationPolicy="default",implicitHpScale=1,implicitThreatScale=1,
  softTreeBonus=0.15,
  softTreeFirstVisitProbability=0.75,softRolloutProbability=0.75,
- nodePriors=false,progressiveWidening=false,puctC=0.35}={}){
+ nodePriors=false,progressiveWidening=false,puctC=0.35,
+ pwK=2,pwAlpha=0.55,pwOrder=null,pwRootFull=false}={}){
  if(typeof nodePriors!=="boolean"||typeof progressiveWidening!=="boolean")
   throw Error("MCTS nodePriors/progressiveWidening must be boolean");
  if(!Number.isFinite(puctC)||puctC<0||puctC>5)
   throw Error("MCTS PUCT exploration coefficient must be in [0,5]");
+ if(!Number.isFinite(pwK)||pwK<1||!Number.isFinite(pwAlpha)||
+    pwAlpha<=0||pwAlpha>1)
+  throw Error("MCTS progressive widening k/alpha out of range");
+ if(pwOrder!==null&&!["random","soft-first","public-prior"].includes(pwOrder))
+  throw Error("Invalid MCTS progressive widening action order");
+ if(typeof pwRootFull!=="boolean")throw Error("pwRootFull must be boolean");
  if(!Number.isInteger(budget)||budget<1||budget>100000)
   throw Error("MCTS budget must be an integer in [1,100000]");
  if(!Number.isInteger(maxSteps)||maxSteps<1||maxSteps>100000)
@@ -608,12 +615,12 @@ export function searchDecision(session,{budget=100,seed=1,
       const forcedCandidate=forced?
        found.candidates.find(c=>c.action.kind==="continue"):
        (pragmaticRule?found.candidates[0]:null);
-      const priors=nodePriors?
+      const priors=nodePriors||(progressiveWidening&&pwOrder==="public-prior")?
        publicActionPriors(sim,found.candidates,softId):null;
-      const active=progressiveWidening?
+      const active=progressiveWidening&&!(pwRootFull&&depth===0)?
        progressivelyWiden(node,found.candidates,choiceRng,{
         preferredId:softId,prioritized:nodePriors,
-        priorWeights:priors?.weights
+        priorWeights:priors?.weights,k:pwK,alpha:pwAlpha,order:pwOrder
        }):found.candidates;
       if(progressiveWidening&&active.length<found.candidates.length){
        widenedSelections++;
@@ -891,6 +898,8 @@ export function searchDecision(session,{budget=100,seed=1,
   ...(nodePriors||progressiveWidening?{
    searchControls:{nodePriors,progressiveWidening,
     ...(nodePriors?{puctC,informativePriorSelections}:{}),
+    ...(progressiveWidening?{pwK,pwAlpha,pwOrder:pwOrder??(nodePriors?"public-prior":"random"),pwRootFull,
+     rootActionsTried:decisions.filter(x=>x.visits>0).length,rootActionsTotal:decisions.length}:{}),
     puctSelections,
     widenedNodes,widenedSelections,wideningActionsFiltered}
   }:{}),
