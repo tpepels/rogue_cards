@@ -58,9 +58,9 @@ const R=[
   [["1–2","The last guard returns. Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"There is dust on the sentry's chair."]
 ];
 const O=[
- ["ex-bandages","Linen Bandages","TOOL",["ALCHEMY","TOOL"],"OUTSIDE COMBAT: Discard to heal d6 HP.",3,"Still clean enough."],
+ ["ex-bandages","Linen Bandages","TOOL",["ALCHEMY","TOOL"],"OUTSIDE COMBAT: Discard to heal d6+2 HP.",3,"Still clean enough."],
  ["ex-lockpicks","Lockpick Set","TOOL",["METAL","TOOL"],"After rolling d6 at Rusty Gate, Chest with a Pulse, Buried Lockbox or The Last Chest: discard to reroll once. The new result stands.",2,"Four picks, three bent."],
- ["ex-rations","Dry Rations","TOOL",["TOOL"],"OUTSIDE COMBAT: Discard to heal 2 HP.",3,"Hard bread travels far."],
+ ["ex-rations","Dry Rations","TOOL",["TOOL"],"OUTSIDE COMBAT: Discard to heal 4 HP.",3,"Hard bread travels far."],
  ["ex-dagger","Plain Dagger","EQUIPMENT",["METAL","WEAPON"],"WEAPON: +1 ATK while equipped.",3,"Sharp enough to argue."],
  ["ex-mace","Heavy Mace","EQUIPMENT",["METAL","WEAPON"],"WEAPON: +2 ATK while equipped.",2,"The handle has old teeth marks."],
  ["ex-spear","Short Spear","EQUIPMENT",["WOOD","WEAPON"],"WEAPON: +1 ATK, or +2 ATK against Monsters tagged BEAST.",2,"Longer than the corridor."],
