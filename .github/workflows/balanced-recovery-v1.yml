@@ -1,0 +1,33 @@
+name: Verify official Balanced Recovery v1
+
+on:
+  push:
+    paths:
+      - .github/workflows/balanced-recovery-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  balance-card-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify canonical physical card changes and engine parity
+        run: npm run test:balanced-recovery
+      - name: Verify historical staging, all core actions, and Item contracts
+        run: |
+          node --test \
+            tests/printed-recovery.test.mjs \
+            tests/recovery-overnight.test.mjs \
+            tests/odd-items.test.mjs \
+            tests/room-memory.test.mjs \
+            tests/new-card-engine-parity.test.mjs \
+            tests/canonical-effect-sweep.test.mjs
+      - name: Audit printed game
+        run: npm run validate:deck
