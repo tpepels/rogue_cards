@@ -245,5 +245,9 @@ if(!isMainThread){
   }catch(e){parentPort.postMessage({error:e.stack||String(e)});}
  });
 }else if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- await main();
+ const args=process.argv.slice(2);
+ if(args.includes("--calibrate")){
+  const {runPwPuctCalibration}=await import("./mcts-search-calibration.mjs");
+  await runPwPuctCalibration(args.filter(arg=>arg!=="--calibrate"));
+ }else await main(); // Archived A/B/C/D command and resume format unchanged.
 }
