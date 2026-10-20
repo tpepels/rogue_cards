@@ -129,7 +129,9 @@
     "study:mcts:search-controls": "node scripts/study-mcts-search-ablation.mjs",
     "test:balance:recovery-overnight": "node --test tests/recovery-overnight.test.mjs tests/printed-recovery.test.mjs",
     "study:balance:recovery-overnight": "node scripts/study-balance-hypotheses.mjs --suite recovery-overnight",
-    "test:balanced-recovery": "node --test tests/balanced-recovery-v1.test.mjs"
+    "test:balanced-recovery": "node --test tests/balanced-recovery-v1.test.mjs",
+    "test:balance:parties": "node --test tests/balanced-recovery-parties.test.mjs",
+    "study:balance:parties": "node scripts/study-balanced-recovery-parties.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
