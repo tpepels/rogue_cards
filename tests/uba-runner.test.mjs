@@ -96,15 +96,26 @@ test('a crashed output owner can resume, but a live owner cannot share its check
   await assert.rejects(runLaboratory(opts),/locked/i);
 });
 
-test('resume rejects changed dirty runtime source even when git HEAD is unchanged',async t=>{
-  const {runLaboratory,root}=await isolatedRunner(t),out=temp(t),opts={...options,out,maxTrials:0};
-  await runLaboratory(opts);
-  const source=join(root,'src','balance','changed-source.js');
-  try{
-    writeFileSync(source,'// temporary runtime source fingerprint test\n');
-    await assert.rejects(runLaboratory(opts),/provenance/i);
-  }finally{rmSync(source,{force:true});}
-  assert.equal((await runLaboratory(opts)).rows.length,0);
+test('resume accepts later revisions, retains the old manifest and both source snapshots',async t=>{
+ const {runLaboratory,root}=await isolatedRunner(t),out=temp(t),opts={...options,out,maxTrials:0};
+ const first=await runLaboratory(opts);
+ const snapshot=join(out,'source-snapshot','src','balance','runner.js');
+ const original=readFileSync(snapshot,'utf8');
+ const altered=join(root,'src','balance','changed-source.js');
+ try{
+  writeFileSync(altered,'// different source version\n');
+  const resumed=await runLaboratory(opts);
+  assert.equal(resumed.manifest.id,first.manifest.id);
+  assert.equal(resumed.rows.length,0);
+  const {sourceFingerprint,hashValue}=await import(join(root,'src','balance','io.js'));
+  const resumeSource=sourceFingerprint();
+  const saved=readFileSync(join(out,'resume-sources',hashValue(resumeSource),'source-snapshot','src','balance','changed-source.js'),'utf8');
+  assert.ok(saved.includes('different source version'));
+  assert.equal(readFileSync(snapshot,'utf8'),original);
+  assert.deepEqual(JSON.parse(readFileSync(join(out,'manifest.json'),'utf8')),first.manifest);
+  await assert.rejects(runLaboratory({...opts,seed:456}),/trial plan/i);
+ }finally{rmSync(altered,{force:true});}
+ assert.equal((await runLaboratory(opts)).rows.length,0);
 });
 
 test('real terminal trials agree across workers and resume without resampling',async t=>{

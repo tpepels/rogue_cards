@@ -5,6 +5,8 @@ on:
       - 'src/balance/**'
       - 'scripts/balance-optimize.mjs'
       - 'tests/uba-puct-profile.test.mjs'
+      - 'tests/uba-runner.test.mjs'
+      - 'tests/uba-optimizer.test.mjs'
       - '.github/workflows/uba-puct-profile-check.yml'
   workflow_dispatch:
 jobs:

@@ -48,7 +48,9 @@ validation also includes that agent, plus the prior `reference-v1` and
 `weak-v1` controls. Existing balance targets are **not recalibrated**;
 the PUCT agent has a higher observed solo baseline win rate than the
 previous search agent, so optimizer scores/physical proposals must be
-reviewed against the baseline under the same policy. A 12-hour run can
-stop with incomplete checkpointed trials; resume with exactly the same
-scientific inputs and code revision. Do not git-pull or change engine
-source while another checkpointed study is still running.
+reviewed against the baseline under the same policy. A 12-hour run can stop with incomplete checkpointed trials. Resume requires
+the same scientific inputs, but Git revisions and Node versions no longer
+block continuation. Original trials and source snapshots are preserved, and
+new source revisions are archived separately. Mixed code versions may change
+experimental behavior: inspect provenance before drawing scientific conclusions.
+Changing source code during an *active* worker run is still detected.

@@ -84,7 +84,7 @@ export async function runLaboratory(options={}){
   const budgetMs=cap(options.budgetMs,'budgetMs')??Infinity,cpuBudgetMs=cap(options.cpuBudgetMs,'cpuBudgetMs')??Infinity;
   const plan=await buildTrialPlan(options),source=sourceFingerprint();
   const identity={schema:'uba-laboratory-manifest-v1',plan,source};
-  const manifest={...identity,id:hashValue(identity)};
+  let manifest={...identity,id:hashValue(identity)};
   const out=options.out===undefined?null:resolve(options.out);
   let lock,lockPath;
   if(out){
@@ -92,17 +92,27 @@ export async function runLaboratory(options={}){
     lock=acquireLock(lockPath);
   }
   try{
-    let rows=[],recoveredTail=false;
+    let rows=[],recoveredTail=false,changedSource=false;
     if(out){
       const manifestPath=join(out,'manifest.json');
       if(existsSync(manifestPath)){
         let prior;try{prior=JSON.parse(readFileSync(manifestPath,'utf8'));}catch(error){throw Error('Corrupt manifest',{cause:error});}
-        if(prior.id!==hashValue({schema:prior.schema,plan:prior.plan,source:prior.source})||canonicalJSON(prior)!==canonicalJSON(manifest))throw Error('Incompatible checkpoint configuration or source provenance');
+        if(prior.schema!==manifest.schema||
+          prior.id!==hashValue({schema:prior.schema,plan:prior.plan,source:prior.source})||
+          canonicalJSON(prior.plan)!==canonicalJSON(plan))
+          throw Error('Incompatible checkpoint trial plan');
+        // Retain the existing manifest ID for finished trial records.
+        changedSource=canonicalJSON(prior.source)!==canonicalJSON(source);
+        manifest=prior;
       }else{
         if(existsSync(join(out,'trials.ndjson'))&&readFileSync(join(out,'trials.ndjson')).length)throw Error('Trial records without a manifest');
         atomicWriteJSON(manifestPath,manifest);
       }
-      persistSourceSnapshot(out,source);
+      if(changedSource){
+        // Archive the resumed version without overwriting original source bytes.
+        persistSourceSnapshot(join(out,'resume-sources',hashValue(source)),source);
+        process.stderr.write('UBA: resumed under a new source version; completed trial records retained. Mixed-version results need review.\n');
+      }else persistSourceSnapshot(out,source);
       ({rows,recoveredTail}=readTrialRecords(join(out,'trials.ndjson'),plan.tasks));
     }
     const begun=performance.now(),usageStart=process.cpuUsage();

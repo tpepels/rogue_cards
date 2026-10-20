@@ -7,6 +7,7 @@ import {mkdtempSync,rmSync,readFileSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {optimizeBalance} from '../src/balance/optimizer.js';
+import {lockConfiguration} from '../src/balance/artifacts.js';
 
 test('automatic generation is deterministic, bounded, jointly varies dimensions and caches hashes',()=>{
  const opts={space:DEFAULT_GOALS.search.space,seed:31,generation:0,population:6};
@@ -62,4 +63,17 @@ test('optimizer rejects modified selection checkpoints before using their archiv
   writeFileSync(path,JSON.stringify(state));
   await assert.rejects(optimizeBalance(options),/checkpoint checksum/);
  }finally{rmSync(out,{recursive:true,force:true});}
+});
+
+test('optimizer can reuse a locked checkpoint after source/Node changes',t=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-source-resume-'));
+ t.after(()=>rmSync(out,{recursive:true,force:true}));
+ const path=join(out,'optimizer-lock.json');
+ const previous={schema:'uba-optimizer-v1',seed:12,profile:{id:'puct-c070-v1'},source:{revision:'old',node:'v22',hash:'old'}};
+ const original=lockConfiguration(path,previous);
+ const updated={...previous,source:{revision:'new',node:'v26',hash:'new'}};
+ assert.deepEqual(lockConfiguration(path,updated,{ignoreSource:true}),original);
+ assert.deepEqual(JSON.parse(readFileSync(path,'utf8')),original);
+ assert.throws(()=>lockConfiguration(path,{...updated,seed:13},{ignoreSource:true}),/incompatible/i);
+ assert.throws(()=>lockConfiguration(path,updated),/incompatible/i);
 });

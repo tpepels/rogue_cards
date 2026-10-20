@@ -8,12 +8,21 @@ export function writeJSON(path,value){
  renameSync(path+'.tmp',path);
 }
 export const readJSON=path=>JSON.parse(readFileSync(path,'utf8'));
-/** A lock is created before any trials and is never silently changed. */
-export function lockConfiguration(path,configuration){
+/** Preserve scientific inputs while permitting source-only changes on resume.
+ * Return the original saved lock hash to retain optimizer-state identity.
+ */
+export function lockConfiguration(path,configuration,{ignoreSource=false}={}){
  const value={schema:'uba-configuration-lock-v1',hash:contentHash(configuration),configuration};
- if(existsSync(path)){
-  const saved=readJSON(path);
-  if(canonicalJSON(saved)!==canonicalJSON(value))throw Error('Incompatible resume configuration: '+path);
- }else writeJSON(path,value);
- return value;
+ if(!existsSync(path)){writeJSON(path,value);return value;}
+ const saved=readJSON(path);
+ if(saved.schema!==value.schema||saved.hash!==contentHash(saved.configuration))
+  throw Error('Corrupt configuration lock: '+path);
+ const inputs=object=>{
+  if(!ignoreSource)return object;
+  const {source,...withoutSource}=object;
+  return withoutSource;
+ };
+ if(canonicalJSON(inputs(saved.configuration))!==canonicalJSON(inputs(configuration)))
+  throw Error('Incompatible resume configuration: '+path);
+ return saved;
 }

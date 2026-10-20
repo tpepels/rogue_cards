@@ -74,7 +74,9 @@ export async function optimizeBalance(options={}){
   const resolved=getAgentProfile(p);return [resolved.hash,resolved];
  })).values()];
  const config={schema:'uba-optimizer-v1',base,goals,seed,algorithm,profile:fixedProfile,parties,settings,protectedCards,validate,validationProfiles,source:sourceFingerprint()};
- const locked=lockConfiguration(join(out,'optimizer-lock.json'),config),statePath=join(out,'optimizer-state.json');
+ // Allow resumption after Git/Node changes; keep all fixed trial inputs and
+ // the original checkpoint checksum/identity.
+ const locked=lockConfiguration(join(out,'optimizer-lock.json'),config,{ignoreSource:true}),statePath=join(out,'optimizer-state.json');
  writeJSON(join(out,'baseline.json'),BASELINE_MANIFEST);
  const savedState=existsSync(statePath),state=savedState?readJSON(statePath):{schema:'uba-optimizer-state-v1',lock:locked.hash,generation:0,archive:[],current:null,complete:false};
  const stateChecksum=()=>{const {integrity,...snapshot}=state;return contentHash(snapshot);};
