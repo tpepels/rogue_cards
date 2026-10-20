@@ -98,7 +98,7 @@ test("PW tuning validates k, alpha and ordering",()=>{
   {pwK:0},{pwAlpha:0},{pwAlpha:1.5},{pwOrder:"garbage"},{pwRootFull:"yes"}
  ])assert.throws(()=>searchDecision(session,{budget:2,progressiveWidening:true,...bad}),
   /widening|pwRootFull/);
- const s=searchDecision(session,{budget:5,seed:1234,
+ const s=searchDecision(session,{budget:Math.max(8,sessionActions(session).length),seed:1234,
   knowledge:"fair",treeMode:"frontier",strictTerminal:false,maxSteps:3000,
   progressiveWidening:true,pwK:3,pwAlpha:0.75,
   pwOrder:"public-prior",pwRootFull:true});
