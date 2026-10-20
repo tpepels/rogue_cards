@@ -68,3 +68,20 @@ test('UBA optimizer CLI selects PUCT and includes it in holdout, without changin
  assert.equal(options.profile.id,'puct-c070-v1');
  assert.equal(options.goals.id,'balanced-recovery-targets-v1');
 });
+
+test('real solo and duo PUCT trials terminate with canonical UBA telemetry', {timeout:600000},async()=>{
+ const {playBalanceTrial}=await import('../src/balance/trial.js');
+ const fragile=createCandidate({staging:{cards:['warrior','knight'].map(id=>({
+  collection:'heroes',id,set:{hp:1,atk:1,def:0,wit:1}
+ }))}});
+ for(const heroes of [['warrior'],['warrior','knight']]){
+  const result=playBalanceTrial({candidate:fragile,heroes,seed:20261021,
+   profile:'puct-c070-v1',maxGameSteps:3000});
+  assert.ok(['win','death','escape'].includes(result.ending));
+  assert.equal(result.profileId,'puct-c070-v1');
+  assert.equal(result.profileHash,getAgentProfile('puct-c070-v1').hash);
+  assert.ok(result.decisions>0);
+  assert.ok(Number.isFinite(result.searchMs));
+  assert.equal(result.heroes.length,heroes.length);
+ }
+});
