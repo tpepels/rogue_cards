@@ -38,5 +38,5 @@ jobs:
             tests/revised-card-contracts.test.mjs \
             tests/card-interactions.test.mjs \
             tests/game-verification.test.mjs
-      - name: Audit printed game
+      - name: Audit official printed game
         run: npm run validate:deck
