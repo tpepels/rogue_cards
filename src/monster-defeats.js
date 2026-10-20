@@ -168,6 +168,29 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  }
 });
+// Metadata for comparing pre-v1 healing hypotheses with the new canonical
+// DEFEAT printed values. This list adds NO global or inferred game effect.
+export const BALANCED_RECOVERY_V1_MONSTER_IDS=Object.freeze([
+ "goblin",
+ "crawler",
+ "bat",
+ "troll",
+ "wisp",
+ "eye",
+ "wraith",
+ "rust",
+ "cultist",
+ "sentinel",
+ "keyhole-mimic",
+ "dust-skeleton",
+ "lantern-moth",
+ "drowned-jailer",
+ "ropebound-hound",
+ "bell-beetle",
+ "vault-parasite",
+ "bone-cantor",
+ "glass-revenant"
+]);
 export function applyMonsterDefeat(state,monster){
  const ops=monster.v2?.defeatOps;
  if(!ops?.length)return;
