@@ -24,7 +24,7 @@ test("Plan pins the real 36-Room game and one shared fair co-op agent",()=>{
  assert.equal(m.parties.length,36);
  assert.equal(m.gameMode,"everything-goes");
  assert.equal(m.agent.knowledge,"fair");
- assert.equal(m.agent.equipmentMode,"legacy");
+ assert.equal(m.agent.equipmentMode,"party-efficient");
  assert.equal(m.agent.heuristicMode,"legacy");
 });
 test("Actual canonical decision-session resolves a solo and a duo",()=>{
