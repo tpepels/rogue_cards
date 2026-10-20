@@ -64,27 +64,49 @@ export function publicActionPriors(session,candidates,preferredId=null){
  return {weights,nonUniform:Math.max(...mass)-Math.min(...mass)>1e-10};
 }
 
+/**
+ * Calibratable progressive widening. Action order controls WHICH moves
+ * are admitted, while k/alpha control HOW MANY. The default arguments
+ * deliberately preserve the archived A/B/C/D experiment.
+ *
+ * Nodes can be encountered with a different current legal-action set after
+ * fair hidden-state sampling. Drop now-illegal IDs, append newly legal IDs,
+ * and never return an empty active set when legal actions are present.
+ */
 export function progressivelyWiden(node,candidates,rng,{
- preferredId=null,prioritized=false,priorWeights=null,k=2,alpha=0.55
+ preferredId=null,prioritized=false,priorWeights=null,k=2,alpha=0.55,
+ order=null
 }={}){
- if(candidates.length<=3)return candidates;
  if(!Number.isFinite(k)||k<1||!Number.isFinite(alpha)||
-    alpha<=0||alpha>1)throw Error("Invalid progressive widening parameters");
- if(!node.wideningOrder){
-  const ordered=rng.shuffle(candidates).map(c=>c.id);
-  if(prioritized&&priorWeights)
-   ordered.sort((a,b)=>(priorWeights.get(b)??0)-(priorWeights.get(a)??0));
-  if(prioritized&&preferredId){
-   const i=ordered.indexOf(preferredId);
-   if(i>=0){ordered.splice(i,1);ordered.unshift(preferredId);}
+   alpha<=0||alpha>1)throw Error("Invalid progressive widening parameters");
+ const ordering=order??(prioritized?"public-prior":"random");
+ if(!["random","soft-first","public-prior"].includes(ordering))
+   throw Error("Invalid progressive widening ordering");
+ if(ordering==="public-prior"&&!(priorWeights instanceof Map))
+   throw Error("Public-prior widening requires public prior weights");
+ if(candidates.length<=3)return candidates;
+ const makeOrder=list=>{
+  const result=rng.shuffle(list).map(c=>c.id);
+  if(ordering==="public-prior")
+   result.sort((a,b)=>(priorWeights.get(b)??0)-(priorWeights.get(a)??0));
+  if((ordering==="soft-first"||(order===null&&prioritized))&&preferredId){
+   const index=result.indexOf(preferredId);
+   if(index>=0){result.splice(index,1);result.unshift(preferredId);}
   }
-  node.wideningOrder=ordered;
+  return result;
+ };
+ const current=new Set(candidates.map(c=>c.id));
+ if(!node.wideningOrder)node.wideningOrder=makeOrder(candidates);
+ else{
+  const kept=node.wideningOrder.filter(id=>current.has(id));
+  const known=new Set(kept);
+  const newlyLegal=candidates.filter(c=>!known.has(c.id));
+  node.wideningOrder=[...kept,...makeOrder(newlyLegal)];
  }
  const cap=Math.max(1,Math.min(candidates.length,
   Math.ceil(k*Math.pow(node.visits+1,alpha))));
  if(cap>=candidates.length)return candidates;
  const allowed=new Set(node.wideningOrder.slice(0,cap));
- // Preserve canonical candidate array order for stable equality and traces.
  return candidates.filter(c=>allowed.has(c.id));
 }
 
