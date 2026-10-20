@@ -6,9 +6,13 @@
  */
 import {canonicalStagingCatalogue,compileStaging} from "./catalogue.js";
 import {BALANCED_HEAL_ROOM_DECK} from "./combat-healing-hypotheses.js";
+import {BALANCED_RECOVERY_V1_MONSTER_IDS} from "../monster-defeats.js";
 
 const monsters=canonicalStagingCatalogue().monsters;
-const nonHealing=monsters.filter(m=>!m.v2.defeatOps.some(op=>op.startsWith("HEAL:")));
+// This is a historical study definition: compare the same original 19
+// Monsters, even after those cards gain official printed healing in v1.
+const nonHealing=monsters.filter(m=>
+ BALANCED_RECOVERY_V1_MONSTER_IDS.includes(m.id));
 const selected=stages=>nonHealing.filter(m=>stages.includes(m.stage)).map(m=>m.id);
 const monstersFor={
  upper:selected(["UPPER"]),middle:selected(["MIDDLE"]),
