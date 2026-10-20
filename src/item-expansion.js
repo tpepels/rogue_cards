@@ -166,7 +166,7 @@ const ROWS=[
    "ALCHEMY",
    "TOOL"
   ],
-  "OUTSIDE COMBAT: discard to heal 3 HP. Your next WIT test has DIS.",
+  "OUTSIDE COMBAT: discard to heal 5 HP. Your next WIT test has DIS.",
   2,
   "One thorn to mend, one to sting."
  ],
