@@ -10,6 +10,7 @@ import {ODD_ITEMS} from "../item-expansion.js";
 import {ROOM_EFFECTS,ROOM_OPERATIONS} from "../room-effect-model.js";
 import {ITEM_HEALING_DEFAULTS,validItemHealing}
  from "../item-healing.js";
+import {BALANCED_RECOVERY_V1_MONSTER_IDS} from "../monster-defeats.js";
 
 const STAGES=["UPPER","MIDDLE","DEEP"];
 const canonical={
@@ -139,9 +140,20 @@ export function compileStaging(spec){
   const m=collections.monsters[i];
   if(!m.v2?.defeat||!Array.isArray(m.v2.defeatOps))
    throw Error("Missing original printed Monster DEFEAT "+id);
+  // Previously tested "add healing" hypotheses now override only the
+  // d6 effect introduced by official Balanced Recovery v1. Do not stack
+  // two independent heals on the same Monster, which would misrepresent
+  // both the candidate's printed text and the historical study.
+  const promoted=BALANCED_RECOVERY_V1_MONSTER_IDS.includes(id);
+  if(promoted&&(!m.v2.defeat.endsWith(" Heal d6 HP.")||
+    m.v2.defeatOps.at(-1)!=="HEAL:d6"))
+   throw Error("Canonical recovery card changed: "+id);
+  const baseText=promoted?
+   m.v2.defeat.slice(0,-" Heal d6 HP.".length):m.v2.defeat;
+  const baseOps=promoted?m.v2.defeatOps.slice(0,-1):m.v2.defeatOps;
   collections.monsters[i]=identity(m,{},{
-   defeat:m.v2.defeat+" Heal "+amount+" HP.",
-   defeatOps:[...m.v2.defeatOps,"HEAL:"+amount]
+   defeat:baseText+" Heal "+amount+" HP.",
+   defeatOps:[...baseOps,"HEAL:"+amount]
   });
  }
  const roomDeck={};
