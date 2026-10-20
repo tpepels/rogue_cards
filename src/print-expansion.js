@@ -18,7 +18,7 @@ const R=[
   [["DASH","Roll d6."],["STEP CAREFULLY","Lose 1 HP; cross safely."]],
   [["1–2","Slip on the stones. Lose 2 HP."],["3–4","Cross safely."],["5–6","Draw 1 Item from the floor."]],"A very old puddle."],
  ["ex-u-coal-store","Coal Store","UPPER","TREASURE","Sacks of cold coal crowd a store.",
-  [["SCAVENGE","Roll d6."],["REST","Discard 1 Item to heal 3 HP."]],
+  [["SCAVENGE","Roll d6."],["REST","Discard 1 Item to heal 5 HP."]],
   [["1–2","A shelf falls. Lose 2 HP."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"Someone left the fire out."],
  ["ex-u-cracked-hall","Cracked Hallway","UPPER","CORRIDOR","A cracked wall divides the passage.",
   [["CHECK THE WALL","Peek at the next Room."],["HURRY","Roll d6."]],
@@ -33,7 +33,7 @@ const R=[
   [["RUN","Roll d6."],["CRAWL","Lose 2 HP; draw 1 Item."]],
   [["1–2","Fall against the wall. Lose d6 HP."],["3–4","Reach the other end."],["5–6","Draw 1 Item."]],"The angle gets worse."],
  ["ex-m-old-barracks","Abandoned Barracks","MIDDLE","TREASURE","Empty bunks line the stone walls.",
-  [["SEARCH","Roll d6."],["SLEEP","Discard 1 Item to heal 4 HP."]],
+  [["SEARCH","Roll d6."],["SLEEP","Discard 1 Item to heal 6 HP."]],
   [["1–2","A sleeper wakes. Draw a MIDDLE Monster."],["3–4","Draw 1 Item from a bunk."],["5–6","Draw 2 Items from the lockers."]],"The beds are still warm."],
  ["ex-m-footbridge","Narrow Footbridge","MIDDLE","HAZARD","A thin walkway crosses black water.",
   [["CROSS","Roll d6."],["USE THE HANDRAIL","Lose 1 HP; cross safely."]],
@@ -54,7 +54,7 @@ const R=[
   [["CLIMB","Roll d6."],["TAKE YOUR TIME","Lose 1 HP; peek at next Room."]],
   [["1–2","A step falls away. Lose 3 HP."],["3–4","Reach the landing."],["5–6","Draw 1 Item."]],"Each step makes a different note."],
  ["ex-d-watchpost","Vacant Watchpost","DEEP","LAIR","An abandoned guard post faces the Vault.",
-  [["SEARCH","Roll d6."],["REST","Heal 2 HP and move on."]],
+  [["SEARCH","Roll d6."],["REST","Heal 4 HP and move on."]],
   [["1–2","The last guard returns. Draw a DEEP Monster."],["3–4","Draw 1 Item."],["5–6","Draw 2 Items."]],"There is dust on the sentry's chair."]
 ];
 const O=[
