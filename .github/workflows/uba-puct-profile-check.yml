@@ -1,0 +1,20 @@
+name: UBA PUCT Profile Check
+on:
+  push:
+    paths:
+      - 'src/balance/**'
+      - 'scripts/balance-optimize.mjs'
+      - 'tests/uba-puct-profile.test.mjs'
+      - '.github/workflows/uba-puct-profile-check.yml'
+  workflow_dispatch:
+jobs:
+  puct-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify pinned agent, immutable manifests, and optimizer
+        run: node --test tests/uba-puct-profile.test.mjs tests/uba-optimizer.test.mjs tests/uba-runner.test.mjs
