@@ -79,7 +79,7 @@ export function progressivelyWiden(node,candidates,rng,{
 }={}){
  if(!Number.isFinite(k)||k<1||!Number.isFinite(alpha)||
    alpha<=0||alpha>1)throw Error("Invalid progressive widening parameters");
- const ordering=order??(prioritized?"public-prior":"random");
+ const ordering=order??(prioritized?(priorWeights?"public-prior":"soft-first"):"random");
  if(!["random","soft-first","public-prior"].includes(ordering))
    throw Error("Invalid progressive widening ordering");
  if(ordering==="public-prior"&&!(priorWeights instanceof Map))
