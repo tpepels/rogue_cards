@@ -29,5 +29,14 @@ jobs:
             tests/room-memory.test.mjs \
             tests/new-card-engine-parity.test.mjs \
             tests/canonical-effect-sweep.test.mjs
+      - name: Check canonical Room, Monster, Item and session regressions
+        run: |
+          node --test \
+            tests/engine-api.test.mjs \
+            tests/expedition-full.test.mjs \
+            tests/everything-goes.test.mjs \
+            tests/revised-card-contracts.test.mjs \
+            tests/card-interactions.test.mjs \
+            tests/game-verification.test.mjs
       - name: Audit printed game
         run: npm run validate:deck
