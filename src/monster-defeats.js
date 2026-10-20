@@ -11,39 +11,45 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  },
  "goblin": {
-  "text": "Loot its satchel: draw 1 Item.",
+  "text": "Loot its satchel: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "crawler": {
-  "text": "Break open its carapace: draw 1 Item.",
+  "text": "Break open its carapace: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "bat": {
-  "text": "Find your bearings: peek at the next 2 Rooms.",
+  "text": "Find your bearings: peek at the next 2 Rooms. Heal d6 HP.",
   "ops": [
-   "PEEK:2"
+   "PEEK:2",
+   "HEAL:d6"
   ]
  },
  "troll": {
-  "text": "Claim the bridge toll: draw 2 Items.",
+  "text": "Claim the bridge toll: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "wisp": {
-  "text": "Catch its lingering light: +2 on your next WIT test.",
+  "text": "Catch its lingering light: +2 on your next WIT test. Heal d6 HP.",
   "ops": [
-   "NEXT_WIT:2"
+   "NEXT_WIT:2",
+   "HEAL:d6"
   ]
  },
  "eye": {
-  "text": "Follow its last gaze: peek at the next 2 Rooms.",
+  "text": "Follow its last gaze: peek at the next 2 Rooms. Heal d6 HP.",
   "ops": [
-   "PEEK:2"
+   "PEEK:2",
+   "HEAL:d6"
   ]
  },
  "mold": {
@@ -53,27 +59,31 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  },
  "wraith": {
-  "text": "Recover an old offering: draw 1 Item.",
+  "text": "Recover an old offering: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "rust": {
-  "text": "Scavenge metal fragments: draw 2 Items.",
+  "text": "Scavenge metal fragments: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "cultist": {
-  "text": "Search its robes: draw 1 Item.",
+  "text": "Search its robes: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "sentinel": {
-  "text": "Open its armoured compartment: draw 2 Items.",
+  "text": "Open its armoured compartment: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "drain-leech": {
@@ -83,21 +93,24 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  },
  "keyhole-mimic": {
-  "text": "Break open its secret compartment: draw 2 Items.",
+  "text": "Break open its secret compartment: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "dust-skeleton": {
-  "text": "Recover the last discarded Item, or draw 1 if none.",
+  "text": "Recover the last discarded Item, or draw 1 if none. Heal d6 HP.",
   "ops": [
-   "SALVAGE"
+   "SALVAGE",
+   "HEAL:d6"
   ]
  },
  "lantern-moth": {
-  "text": "Catch its light: your next Hero attack has ADV.",
+  "text": "Catch its light: your next Hero attack has ADV. Heal d6 HP.",
   "ops": [
-   "NEXT_ADV"
+   "NEXT_ADV",
+   "HEAL:d6"
   ]
  },
  "wax-golem": {
@@ -107,21 +120,24 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  },
  "drowned-jailer": {
-  "text": "Take the jailer's keys: draw 2 Items.",
+  "text": "Take the jailer's keys: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "ropebound-hound": {
-  "text": "Loosen its ropes: the next Monster attack against you has DIS.",
+  "text": "Loosen its ropes: the next Monster attack against you has DIS. Heal d6 HP.",
   "ops": [
-   "DEF_ADV"
+   "DEF_ADV",
+   "HEAL:d6"
   ]
  },
  "bell-beetle": {
-  "text": "Open its shell: draw 1 Item.",
+  "text": "Open its shell: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "ash-penitent": {
@@ -131,21 +147,24 @@ export const MONSTER_DEFEATS=Object.freeze({
   ]
  },
  "vault-parasite": {
-  "text": "Open what it was guarding: draw 2 Items.",
+  "text": "Open what it was guarding: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  },
  "bone-cantor": {
-  "text": "Search the choir's remains: draw 1 Item.",
+  "text": "Search the choir's remains: draw 1 Item. Heal d6 HP.",
   "ops": [
-   "DRAW:1"
+   "DRAW:1",
+   "HEAL:d6"
   ]
  },
  "glass-revenant": {
-  "text": "Pick through the shards: draw 2 Items.",
+  "text": "Pick through the shards: draw 2 Items. Heal d6 HP.",
   "ops": [
-   "DRAW:2"
+   "DRAW:2",
+   "HEAL:d6"
   ]
  }
 });
