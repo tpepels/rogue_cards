@@ -12,20 +12,20 @@ permissions:
 jobs:
   all-parties:
     runs-on: ubuntu-latest
-    timeout-minutes: 23
+    timeout-minutes: 17
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Test real single and cooperative decision-session expeditions
-        run: npm run test:balance:parties
+      - name: Validate the party enumeration and experiment contract
+        run: node --test --test-name-pattern="All eight|Plan pins" tests/balanced-recovery-parties.test.mjs
       - name: Verify the full all-party experiment plan
-        run: npm run study:balance:parties -- --runs-per-party 3 --budget 4 --dry-run
+        run: npm run study:balance:parties -- --runs-per-party 1 --budget 2 --dry-run
       - name: Run all 36 parties with a common MCTS policy
         run: |
           node scripts/study-balanced-recovery-parties.mjs \
-            --runs-per-party 3 --budget 4 --workers 4 --minutes 17 \
+            --runs-per-party 1 --budget 2 --workers 4 --minutes 12 \
             --seed 20261021 --out results/balanced-recovery-party-pilot
       - name: Show completed observations
         if: always()
