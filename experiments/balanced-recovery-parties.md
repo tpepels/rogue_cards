@@ -28,9 +28,9 @@ Heroes and whether any duo combination is disproportionately powerful.
 ## Smoke / pilot
 
 The automated [GitHub Actions pilot](../.github/workflows/balanced-recovery-party-pilot.yml)
-checks two real canonical games, all-party enumeration, and runs 3 different
-seeds per each of the 36 party compositions (108 expeditions total) at
-budget 4 with checkpoints. **Even if all 108 finish, 3 results per duo cannot
+checks all-party enumeration and runs one complete expedition per each
+of the 36 party compositions (36 expeditions total) at budget 2
+with checkpoints. **One result per duo absolutely cannot
 establish a meaningful win rate** or justify printed rule changes.
 Artifacts include `manifest.json`, `trials.ndjson`, `summary.json`
 and `comparison.md`. The pilot is explicitly a feasibility smoke.
