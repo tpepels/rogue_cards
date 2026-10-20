@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify pinned agent, immutable manifests, and optimizer
-        run: node --test tests/uba-puct-profile.test.mjs tests/uba-optimizer.test.mjs tests/uba-runner.test.mjs
+        run: node --test tests/uba-puct-profile.test.mjs tests/uba-optimizer.test.mjs tests/uba-runner.test.mjs tests/uba-telemetry.test.mjs

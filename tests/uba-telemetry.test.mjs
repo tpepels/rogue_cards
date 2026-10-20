@@ -16,7 +16,7 @@ test("versioned party profiles are deeply frozen and content identified",()=>{
  assert.equal(typeof profiles.getAgentProfile,"function");
  const {AGENT_PROFILES,getAgentProfile}=profiles;
  assert.deepEqual(Object.keys(AGENT_PROFILES).sort(),
-  ["reference-v1","widening-v1","priors-v1","combined-v1","weak-v1","random-v1"].sort());
+  ["reference-v1","widening-v1","priors-v1","puct-c070-v1","combined-v1","weak-v1","random-v1"].sort());
  const reference=getAgentProfile("reference-v1");
  assert.equal(reference.budget,8);
  assert.equal(reference.exploration,0.2);
