@@ -15,9 +15,9 @@ test("d20 health trackers support full HP, 0 HP, and healing",()=>{
  assert.equal(wizard.hp,5);
  s.heal(wizard,100);
  assert.equal(wizard.hp,wizard.card.hp);
- assert.equal(WARDEN.hp,20);
- assert.equal(WARDEN_FURY.hp,10);
- assert.match(WARDEN.v2.weakness,/10 HP or less/);
+ assert.equal(WARDEN.hp,15);
+ assert.equal(WARDEN_FURY.hp,8);
+ assert.match(WARDEN.v2.weakness,/8 HP or less/);
 });
 test("all printed Object results and Room choices have exactly one executable handler",()=>{
  const o=verifyObjectCoverage(),r=verifyRoomCoverage();
