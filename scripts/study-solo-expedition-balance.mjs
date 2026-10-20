@@ -204,6 +204,7 @@ export function playFullSoloExpedition({
  softTreeBonus=0.15,softTreeFirstVisitProbability=0.75,
  softRolloutProbability=0.75,implicitHpScale=1,implicitThreatScale=1,
  nodePriors=false,progressiveWidening=false,puctC=0.35,
+ pwK=2,pwAlpha=0.55,pwOrder=null,pwRootFull=false,
  cardPools=null,maxGameSteps=20000,maxSearchSteps=5000
 }={}){
  if(!SOLO_HEROES.includes(hero)||!ARM_NAMES.includes(arm))
@@ -221,7 +222,8 @@ export function playFullSoloExpedition({
   suppressedEquipmentCandidates:0,treeSoftOffered:0,treeSoftChosen:0,
   rolloutSoftOffered:0,rolloutSoftChosen:0,rules:{}};
  const searchControls={puctSelections:0,informativePriorSelections:0,
-  widenedNodes:0,widenedSelections:0,wideningActionsFiltered:0};
+  widenedNodes:0,widenedSelections:0,wideningActionsFiltered:0,
+  rootActionsTried:0,rootActionsTotal:0};
  const selectedActions={},phaseDecisions={};
  const maxHp=session.state.heroes[0].card.hp;
  const recorder=recordTelemetry?createDecisionRecorder({
@@ -266,7 +268,7 @@ export function playFullSoloExpedition({
    equipmentMode,mctsPragmaticVariant,
    softTreeBonus,softTreeFirstVisitProbability,softRolloutProbability,
    implicitHpScale,implicitThreatScale,nodePriors,progressiveWidening,puctC,
-   onPolicyDecision:event=>{shortcutReason=event.rule;},
+   pwK,pwAlpha,pwOrder,pwRootFull,onPolicyDecision:event=>{shortcutReason=event.rule;},
    onSearchResult:result=>{
     if(recorder)searchDiagnostics=result;
     const control=result.searchControls;
