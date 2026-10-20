@@ -1,0 +1,46 @@
+name: Verify calibrated PW and PUCT research
+
+on:
+  push:
+    paths:
+      - src/mcts-search-controls.js
+      - src/session-mcts.js
+      - src/session-policy.js
+      - scripts/study-solo-expedition-balance.mjs
+      - scripts/study-mcts-search-ablation.mjs
+      - scripts/mcts-search-calibration.mjs
+      - tests/mcts-search-controls.test.mjs
+      - tests/mcts-search-calibration.test.mjs
+      - .github/workflows/mcts-pw-puct-calibration-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate ESM syntax
+        run: |
+          node --check src/mcts-search-controls.js
+          node --check src/session-mcts.js
+          node --check src/session-policy.js
+          node --check scripts/study-solo-expedition-balance.mjs
+          node --check scripts/mcts-search-calibration.mjs
+          node --check scripts/study-mcts-search-ablation.mjs
+      - name: Validate calibration, legacy PW/PUCT and end-to-end decisions
+        run: npm run test:mcts:calibration
+      - name: Validate frozen old command remains usable
+        run: node scripts/study-mcts-search-ablation.mjs --dry-run --budgets 16,32,64 --runs-per-hero 5 > /tmp/mcts-old-plan.json
+      - name: Validate 2-stage study plan
+        run: |
+          node scripts/study-mcts-search-ablation.mjs --calibrate \
+            --dry-run --screen-repeats 2 --confirm-repeats 12 \
+            --screen-budget 16 --confirm-budgets 32,64 > /tmp/mcts-new-plan.json
+          node -e 'const x=require("/tmp/mcts-new-plan.json");if(x.screenPlanned!==448||x.confirmPlanned!==768)process.exit(1);'
