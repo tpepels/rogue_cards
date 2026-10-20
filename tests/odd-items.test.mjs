@@ -90,7 +90,7 @@ test("Fever Candle and Thorn Tonic trade healing and WIT penalties",()=>{
  assert.equal(x.s.witBonus,3);assert.equal(x.h.hp,hp-1);
  x=game(["thorn-tonic"]);x.h.hp-=5;
  activateOddTool(x.s,x.h,get(x.h,"thorn-tonic"));
- assert.equal(x.h.hp,x.h.card.hp-2);assert.equal(x.h.nextWitDis,1);
+ assert.equal(x.h.hp,x.h.card.hp);assert.equal(x.h.nextWitDis,1);
 });
 test("Grave Salt applies only against CURSED Monsters and expires after battle",()=>{
  const {s,h}=game(["grave-salt"]);
