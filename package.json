@@ -137,7 +137,9 @@
     "balance:optimize": "node scripts/balance-optimize.mjs",
     "balance:validate": "node scripts/balance-validate.mjs",
     "balance:card-impact": "node scripts/balance-card-impact.mjs",
-    "balance:compare-agents": "node scripts/balance-compare-agents.mjs"
+    "balance:compare-agents": "node scripts/balance-compare-agents.mjs",
+    "test:mcts:calibration": "node --test tests/mcts-search-controls.test.mjs tests/mcts-search-calibration.test.mjs",
+    "study:mcts:calibration": "node scripts/study-mcts-search-ablation.mjs --calibrate"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1"
