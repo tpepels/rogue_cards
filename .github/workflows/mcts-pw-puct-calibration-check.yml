@@ -54,7 +54,7 @@ jobs:
             import {readFileSync,existsSync} from "node:fs";
             const p=process.env.RUNNER_TEMP+"/pw-worker-smoke/screen/";
             if(!existsSync(p+"trials.ndjson"))throw Error("No real PW/PUCT trial was completed");
-            const rows=readFileSync(p+"trials.ndjson","utf8").trim().split("\\n").filter(Boolean);
+            const rows=readFileSync(p+"trials.ndjson","utf8").trim().split("\n").filter(Boolean);
             if(!rows.length)throw Error("Calibration workers returned no completed games");
             for(const line of rows){const x=JSON.parse(line);if(!["win","death","escape"].includes(x.ending))throw Error("Nonterminal calibration row");}
             console.log("Completed valid canonical calibration trials:",rows.length);
