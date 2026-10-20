@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {AGENT_PROFILES,getAgentProfile} from '../src/balance/profiles.js';
-import {balanceEquipmentMode} from '../src/balance/trial.js';
+import {balanceEquipmentMode,balanceImplicitHeuristicMode} from '../src/balance/trial.js';
 import {buildTrialPlan} from '../src/balance/runner.js';
 import {createCandidate} from '../src/balance/candidate.js';
 
@@ -41,6 +41,8 @@ test('solo retains pragmatic simulation and duo gets existing legal party equipm
  assert.equal(balanceEquipmentMode(p,['warrior']),'solo-pragmatic');
  assert.equal(balanceEquipmentMode(p,['warrior','knight']),'party-efficient');
  assert.equal(balanceEquipmentMode(getAgentProfile('reference-v1'),['warrior','knight']),'party-efficient');
+ assert.equal(balanceImplicitHeuristicMode(p,['warrior']),'solo-threat');
+ assert.equal(balanceImplicitHeuristicMode(p,['warrior','knight']),'legacy');
 });
 
 test('UBA trial manifests retain the pinned PUCT identity separately from old agents',async()=>{

@@ -24,9 +24,9 @@ simulation, tree bonus 0.15, first visit 0.75, rollout preference 0.75,
 implicit scales 1.0, and max 5000 search steps. PUCT uses coefficient
 0.70. Progressive widening is disabled. Solo keeps the studied
 solo-pragmatic equipment policy. Duo automatically selects the existing
-party-efficient equipment policy because the solo policy rejects
-multi-Hero parties; this duo use of PUCT has not been independently
-validated.
+party-efficient equipment policy and legacy implicit heuristic because
+both selected solo controls reject multi-Hero parties; this duo use of
+PUCT has not been independently validated.
 
 The older UBA `reference-v1`, `weak-v1`, and earlier agent hashes stay
 unchanged. Optimization and confirmation checkpoints are keyed by their

@@ -44,6 +44,11 @@ export function balanceEquipmentMode(profile,heroes){
  return profile.id==="puct-c070-v1"&&heroes.length===2?
   "party-efficient":profile.equipmentMode;
 }
+export function balanceImplicitHeuristicMode(profile,heroes){
+ // The solo-threat implicit evaluator requires exactly one Hero.
+ return profile.id==="puct-c070-v1"&&heroes.length===2?
+  "legacy":profile.implicitHeuristicMode;
+}
 
 /** Run a printable candidate through the canonical playParty loop.
  * recordEvents controls retained compact traces; summary aggregation is
@@ -79,6 +84,7 @@ export function playBalanceTrial({candidate,heroes,seed,profile="reference-v1",
   const {id,hash,schema,policyKind,...parameters}=agent;
   const action=policyRng?randomAction(session,policy,legal,policyRng):selectSessionPolicyAction(session,policy,{
    ...parameters,equipmentMode:balanceEquipmentMode(agent,heroes),
+   implicitHeuristicMode:balanceImplicitHeuristicMode(agent,heroes),
    seed:mix(seed^Math.imul(decisions,0xc2b2ae35)),legalActions:legal,
    ...(recorder?{onSearchResult:d=>{diagnostic=d;},
     onPolicyDecision:d=>{policyRule=d.rule;}}:{})
