@@ -16,7 +16,8 @@
 import {sessionActions} from "./engine/decision-session.js";
 import {searchDecision} from "./session-mcts.js";
 import {resolveSearchProfile} from "./mcts-hybrid-defaults.js";
-import {usefulSoloEquipmentAction,pragmaticSoloAction} from "./solo-pragmatic.js";
+import {usefulSoloEquipmentAction,usefulPartyEquipmentAction,
+ pragmaticSoloAction} from "./solo-pragmatic.js";
 export {usefulSoloEquipmentAction,pragmaticSoloAction} from "./solo-pragmatic.js";
 
 export const MAX_CONSECUTIVE_EQUIPMENT_ACTIONS=12;
@@ -100,9 +101,11 @@ export function selectSessionPolicyAction(session,policy,{
  // Reuse that array instead of rebuilding equipment options a second time.
  const legal=legalActions??sessionActions(session);
  if(!legal.length)throw Error("No legal policy action at "+session.phase);
- if(!["legacy","solo-efficient","solo-pragmatic"].includes(equipmentMode))
+ if(!["legacy","solo-efficient","solo-pragmatic",
+   "party-efficient"].includes(equipmentMode))
   throw Error("Unknown equipment policy mode");
- if(equipmentMode!=="legacy"&&session.state.heroes.length!==1)
+ if(!["legacy","party-efficient"].includes(equipmentMode)&&
+    session.state.heroes.length!==1)
   throw Error("Solo-efficient equipment policy requires exactly one Hero");
  if(equipmentMode==="solo-pragmatic"){
   const shortcut=pragmaticSoloAction(session,legal);
@@ -110,7 +113,9 @@ export function selectSessionPolicyAction(session,policy,{
    shortcut.rule,shortcut.action);
  }
  if(equipmentMode!=="legacy"&&safePhases.has(session.phase)){
-  const upgrade=usefulSoloEquipmentAction(session,legal);
+  const upgrade=equipmentMode==="party-efficient"?
+   usefulPartyEquipmentAction(session,legal):
+   usefulSoloEquipmentAction(session,legal);
   if(upgrade){
    policy.equipmentActions++;
    policy.equippedUpgradeCount++;
