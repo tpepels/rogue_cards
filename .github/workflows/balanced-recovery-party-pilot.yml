@@ -1,0 +1,42 @@
+name: Balanced Recovery v1 solo and duo pilot
+
+on:
+  push:
+    paths:
+      - .github/workflows/balanced-recovery-party-pilot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  all-parties:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test real single and cooperative decision-session expeditions
+        run: npm run test:balance:parties
+      - name: Verify the full all-party experiment plan
+        run: npm run study:balance:parties -- --runs-per-party 3 --budget 4 --dry-run
+      - name: Run all 36 parties with a common MCTS policy
+        run: |
+          node scripts/study-balanced-recovery-parties.mjs \
+            --runs-per-party 3 --budget 4 --workers 4 --minutes 17 \
+            --seed 20261021 --out results/balanced-recovery-party-pilot
+      - name: Show completed observations
+        if: always()
+        run: |
+          if [ -f results/balanced-recovery-party-pilot/comparison.md ]; then
+            cat results/balanced-recovery-party-pilot/comparison.md
+          fi
+      - name: Retain every measured expedition
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: balanced-recovery-party-pilot
+          path: results/balanced-recovery-party-pilot/
+          if-no-files-found: ignore
