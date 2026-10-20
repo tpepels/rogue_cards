@@ -4,9 +4,9 @@
  * Changing printed amounts never changes the original canonical source cards.
  */
 export const ITEM_HEALING_DEFAULTS=Object.freeze({
- "ex-bandages":"d6",
- "ex-rations":2,
- "odd-thorn-tonic":3
+ "ex-bandages":"d6+2",
+ "ex-rations":4,
+ "odd-thorn-tonic":5
 });
 export const ITEM_HEALING_OPTIONS=Object.freeze({
  "ex-bandages":Object.freeze(["d6","d6+2",4,6,8]),
