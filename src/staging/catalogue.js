@@ -119,7 +119,8 @@ export function compileStaging(spec){
   const prior=collections.items[index];
   const original=prior.v2?.trigger;
   const current=ITEM_HEALING_DEFAULTS[id];
-  const pattern=new RegExp("\\bheal\\s+"+current+"\\s+HP\\b","i");
+  const pattern=new RegExp("\\bheal\\s+"+
+   String(current).replaceAll("+","\\+")+"\\s+HP\\b","i");
   if(!pattern.test(original))
    throw Error("Printed healing text mismatch for "+id);
   const next=original.replace(pattern,"heal "+amount+" HP");
