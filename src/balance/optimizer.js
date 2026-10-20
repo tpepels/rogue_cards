@@ -59,14 +59,20 @@ function evaluateEntry(entry,rows,goals,parties){
  return {...entry,summary,diff,fitness,rows:selectionRows(rows)};
 }
 export async function optimizeBalance(options={}){
- const {goals=DEFAULT_GOALS,base=createCandidate(),seed=20261020,workers=1,out='results/ultimate-balance',algorithm='evolutionary',profile='reference-v1',parties=ALL_PARTIES,
+ const {goals=DEFAULT_GOALS,base=createCandidate(),seed=20261020,workers=1,out='results/ultimate-balance',algorithm='evolutionary',profile='puct-c070-v1',parties=ALL_PARTIES,
   protectedCards=[],maxTrials,validate=true}=options;
  const settings={...goals.search,...options.search},space=settings.space;
  validateSearchSpace(space,{base,protectedCards});compileCandidate(base);
  const fixedProfile=getAgentProfile(profile),started=Date.now(),budgetMs=options.budgetMs??12*60*60*1000;
  const remaining=()=>Math.max(0,budgetMs-(Date.now()-started));
  mkdirSync(out,{recursive:true});
- const validationProfiles=(options.validationProfiles??goals.validation.profiles).map(getAgentProfile);
+ // The optimizing agent must also appear in independent holdout validation.
+ // Preserve the legacy two-profile control set as additional sensitivity checks.
+ const validationIds=options.validationProfiles??(fixedProfile.id==='puct-c070-v1'?
+  [fixedProfile,...goals.validation.profiles]:goals.validation.profiles);
+ const validationProfiles=[...new Map(validationIds.map(p=>{
+  const resolved=getAgentProfile(p);return [resolved.hash,resolved];
+ })).values()];
  const config={schema:'uba-optimizer-v1',base,goals,seed,algorithm,profile:fixedProfile,parties,settings,protectedCards,validate,validationProfiles,source:sourceFingerprint()};
  const locked=lockConfiguration(join(out,'optimizer-lock.json'),config),statePath=join(out,'optimizer-state.json');
  writeJSON(join(out,'baseline.json'),BASELINE_MANIFEST);

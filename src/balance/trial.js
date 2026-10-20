@@ -36,6 +36,15 @@ function randomAction(session,policy,legal,rng){
  return choices[rng.die(choices.length)-1];
 }
 
+/** The selected solo-study equipment shortcut is incompatible with two Heroes.
+ * Keep it identical for solo, use the existing party-efficient policy for duo.
+ * PUCT, its exploration coefficient and all search heuristics stay pinned.
+ */
+export function balanceEquipmentMode(profile,heroes){
+ return profile.id==="puct-c070-v1"&&heroes.length===2?
+  "party-efficient":profile.equipmentMode;
+}
+
 /** Run a printable candidate through the canonical playParty loop.
  * recordEvents controls retained compact traces; summary aggregation is
  * always enabled. A capped/unresolved expedition is an error, never a loss.
@@ -69,7 +78,8 @@ export function playBalanceTrial({candidate,heroes,seed,profile="reference-v1",
   const begin=performance.now();let diagnostic=null,policyRule=null;
   const {id,hash,schema,policyKind,...parameters}=agent;
   const action=policyRng?randomAction(session,policy,legal,policyRng):selectSessionPolicyAction(session,policy,{
-   ...parameters,seed:mix(seed^Math.imul(decisions,0xc2b2ae35)),legalActions:legal,
+   ...parameters,equipmentMode:balanceEquipmentMode(agent,heroes),
+   seed:mix(seed^Math.imul(decisions,0xc2b2ae35)),legalActions:legal,
    ...(recorder?{onSearchResult:d=>{diagnostic=d;},
     onPolicyDecision:d=>{policyRule=d.rule;}}:{})
   });
