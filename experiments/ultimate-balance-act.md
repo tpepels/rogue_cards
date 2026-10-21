@@ -8,6 +8,17 @@
 
 > This document is the long-lived roadmap and phase tracker for **Ultimate Balance Act (UBA)**. Keep it up to date when beginning or completing work; record decisions and evidence rather than silently changing targets. Existing balance-study scripts are reusable foundations, not evidence that a UBA phase is complete.
 
+## 21 October 2026 — selected-agent balance policy
+
+The standard UBA optimization **and independent holdout** both use the strongest
+currently selected frozen policy, `puct-c070-v1`. Earlier multi-profile holdout
+requirements are superseded for new runs; `reference-v1` and `weak-v1` remain
+available only for separately requested historical/agent comparisons. Retain
+paired independent seeds, complete Hero/pair coverage and statistical safeguards.
+This does not establish that the selected PUCT duo policy is superior, or that
+any AI agent reproduces human play. Existing optimizer checkpoint locks remain
+resumable with their original validation profile lists.
+
 ## 1. Mission
 
 Build **one automatic, reproducible balancing system** that:
