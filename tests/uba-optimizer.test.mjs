@@ -53,6 +53,18 @@ test('optimizer resumes its exact proposed population and finished trials after 
  }finally{rmSync(out,{recursive:true,force:true});}
 });
 
+test('fresh optimizer uses its single selected agent for independent confirmation',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-single-agent-'));
+ try{
+  await optimizeBalance({out,profile:'puct-c070-v1',workers:1,maxTrials:0,
+   parties:[['warrior']],search:{population:1,generations:1,
+    space:[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[-1]}]}});
+  const lock=JSON.parse(readFileSync(join(out,'optimizer-lock.json'),'utf8')).configuration;
+  assert.equal(lock.profile.id,'puct-c070-v1');
+  assert.deepEqual(lock.validationProfiles.map(p=>p.id),['puct-c070-v1']);
+ }finally{rmSync(out,{recursive:true,force:true});}
+});
+
 test('optimizer rejects modified selection checkpoints before using their archive',async()=>{
  const out=mkdtempSync(join(tmpdir(),'uba-opt-checksum-'));
  const options={out,profile:'random-v1',parties:[['warrior']],validate:false,maxTrials:0,
