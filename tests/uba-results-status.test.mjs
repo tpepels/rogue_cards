@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,readFileSync,rmSync,statSync,writeFileSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {renderResultsStatus,resultsRootForOutput,writeResultsStatus} from '../src/balance/results-status.js';
@@ -39,7 +39,7 @@ test('independent run status, completed optimizer and unknown result directories
  save(join(done,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',complete:true,generation:3,archive:[]});
  const md=renderResultsStatus(root);
  assert.match(md,/Paused: max-trials/);assert.match(md,/10 \/ 40/);
- assert.match(md,/Other results/);assert.match(md,/old-sim\/report.md/);
+ assert.match(md,/Report available \(state unknown\)/);assert.match(md,/old-sim\/report.md/);
  assert.match(md,/Complete/);
 });
 test('only repo results outputs are auto-indexed, and force regenerates an existing file',t=>{
@@ -51,4 +51,38 @@ test('only repo results outputs are auto-indexed, and force regenerates an exist
  writeFileSync(status,'OLD\n');
  writeResultsStatus(join(cwd,'results'),{force:true});
  assert.match(readFileSync(status,'utf8'),/# Results status/);
+});
+
+test('complete optimizer does not falsely show a holdout without progress',t=>{
+ const root=fixture(t),dir=join(root,'finished-v1');
+ mkdirSync(dir,{recursive:true});
+ save(join(dir,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',complete:true,generation:3,
+  finalists:[{id:'candidate-a'}],archive:[]});
+ const md=renderResultsStatus(root);
+ assert.match(md,/\| finished-v1 \| Complete \| complete \|/);
+ assert.doesNotMatch(md,/holdout · No progress yet/);
+});
+test('legacy MCTS ablation progress and report-only studies remain visible without invented completion',t=>{
+ const root=fixture(t),ablation=join(root,'mcts-search-ablation'),old=join(root,'mechanical-balance');
+ mkdirSync(ablation);mkdirSync(old);
+ save(join(ablation,'summary.json'),{schema:'rogue-cards-mcts-search-ablation-summary-v1',
+  status:'incomplete',finished:18,total:80});
+ writeFileSync(join(old,'comparison.md'),'# Historical comparison\n');
+ save(join(old,'summary.json'),{schema:'historical-balance-report'});
+ const md=renderResultsStatus(root);
+ assert.match(md,/mcts-search-ablation \| Partial \(source report\) \| 18 \/ 80 \(22\.5%\)/);
+ assert.match(md,/mechanical-balance \| Report available \(state unknown\)/);
+ assert.doesNotMatch(md,/No recognized checkpoint/);
+});
+test('running optimizer is placed before archived comparison reports',t=>{
+ const root=fixture(t);
+ for(const name of ['a-archived','z-running'])mkdirSync(join(root,name));
+ writeFileSync(join(root,'a-archived','report.md'),'# Archive\n');
+ const dir=join(root,'z-running'),screen=join(dir,'screen','g0');
+ mkdirSync(screen,{recursive:true});
+ save(join(dir,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',complete:false,generation:0,
+   current:{stage:'screen'},archive:[]});
+ save(join(screen,'.laboratory.lock'),{pid:process.pid});
+ const text=renderResultsStatus(root);
+ assert.ok(text.indexOf('| z-running |')<text.indexOf('| a-archived |'));
 });
