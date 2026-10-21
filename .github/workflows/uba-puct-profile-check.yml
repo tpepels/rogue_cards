@@ -4,9 +4,11 @@ on:
     paths:
       - 'src/balance/**'
       - 'scripts/balance-optimize.mjs'
+      - 'scripts/results-status.mjs'
       - 'tests/uba-puct-profile.test.mjs'
       - 'tests/uba-runner.test.mjs'
       - 'tests/uba-optimizer.test.mjs'
+      - 'tests/uba-results-status.test.mjs'
       - '.github/workflows/uba-puct-profile-check.yml'
   workflow_dispatch:
 jobs:
@@ -19,4 +21,4 @@ jobs:
         with:
           node-version: '22'
       - name: Verify pinned agent, immutable manifests, and optimizer
-        run: node --test tests/uba-puct-profile.test.mjs tests/uba-optimizer.test.mjs tests/uba-runner.test.mjs tests/uba-telemetry.test.mjs
+        run: node --test tests/uba-puct-profile.test.mjs tests/uba-optimizer.test.mjs tests/uba-runner.test.mjs tests/uba-telemetry.test.mjs tests/uba-results-status.test.mjs
