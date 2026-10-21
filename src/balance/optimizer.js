@@ -128,7 +128,7 @@ export async function optimizeBalance(options={}){
   const frontier=paretoFrontier(state.archive);
   writeJSON(join(out,'pareto.json'),frontier.map(({rows,...e})=>e));
   writeJSON(join(out,'ranked.json'),[...state.archive].sort((a,b)=>b.fitness.score-a.fitness.score).map(({rows,...e})=>e));
-  saveComparison(out,state.archive,{title:'Ultimate Balance Act — '+algorithm,baselineHash:base.hash,complete:false});
+  saveComparison(out,state.archive,{title:'Ultimate Balance Act — '+algorithm,baselineHash:base.hash,complete:false,space});
   // Increment is persisted before entering the next generation so a crash
   // cannot replay a different proposal against already saved batches.
   state.generation=g+1;save();state.generation=g;
@@ -149,6 +149,6 @@ export async function optimizeBalance(options={}){
   if(!state.validation.complete)return stop('confirmation-incomplete');
  }
  state.complete=true;state.stopReason=null;save();
- saveComparison(out,state.archive,{title:'Ultimate Balance Act — '+algorithm,baselineHash:base.hash,complete:true,validation:state.validation??null});
+ saveComparison(out,state.archive,{title:'Ultimate Balance Act — '+algorithm,baselineHash:base.hash,complete:true,validation:state.validation??null,space});
  return state;
 }
