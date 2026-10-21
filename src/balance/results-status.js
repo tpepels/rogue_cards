@@ -199,7 +199,7 @@ export function renderResultsStatus(root){
  const lines=[
   '# Results status','',
   'Updated '+new Date().toISOString()+'. Auto-generated; do not edit.','',
-  'This consolidates checkpoint progress and comparative statistics without reading raw trials. Historical report formats may have unknown completion status; screening and model-agent results are not independent validation.','',
+  'Optimizer reports include every committed candidate, full Hero/pair strata, and a read-only snapshot of completed trials in the active laboratory. In-flight values are descriptive and are not yet committed fitness or independent validation. Historical report formats may have unknown completion status.','',
   '| Experiment | Status | Phase / trials | Best candidate · fitness | Report |',
   '|---|---|---|---|---|',
   ...found.map(x=>'| '+clean(x.name)+' | '+clean(x.status)+' | '+clean(x.phase)+' | '+x.top+' | '+x.report+' |'),''
