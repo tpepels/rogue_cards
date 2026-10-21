@@ -67,8 +67,8 @@ export async function optimizeBalance(options={}){
  const fixedProfile=getAgentProfile(profile),started=Date.now(),budgetMs=options.budgetMs??12*60*60*1000;
  const remaining=()=>Math.max(0,budgetMs-(Date.now()-started));
  mkdirSync(out,{recursive:true});
- // The optimizing agent must also appear in independent holdout validation.
- // Preserve the legacy two-profile control set as additional sensitivity checks.
+ // Independent confirmation defaults to the same pinned policy used for
+ // optimization. Legacy checkpoints retain their originally locked policies.
  // New balance runs use the strongest pinned agent for both selection and
  // independent confirmation. Existing checkpoint inputs must stay immutable:
  // retain the original validation profiles when resuming an older run.
