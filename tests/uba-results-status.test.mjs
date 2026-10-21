@@ -141,3 +141,38 @@ test('MCTS summary.json alone yields useful budget, win-rate and search-cost sta
  assert.match(md,/PUCT|puct/);assert.match(md,/62\.5% \[52\.5%–71\.5%\]/);
  assert.match(md,/96\.3 s/);assert.match(md,/32 \| puct \| 96/);
 });
+
+
+test('STATUS expands every archived optimizer candidate into exact parameter values and physical edits',t=>{
+ const root=fixture(t),dir=join(root,'uba-configs');mkdirSync(dir);
+ save(join(dir,'optimizer-lock.json'),{configuration:{settings:{generations:3,space:[
+  {key:'upper-encounters',kind:'room-transfer',stage:'UPPER',from:'u-shrine',to:'u-nest',values:[0,1]},
+  {key:'monster-hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[-2,-1,0]},
+  {key:'bandage-healing',kind:'item-healing',id:'ex-bandages',values:[2,3,4]}
+ ]},profile:{id:'puct-c070-v1'}}});
+ const entry=(id,hash,score,genes,changes)=>({candidate:{id,hash},genes,
+  diff:{changes},fitness:{score,values:{encounters36:18,fightConversion:.65},violations:[]},
+  summary:{solo:{n:40,winRate:.4,winCI:[.25,.55]},duo:{n:140,winRate:.5,winCI:[.42,.58]}}});
+ save(join(dir,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',generation:1,complete:false,
+  current:{stage:'refine'},archive:[
+  entry('baseline','canonical',.41,null,[]),
+  entry('candidate-one','one',.81,{'upper-encounters':1,'monster-hp':1,'bandage-healing':2},[
+   {type:'monster',id:'wisp',before:{copies:1,card:{title:'Will-o-Wisp'}},
+    after:{copies:1,card:{title:'Will-o-Wisp'}},fields:[{path:'hp',before:8,after:7}]},
+   {type:'item',id:'ex-bandages',before:{copies:1,card:{title:'Bandages'}},
+    after:{copies:1,card:{title:'Bandages'}},fields:[
+     {path:'v2',before:{rule:'Heal 2 HP.'},after:{rule:'Heal 4 HP.'}}]}]),
+  entry('candidate-two','two',.7,{'upper-encounters':0,'monster-hp':2,'bandage-healing':0},[])
+ ]});
+ const md=renderResultsStatus(root);
+ assert.match(md,/Candidate \| Configuration \| Solo wins/);
+ assert.match(md,/upper-encounters=1/);
+ assert.match(md,/Exact candidate configurations \(all 3 evaluated candidates\)/);
+ assert.match(md,/UPPER u-shrine → u-nest: 1 physical Room/);
+ assert.match(md,/monster-hp = -1/);
+ assert.match(md,/bandage-healing = 4/);
+ assert.match(md,/Will-o-Wisp \[monster:wisp\]: hp: 8 → 7/);
+ assert.match(md,/Bandages \[item:ex-bandages\]: v2\.rule: "Heal 2 HP\." → "Heal 4 HP\."/);
+ assert.match(md,/candidate-two/);
+ assert.match(md,/Unchanged canonical baseline/);
+});
