@@ -81,6 +81,36 @@ test('generation boundary pause preserves refined results, original lock, and a 
  }finally{rmSync(out,{recursive:true,force:true});}
 });
 
+
+test('finishing current g1 refinement does not silently stop at past boundary or start g2',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-active-generation-'));
+ const options={out,profile:'random-v1',parties:[['warrior']],workers:1,validate:false,
+  search:{population:1,generations:3,screenRuns:1,refineRuns:2,finalists:1,
+   space:[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[-1,-2]}]}};
+ try{
+  const completedG0=await optimizeBalance({...options,stopAfterGeneration:1});
+  assert.equal(completedG0.generation,1);
+  assert.equal(completedG0.current,null);
+  const interruptedG1=await optimizeBalance({...options,maxTrials:1});
+  assert.equal(interruptedG1.generation,1);
+  assert.equal(interruptedG1.current?.stage,'refine');
+  const trialPath=join(out,'refine','g1','trials.ndjson');
+  const partial=readFileSync(trialPath,'utf8');
+  assert.equal(partial.trim().split('\n').length,1);
+  await assert.rejects(optimizeBalance({...options,stopAfterGeneration:1}),/already behind active generation g1/);
+  const stopped=await optimizeBalance({...options,stopAfterCurrentGeneration:true});
+  assert.equal(stopped.complete,false);
+  assert.equal(stopped.generation,2);
+  assert.equal(stopped.current,null);
+  assert.equal(stopped.stopReason,'generation-boundary');
+  assert.equal(stopped.archive.length,completedG0.archive.length+1);
+  assert.ok(readFileSync(trialPath,'utf8').startsWith(partial));
+  assert.equal(readFileSync(trialPath,'utf8').trim().split('\n').length,2);
+  await assert.rejects(optimizeBalance({...options,stopAfterCurrentGeneration:true}),/No active generation to finish/);
+  assert.equal(readFileSync(trialPath,'utf8').trim().split('\n').length,2);
+ }finally{rmSync(out,{recursive:true,force:true});}
+});
+
 test('fresh optimizer uses its single selected agent for independent confirmation',async()=>{
  const out=mkdtempSync(join(tmpdir(),'uba-opt-single-agent-'));
  try{
