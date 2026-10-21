@@ -66,3 +66,32 @@ block continuation. Original trials and source snapshots are preserved, and
 new source revisions are archived separately. Mixed code versions may change
 experimental behavior: inspect provenance before drawing scientific conclusions.
 Changing source code during an *active* worker run is still detected.
+
+
+## Stop after the first refined generation (21 October 2026)
+
+To review all first-generation results before beginning another generation,
+interrupt the currently running process with Ctrl+C and let it exit.
+Completed trials are preserved with checksums. Then run:
+
+```bash
+cd ~/Projects/rogue_cards
+git pull --ff-only
+node --test tests/uba-optimizer.test.mjs tests/uba-results-status.test.mjs
+node scripts/balance-optimize.mjs \
+  --goals experiments/balance-goals.json \
+  --base balanced-recovery-v1 \
+  --workers 8 --budget-hours 12 \
+  --out results/uba-puct-c070-v1 \
+  --best-agent-only-validation \
+  --stop-after-generation 1
+```
+
+The option completes outstanding first-generation refinement trials, recomputes
+all candidate fitness scores and reports, and persists the checkpoint at
+generation 1 of 3. It exits with stopReason `generation-boundary`,
+`complete: false`, without starting generation two or independent holdout.
+`npm run results:status` refreshes the human-readable final checkpoint summary.
+The flag is an operator-only stop boundary, not part of the locked scientific
+inputs: no old data is erased and a later resume without the flag may continue.
+Existing running Node processes cannot adopt this flag until restarted.
