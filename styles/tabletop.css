@@ -869,8 +869,13 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  html,body{background:white;color:black!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
  .tt-sitehead,.tt-shell,.tt-footerbar,.tt-noprint{display:none!important}
  .tt-print-only{display:block!important}
- .tt-sheet{display:grid;grid-template-columns:90mm 90mm;grid-template-rows:130mm 130mm;column-gap:4mm;row-gap:4mm;
-  justify-content:center;align-content:start;width:194mm;height:277mm;max-height:277mm;
+ /* Four cards touch edge-to-edge: a centred 180 x 260 mm cut block on A4.
+    With @page's 8 mm margins, this leaves 15 mm at each side and
+    approximately 18–19 mm above/below. The 1 mm page slack prevents
+    browsers creating spurious blank pages from print rounding. */
+ .tt-sheet{display:grid;grid-template-columns:repeat(2,90mm);grid-template-rows:repeat(2,130mm);
+  gap:0;justify-content:center;align-content:center;
+  width:194mm;height:280mm;max-height:280mm;
   break-after:page;page-break-after:always;overflow:hidden}
  .tt-sheet:last-child{break-after:auto;page-break-after:auto}
  .tt-card{box-shadow:none!important;margin:0!important;break-inside:avoid;page-break-inside:avoid;border-width:1.5px}

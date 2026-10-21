@@ -19,6 +19,7 @@ on:
       - "tests/layout-editor.spec.mjs"
       - "tests/visual.spec.mjs"
       - "tests/decks.spec.mjs"
+      - "tests/print-sheets.spec.mjs"
       - "tests/decks.test.mjs"
       - "decks.html"
       - "cards.html"
@@ -48,7 +49,7 @@ jobs:
           npm run layouts:check
           node --test tests/card-layouts.test.mjs tests/decks.test.mjs
       - name: Test browser editor and 139-card print layouts
-        run: npx playwright test tests/layout-editor.spec.mjs tests/visual.spec.mjs tests/decks.spec.mjs
+        run: npx playwright test tests/layout-editor.spec.mjs tests/visual.spec.mjs tests/decks.spec.mjs tests/print-sheets.spec.mjs
       - name: Upload per-card visual-inspection screenshots and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
