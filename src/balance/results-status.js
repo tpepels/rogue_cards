@@ -4,7 +4,7 @@
  */
 import {existsSync,mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
 import {isAbsolute,join,relative,resolve,sep} from 'node:path';
-import {summarizeComparison} from './comparison-summary.js';
+import {summarizeComparison,describeCandidateConfiguration} from './comparison-summary.js';
 
 const STATUS='STATUS.md',tick=String.fromCharCode(96);
 const code=value=>tick+String(value??'—')+tick;
@@ -59,7 +59,7 @@ function inspect(root,name){
   const active=runDir&&liveLock(join(runDir,'.laboratory.lock'));
   const status=state.complete?'Complete':active?'Running':state.stopReason?'Paused: '+state.stopReason:'Pending';
   const phase=stage+(runDir?' · '+progressLabel(progress):'');
-  const top=best?code(best.candidate?.id??best.candidate?.hash?.slice(0,12))+' · '+score(best.fitness.score):'—';
+  const top=best?clean(describeCandidateConfiguration(best,cfg?.settings?.space,{short:true}))+' · '+score(best.fitness.score)+' · '+code(best.candidate?.id??best.candidate?.hash?.slice(0,12)):'—';
   const report=links(root,dir,['comparison.md','ranked.json','optimizer-state.json']);
   const body=[
    '### '+clean(name),'',
