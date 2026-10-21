@@ -161,7 +161,9 @@ test('STATUS expands every archived optimizer candidate into exact parameter val
     after:{copies:1,card:{title:'Will-o-Wisp'}},fields:[{path:'hp',before:8,after:7}]},
    {type:'item',id:'ex-bandages',before:{copies:1,card:{title:'Bandages'}},
     after:{copies:1,card:{title:'Bandages'}},fields:[
-     {path:'v2',before:{rule:'Heal 2 HP.'},after:{rule:'Heal 4 HP.'}}]}]),
+     {path:'v2',before:{rule:'Heal 2 HP.'},after:{rule:'Heal 4 HP.'}}]},
+   {type:'room',id:'d-mirror',before:{copies:1,card:{title:'Mirror of Regrets',rule:'Long card definition must not appear in summary'}},
+    after:null,fields:[]}]),
   entry('candidate-two','two',.7,{'upper-encounters':0,'monster-hp':2,'bandage-healing':0},[])
  ]});
  const md=renderResultsStatus(root);
@@ -173,6 +175,8 @@ test('STATUS expands every archived optimizer candidate into exact parameter val
  assert.match(md,/bandage-healing = 4/);
  assert.match(md,/Will-o-Wisp \[monster:wisp\]: hp: 8 → 7/);
  assert.match(md,/Bandages \[item:ex-bandages\]: v2\.rule: "Heal 2 HP\." → "Heal 4 HP\."/);
+ assert.match(md,/Mirror of Regrets \[room:d-mirror\]: copies 1 → 0 \(removed\)/);
+ assert.doesNotMatch(md,/Long card definition must not appear in summary/);
  assert.match(md,/candidate-two/);
  assert.match(md,/Unchanged canonical baseline/);
 });
