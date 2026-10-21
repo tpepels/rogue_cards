@@ -43,9 +43,16 @@ node scripts/balance-optimize.mjs --goals experiments/balance-goals.json \
   --out results/uba-puct-c070-v1
 ```
 
-The CLI and library optimizer default to the pinned PUCT agent. Independent
-validation also includes that agent, plus the prior `reference-v1` and
-`weak-v1` controls. Existing balance targets are **not recalibrated**;
+The CLI and library optimizer default to the pinned PUCT agent. Since
+21 October 2026, NEW optimizer runs and standalone confirmation default to
+**that PUCT agent only**, for both optimization and independent holdout. The
+older reference/weak profiles can still be explicitly requested for separate
+agent comparisons but are not part of standard balancing. Existing optimizer
+checkpoints retain their originally locked validation-profile set to remain
+resumable; start a fresh output directory to use the single-agent default.
+The historical `validation.profiles` array in `balance-goals.json` is
+preserved to avoid invalidating the 20 October checkpoint and no longer
+forces extra profiles in new validations. Existing balance targets are **not recalibrated**;
 the PUCT agent has a higher observed solo baseline win rate than the
 previous search agent, so optimizer scores/physical proposals must be
 reviewed against the baseline under the same policy. A 12-hour run can stop with incomplete checkpointed trials. Resume requires
