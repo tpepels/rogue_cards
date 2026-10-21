@@ -137,7 +137,7 @@ function inspect(root,name){
   ];
   if(best){
    const solo=best.summary?.solo,duo=best.summary?.duo;
-   body.push('**Provisional leader:** '+clean(describeCandidateConfiguration(best,cfg?.settings?.space,{short:true}))+
+   body.push('**Last committed provisional leader (excludes active phase):** '+clean(describeCandidateConfiguration(best,cfg?.settings?.space,{short:true}))+
     ' ('+code(best.candidate?.id??best.candidate?.hash)+') · fitness '+score(best.fitness.score)+
     ' · solo '+percent(solo?.winRate)+' (n='+clean(solo?.n??0)+')'+
     ' · duo '+percent(duo?.winRate)+' (n='+clean(duo?.n??0)+').','');
