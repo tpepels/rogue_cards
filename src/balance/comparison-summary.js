@@ -49,8 +49,11 @@ function printedChanges(entry){
   const before=change.before,after=change.after;
   const card=after?.card??before?.card??{},name=card.title??change.id??'unknown card';
   const id=(change.type??'card')+':'+(change.id??'unknown');
-  if(!before||!after)return name+' ['+id+']: '+(before?'removed ':'added ')+
-   (before?.copies??after?.copies??'?')+' copies; '+value(before?.card??after?.card);
+  if(!before||!after){
+   const previous=before?.copies??0,current=after?.copies??0;
+   return name+' ['+id+']: copies '+previous+' → '+current+
+    (after&&!before?' (new card; full definition in candidate manifest)':' (removed)');
+  }
   const details=[];
   if(before.copies!==after.copies)details.push('copies '+before.copies+' → '+after.copies);
   for(const field of change.fields??[]){
