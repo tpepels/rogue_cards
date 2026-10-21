@@ -65,6 +65,27 @@ test('fresh optimizer uses its single selected agent for independent confirmatio
  }finally{rmSync(out,{recursive:true,force:true});}
 });
 
+
+test('legacy optimizer can resume with recorded selected-agent-only holdout without discarding trials',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-puct-override-'));
+ const options={out,profile:'puct-c070-v1',workers:1,maxTrials:0,parties:[['warrior']],
+  search:{population:1,generations:1,space:[{key:'hp',kind:'card-stat',
+   collection:'monsters',field:'hp',offset:true,values:[-1]}]}};
+ try{
+  await optimizeBalance({...options,validationProfiles:['puct-c070-v1','reference-v1','weak-v1']});
+  const oldLock=readFileSync(join(out,'optimizer-lock.json'),'utf8');
+  const oldState=readFileSync(join(out,'optimizer-state.json'),'utf8');
+  const resumed=await optimizeBalance({...options,bestAgentOnlyValidation:true});
+  assert.equal(resumed.complete,false);
+  assert.equal(readFileSync(join(out,'optimizer-lock.json'),'utf8'),oldLock);
+  const amendment=JSON.parse(readFileSync(join(out,'validation-policy-override.json'),'utf8')).configuration;
+  assert.deepEqual(amendment.effectiveProfiles.map(p=>p.id),['puct-c070-v1']);
+  assert.deepEqual(amendment.fromProfiles.map(p=>p.id),['puct-c070-v1','reference-v1','weak-v1']);
+  assert.equal(JSON.parse(oldState).archive.length,JSON.parse(readFileSync(join(out,'optimizer-state.json'),'utf8')).archive.length);
+  await optimizeBalance(options); // The saved amendment remains in effect without repeating the CLI flag.
+ }finally{rmSync(out,{recursive:true,force:true});}
+});
+
 test('optimizer rejects modified selection checkpoints before using their archive',async()=>{
  const out=mkdtempSync(join(tmpdir(),'uba-opt-checksum-'));
  const options={out,profile:'random-v1',parties:[['warrior']],validate:false,maxTrials:0,
