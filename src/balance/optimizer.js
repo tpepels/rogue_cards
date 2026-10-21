@@ -118,8 +118,9 @@ export async function optimizeBalance(options={}){
  if(stopAfterGeneration!==undefined&&state.current&&state.generation>=stopAfterGeneration)
   throw Error('Requested stop-after-generation '+stopAfterGeneration+' is already behind active generation g'+
    state.generation+'. Use --stop-after-current-generation or --stop-after-generation '+(state.generation+1));
- const stopBoundary=options.stopAfterCurrentGeneration
-  ?state.generation+(state.complete?0:1):stopAfterGeneration;
+ if(options.stopAfterCurrentGeneration&&!state.current)
+  throw Error('No active generation to finish; inspect the saved checkpoint instead of starting a new generation');
+ const stopBoundary=options.stopAfterCurrentGeneration?state.generation+1:stopAfterGeneration;
  // Also recreate results/STATUS.md when resuming an older checkpoint.
  writeResultsStatusForOutput(out,{force:true});
  const save=()=>{state.integrity=stateChecksum();writeJSON(statePath,state);writeResultsStatusForOutput(out,{force:true});};
