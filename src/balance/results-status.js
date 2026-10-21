@@ -48,6 +48,9 @@ function inspect(root,name){
  if(state?.schema==='uba-optimizer-state-v1'){
   const {data:lock}=read(join(dir,'optimizer-lock.json'));
   const cfg=lock?.configuration;
+  const {data:validationOverride}=read(join(dir,'validation-policy-override.json'));
+  const holdoutAgents=(validationOverride?.configuration?.effectiveProfiles??cfg?.validationProfiles??[])
+   .map(p=>p?.id??p).join(', ')||'unknown';
   const archive=Array.isArray(state.archive)?state.archive:[];
   const best=archive.filter(x=>Number.isFinite(x.fitness?.score))
    .sort((a,b)=>b.fitness.score-a.fitness.score)[0];
@@ -68,6 +71,7 @@ function inspect(root,name){
    '**Stage:** '+clean(phase)+'  ',
    '**Evaluated candidates:** '+archive.length+'  ',
    '**Agent:** '+clean(cfg?.profile?.id??'unknown')+'  ',
+   '**Holdout agent(s):** '+clean(holdoutAgents)+(validationOverride?' (explicit override recorded)':'')+'  ',
    '**Checkpoint modified:** '+(mtime(checkpoint)??'unknown')+'  ',
    '**Last observed activity:** '+(dateFrom([checkpoint,runDir?join(runDir,'progress.json'):checkpoint])??'unknown')+'',''
   ];
