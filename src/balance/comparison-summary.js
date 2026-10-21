@@ -86,8 +86,7 @@ function uba(entries,{baselineHash,complete,origin,space}){
   .sort((a,b)=>b.fitness.score-a.fitness.score);
  if(!ranked.length)return null;
  const baseline=ranked.find(e=>e.candidate?.hash===baselineHash);
- const top=ranked.slice(0,8);
- if(baseline&&!top.includes(baseline))top.push(baseline);
+ const top=ranked;
  const lines=['**Source:** '+origin+'. '+(complete?'Optimizer completed.':'Provisional optimizer results.'),'',
   '| Candidate | Configuration | Solo wins (95% CI) | Duo wins (95% CI) | Solo Vault | Win given Vault | Encounters/36 | Fight conversion | Fitness | Constraint flags |',
   '|---|---|---:|---:|---:|---:|---:|---:|---:|---|'];
@@ -99,8 +98,7 @@ function uba(entries,{baselineHash,complete,origin,space}){
    ' | '+num(v.encounters36)+' | '+pct(v.fightConversion)+
    ' | '+num(e.fitness.score,3)+' | '+clean(flags)+' |');
  }
- if(ranked.length>top.length)lines.push('','Other evaluated candidates: '+(ranked.length-top.length)+
-  '. Showing the top eight by fitness and the baseline when available.','');
+ lines.push('','All '+ranked.length+' scored candidates are included above; configuration details and all Hero/pair strata follow.','');
  const best=ranked[0],s=best.summary.solo||{},d=best.summary.duo||{},v=best.fitness.values||{};
  lines.push('','**Top fitness:** '+clean(describeCandidateConfiguration(best,space,{short:true}))+
   ' ('+clean(label(best))+', fitness '+num(best.fitness.score,3)+')'+
@@ -126,6 +124,18 @@ function uba(entries,{baselineHash,complete,origin,space}){
   else lines.push('Parameters: not recorded in the available optimizer metadata.','');
   if(config.changes===null)lines.push('Printed changes: unavailable in the saved comparison.','');
   else for(const change of config.changes)lines.push('- '+change);
+  lines.push('','**Individual Hero and duo outcomes from the committed checkpoint**','','| Hero or duo | n | Wins | Win (95% CI) | Vault |',
+   '|---|---:|---:|---:|---:|');
+  for(const party of [...(entry.summary?.solo?.byParty??[]),...(entry.summary?.duo?.byParty??[])])
+   lines.push('| '+clean(party.party)+' | '+(party.n??'—')+' | '+(party.wins??'—')+
+    ' | '+pct(party.winRate)+ci(party.winCI)+' | '+pct(party.vaultRate)+' |');
+  lines.push('','**Committed metrics:** solo n '+clean(entry.summary?.solo?.n)+', duo n '+clean(entry.summary?.duo?.n)+
+   '; damage/run solo '+num(entry.summary?.solo?.damage)+', duo '+num(entry.summary?.duo?.damage)+
+   '; healing restored/run solo '+num(entry.summary?.solo?.healingRestored)+', duo '+num(entry.summary?.duo?.healingRestored)+
+   '; wasted healing solo '+num(entry.summary?.solo?.healingWasted)+', duo '+num(entry.summary?.duo?.healingWasted)+
+   '; solo win after Vault '+pct(entry.summary?.solo?.conditionalWin)+
+   '; Warden combat wins/starts solo '+clean(entry.summary?.solo?.wardenCombatWins)+'/'+clean(entry.summary?.solo?.wardenFightStarts)+
+   ', duo '+clean(entry.summary?.duo?.wardenCombatWins)+'/'+clean(entry.summary?.duo?.wardenFightStarts)+'.','');
   lines.push('');
  }
 
