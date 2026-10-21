@@ -53,6 +53,34 @@ test('optimizer resumes its exact proposed population and finished trials after 
  }finally{rmSync(out,{recursive:true,force:true});}
 });
 
+
+test('generation boundary pause preserves refined results, original lock, and a resumable next generation',async()=>{
+ const out=mkdtempSync(join(tmpdir(),'uba-opt-boundary-'));
+ const options={out,profile:'random-v1',parties:[['warrior']],workers:1,validate:false,
+  search:{population:1,generations:2,screenRuns:1,refineRuns:1,finalists:1,
+   space:[{key:'hp',kind:'card-stat',collection:'monsters',field:'hp',offset:true,values:[-1,-2]}]}};
+ try{
+  await assert.rejects(optimizeBalance({...options,stopAfterGeneration:3}),/Invalid stopAfterGeneration/);
+  const paused=await optimizeBalance({...options,stopAfterGeneration:1});
+  assert.equal(paused.complete,false);
+  assert.equal(paused.generation,1);
+  assert.equal(paused.current,null);
+  assert.equal(paused.stopReason,'generation-boundary');
+  assert.ok(paused.archive.some(e=>e.refined));
+  const archive=JSON.parse(readFileSync(join(out,'optimizer-state.json'))).archive;
+  const lock=readFileSync(join(out,'optimizer-lock.json'),'utf8');
+  const alreadyPaused=await optimizeBalance({...options,stopAfterGeneration:1});
+  assert.equal(alreadyPaused.generation,1);
+  assert.deepEqual(alreadyPaused.archive,archive);
+  assert.equal(readFileSync(join(out,'optimizer-lock.json'),'utf8'),lock);
+  const resumed=await optimizeBalance(options);
+  assert.equal(resumed.complete,true);
+  assert.equal(resumed.generation,2);
+  assert.deepEqual(resumed.archive.slice(0,archive.length),archive);
+  assert.equal(readFileSync(join(out,'optimizer-lock.json'),'utf8'),lock);
+ }finally{rmSync(out,{recursive:true,force:true});}
+});
+
 test('fresh optimizer uses its single selected agent for independent confirmation',async()=>{
  const out=mkdtempSync(join(tmpdir(),'uba-opt-single-agent-'));
  try{
