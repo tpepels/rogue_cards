@@ -69,8 +69,12 @@ export async function optimizeBalance(options={}){
  mkdirSync(out,{recursive:true});
  // The optimizing agent must also appear in independent holdout validation.
  // Preserve the legacy two-profile control set as additional sensitivity checks.
- const validationIds=options.validationProfiles??(fixedProfile.id==='puct-c070-v1'?
-  [fixedProfile,...goals.validation.profiles]:goals.validation.profiles);
+ // New balance runs use the strongest pinned agent for both selection and
+ // independent confirmation. Existing checkpoint inputs must stay immutable:
+ // retain the original validation profiles when resuming an older run.
+ const priorLockPath=join(out,'optimizer-lock.json');
+ const priorLock=existsSync(priorLockPath)?readJSON(priorLockPath):null;
+ const validationIds=options.validationProfiles??priorLock?.configuration?.validationProfiles??[fixedProfile];
  const validationProfiles=[...new Map(validationIds.map(p=>{
   const resolved=getAgentProfile(p);return [resolved.hash,resolved];
  })).values()];
