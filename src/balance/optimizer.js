@@ -63,6 +63,12 @@ export async function optimizeBalance(options={}){
  const {goals=DEFAULT_GOALS,base=createCandidate(),seed=20261020,workers=1,out='results/ultimate-balance',algorithm='evolutionary',profile='puct-c070-v1',parties=ALL_PARTIES,
   protectedCards=[],maxTrials,validate=true}=options;
  const settings={...goals.search,...options.search},space=settings.space;
+ // Operator-only pause boundary: intentionally excluded from the immutable
+ // scientific input lock. Resuming without it continues the same experiment.
+ const stopAfterGeneration=options.stopAfterGeneration;
+ if(stopAfterGeneration!==undefined&&(!Number.isSafeInteger(stopAfterGeneration)||
+  stopAfterGeneration<1||stopAfterGeneration>settings.generations))
+  throw Error('Invalid stopAfterGeneration: expected a completed generation between 1 and '+settings.generations);
  validateSearchSpace(space,{base,protectedCards});compileCandidate(base);
  const fixedProfile=getAgentProfile(profile),started=Date.now(),budgetMs=options.budgetMs??12*60*60*1000;
  const remaining=()=>Math.max(0,budgetMs-(Date.now()-started));
@@ -110,6 +116,8 @@ export async function optimizeBalance(options={}){
  const save=()=>{state.integrity=stateChecksum();writeJSON(statePath,state);writeResultsStatusForOutput(out,{force:true});};
  const stop=reason=>{state.stopReason=reason;save();return {...state,complete:false};};
  for(;state.generation<settings.generations;state.generation++){
+  if(stopAfterGeneration!==undefined&&state.generation>=stopAfterGeneration)
+   return stop('generation-boundary');
   if(!remaining())return stop('time-budget');
   const g=state.generation;
   if(!state.current){
@@ -149,7 +157,10 @@ export async function optimizeBalance(options={}){
   saveComparison(out,state.archive,{title:'Ultimate Balance Act — '+algorithm,baselineHash:base.hash,complete:false,space});
   // Increment is persisted before entering the next generation so a crash
   // cannot replay a different proposal against already saved batches.
-  state.generation=g+1;save();state.generation=g;
+  state.generation=g+1;save();
+  if(stopAfterGeneration!==undefined&&state.generation>=stopAfterGeneration)
+   return stop('generation-boundary');
+  state.generation=g;
  }
  const frontier=paretoFrontier(state.archive),finalists=chooseRefinements(frontier.filter(e=>e.candidate.hash!==base.hash),settings.finalists);
  state.finalists=finalists.map(e=>e.candidate);
