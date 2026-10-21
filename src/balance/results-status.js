@@ -4,6 +4,7 @@
  */
 import {existsSync,mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from 'node:fs';
 import {isAbsolute,join,relative,resolve,sep} from 'node:path';
+import {summarizeComparison} from './comparison-summary.js';
 
 const STATUS='STATUS.md',tick=String.fromCharCode(96);
 const code=value=>tick+String(value??'—')+tick;
@@ -79,6 +80,8 @@ function inspect(root,name){
   if(!state.complete)body.push('**Interpretation:** provisional; candidates may have unequal trial counts and independent holdout may be pending.','');
   if(state.validation)body.push('**Validation:** '+(state.validation.complete?'completed':'incomplete')+'.','');
   if(progressError)body.push('**Warning:** '+progressError+'.','');
+  const comparative=summarizeComparison(dir,{archive,complete:state.complete,baselineHash:cfg?.base?.hash});
+  if(comparative)body.push('#### Comparative results','',...comparative.lines,'');
   body.push('**Files:** '+report,'');
   return {name,status,phase,top,report,body,priority:priority(status)};
  }
@@ -117,7 +120,9 @@ function inspect(root,name){
   '**Last report:** '+(changed??'unknown')+'  ','**Files:** '+report,''];
  const errors=[stateError,manifestError,progressError,summaryError].filter(Boolean);
  if(errors.length)body.push('**Warnings:** '+errors.join('; ')+'.','');
- return {name,status,phase,top:'—',report,body,priority:priority(status)};
+ const comparative=summarizeComparison(dir);
+ if(comparative)body.push('#### Comparative results','',...comparative.lines,'');
+ return {name,status,phase,top:comparative?.headline??'—',report,body,priority:priority(status)};
 
 }
 export function renderResultsStatus(root){
@@ -127,15 +132,15 @@ export function renderResultsStatus(root){
  const lines=[
   '# Results status','',
   'Updated '+new Date().toISOString()+'. Auto-generated; do not edit.','',
-  'This summarizes known checkpoints and reports without loading raw trials. Unrecognized report formats have unknown completion status. Rankings are not proof of balance.','',
+  'This consolidates checkpoint progress and comparative statistics without reading raw trials. Historical report formats may have unknown completion status; screening and model-agent results are not independent validation.','',
   '| Experiment | Status | Phase / trials | Best candidate · fitness | Report |',
   '|---|---|---|---|---|',
   ...found.map(x=>'| '+clean(x.name)+' | '+clean(x.status)+' | '+clean(x.phase)+' | '+x.top+' | '+x.report+' |'),''
  ];
  if(!found.length)lines.push('No experiment directories yet. Run an experiment to populate this index.','');
- // Only expand live/interrupted experiments and optimizer states; older reports
- // already have their own links in the overview table.
- for(const entry of found)if(entry.priority<2||entry.top!=='—')lines.push(...entry.body);
+ // Every experiment gets its comparison summary, including historical runs.
+ // STATUS.md should be usable without opening individual comparison files.
+ for(const entry of found)lines.push(...entry.body);
  lines.push('---','','Regenerate manually: '+code('npm run results:status')+
   '. Optimizer/laboratory runs under '+code('results/')+' refresh this index automatically.','');
  return lines.join('\n');

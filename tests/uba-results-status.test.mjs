@@ -86,3 +86,58 @@ test('running optimizer is placed before archived comparison reports',t=>{
  const text=renderResultsStatus(root);
  assert.ok(text.indexOf('| z-running |')<text.indexOf('| a-archived |'));
 });
+
+test('structured UBA comparison metrics appear directly in STATUS, including baseline and safeguards',t=>{
+ const root=fixture(t),dir=join(root,'uba-comparison');
+ mkdirSync(dir,{recursive:true});
+ const entry=(id,hash,fitness,solo,duo)=>({candidate:{id,hash},
+  fitness:{score:fitness,values:{encounters36:19.7,fightConversion:.72},
+   violations:id==='modified'?[{code:'hero-floor'}]:[]},
+  summary:{solo:{n:40,winRate:solo,winCI:[solo-.1,solo+.1],vaultRate:.6,conditionalWin:.8},
+   duo:{n:140,winRate:duo,winCI:[duo-.07,duo+.07]}}});
+ save(join(dir,'comparison.json'),{schema:'uba-comparison-v1',complete:false,baselineHash:'base',
+  entries:[entry('original','base',.4,.3,.5),entry('modified','new',.81,.55,.71)]});
+ const md=renderResultsStatus(root);
+ assert.match(md,/original \(baseline\)/);
+ assert.match(md,/55\.0% \[45\.0%–65\.0%\] \(n=40\)/);
+ assert.match(md,/71\.0% \[64\.0%–78\.0%\] \(n=140\)/);
+ assert.match(md,/hero-floor/);assert.match(md,/encounters\/36 19\.70/);
+ assert.match(md,/solo \+25\.0 pp, duo \+21\.0 pp/);
+});
+test('latest checkpoint takes precedence over stale comparison.json and does not repeat raw trial records',t=>{
+ const root=fixture(t),dir=join(root,'uba-live');
+ mkdirSync(dir,{recursive:true});
+ save(join(dir,'comparison.json'),{schema:'uba-comparison-v1',entries:[{
+  candidate:{id:'stale'},fitness:{score:.5},summary:{solo:{n:3},duo:{n:5}}}]});
+ save(join(dir,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',complete:false,
+  generation:1,current:{stage:'refine'},archive:[{candidate:{id:'fresh'},
+   fitness:{score:.9,values:{encounters36:21,fightConversion:.5},violations:[]},
+   summary:{solo:{n:20,winRate:.6},duo:{n:40,winRate:.7}}}]});
+ const md=renderResultsStatus(root);
+ assert.match(md,/latest optimizer checkpoint/);assert.match(md,/fresh/);
+ assert.doesNotMatch(md,/stale \|/);
+});
+test('historical staged comparison Markdown tables and canonical baselines are summarized',t=>{
+ const root=fixture(t),dir=join(root,'staged-room-study');mkdirSync(dir);
+ const table=title=>[
+  '## '+title,'','| Hypothesis | runs | encounter/36 equiv. | wins | Vault |',
+  '|---|---:|---:|---:|---:|',
+  ...Array.from({length:11},(_,i)=>'| variant-'+i+' | 40 | '+(18+i)+'.0 | 0.50 | 0.70 |'),
+  'Canonical: 17.00 encounters/36 equivalent; 0.250 wins; 32.0 Rooms.',''].join('\n');
+ writeFileSync(join(dir,'comparison.md'),'# Card balance\n\n'+table('screen (complete)')+'\n'+table('confirm (partial)'));
+ const md=renderResultsStatus(root);
+ assert.match(md,/Comparative results/);
+ assert.match(md,/encounter\/36 equiv/);
+ assert.match(md,/confirm \(partial\)/);
+ assert.match(md,/Canonical: 17\.00 encounters/);
+ assert.match(md,/further rows omitted/);
+});
+test('MCTS summary.json alone yields useful budget, win-rate and search-cost statistics',t=>{
+ const root=fixture(t),dir=join(root,'mcts-calibration');mkdirSync(dir);
+ save(join(dir,'summary.json'),{schema:'mcts-pw-puct-stage-status-v1',byBudget:{
+  32:[{arm:'baseline',n:96,winRate:.323,winWilson95:[.24,.42],vaultRate:.5,meanSearchSeconds:47.5},
+      {arm:'puct',n:96,winRate:.625,winWilson95:[.525,.715],vaultRate:.802,meanSearchSeconds:96.3}]}});
+ const md=renderResultsStatus(root);
+ assert.match(md,/PUCT|puct/);assert.match(md,/62\.5% \[52\.5%–71\.5%\]/);
+ assert.match(md,/96\.3 s/);assert.match(md,/32 \| puct \| 96/);
+});
