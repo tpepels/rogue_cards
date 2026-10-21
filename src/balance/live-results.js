@@ -17,7 +17,9 @@ export function readLiveTrialRows(dir){
  if(manifest.schema!=='uba-laboratory-manifest-v1'||!Array.isArray(manifest.plan?.tasks))
   return {rows:[],planned:null,profiles:[],warning:'Unrecognized laboratory manifest'};
  const tasks=new Map(manifest.plan.tasks.map(task=>[task.id,task]));
- if(!existsSync(trialsPath))return {rows:[],planned:tasks.size,profiles:[],warning:null};
+ const candidates=manifest.plan.config?.candidates?.map(c=>({id:c.id,hash:c.hash}))??[];
+ const parties=manifest.plan.config?.parties?.map(p=>p.join('+'))??[];
+ if(!existsSync(trialsPath))return {rows:[],planned:tasks.size,candidates,parties,profiles:[],warning:null};
  // A concurrent writer may leave a final partial line in the snapshot.
  const contents=readFileSync(trialsPath,'utf8'),end=contents.lastIndexOf('\n');
  const lines=end<0?[]:contents.slice(0,end).split('\n');
@@ -25,17 +27,17 @@ export function readLiveTrialRows(dir){
  for(const [index,line] of lines.entries()){
   if(!line)continue;
   let record;
-  try{record=JSON.parse(line);}catch{return {rows:[],planned:tasks.size,profiles:[],warning:'Unreadable complete trial record at line '+(index+1)};}
+  try{record=JSON.parse(line);}catch{return {rows:[],planned:tasks.size,candidates,parties,profiles:[],warning:'Unreadable complete trial record at line '+(index+1)};}
   const row=record?.row,task=tasks.get(row?.id);
   if(record.schema!=='uba-trial-record-v1'||!row||!task||
     record.checksum!==hashValue(row)||seen.has(row.id)||
     row.candidateHash!==task.candidateHash||row.profileHash!==task.profileHash||
     row.party!==task.party||row.seed!==task.seed||row.split!==task.split||
     !['win','death','escape'].includes(row.ending)||Boolean(row.won)!==(row.ending==='win'))
-   return {rows:[],planned:tasks.size,profiles:[],warning:'Invalid or mismatched trial record at line '+(index+1)};
+   return {rows:[],planned:tasks.size,candidates,parties,profiles:[],warning:'Invalid or mismatched trial record at line '+(index+1)};
   seen.add(row.id);rows.push(row);
  }
- return {rows,planned:tasks.size,profiles:[...new Set(rows.map(row=>row.profileId??row.profile).filter(Boolean))],
+ return {rows,planned:tasks.size,candidates,parties,profiles:[...new Set(rows.map(row=>row.profileId??row.profile).filter(Boolean))],
   warning:end===contents.length-1?null:'An unfinished trailing trial write was ignored'};
 }
 export function summarizeLiveRows(rows){
