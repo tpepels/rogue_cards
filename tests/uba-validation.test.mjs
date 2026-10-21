@@ -24,8 +24,18 @@ test('observed hard hidden-healing violation rejects the candidate regardless of
  assert.equal(a.status,'rejected');
 });
 
-test('empty or reduced policy sets cannot bypass the required robustness profiles',()=>{
- for(const profiles of [[],['reference-v1'],['reference-v1','reference-v1']]){
+test('a single pinned agent is an admissible holdout policy',()=>{
+ const rows=[{party:'warrior',heroes:['warrior'],seed:5,split:'holdout',profile:'puct-c070-v1',won:1,vaultReached:1,
+  roomsCleared:36,ordinaryEncounters:18,ordinaryFights:11,healingRestored:6,healingWasted:1,ending:'win'}];
+ const a=assessValidation({rows,baselineRows:rows,goals:DEFAULT_GOALS,profiles:['puct-c070-v1']});
+ assert.equal(a.status,'uncertain');
+ assert.equal(a.profiles.length,1);
+ assert.ok(!a.reasons.some(s=>s.includes('profile')));
+ assert.ok(a.reasons.some(s=>s.includes('coverage')));
+});
+
+test('empty or duplicate validation profile sets cannot be certified',()=>{
+ for(const profiles of [[],['puct-c070-v1','puct-c070-v1']]){
   const a=assessValidation({rows:[],goals:DEFAULT_GOALS,profiles});
   assert.equal(a.status,'uncertain');
   assert.ok(a.reasons.some(s=>s.includes('profile')));
