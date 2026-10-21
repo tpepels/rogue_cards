@@ -80,6 +80,18 @@ production algorithms.
 The older multi-Hero and historical experiments below remain available
 for reproducibility, **not** as directly comparable 2026 solo benchmarks.
 
+### Experiment status overview
+
+`results/STATUS.md` is a generated index of the experiment folders under `results/`.
+The UBA optimizer and its laboratory worker runs create it if missing and refresh
+it as checkpoints and trial progress change (approximately every 30 seconds
+during long runs, and on stop/completion). It shows each recognized run's
+stage, trials completed, checkpoint status, provisional leader and links to
+full reports. It never reads large NDJSON trial files. Existing runs can be
+indexed without rerunning them using `npm run results:status`. The entire
+`results/` folder, including `STATUS.md`, remains ignored by Git.
+
+
 ## Everything Goes - comprehensive decision-ready balance experiment
 
 For 36-Room Everything Goes balance research, use

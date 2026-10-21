@@ -3,6 +3,7 @@ import {existsSync,mkdirSync,readFileSync,openSync,closeSync,unlinkSync,writeFil
 import {resolve,join} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {HEROES} from '../heroes.js';
+import {writeResultsStatusForOutput} from './results-status.js';
 import {canonicalJSON,hashValue,sourceFingerprint,persistSourceSnapshot,atomicWriteJSON,appendTrialRecord,readTrialRecords} from './io.js';
 
 export const ALL_PARTIES=Object.freeze([
@@ -119,7 +120,7 @@ export async function runLaboratory(options={}){
     const publishProgress=()=>{
       const cpu=process.cpuUsage(usageStart),progress={schema:'uba-progress-v1',manifestId:manifest.id,planned:plan.tasks.length,completed:rows.length,pending:plan.tasks.length-rows.length,
         workers,elapsedMs:performance.now()-begun,cpuMs:(cpu.user+cpu.system)/1000,residentBytes:process.memoryUsage().rss};
-      if(out)atomicWriteJSON(join(out,'progress.json'),progress);
+      if(out){atomicWriteJSON(join(out,'progress.json'),progress);writeResultsStatusForOutput(out);}
       options.onProgress?.(progress);
     };
     publishProgress();
@@ -144,7 +145,7 @@ export async function runLaboratory(options={}){
     const complete=rows.length===plan.tasks.length;
     publishProgress();
     const summary={schema:'uba-laboratory-summary-v1',manifestId:manifest.id,planned:plan.tasks.length,completed:rows.length,pending:plan.tasks.length-rows.length,complete,stopReason,errors};
-    if(out)atomicWriteJSON(join(out,'summary.json'),summary);
+    if(out){atomicWriteJSON(join(out,'summary.json'),summary);writeResultsStatusForOutput(out,{force:true});}
     return {manifest,rows,complete,pending:summary.pending,errors,stopReason,recoveredTail,summary};
   }finally{if(lock!==undefined){closeSync(lock);unlinkSync(lockPath);}}
 }

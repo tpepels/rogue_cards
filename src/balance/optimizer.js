@@ -14,6 +14,7 @@ import {validateFinalists} from './validation.js';
 import {saveComparison} from './report.js';
 import {BASELINE_MANIFEST} from './baseline.js';
 import {exportPrintProposal} from './print.js';
+import {writeResultsStatusForOutput} from './results-status.js';
 
 export function proposePopulation({base=createCandidate(),space,seed=1,generation=0,population=8,archive=[],algorithm='evolutionary',mutationRate=0.3,randomFraction=0.25,protectedCards=[]}={}){
  validateSearchSpace(space,{base,protectedCards});
@@ -82,7 +83,9 @@ export async function optimizeBalance(options={}){
  const stateChecksum=()=>{const {integrity,...snapshot}=state;return contentHash(snapshot);};
  if(savedState&&state.integrity!==stateChecksum())throw Error('Optimizer checkpoint checksum mismatch');
  if(state.lock!==locked.hash)throw Error('Optimizer checkpoint lock mismatch');
- const save=()=>{state.integrity=stateChecksum();writeJSON(statePath,state);};
+ // Also recreate results/STATUS.md when resuming an older checkpoint.
+ writeResultsStatusForOutput(out,{force:true});
+ const save=()=>{state.integrity=stateChecksum();writeJSON(statePath,state);writeResultsStatusForOutput(out,{force:true});};
  const stop=reason=>{state.stopReason=reason;save();return {...state,complete:false};};
  for(;state.generation<settings.generations;state.generation++){
   if(!remaining())return stop('time-budget');
