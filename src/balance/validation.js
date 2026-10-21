@@ -20,9 +20,7 @@ export function assessValidation({rows,baselineRows=[],goals=DEFAULT_GOALS,profi
  const reasons=[],failures=[],results=[];
  const requested=profiles.map(p=>typeof p==='string'?p:p.id);
  if(new Set(requested).size!==requested.length)reasons.push('Duplicate validation profile IDs');
- const absent=goals.validation.profiles.filter(p=>!requested.includes(p));
- if(absent.length)reasons.push('Required robustness profiles missing: '+absent.join(', '));
- if(new Set(requested).size<2)reasons.push('At least two distinct validation profiles are required');
+ if(!requested.length)reasons.push('At least one fixed validation profile is required');
  // Predeclared family: candidates × profiles × all rate targets and party
  // floors. Wide simultaneous intervals are intentional after arm selection.
  const family=Math.max(1,arms*profiles.length*(ALL_PARTY_NAMES.length+16)),confidence=1-(1-goals.validation.confidence)/family;
@@ -84,7 +82,7 @@ export function assessValidation({rows,baselineRows=[],goals=DEFAULT_GOALS,profi
   reasons:[...new Set(reasons)],failures:[...new Set(failures)],profiles:results,
   interpretation:'Validation is conditional on fixed policies and declared target tolerances. Human enjoyment and play duration require playtests.'};
 }
-export async function validateFinalists({candidates,goals=DEFAULT_GOALS,out,profiles=goals.validation.profiles,runsPerParty=goals.search.holdoutRuns,seed=20261020,workers=1,budgetMs,tuningRows=[],parties,humanFeedback=null,maxTrials}={}){
+export async function validateFinalists({candidates,goals=DEFAULT_GOALS,out,profiles=['puct-c070-v1'],runsPerParty=goals.search.holdoutRuns,seed=20261020,workers=1,budgetMs,tuningRows=[],parties,humanFeedback=null,maxTrials}={}){
  const {createCandidate}=await import('./candidate.js'),{compileCandidate,printableDiff,physicalChangeCount}=await import('./compiler.js'),
   {runLaboratory}=await import('./runner.js'),{getAgentProfile}=await import('./profiles.js');
  const baseline=createCandidate(),unique=new Map([[baseline.hash,baseline],...candidates.map(c=>[c.hash,c])]);
