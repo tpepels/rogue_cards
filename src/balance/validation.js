@@ -15,7 +15,7 @@ export function assertIndependentHoldout(rows,tuningRows=[]){
 }
 const profileId=r=>typeof r.profile==='object'?r.profile.id:r.profileId??r.profile;
 const ALL_PARTY_NAMES=[...HEROES.map(h=>h.id),...HEROES.flatMap((h,i)=>HEROES.slice(i+1).map(o=>h.id+'+'+o.id))];
-export function assessValidation({rows,baselineRows=[],goals=DEFAULT_GOALS,profiles=goals.validation.profiles,physicalChanges=0,arms=1,tuningRows=[]}={}){
+export function assessValidation({rows,baselineRows=[],goals=DEFAULT_GOALS,profiles=['puct-c070-v1'],physicalChanges=0,arms=1,tuningRows=[]}={}){
  assertIndependentHoldout(rows,tuningRows);assertIndependentHoldout(baselineRows,tuningRows);
  const reasons=[],failures=[],results=[];
  const requested=profiles.map(p=>typeof p==='string'?p:p.id);
