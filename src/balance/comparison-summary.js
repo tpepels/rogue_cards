@@ -99,7 +99,8 @@ function uba(entries,{baselineHash,complete,origin,space}){
  if(ranked.length>top.length)lines.push('','Other evaluated candidates: '+(ranked.length-top.length)+
   '. Showing the top eight by fitness and the baseline when available.','');
  const best=ranked[0],s=best.summary.solo||{},d=best.summary.duo||{},v=best.fitness.values||{};
- lines.push('','**Top fitness:** '+clean(label(best))+' ('+num(best.fitness.score,3)+')'+
+ lines.push('','**Top fitness:** '+clean(describeCandidateConfiguration(best,space,{short:true}))+
+  ' ('+clean(label(best))+', fitness '+num(best.fitness.score,3)+')'+
   ' · solo '+pct(s.winRate)+' (n='+clean(s.n??0)+')'+
   ' · duo '+pct(d.winRate)+' (n='+clean(d.n??0)+')'+
   ' · encounters/36 '+num(v.encounters36)+' · fights '+pct(v.fightConversion)+'.');
