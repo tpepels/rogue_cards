@@ -38,7 +38,7 @@ export function validateGoals(input){
   if(!Number.isSafeInteger(g.validation[key])||g.validation[key]<1)throw Error('Invalid '+key);
  if(!(g.validation.confidence>0.5&&g.validation.confidence<1))throw Error('Invalid confidence');
  if(g.validation.multipleComparisons!=='bonferroni')throw Error('Unsupported multiple comparisons method');
- if(!Array.isArray(g.validation.profiles)||new Set(g.validation.profiles).size!==g.validation.profiles.length||g.validation.profiles.length<2||g.validation.profiles.some(p=>typeof p!=='string'))throw Error('Validation requires multiple distinct fixed profiles');
+ if(!Array.isArray(g.validation.profiles)||new Set(g.validation.profiles).size!==g.validation.profiles.length||g.validation.profiles.length<1||g.validation.profiles.some(p=>typeof p!=='string'))throw Error('Validation requires multiple distinct fixed profiles');
  if(!Number.isFinite(g.validation.maxWinRegression)||g.validation.maxWinRegression<0||g.validation.maxWinRegression>1)throw Error('Invalid regression tolerance');
  for(const key of ['population','generations','screenRuns','refineRuns','finalists','holdoutRuns'])
   if(!Number.isSafeInteger(g.search[key])||g.search[key]<1)throw Error('Invalid search '+key);
