@@ -10,7 +10,75 @@ const pct=v=>Number.isFinite(v)?(v*100).toFixed(1)+'%':'—';
 const ci=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?' ['+pct(v[0])+'–'+pct(v[1])+']':'';
 const label=e=>e.candidate?.id??e.candidate?.hash?.slice(0,16)??'unknown';
 const wins=s=>pct(s?.winRate)+ci(s?.winCI)+' (n='+clean(s?.n??'—')+')';
-function uba(entries,{baselineHash,complete,origin}){
+
+const value=v=>v===undefined?'(absent)':JSON.stringify(v);
+const signed=v=>Number.isFinite(v)&&v>0?'+'+v:String(v);
+function describeParameter(d,chosen){
+ if(d.kind==='room-transfer')return d.stage+' '+d.from+' → '+d.to+': '+chosen+' physical Room'+(chosen===1?'':'s');
+ if(d.kind==='card-stat'){
+  const target=d.id??(d.ids?.join(', ')??'all '+d.collection);
+  return target+' '+d.field+(d.offset?' '+signed(chosen)+' (offset)':' = '+value(chosen));
+ }
+ const effect={'item-healing':'item healing','monster-healing':'Monster healing','room-rest-healing':'Room rest healing','room-rest-cost':'Room rest cost'}[d.kind];
+ return (effect??d.key)+' '+(d.id??'')+': '+value(chosen);
+}
+function parameterSettings(entry,space){
+ if(entry?.genes===null)return ['Unchanged canonical baseline'];
+ if(!entry?.genes||!Array.isArray(space)||!space.length)return [];
+ return space.map(d=>{
+  const i=entry.genes[d.key];
+  return Number.isSafeInteger(i)&&i>=0&&i<d.values.length?
+   d.key+' = '+value(d.values[i])+' ('+describeParameter(d,d.values[i])+')':
+   d.key+' = unavailable';
+ });
+}
+function leafChanges(before,after,path=''){
+ if(JSON.stringify(before)===JSON.stringify(after))return [];
+ const objects=(x)=>x!==null&&typeof x==='object';
+ if(objects(before)&&objects(after)&&Array.isArray(before)===Array.isArray(after)){
+  const keys=Array.isArray(before)?Array.from({length:Math.max(before.length,after.length)},(_,i)=>i):
+   [...new Set([...Object.keys(before),...Object.keys(after)])].sort();
+  return keys.flatMap(k=>leafChanges(before[k],after[k],path+(typeof k==='number'?'['+k+']':(path?'.':'')+k)));
+ }
+ return [path+': '+value(before)+' → '+value(after)];
+}
+function printedChanges(entry){
+ if(!Array.isArray(entry?.diff?.changes))return null;
+ if(!entry.diff.changes.length)return ['No changes to the printed deck'];
+ return entry.diff.changes.map(change=>{
+  const before=change.before,after=change.after;
+  const card=after?.card??before?.card??{},name=card.title??change.id??'unknown card';
+  const id=(change.type??'card')+':'+(change.id??'unknown');
+  if(!before||!after)return name+' ['+id+']: '+(before?'removed ':'added ')+
+   (before?.copies??after?.copies??'?')+' copies; '+value(before?.card??after?.card);
+  const details=[];
+  if(before.copies!==after.copies)details.push('copies '+before.copies+' → '+after.copies);
+  for(const field of change.fields??[]){
+   if(field.path==='copies')continue;
+   details.push(...leafChanges(field.before,field.after,field.path));
+  }
+  return name+' ['+id+']: '+(details.join('; ')||'modified (no field diff available)');
+ });
+}
+export function describeCandidateConfiguration(entry,space,{short=false}={}){
+ const parameters=parameterSettings(entry,space);
+ const changes=printedChanges(entry);
+ if(short){
+  if(entry?.genes===null)return 'canonical (unchanged)';
+  const changed=Array.isArray(space)&&entry?.genes?space.filter(d=>{
+   const i=entry.genes[d.key];
+   const n=d.values?.[i];
+   return Number.isSafeInteger(i)&&
+    ((d.kind==='room-transfer'||d.offset)?n!==0:true);
+  }).map(d=>d.key+'='+value(d.values[entry.genes[d.key]])):[];
+  if(changed.length)return changed.slice(0,3).join(', ')+(changed.length>3?' (+'+(changed.length-3)+' more)':'');
+  if(changes?.length)return changes[0].slice(0,90)+(changes.length>1?' (+'+(changes.length-1)+' cards)':'');
+  return 'configuration unavailable';
+ }
+ return {parameters,changes};
+}
+
+function uba(entries,{baselineHash,complete,origin,space}){
  const ranked=entries.filter(e=>e?.summary&&Number.isFinite(e.fitness?.score))
   .sort((a,b)=>b.fitness.score-a.fitness.score);
  if(!ranked.length)return null;
@@ -18,13 +86,13 @@ function uba(entries,{baselineHash,complete,origin}){
  const top=ranked.slice(0,8);
  if(baseline&&!top.includes(baseline))top.push(baseline);
  const lines=['**Source:** '+origin+'. '+(complete?'Optimizer completed.':'Provisional optimizer results.'),'',
-  '| Candidate | Solo wins (95% CI) | Duo wins (95% CI) | Solo Vault | Win given Vault | Encounters/36 | Fight conversion | Fitness | Constraint flags |',
-  '|---|---:|---:|---:|---:|---:|---:|---:|---|'];
+  '| Candidate | Configuration | Solo wins (95% CI) | Duo wins (95% CI) | Solo Vault | Win given Vault | Encounters/36 | Fight conversion | Fitness | Constraint flags |',
+  '|---|---|---:|---:|---:|---:|---:|---:|---:|---|'];
  for(const e of top){
   const s=e.summary.solo||{},d=e.summary.duo||{},v=e.fitness.values||{};
   const flags=e.fitness.violations?.map(x=>x.code).filter(Boolean).join(', ')||'none recorded';
   lines.push('| '+clean(label(e))+(e===baseline?' (baseline)':'')+
-   ' | '+wins(s)+' | '+wins(d)+' | '+pct(s.vaultRate)+' | '+pct(s.conditionalWin)+
+   ' | '+clean(describeCandidateConfiguration(e,space,{short:true}))+' | '+wins(s)+' | '+wins(d)+' | '+pct(s.vaultRate)+' | '+pct(s.conditionalWin)+
    ' | '+num(v.encounters36)+' | '+pct(v.fightConversion)+
    ' | '+num(e.fitness.score,3)+' | '+clean(flags)+' |');
  }
@@ -44,6 +112,19 @@ function uba(entries,{baselineHash,complete,origin}){
     '. These rate differences are not paired causal estimates.');
   }
  }
+
+ lines.push('','**Exact candidate configurations (all '+ranked.length+' evaluated candidates)**','',
+  'Parameter values are the optimizer search settings; printed changes show the actual card properties, including before → after. Candidate IDs remain for reproducibility.','');
+ for(const entry of ranked){
+  const config=describeCandidateConfiguration(entry,space);
+  lines.push('**'+clean(label(entry))+'** · fitness '+num(entry.fitness.score,3),'');
+  if(config.parameters.length)lines.push('Parameters: '+config.parameters.map(x=>clean(x)).join('; ')+'.','');
+  else lines.push('Parameters: not recorded in the available optimizer metadata.','');
+  if(config.changes===null)lines.push('Printed changes: unavailable in the saved comparison.','');
+  else for(const change of config.changes)lines.push('- '+change);
+  lines.push('');
+ }
+
  lines.push('Screening and refinement samples may differ; independent holdout confirmation is needed before adopting changes.');
  return {lines,headline:'solo '+pct(s.winRate)+' · duo '+pct(d.winRate)+' · encounters '+num(v.encounters36)};
 }
@@ -114,7 +195,9 @@ export function summarizeComparison(dir,{archive=[],complete=false,baselineHash=
  const recent=Array.isArray(archive)&&archive.some(e=>e?.summary&&e?.fitness);
  const selection=recent?archive:json?.schema==='uba-comparison-v1'?json.entries:null;
  if(Array.isArray(selection)){
+  const locked=readJSON(join(dir,'optimizer-lock.json'));
   const result=uba(selection,{complete,baselineHash:baselineHash??json?.baselineHash,
+   space:locked?.configuration?.settings?.space,
    origin:recent?'latest optimizer checkpoint (including saved refinements)':'comparison.json'});
   if(result)return result;
  }
