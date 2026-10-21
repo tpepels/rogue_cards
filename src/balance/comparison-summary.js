@@ -70,7 +70,7 @@ export function describeCandidateConfiguration(entry,space,{short=false}={}){
    const n=d.values?.[i];
    return Number.isSafeInteger(i)&&
     ((d.kind==='room-transfer'||d.offset)?n!==0:true);
-  }).map(d=>d.key+'='+value(d.values[entry.genes[d.key]])):[];
+  }).map(d=>describeParameter(d,d.values[entry.genes[d.key]])):[];
   if(changed.length)return changed.slice(0,3).join(', ')+(changed.length>3?' (+'+(changed.length-3)+' more)':'');
   if(changes?.length)return changes[0].slice(0,90)+(changes.length>1?' (+'+(changes.length-1)+' cards)':'');
   return 'configuration unavailable';
