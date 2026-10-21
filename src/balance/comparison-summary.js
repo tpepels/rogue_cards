@@ -81,7 +81,7 @@ export function describeCandidateConfiguration(entry,space,{short=false}={}){
  return {parameters,changes};
 }
 
-function uba(entries,{baselineHash,complete,origin,space}){
+function uba(entries,{baselineHash,complete,origin,space,goals}){
  const ranked=entries.filter(e=>e?.summary&&Number.isFinite(e.fitness?.score))
   .sort((a,b)=>b.fitness.score-a.fitness.score);
  if(!ranked.length)return null;
@@ -124,6 +124,18 @@ function uba(entries,{baselineHash,complete,origin,space}){
   else lines.push('Parameters: not recorded in the available optimizer metadata.','');
   if(config.changes===null)lines.push('Printed changes: unavailable in the saved comparison.','');
   else for(const change of config.changes)lines.push('- '+change);
+  lines.push('','**Full fitness components from the committed checkpoint**','',
+   '| Objective | Observed value | Target range | Weight | Component score |',
+   '|---|---:|---|---:|---:|');
+  for(const [i,key] of (entry.fitness?.keys??[]).entries()){
+   const target=goals?.objectives?.[key];
+   lines.push('| '+clean(key)+' | '+num(entry.fitness.values?.[key],3)+' | '+
+    (Array.isArray(target?.range)?target.range.map(v=>num(v,3)).join(' to '):'—')+
+    ' | '+num(target?.weight,2)+' | '+num(entry.fitness.objectives?.[i],3)+' |');
+  }
+  lines.push('','**Fitness safeguards:** '+(entry.fitness?.violations?.length?
+   entry.fitness.violations.map(v=>clean(v.code)+(v.hard?' (hard)':' (soft)')).join(', '):'none recorded')+
+   '; missing metrics: '+(entry.fitness?.missingMetrics?.length?entry.fitness.missingMetrics.join(', '):'none recorded')+'.','');
   lines.push('','**Individual Hero and duo outcomes from the committed checkpoint**','','| Hero or duo | n | Wins | Win (95% CI) | Vault |',
    '|---|---:|---:|---:|---:|');
   for(const party of [...(entry.summary?.solo?.byParty??[]),...(entry.summary?.duo?.byParty??[])])
@@ -212,6 +224,7 @@ export function summarizeComparison(dir,{archive=[],complete=false,baselineHash=
   const locked=readJSON(join(dir,'optimizer-lock.json'));
   const result=uba(selection,{complete,baselineHash:baselineHash??json?.baselineHash,
    space:locked?.configuration?.settings?.space??json?.space,
+   goals:locked?.configuration?.goals??json?.goals,
    origin:recent?'latest optimizer checkpoint (including saved refinements)':'comparison.json'});
   if(result)return result;
  }
