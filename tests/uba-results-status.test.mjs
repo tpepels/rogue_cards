@@ -166,7 +166,7 @@ test('STATUS expands every archived optimizer candidate into exact parameter val
  ]});
  const md=renderResultsStatus(root);
  assert.match(md,/Candidate \| Configuration \| Solo wins/);
- assert.match(md,/upper-encounters=1/);
+ assert.match(md,/all monsters hp -1 \(offset\)/);
  assert.match(md,/Exact candidate configurations \(all 3 evaluated candidates\)/);
  assert.match(md,/UPPER u-shrine → u-nest: 1 physical Room/);
  assert.match(md,/monster-hp = -1/);
