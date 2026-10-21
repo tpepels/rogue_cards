@@ -49,7 +49,12 @@ The CLI and library optimizer default to the pinned PUCT agent. Since
 older reference/weak profiles can still be explicitly requested for separate
 agent comparisons but are not part of standard balancing. Existing optimizer
 checkpoints retain their originally locked validation-profile set to remain
-resumable; start a fresh output directory to use the single-agent default.
+resumable; use `--best-agent-only-validation` to explicitly amend the holdout
+policy on a paused legacy checkpoint without discarding completed optimization
+trials. The amendment is stored separately in
+`validation-policy-override.json` and persists on subsequent resumes. If a
+holdout with legacy profiles has already started, the command rejects an
+in-place profile change; use a fresh validation output instead.
 The historical `validation.profiles` array in `balance-goals.json` is
 preserved to avoid invalidating the 20 October checkpoint and no longer
 forces extra profiles in new validations. Existing balance targets are **not recalibrated**;
