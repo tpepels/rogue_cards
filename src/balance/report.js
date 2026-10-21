@@ -2,11 +2,12 @@ import {writeFileSync,mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {pairedComparison,mean} from './statistics.js';
 import {writeJSON} from './artifacts.js';
+import {describeCandidateConfiguration} from './comparison-summary.js';
 
 const pct=value=>Number.isFinite(value)?(value*100).toFixed(1)+'%':'unknown';
 const num=value=>Number.isFinite(value)?value.toFixed(2):'unknown';
 const ci=value=>value?value.map(pct).join(' – '):'unknown';
-export function comparisonReport(entries,{title='Ultimate Balance Act',complete=true,baselineHash,validation=null}={}){
+export function comparisonReport(entries,{title='Ultimate Balance Act',complete=true,baselineHash,validation=null,space=null}={}){
  const lines=['# '+title,'',complete?'Planned trials complete.':'**PARTIAL: pending trials remain.**','',
   'Results describe fixed simulated agents. No canonical cards were adopted. Human play duration and enjoyment require playtest input.','',
   '| Candidate | n solo / duo | Solo wins (95%) | Vault | Win after Vault | Duo wins (95%) | Encounters /36 | Fight conversion | Score |',
@@ -18,6 +19,9 @@ export function comparisonReport(entries,{title='Ultimate Balance Act',complete=
    'Observed complete-36 encounters: solo '+num(e.summary.solo.complete36Encounters)+' ('+e.summary.solo.complete36Runs+' runs), duo '+num(e.summary.duo.complete36Encounters)+' ('+e.summary.duo.complete36Runs+' runs). Normalized rates in the table also include shorter expeditions.','',
    'Warden combat wins/starts: '+e.summary.solo.wardenCombatWins+'/'+e.summary.solo.wardenFightStarts+' solo; '+e.summary.duo.wardenCombatWins+'/'+e.summary.duo.wardenFightStarts+' duo. SEAL wins/attempts: '+e.summary.solo.sealWins+'/'+e.summary.solo.sealAttempts+' solo; '+e.summary.duo.sealWins+'/'+e.summary.duo.sealAttempts+' duo.','',
    'Healing restored/wasted per run: '+num(e.summary.solo.healingRestored)+' / '+num(e.summary.solo.healingWasted)+' solo; '+num(e.summary.duo.healingRestored)+' / '+num(e.summary.duo.healingWasted)+' duo.','');
+  const configuration=describeCandidateConfiguration(e,space);
+  lines.push('**Search configuration:**','',...(configuration.parameters.length?configuration.parameters.map(x=>'- '+x):['- Search parameter values unavailable for this historical report.']),'',
+    '**Exact printed card changes:**','',...(configuration.changes??['Not available in the saved diff.']).map(x=>'- '+x),'');
   if(e.summary.profiles.length>1){
    lines.push('Multiple agent profiles: pooled rates above are descriptive; optimization is disabled for mixed profiles.','',
     '| Fixed profile | Solo n / win | Duo n / win |','|---|---:|---:|');
