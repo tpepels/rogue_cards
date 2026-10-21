@@ -66,6 +66,8 @@ export async function optimizeBalance(options={}){
  // Operator-only pause boundary: intentionally excluded from the immutable
  // scientific input lock. Resuming without it continues the same experiment.
  const stopAfterGeneration=options.stopAfterGeneration;
+ if(options.stopAfterCurrentGeneration&&stopAfterGeneration!==undefined)
+  throw Error('Choose either stopAfterCurrentGeneration or stopAfterGeneration, not both');
  if(stopAfterGeneration!==undefined&&(!Number.isSafeInteger(stopAfterGeneration)||
   stopAfterGeneration<1||stopAfterGeneration>settings.generations))
   throw Error('Invalid stopAfterGeneration: expected a completed generation between 1 and '+settings.generations);
@@ -111,12 +113,19 @@ export async function optimizeBalance(options={}){
  const stateChecksum=()=>{const {integrity,...snapshot}=state;return contentHash(snapshot);};
  if(savedState&&state.integrity!==stateChecksum())throw Error('Optimizer checkpoint checksum mismatch');
  if(state.lock!==locked.hash)throw Error('Optimizer checkpoint lock mismatch');
+ // generation is zero-based; an active g1 refinement must finish before
+ // reaching the next boundary at 2, not stop on entry at generation=1.
+ if(stopAfterGeneration!==undefined&&state.current&&state.generation>=stopAfterGeneration)
+  throw Error('Requested stop-after-generation '+stopAfterGeneration+' is already behind active generation g'+
+   state.generation+'. Use --stop-after-current-generation or --stop-after-generation '+(state.generation+1));
+ const stopBoundary=options.stopAfterCurrentGeneration
+  ?state.generation+(state.complete?0:1):stopAfterGeneration;
  // Also recreate results/STATUS.md when resuming an older checkpoint.
  writeResultsStatusForOutput(out,{force:true});
  const save=()=>{state.integrity=stateChecksum();writeJSON(statePath,state);writeResultsStatusForOutput(out,{force:true});};
  const stop=reason=>{state.stopReason=reason;save();return {...state,complete:false};};
  for(;state.generation<settings.generations;state.generation++){
-  if(stopAfterGeneration!==undefined&&state.generation>=stopAfterGeneration)
+  if(stopBoundary!==undefined&&state.generation>=stopBoundary)
    return stop('generation-boundary');
   if(!remaining())return stop('time-budget');
   const g=state.generation;
@@ -158,7 +167,7 @@ export async function optimizeBalance(options={}){
   // Increment is persisted before entering the next generation so a crash
   // cannot replay a different proposal against already saved batches.
   state.generation=g+1;save();
-  if(stopAfterGeneration!==undefined&&state.generation>=stopAfterGeneration)
+  if(stopBoundary!==undefined&&state.generation>=stopBoundary)
    return stop('generation-boundary');
   state.generation=g;
  }
