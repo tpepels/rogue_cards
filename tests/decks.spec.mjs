@@ -1,11 +1,11 @@
 import {test,expect} from "@playwright/test";
 import {PRESETS,selectionForPreset,physicalDeck} from "../src/decks.js";
-test("three recommended physical decks are selectable and print the right card copies",async({page})=>{
+test("all available deck presets are selectable and print the right card copies",async({page})=>{
  test.setTimeout(180000);
  const errors=[];page.on("pageerror",err=>errors.push(err.message));
  await page.goto("/decks.html");
  await expect(page.getByRole("heading",{name:"The dungeon is yours to build."})).toBeVisible();
- await expect(page.locator("[data-preset]")).toHaveCount(3);
+ await expect(page.locator("[data-preset]")).toHaveCount(PRESETS.length);
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(physicalDeck(selectionForPreset("strange")).length);
  for(const preset of PRESETS){
   await page.locator("[data-preset='"+preset.id+"']").click();
