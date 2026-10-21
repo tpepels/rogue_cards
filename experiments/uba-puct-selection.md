@@ -68,11 +68,16 @@ experimental behavior: inspect provenance before drawing scientific conclusions.
 Changing source code during an *active* worker run is still detected.
 
 
-## Stop after the first refined generation (21 October 2026)
+## Finish the active generation, then review
 
-To review all first-generation results before beginning another generation,
-interrupt the currently running process with Ctrl+C and let it exit.
-Completed trials are preserved with checksums. Then run:
+The optimizer stores a **zero-based** generation index: `g0`, `g1`, `g2`.
+If `STATUS.md` says `Generation: 1 / 3` and `Stage: refine`, the run
+is working on **g1**; `--stop-after-generation 1` is already behind the
+active generation. An older version silently stopped without completing it.
+That mismatch is now rejected.
+
+To complete an already active `g1` refinement and stop without starting `g2`,
+interrupt the original Node process with Ctrl+C, then:
 
 ```bash
 cd ~/Projects/rogue_cards
@@ -84,14 +89,17 @@ node scripts/balance-optimize.mjs \
   --workers 8 --budget-hours 12 \
   --out results/uba-puct-c070-v1 \
   --best-agent-only-validation \
-  --stop-after-generation 1
+  --stop-after-current-generation
+npm run results:status
 ```
 
-The option completes outstanding first-generation refinement trials, recomputes
-all candidate fitness scores and reports, and persists the checkpoint at
-generation 1 of 3. It exits with stopReason `generation-boundary`,
-`complete: false`, without starting generation two or independent holdout.
-`npm run results:status` refreshes the human-readable final checkpoint summary.
-The flag is an operator-only stop boundary, not part of the locked scientific
-inputs: no old data is erased and a later resume without the flag may continue.
-Existing running Node processes cannot adopt this flag until restarted.
+The flag requires an active saved generation, completes only that
+generation, recomputes candidate fitness, and persists the checkpoint
+at the **next** zero-based generation index. It exits with
+`stopReason: generation-boundary` and `complete: false`.
+The output now calls the field `completedGenerations`, not `generations`.
+If the checkpoint is already between generations, it refuses to start
+anything new. With the explicit numbered option,
+`--stop-after-generation 2` is also appropriate for g1, but the
+current-generation flag is safer when you are uncertain about the index.
+All committed trial records and the optimizer lock remain unchanged.
