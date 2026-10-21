@@ -197,7 +197,7 @@ export function summarizeComparison(dir,{archive=[],complete=false,baselineHash=
  if(Array.isArray(selection)){
   const locked=readJSON(join(dir,'optimizer-lock.json'));
   const result=uba(selection,{complete,baselineHash:baselineHash??json?.baselineHash,
-   space:locked?.configuration?.settings?.space,
+   space:locked?.configuration?.settings?.space??json?.space,
    origin:recent?'latest optimizer checkpoint (including saved refinements)':'comparison.json'});
   if(result)return result;
  }
