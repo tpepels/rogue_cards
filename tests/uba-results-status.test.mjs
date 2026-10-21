@@ -4,6 +4,7 @@ import {mkdtempSync,mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {renderResultsStatus,resultsRootForOutput,writeResultsStatus} from '../src/balance/results-status.js';
+import {hashValue} from '../src/balance/io.js';
 
 const fixture=t=>{
  const root=mkdtempSync(join(tmpdir(),'uba-status-'));
@@ -179,4 +180,42 @@ test('STATUS expands every archived optimizer candidate into exact parameter val
  assert.doesNotMatch(md,/Long card definition must not appear in summary/);
  assert.match(md,/candidate-two/);
  assert.match(md,/Unchanged canonical baseline/);
+});
+
+
+test('active refinements display every saved trial, live and combined win rates, and all Hero/duo strata without changing source',t=>{
+ const root=fixture(t),dir=join(root,'uba-live-rows'),run=join(dir,'refine','g1');
+ mkdirSync(run,{recursive:true});
+ save(join(dir,'optimizer-lock.json'),{configuration:{settings:{generations:3},profile:{id:'puct-c070-v1'},
+  validationProfiles:[{id:'puct-c070-v1'}]}});
+ const candidate={id:'uba-readable',hash:'hash-readable'};
+ const oldRow={id:'from-screen',candidateHash:candidate.hash,profileHash:'puct',
+  profileId:'puct-c070-v1',party:'warrior',seed:11,split:'screen',won:0,ending:'death',vaultReached:0,
+  roomsCleared:20,ordinaryEncounters:13,ordinaryFights:10,damage:10,healingRestored:2,healingWasted:0};
+ save(join(dir,'optimizer-state.json'),{schema:'uba-optimizer-state-v1',generation:1,
+  complete:false,current:{stage:'refine',refine:[candidate.hash]},
+  archive:[{candidate,genes:null,rows:[oldRow],fitness:{score:.85,values:{encounters36:18,fightConversion:.7},violations:[]},
+   summary:{solo:{n:1,winRate:0},duo:{n:0,winRate:null}}}]});
+ const tasks=[
+  {id:'first',candidateHash:candidate.hash,profileHash:'puct',party:'warrior',seed:111,split:'refine'},
+  {id:'second',candidateHash:candidate.hash,profileHash:'puct',party:'warrior+knight',seed:112,split:'refine'}
+ ];
+ save(join(run,'manifest.json'),{schema:'uba-laboratory-manifest-v1',plan:{
+  tasks,config:{candidates:[candidate],parties:[['warrior'],['warrior','knight']]}}});
+ save(join(run,'progress.json'),{schema:'uba-progress-v1',planned:2,completed:1});
+ save(join(run,'.laboratory.lock'),{pid:process.pid});
+ const row={...tasks[0],profileId:'puct-c070-v1',candidateId:candidate.id,won:1,ending:'win',
+  vaultReached:1,roomsCleared:36,ordinaryEncounters:20,ordinaryFights:14,damage:7,healingRestored:4,healingWasted:1};
+ const saved=JSON.stringify({schema:'uba-trial-record-v1',row,checksum:hashValue(row)})+'\n{"schema":';
+ const trialPath=join(run,'trials.ndjson');writeFileSync(trialPath,saved);
+ const md=renderResultsStatus(root);
+ assert.match(md,/Live refine results \(completed trial records\)/);
+ assert.match(md,/Read-only snapshot:\*\* 1 \/ 2 completed trials/);
+ assert.match(md,/New trials: 1; prior committed trials: 1; combined distinct trials: 2/);
+ assert.match(md,/100\.0%.*\(1 runs\)/);
+ assert.match(md,/50\.0%.*\(2 runs\)/);
+ assert.match(md,/\| warrior\+knight \| 0 \| 0 \|/);
+ assert.match(md,/An unfinished trailing trial write was ignored/);
+ assert.match(md,/trials\.ndjson/);
+ assert.equal(readFileSync(trialPath,'utf8'),saved,'status must never mutate live trial records');
 });
