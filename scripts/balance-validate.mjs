@@ -7,14 +7,14 @@ import {validateFinalists} from '../src/balance/validation.js';
 import {parseArguments,positiveNumber,loadCandidate,loadProfile,loadJSON,selectParties} from '../src/balance/cli.js';
 
 const a=parseArguments(process.argv.slice(2),['--candidate','--candidates','--goals','--out','--runs','--workers','--seed','--budget-hours','--profiles','--parties','--tuning','--human-feedback','--max-trials','--help'],['--help']);
-if(a['--help'])console.log('node scripts/balance-validate.mjs --candidate finalist.json --out results/uba-validation [--tuning optimizer-state.json] [--profiles reference-v1,weak-v1] [--runs 32]');
+if(a['--help'])console.log('node scripts/balance-validate.mjs --candidate finalist.json --out results/uba-validation [--tuning optimizer-state.json] [--profiles puct-c070-v1] [--runs 32]');
 else{
  if(Boolean(a['--candidate'])===Boolean(a['--candidates']))throw Error('Provide --candidate or --candidates');
  const candidates=a['--candidate']?[loadCandidate(a['--candidate'])]:readdirSync(resolve(a['--candidates'])).filter(p=>/^candidate-\d+\.json$/.test(p)).sort().map(p=>loadCandidate(join(a['--candidates'],p)));
  if(!candidates.length)throw Error('No candidate manifests found');
  const goals=loadGoals(a['--goals']),out=resolve(a['--out']??'results/ultimate-balance-validation');
  const tuning=a['--tuning']?loadJSON(a['--tuning']):null,tuningRows=tuning?.archive?.flatMap(e=>e.rows)??tuning?.rows??[];
- const result=await validateFinalists({candidates,goals,out,tuningRows,profiles:a['--profiles']?.split(',').map(loadProfile)??goals.validation.profiles,
+ const result=await validateFinalists({candidates,goals,out,tuningRows,profiles:a['--profiles']?.split(',').map(loadProfile)??['puct-c070-v1'],
   parties:selectParties(a['--parties']),runsPerParty:positiveNumber(a['--runs'],goals.search.holdoutRuns,'runs',{integer:true}),workers:positiveNumber(a['--workers'],8,'workers',{integer:true}),
   seed:positiveNumber(a['--seed'],20261020,'seed',{integer:true}),budgetMs:positiveNumber(a['--budget-hours'],12,'budget-hours')*3600000,
   humanFeedback:a['--human-feedback']?loadJSON(a['--human-feedback']):null,maxTrials:a['--max-trials']===undefined?undefined:positiveNumber(a['--max-trials'],null,'max-trials',{integer:true,zero:true})});
