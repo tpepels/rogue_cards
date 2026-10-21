@@ -82,6 +82,24 @@ export async function optimizeBalance(options={}){
  // Allow resumption after Git/Node changes; keep all fixed trial inputs and
  // the original checkpoint checksum/identity.
  const locked=lockConfiguration(join(out,'optimizer-lock.json'),config,{ignoreSource:true}),statePath=join(out,'optimizer-state.json');
+ // The original scientific search lock remains unchanged. A separate
+ // persisted policy amendment is opt-in for legacy checkpoints whose holdout
+ // would otherwise run reference/weak agents as well as the selected PUCT.
+ const validationOverridePath=join(out,'validation-policy-override.json');
+ const bestAgentOnlyValidation=Boolean(options.bestAgentOnlyValidation||existsSync(validationOverridePath));
+ if(bestAgentOnlyValidation){
+  const alreadyStarted=existsSync(join(out,'confirmation','validation-lock.json'));
+  if(alreadyStarted&&!existsSync(validationOverridePath))
+   throw Error('Holdout already started under the original profile plan; cannot change its agent set in place');
+  lockConfiguration(validationOverridePath,{
+   schema:'uba-best-agent-validation-override-v1',
+   optimizerLock:locked.hash,
+   fromProfiles:validationProfiles.map(p=>({id:p.id,hash:p.hash})),
+   effectiveProfiles:[{id:fixedProfile.id,hash:fixedProfile.hash}],
+   purpose:'Single selected strongest-agent holdout; source search/checkpoint unchanged'
+  });
+ }
+ const holdoutProfiles=bestAgentOnlyValidation?[fixedProfile]:validationProfiles;
  writeJSON(join(out,'baseline.json'),BASELINE_MANIFEST);
  const savedState=existsSync(statePath),state=savedState?readJSON(statePath):{schema:'uba-optimizer-state-v1',lock:locked.hash,generation:0,archive:[],current:null,complete:false};
  const stateChecksum=()=>{const {integrity,...snapshot}=state;return contentHash(snapshot);};
@@ -144,7 +162,7 @@ export async function optimizeBalance(options={}){
  if(validate&&finalists.length){
   if(!remaining())return stop('time-budget-before-confirmation');
   const {rows:holdoutRows,...confirmation}=await validateFinalists({candidates:state.finalists,goals,out:join(out,'confirmation'),workers,budgetMs:remaining(),seed,parties,runsPerParty:settings.holdoutRuns,
-   tuningRows:state.archive.flatMap(e=>e.rows),maxTrials,profiles:validationProfiles});
+   tuningRows:state.archive.flatMap(e=>e.rows),maxTrials,profiles:holdoutProfiles});
   state.validation=confirmation;
   if(!state.validation.complete)return stop('confirmation-incomplete');
  }
