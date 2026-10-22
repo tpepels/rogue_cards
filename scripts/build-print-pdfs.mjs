@@ -37,7 +37,7 @@ try{
  page.setDefaultTimeout(90000);
  for(let i=0;i<designs.length;i++){
   const card=designs[i];
-  const n=String(card.v2.number).padStart(3,"0");
+  const n=String(i+1).padStart(3,"0"); // stable *source* index, not the card's printed number
   const filename=path.join(temp,n+".pdf");
   await page.goto(base+printUrl([card]).slice(2),{waitUntil:"domcontentloaded"});
   const button=page.locator("#print-current");
@@ -57,10 +57,11 @@ try{
   ["rogue-cards-all-copies.pdf",physicalDeck(selectionForPreset("chaos"))],
   ...PRESETS.filter(p=>p.id!=="chaos").map(p=>["rogue-cards-"+p.id+".pdf",physicalDeck(selectionForPreset(p.id))])
  ];
+ const sourceByKey=new Map(designs.map((card,i)=>[cardKey(card),i+1]));
  const manifest={revision:process.env.GITHUB_SHA||"local",designCount:designs.length,
   editions:editions.map(([file,cards])=>({
    file,cardCount:cards.length,pages:Math.ceil(cards.length/4),
-   cards:cards.map(c=>({number:c.v2.number,key:cardKey(c)}))
+   cards:cards.map(c=>({sourceIndex:sourceByKey.get(cardKey(c)),number:c.v2.number,key:cardKey(c)}))
   }))};
  await writeFile(path.join(temp,"manifest.json"),JSON.stringify(manifest,null,2));
  const child=spawn("python3",["scripts/compose-print-pdfs.py",temp,out],{stdio:"inherit"});

@@ -42,7 +42,7 @@ for edition in manifest["editions"]:
     for offset in range(0, len(card_list), 4):
         page = pdf.new_page(width=PAGE[0], height=PAGE[1])
         for ix, card in enumerate(card_list[offset:offset + 4]):
-            n = card["number"]
+            n = card["sourceIndex"]
             target = fitz.Rect(
                 LEFT + (ix % 2) * CARD[0],
                 TOP + (ix // 2) * CARD[1],
