@@ -1,18 +1,41 @@
 import {test,expect} from "@playwright/test";
 import {mkdir,writeFile} from "node:fs/promises";
+test("home and printable catalogue show identical 193-card edition",async({page})=>{
+ const snapshots=[];
+ for(const url of ["/index.html","/cards.html"]){
+  await page.goto(url);
+  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
+  const cards=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(c=>({
+   key:c.dataset.type+":"+c.dataset.id,
+   image:c.querySelector(".tt-art-image")?.getAttribute("src")
+  })));
+  expect(new Set(cards.map(c=>c.key)).size).toBe(193);
+  expect(cards.every(c=>c.image?.startsWith("./assets/illustrations/"))).toBe(true);
+  await expect(page.locator('.tt-grid .tt-card[data-print-expansion="true"]')).toHaveCount(54);
+  const category=page.getByRole("combobox",{name:"Card category"});
+  await category.selectOption("expansion");
+  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(54);
+  await category.selectOption("all");
+  await page.getByRole("button",{name:"ONE OF EACH"}).click();
+  await expect(page.getByRole("button",{name:"FULL PRINT QUANTITIES"})).toBeVisible();
+  snapshots.push(cards);
+ }
+ expect(snapshots[0]).toEqual(snapshots[1]);
+});
+
 test("one canonical gallery covers all families and prints real card sheets",async({page})=>{
  test.setTimeout(180000);
  const errors=[];page.on("pageerror",e=>errors.push(e.message));
  await page.goto("/");
  await expect(page.getByRole("heading",{name:/Many dungeons. One rulebook/i})).toBeVisible();
- await expect(page.locator(".tt-grid .tt-card")).toHaveCount(139);
- await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(139);
- await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(139);
+ await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
+ await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(193);
+ await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(193);
  await expect(page.locator(".tt-grid .tt-needs-art")).toHaveCount(0);
  await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
  await expect(page.getByRole("link",{name:/READ \/ PRINT THE RULEBOOK/})).toBeVisible();
  const filter=page.getByRole("combobox",{name:"Card category"});
- const checks=[["hero",8],["room",65],["monster",14],["TOOL",8],["EQUIPMENT",6],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
+ const checks=[["hero",8],["room",80],["monster",26],["TOOL",12],["EQUIPMENT",12],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
  for(const [type,count] of checks){
   await filter.selectOption(type);
   await expect(page.locator(".tt-grid .tt-card")).toHaveCount(count);
@@ -38,7 +61,7 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await filter.selectOption("WAND");
  await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(2);
  await page.getByRole("button",{name:"ONE OF EACH"}).click();
- await expect(page.getByRole("button",{name:"PRINT QUANTITIES"})).toBeVisible();
+ await expect(page.getByRole("button",{name:"FULL PRINT QUANTITIES"})).toBeVisible();
  await page.emulateMedia({media:"print"});
  const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
   const slips=[...c.querySelectorAll(".tt-collage>.tt-content>.tt-slip")],r=c.getBoundingClientRect();
@@ -160,7 +183,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
     excess:card.notes[1].bottom-(card.cardBounds.bottom-6*96/25.4)
   })).filter(x=>x.excess>0);
   if(footerViolations.length)console.log("ALL CARD FOOTER VIOLATIONS",JSON.stringify(footerViolations));
-  expect(cards).toHaveLength(139);
+  expect(cards).toHaveLength(193);
   for(const card of cards){
    expect(card.imageFill,card.id+" missing full artwork").toBe("cover");
    expect(Math.abs(card.collage.left-card.cardBounds.left),card.id+" art not flush left").toBeLessThanOrEqual(2);
@@ -217,7 +240,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    y:n.scrollHeight-n.clientHeight,x:n.scrollWidth-n.clientWidth
   }))
  })));
- expect(printed).toHaveLength(139);
+ expect(printed).toHaveLength(193);
  for(const card of printed){
   expect(card.w).toBeGreaterThan(90*96/25.4-2);
   expect(card.h).toBeLessThan(130*96/25.4+2);
@@ -271,7 +294,7 @@ test("individual card placements preserve room depth and readable pasted rules",
    leadWidth:lead.getBoundingClientRect().width
   };
  }));
- expect(checks).toHaveLength(139);
+ expect(checks).toHaveLength(193);
  for(const item of checks){
   expect(item.leadWidth,item.id+" has no visible rules paper").toBeGreaterThan(20);
   expect(item.titleAngle,item.id+" lost title placement").not.toBe("none");
@@ -318,7 +341,7 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
  expect(print.slip).toContain("polygon");
 });
 
-test("capture all 139 rendered cards for visual inspection",async({page})=>{
+test("capture all 193 rendered cards for visual inspection",async({page})=>{
  test.setTimeout(180000);
  await page.goto("/");
  const dir="test-results/card-visual-inspection";
@@ -328,7 +351,7 @@ test("capture all 139 rendered cards for visual inspection",async({page})=>{
   await Promise.all(imgs.map(img=>img.decode().catch(()=>{})));
   return imgs.map(img=>({loaded:img.complete&&img.naturalWidth>0,url:img.getAttribute("src")}));
  });
- expect(eager).toHaveLength(139);
+ expect(eager).toHaveLength(193);
  expect(eager.filter(i=>!i.loaded),"Missing actual illustration files").toEqual([]);
  const bounds=await page.locator(".tt-grid .tt-card").evaluateAll(cards=>cards.map(card=>{
   const r=card.getBoundingClientRect();
@@ -354,13 +377,13 @@ test("capture all 139 rendered cards for visual inspection",async({page})=>{
     })
   };
  }));
- expect(measures).toHaveLength(139);
+ expect(measures).toHaveLength(193);
  await writeFile(dir+"/card-measurements.json",JSON.stringify(measures,null,2));
  const groups=[["hero",null],["room","UPPER"],["room","MIDDLE"],["room","DEEP"],["room","FINAL"],
   ["monster",null],...["TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"].map(x=>[x,null])];
  for(const [category,region] of groups){
   await page.getByRole("combobox",{name:"Card category"}).selectOption(category);
-  if(region)await page.getByRole("combobox",{name:"Dungeon region"}).selectOption(region);
+  if(region)await page.getByRole("combobox",{name:"Dungeon depth"}).selectOption(region);
   const loaded=await page.locator(".tt-grid .tt-art-image").evaluateAll(async imgs=>{
    for(const img of imgs)img.loading="eager";
    await Promise.all(imgs.map(img=>img.decode().catch(()=>{})));

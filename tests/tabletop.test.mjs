@@ -21,9 +21,16 @@ test("exactly one complete canonical physical edition",()=>{
  assert.equal(catalogue("all","WAND").length,7);
  assert.equal(catalogue("all","POTION").length,8);
  for(const family of ITEM_FAMILIES)assert.ok(catalogue("all",family).length>0,family);
- const homepage=readFileSync("src/tabletop-app.js","utf8");
- assert.doesNotMatch(homepage,/v2-(rooms|objects|monsters)\.html|print-and-play\.html/);
- assert.match(homepage,/rules\.html/);
+ const homepage=readFileSync("index.html","utf8");
+ const cardpage=readFileSync("cards.html","utf8");
+ const shared=readFileSync("src/cards-app.js","utf8");
+ assert.match(homepage,/src\/cards-app\.js/);
+ assert.match(cardpage,/src\/cards-app\.js/);
+ assert.match(shared,/FIXED_CARDS,SELECTABLE/);
+ assert.doesNotMatch(shared,/from "\.\/tabletop-data\.js"/);
+ assert.match(shared,/rules\.html/);
+ assert.match(shared,/tutorial\.html/);
+ assert.match(readFileSync("src/tabletop-app.js","utf8"),/import "\.\/cards-app\.js"/);
 });
 test("eight archetypes have unique starting Objects, valid stats and complete d6 skills",()=>{
  const starts=new Set();
@@ -182,6 +189,6 @@ test("learn-to-play tutorial uses the canonical physical cards and is linked fro
  assert.match(page,/After completing the proper number of Rooms in each depth/);
  assert.match(page,/one action in combat/i);
  assert.match(page,/tut-scroll/);
- assert.match(readFileSync("src/tabletop-app.js","utf8"),/tutorial\.html/);
+ assert.match(readFileSync("src/cards-app.js","utf8"),/tutorial\.html/);
  assert.match(readFileSync("rules.html","utf8"),/tutorial\.html/);
 });
