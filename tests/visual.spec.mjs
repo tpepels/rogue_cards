@@ -340,6 +340,8 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
   if(x.resultsShape!==null)expect(x.resultsShape).toContain("polygon");
  }
  expect(new Set(metrics.map(x=>x.leadAngle)).size).toBeGreaterThanOrEqual(3);
+ await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  const print=await page.locator(".tt-print-only .tt-card").first().evaluate(c=>({
   title:getComputedStyle(c.querySelector(".tt-title")).clipPath,

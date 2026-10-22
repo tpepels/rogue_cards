@@ -42,3 +42,38 @@ for(const kind of ["from-gallery","from-deck"]){
   await expect(page.locator(".tt-sheet").nth(1)).toBeVisible();
  });
 }
+
+// Print in bounded chunks without losing a copy; don't preload the other batches.
+test("quick print advances through all physical cards exactly once",async({page})=>{
+ const cards=[...FIXED_CARDS,...SELECTABLE];
+ await page.addInitScript(()=>{HTMLImageElement.prototype.decode=async()=>{};});
+ await page.route("**/assets/illustrations/**",route=>route.abort());
+ await page.goto("/"+printUrl(cards).slice(2));
+ await expect(page.locator("#print-app")).toHaveAttribute("data-print-total","193");
+ const rendered=[];
+ while(true){
+  const shown=await page.locator(".tt-print-only .tt-card").evaluateAll(all=>all.map(c=>c.dataset.type+":"+c.dataset.id));
+  expect(shown.length).toBeGreaterThan(0);
+  expect(shown.length).toBeLessThanOrEqual(16);
+  rendered.push(...shown);
+  const next=page.locator("#print-next");
+  if(await next.isDisabled())break;
+  await next.click();
+ }
+ expect(rendered).toEqual(cards.map(c=>c.type+":"+c.id));
+});
+test("the print dialog is called for a single prepared batch only",async({page})=>{
+ await page.addInitScript(()=>{HTMLImageElement.prototype.decode=async()=>{};});
+ await page.route("**/assets/illustrations/**",route=>route.abort());
+ await page.goto("/"+printUrl([...FIXED_CARDS,...SELECTABLE].slice(0,32)).slice(2));
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
+ await expect(page.locator("#print-current")).toBeEnabled();
+ await page.evaluate(()=>{window.print=()=>{window.__printInvocations=(window.__printInvocations||0)+1;}});
+ await page.locator("#print-current").click();
+ expect(await page.evaluate(()=>window.__printInvocations)).toBe(1);
+ await page.locator("#print-next").click();
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
+ await expect(page.locator("#print-current")).toBeEnabled();
+ await page.locator("#print-current").click();
+ expect(await page.evaluate(()=>window.__printInvocations)).toBe(2);
+});
