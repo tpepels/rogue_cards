@@ -70,7 +70,7 @@ const ROWS=[
    "TOOL",
    "FIRE"
   ],
-  "OUTSIDE COMBAT: discard for +3 on your next WIT test; then lose 1 HP.",
+  "OUTSIDE COMBAT: discard and lose 1 HP now; gain +3 on your next WIT test.",
   2,
   "Its wick burns from both ends."
  ],
@@ -106,7 +106,7 @@ const ROWS=[
    "TOOL",
    "LIGHT"
   ],
-  "OUTSIDE COMBAT: discard to cure POISONED and cancel your next DIS penalties.",
+  "OUTSIDE COMBAT: discard to remove POISONED and clear all DIS penalties already waiting on you. Does not prevent new DIS.",
   2,
   "The rays are drawn the wrong way."
  ],
@@ -178,7 +178,7 @@ const ROWS=[
    "TOOL",
    "MAGIC"
   ],
-  "OUTSIDE COMBAT: discard and choose a held KEEP Room trophy. It can be used one extra time.",
+  "OUTSIDE COMBAT: discard; choose a kept Room with a later use. Mark one extra use of its printed effect. Spend one mark each time.",
   1,
   "Old promises answer twice."
  ],
@@ -190,7 +190,7 @@ const ROWS=[
    "TOOL",
    "MAGIC"
   ],
-  "BEFORE choosing a Room option: discard and roll its ROOM d6 now. If you later roll here, use that face.",
+  "BEFORE choosing an option in a Room with a printed d6 table: discard and roll its d6 now. If you use that Room roll, keep this face; otherwise it expires on leaving.",
   2,
   "A future that might still happen."
  ],
@@ -214,7 +214,7 @@ const ROWS=[
    "TOOL",
    "MAGIC"
   ],
-  "OUTSIDE COMBAT (2 Heroes): discard. Your next d20 result is also the other Hero's next d20 result.",
+  "OUTSIDE COMBAT (2 Heroes): discard. The face of your next d20 (after rerolls) is also the other Hero's next d20 face. They do not roll; each adds their own bonuses.",
   1,
   "Nobody remembers tying the knot."
  ]
