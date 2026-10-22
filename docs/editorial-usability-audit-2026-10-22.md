@@ -1,6 +1,16 @@
 # Rogue Cards — editorial and beginner-usability review
 22 October 2026. Source-level audit on `main` at `40c09443`.
-**Editorial only. No rules, card values, engines or printing layouts have been changed.**
+**Original audit was source-only. An editorial implementation followed; see implementation status below. The engine, card statistics and balance remain unchanged.**
+
+## Implementation status
+
+Changes committed on 22 October 2026:
+
+- **Applied:** E01–E04 (tutorial fixed-AC combat, canonical statistics and example arithmetic); E05 (explicit preset-depth instructions in the rulebook); E06–E08 (opposed ties, downed Heroes, acting Hero); E09–E13 (timing reminders, kept/tucked state, tags, used Potion memory and Room vs combat); E15–E16 (immediate win and route example); E18–E19 (Oracle and Judge/Door printed handling); E21–E25 (odd Item timings, face sharing and bookkeeping); E26 (per-Hero pending effects); E27–E29 (193-card audit, canonical tutorial stats and fixed-AC example tests).
+- **Partially applied:** E10 and E17 (simple examples and passive/sideways distinction); E30 and E32 (beginner order and consistent timing/cost language).
+- **Cannot safely settle by copy-edit alone:** E14 (Goblin's temporary Companion occupies an empty slot at recruitment but code tracks a separate +1 ATK flag; requires an explicit ongoing slot rule), E20 (Beetle Caravan's printed Midnight Bazaar kept effects are not reflected in the engine), E31 (printed at-scale blind novice test). The extended visual test now checks all 193 card layouts in Chromium, but this does not replace physical playtesting.
+
+**Editorial contract for further changes:** Write each effect as **WHEN / COST / ROLL / OUTCOME / DURATION**; use the exact terms in the two-page guide. If printed choices and executable effects differ, preserve the existing game and identify the mismatch explicitly—do not silently add a balance change during editorial review. An actual person unfamiliar with RPGs still needs to perform a blind first-run test.
 
 ## Brief and scope
 Editorial standard: a person who has never played a dungeon crawler should be able to set up, take turns, resolve a fight, and finish a game from the core rules; someone who has learned those rules should execute every printed card without improvising an unstated mechanic.
