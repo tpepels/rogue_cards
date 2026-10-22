@@ -10,7 +10,7 @@ test("all deck presets send the intended quantities to fast printing",async({pag
   await expect(page.locator("#db-preset-select")).toHaveValue(preset.id);
   await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0);
   await page.getByRole("button",{name:"FAST PRINT THIS DECK"}).click();
-  await expect(page).toHaveURL(/print\\.html\\?cards=/);
+  await expect(page).toHaveURL(/print\.html\?cards=/);
   await expect(page.locator("#print-app")).toHaveAttribute("data-print-total",
    String(physicalDeck(selectionForPreset(preset.id)).length));
   await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
@@ -46,7 +46,7 @@ test("the fast print page includes genuine expansion art with legible notes",asy
   expect(c.width,c.id).toBeGreaterThan(339);
   expect(c.height,c.id).toBeGreaterThan(489);
   expect(c.status,c.id).toBe("generated");
-  expect(c.src,c.id).toMatch(/assets\\/illustrations\\/.+\\.png/);
+  expect(c.src,c.id).toMatch(/assets\/illustrations\/.+\.png/);
   for(const p of c.parts)expect(p.clip,c.id+" clipped note").toBeLessThanOrEqual(2);
  }
 });
@@ -57,7 +57,7 @@ test("all 193 cards enter the fast print queue, never the catalogue DOM",async({
  await page.getByRole("combobox",{name:"Card category"}).selectOption("expansion");
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(54);
  await page.getByRole("button",{name:"FAST PRINT ALL COPIES"}).click();
- await expect(page).toHaveURL(/print\\.html\\?cards=/);
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await expect(page.locator("#print-app")).toHaveAttribute("data-print-total",
   String(physicalDeck(selectionForPreset("chaos")).length));
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);

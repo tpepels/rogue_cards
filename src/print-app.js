@@ -2,7 +2,6 @@ import {decodePrintQueue} from "./print-queue.js";
 import {printSheets} from "./tabletop-view.js";
 
 const root=document.getElementById("print-app");
-const params=new URLSearchParams(window.location.search);
 const MAX_BATCH=16; // Four A4 sheets. Keep Chromium print preview responsive.
 let queue,first=0,edition=0;
 try{queue=decodePrintQueue(window.location.search);}
