@@ -1,5 +1,6 @@
 import {test,expect} from "@playwright/test";
 import {mkdir,writeFile} from "node:fs/promises";
+import {FIXED_CARDS,SELECTABLE} from "../src/decks.js";
 test("home and printable catalogue show identical 193-card edition",async({page})=>{
  const snapshots=[];
  for(const url of ["/index.html","/cards.html"]){
@@ -35,7 +36,10 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
  await expect(page.getByRole("link",{name:/READ \/ PRINT THE RULEBOOK/})).toBeVisible();
  const filter=page.getByRole("combobox",{name:"Card category"});
- const checks=[["hero",8],["room",80],["monster",26],["TOOL",12],["EQUIPMENT",12],["COMPANION",4],["RELIC",4],["SCROLL",8],["RING",7],["WAND",7],["POTION",8]];
+ const allCards=[...FIXED_CARDS,...SELECTABLE];
+ expect(allCards.length).toBe(193);
+ const countType=type=>allCards.filter(card=>["hero","room","monster"].includes(type)?card.type===type:card.v2.kind===type).length;
+ const checks=["hero","room","monster","TOOL","EQUIPMENT","COMPANION","RELIC","SCROLL","RING","WAND","POTION"].map(type=>[type,countType(type)]);
  for(const [type,count] of checks){
   await filter.selectOption(type);
   await expect(page.locator(".tt-grid .tt-card")).toHaveCount(count);
