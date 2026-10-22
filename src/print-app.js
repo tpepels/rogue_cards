@@ -10,6 +10,7 @@ catch(error){
  root.innerHTML='<main class="tt-shell"><h1>Print selection unavailable</h1><p>'+String(error.message).replaceAll("<","&lt;")+'</p><p><a href="./cards.html">Return to all cards</a></p></main>';
  throw error;
 }
+root.dataset.printTotal=String(queue.length);
 const batchCount=Math.ceil(queue.length/MAX_BATCH);
 const title=document.createElement("title");
 title.textContent="Rogue Cards – "+queue.length+" cards – quick print";
@@ -20,7 +21,7 @@ function display(){
  const batch=queue.slice(first,first+MAX_BATCH);
  const number=Math.floor(first/MAX_BATCH)+1;
  root.innerHTML=
- '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">QUICK PRINT · '+queue.length+' PHYSICAL CARDS</div></div><nav class="tt-nav"><a href="./cards.html">ALL CARDS</a><a href="./decks.html">DECK BUILDER</a><a href="javascript:history.back()">BACK</a></nav></div>'+
+ '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">QUICK PRINT · '+queue.length+' PHYSICAL CARDS</div></div><nav class="tt-nav"><a href="./cards.html">ALL CARDS</a><a href="./decks.html">DECK BUILDER</a><a href="./index.html">HOME</a></nav></div>'+
  '<main class="tt-shell tt-print-controls"><h1>Print in manageable batches</h1>'+
  '<p>Batch <strong>'+number+' of '+batchCount+'</strong> · cards '+(first+1)+'–'+(first+count)+' of '+queue.length+
  ' · '+Math.ceil(count/4)+' A4 sheets. This page loads only these '+count+' cards, not the full collection.</p>'+

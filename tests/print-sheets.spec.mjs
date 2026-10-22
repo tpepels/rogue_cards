@@ -1,13 +1,16 @@
 import {test,expect} from "@playwright/test";
+import {FIXED_CARDS,SELECTABLE} from "../src/decks.js";
+import {printUrl} from "../src/print-queue.js";
 
 // A4 layout is measured in CSS physical units; printed cards must be in one
 // contiguous block so only the outer edges and two internal cuts are needed.
 const pxPerMm=96/25.4;
 const near=(actual,expected)=>expect(Math.abs(actual-expected)).toBeLessThan(.65);
-for(const pagePath of ["/cards.html","/decks.html"]){
- test(`${pagePath} prints touching 90 x 130 mm cards in a 2 x 2 grid`,async({page})=>{
+for(const kind of ["from-gallery","from-deck"]){
+ test(`${kind} prints touching 90 x 130 mm cards in a 2 x 2 grid`,async({page})=>{
   await page.route("**/assets/illustrations/**",route=>route.abort());
-  await page.goto(pagePath,{waitUntil:"domcontentloaded"});
+  const selection=(kind==="from-gallery"?[...FIXED_CARDS,...SELECTABLE]:[...FIXED_CARDS]).slice(0,16);
+ await page.goto("/"+printUrl(selection).slice(2),{waitUntil:"domcontentloaded"});
   await expect(page.locator(".tt-sheet").first()).toHaveCount(1);
   await page.emulateMedia({media:"print"});
   const sheet=page.locator(".tt-sheet").first();

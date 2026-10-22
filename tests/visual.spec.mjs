@@ -31,7 +31,7 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  await expect(page.getByRole("heading",{name:/Many dungeons. One rulebook/i})).toBeVisible();
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
  await expect(page.locator(".tt-grid .tt-has-art .tt-art-image")).toHaveCount(193);
- await expect(page.locator(".tt-print-only .tt-has-art .tt-art-image")).toHaveCount(193);
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0); // Never construct hidden print sheets in the gallery.
  await expect(page.locator(".tt-grid .tt-needs-art")).toHaveCount(0);
  await expect(page.locator(".tt-print-only .tt-needs-art")).toHaveCount(0);
  await expect(page.getByRole("link",{name:/READ \/ PRINT THE RULEBOOK/})).toBeVisible();
@@ -63,9 +63,9 @@ test("one canonical gallery covers all families and prints real card sheets",asy
   }
  }
  await filter.selectOption("WAND");
+ await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(2);
- await page.getByRole("button",{name:"ONE OF EACH"}).click();
- await expect(page.getByRole("button",{name:"FULL PRINT QUANTITIES"})).toBeVisible();
  await page.emulateMedia({media:"print"});
  const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>{
   const slips=[...c.querySelectorAll(".tt-collage>.tt-content>.tt-slip")],r=c.getBoundingClientRect();
@@ -91,9 +91,11 @@ test("all 193 complete-edition card designs keep their printed instructions visi
    return y>2||x>2?[{id:c.dataset.id,part:i,x,y}]:[];
   })));
  expect(screenIssues,"Clipped words in full 193-card catalogue").toEqual([]);
+ await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  const printed=page.locator(".tt-print-only .tt-card");
- await expect(printed).toHaveCount(193);
+ await expect(printed).toHaveCount(16);
  const printIssues=await printed.evaluateAll(cards=>cards.flatMap(c=>
   [...c.querySelectorAll(".tt-slip")].flatMap((note,i)=>{
    const y=note.scrollHeight-note.clientHeight,x=note.scrollWidth-note.clientWidth;
@@ -235,6 +237,8 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
   expect(families.has(family),"No artwork/layout for "+family).toBeTruthy();
  expect(new Set(onScreen.map(c=>c.plate)).size).toBe(4);
  expect(new Set(onScreen.map(c=>c.notes[0].angle)).size).toBeGreaterThanOrEqual(3);
+ await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  // The same physical card component is used in the four-up print sheets.
  const printed=await page.locator(".tt-print-only .tt-card").evaluateAll(cards=>cards.map(c=>({
@@ -244,7 +248,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
    y:n.scrollHeight-n.clientHeight,x:n.scrollWidth-n.clientWidth
   }))
  })));
- expect(printed).toHaveLength(193);
+ expect(printed).toHaveLength(16);
  for(const card of printed){
   expect(card.w).toBeGreaterThan(90*96/25.4-2);
   expect(card.h).toBeLessThan(130*96/25.4+2);
