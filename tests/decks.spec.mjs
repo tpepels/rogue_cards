@@ -8,7 +8,7 @@ test("all presets offer a single downloadable vector PDF",async({page})=>{
   await expect(page.locator("#db-preset-select")).toHaveValue(preset.id);
   await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0);
   await expect(page.locator("#db-print")).toHaveAttribute("href",
-   "https://github.com/tpepels/rogue_cards/releases/download/print-ready/rogue-cards-"+preset.id+".pdf");
+   "https://github.com/tpepels/rogue_cards/releases/download/print-ready/rogue-cards-"+(preset.id==="chaos"?"all-copies":preset.id)+".pdf");
  }
  const before=physicalDeck(selectionForPreset("classic")).length;
  await page.locator('[data-preset="classic"]').click();
