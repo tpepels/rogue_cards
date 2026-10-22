@@ -69,7 +69,6 @@ test("printed rulebook combat example agrees with live fixed AC and HP",()=>{
  assert.ok(rulebook.includes("ties fail for the acting Hero"));
  assert.ok(rulebook.includes("There is no return journey"));
  assert.ok(rulebook.includes("12 non-Corridor Rooms per depth"));
- assert.ok(rulebook.includes("Giant Rat")===false || true);
  assert.ok(rulebook.includes("Wisp</strong> · "+wisp.hp+" HP · AC "+(12+wisp.def)+" · ATK +"+wisp.atk));
  assert.ok(rulebook.includes("Warrior</strong> · ATK +"+(warrior.atk+2)+" with Sword · AC "+(12+warrior.def)));
  assert.ok(rulebook.includes("Knight</strong> · ATK +"+knight.atk+" · AC "+(12+knight.def+1)+" with Shield"));
