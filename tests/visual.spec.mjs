@@ -404,3 +404,12 @@ test("capture all 193 rendered cards for visual inspection",async({page})=>{
   await page.locator(".tt-grid").screenshot({path:dir+"/"+name+".png",animations:"disabled",timeout:45000});
  }
 });
+
+// Print-all must remain a single PDF link even after arbitrary gallery filtering.
+test("all-copies print is always one pre-rendered A4 PDF",async({page})=>{
+ await page.goto("/index.html");
+ await page.getByRole("combobox",{name:"Card category"}).selectOption("monster");
+ await expect(page.locator("#card-print-all")).toHaveAttribute("href",
+  /releases\/download\/print-ready\/rogue-cards-all-copies\.pdf$/);
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0);
+});

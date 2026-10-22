@@ -3,6 +3,7 @@ import {cardMarkup,esc} from "./tabletop-view.js";
 import {printUrl} from "./print-queue.js";
 const mount=document.getElementById("all-cards")||document.getElementById("tabletop-app");
 const home=mount?.id==="tabletop-app";
+const PDF_BASE="https://github.com/tpepels/rogue_cards/releases/download/print-ready/";
 const CATALOGUE=Object.freeze([...FIXED_CARDS,...SELECTABLE]);
 const ink='<svg class="tt-print-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id="tt-xerox-ink" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncG type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncB type="discrete" tableValues="0 .025 .10 .92 1 1"/></feComponentTransfer></filter></defs></svg>';
 const options=[
@@ -34,18 +35,18 @@ function render(){
  '<label for="card-category">TYPE <select id="card-category" aria-label="Card category">'+options.map(([key,name])=>'<option value="'+key+'"'+(key===category?" selected":"")+'>'+name+'</option>').join("")+'</select></label>'+
  (regionsAvailable?'<label for="card-region">DEPTH <select id="card-region" aria-label="Dungeon depth">'+regions.map(key=>'<option value="'+key+'"'+(key===region?" selected":"")+'>'+key+'</option>').join("")+'</select></label>':"")+
  '<button id="card-quantities" type="button" aria-pressed="'+copies+'">'+(copies?"FULL PRINT QUANTITIES":"ONE OF EACH")+'</button>'+
- '<button id="card-print" type="button">FAST PRINT SHOWN CARDS</button>'+
- '<button id="card-print-all" type="button">FAST PRINT ALL COPIES</button></div></div>'+
- '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm. Print opens a separate, lightweight batch preview (16 cards at a time). FAST PRINT SHOWN CARDS respects your filters; FAST PRINT ALL COPIES prepares the entire '+CATALOGUE.length+'-design collection in its physical quantities, including duplicate copies. For one playable dungeon rather than the entire library, use BUILD YOUR DECK. Every design has its own illustration.</p>'+
+ '<button id="card-print" type="button">'+(category==="all"&&region==="all"?"DOWNLOAD ONE PDF FOR SHOWN CARDS":"PRINT SHOWN CARDS (BATCHED)")+'</button>'+
+ '<a id="card-print-all" class="tt-pdf-link" href="'+PDF_BASE+'rogue-cards-all-copies.pdf">DOWNLOAD ALL COPIES · ONE PDF</a></div></div>'+
+ '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm. Download one pre-rendered A4 PDF and print it in a single operation. PRINT SHOWN CARDS uses the full PDF when no filters are active, or small batches for filtered selections. ALL COPIES contains the entire '+CATALOGUE.length+'-design collection in its physical quantities, including duplicate copies. For one playable dungeon rather than the entire library, use BUILD YOUR DECK. Every design has its own illustration.</p>'+
  '<div class="tt-grid">'+choices.map(cardMarkup).join("")+'</div></main>'+
  '<footer class="tt-footerbar"><a href="./rules.html">THE RULES</a> · <a href="./decks.html">DECK BUILDER</a> · <a href="https://github.com/tpepels/rogue_cards">SOURCE</a></footer>';
  mount.querySelector("#card-category").addEventListener("change",e=>{category=e.target.value;region="all";render()});
  if(regionsAvailable)mount.querySelector("#card-region").addEventListener("change",e=>{region=e.target.value;render()});
  mount.querySelector("#card-quantities").addEventListener("click",()=>{copies=!copies;render()});
- mount.querySelector("#card-print").addEventListener("click",()=>{window.location.href=printUrl(printed)});
- mount.querySelector("#card-print-all").addEventListener("click",()=>{
-  const all=CATALOGUE.flatMap(c=>Array.from({length:c.copies},()=>c));
-  window.location.href=printUrl(all);
+ mount.querySelector("#card-print").addEventListener("click",()=>{
+  if(category==="all"&&region==="all"){
+   window.location.href=PDF_BASE+(copies?"rogue-cards-all-copies.pdf":"rogue-cards-one-of-each.pdf");
+  }else window.location.href=printUrl(printed);
  });
 }
 render();

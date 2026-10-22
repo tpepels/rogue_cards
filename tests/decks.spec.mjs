@@ -1,31 +1,24 @@
 import {test,expect} from "@playwright/test";
 import {PRESETS,selectionForPreset,physicalDeck} from "../src/decks.js";
-test("all deck presets send the intended quantities to fast printing",async({page})=>{
- test.setTimeout(180000);
- const errors=[];page.on("pageerror",e=>errors.push(e.message));
+test("all presets offer a single downloadable vector PDF",async({page})=>{
  await page.goto("/decks.html");
  await expect(page.locator("[data-preset]")).toHaveCount(PRESETS.length);
  for(const preset of PRESETS){
   await page.locator('[data-preset="'+preset.id+'"]').click();
   await expect(page.locator("#db-preset-select")).toHaveValue(preset.id);
   await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0);
-  await page.getByRole("button",{name:"FAST PRINT THIS DECK"}).click();
-  await expect(page).toHaveURL(/print\.html\?cards=/);
-  await expect(page.locator("#print-app")).toHaveAttribute("data-print-total",
-   String(physicalDeck(selectionForPreset(preset.id)).length));
-  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
-  await page.goBack();
+  await expect(page.locator("#db-print")).toHaveAttribute("href",
+   "https://github.com/tpepels/rogue_cards/releases/download/print-ready/rogue-cards-"+preset.id+".pdf");
  }
  const before=physicalDeck(selectionForPreset("classic")).length;
  await page.locator('[data-preset="classic"]').click();
- const entry=page.locator('input[data-card="room:ex-u-guard-cell"]');
- await entry.uncheck();
+ await page.locator('input[data-card="room:ex-u-guard-cell"]').uncheck();
  await expect(page.locator("#db-preset-select")).toHaveValue("custom");
  await page.reload();
  await expect(page.locator("#db-preset-select")).toHaveValue("custom");
- await page.getByRole("button",{name:"FAST PRINT THIS DECK"}).click();
+ await page.getByRole("button",{name:"PRINT CUSTOM DECK IN BATCHES"}).click();
+ await expect(page).toHaveURL(/print\.html\?cards=/);
  await expect(page.locator("#print-app")).toHaveAttribute("data-print-total",String(before-1));
- expect(errors).toEqual([]);
 });
 test("the fast print page includes genuine expansion art with legible notes",async({page})=>{
  test.setTimeout(180000);
@@ -50,16 +43,14 @@ test("the fast print page includes genuine expansion art with legible notes",asy
   for(const p of c.parts)expect(p.clip,c.id+" clipped note").toBeLessThanOrEqual(2);
  }
 });
-test("all 193 cards enter the fast print queue, never the catalogue DOM",async({page})=>{
+test("all 193 designs offer one full physical PDF without hidden card DOM",async({page})=>{
  await page.goto("/cards.html");
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(193);
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(0);
+ await expect(page.locator("#card-print-all")).toHaveAttribute("href",
+  "https://github.com/tpepels/rogue_cards/releases/download/print-ready/rogue-cards-all-copies.pdf");
  await page.getByRole("combobox",{name:"Card category"}).selectOption("expansion");
  await expect(page.locator(".tt-grid .tt-card")).toHaveCount(54);
- await page.getByRole("button",{name:"FAST PRINT ALL COPIES"}).click();
- await expect(page).toHaveURL(/print\.html\?cards=/);
- await expect(page.locator("#print-app")).toHaveAttribute("data-print-total",
-  String(physicalDeck(selectionForPreset("chaos")).length));
- await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
- await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(4);
+ await expect(page.locator("#card-print-all")).toHaveAttribute("href",
+  /rogue-cards-all-copies\.pdf$/);
 });

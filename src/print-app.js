@@ -2,6 +2,7 @@ import {decodePrintQueue} from "./print-queue.js";
 import {printSheets} from "./tabletop-view.js";
 
 const root=document.getElementById("print-app");
+const ink='<svg class="tt-print-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id="tt-xerox-ink" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncG type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncB type="discrete" tableValues="0 .025 .10 .92 1 1"/></feComponentTransfer></filter></defs></svg>';
 const MAX_BATCH=16; // Four A4 sheets. Keep Chromium print preview responsive.
 let queue,first=0,edition=0;
 try{queue=decodePrintQueue(window.location.search);}
@@ -19,7 +20,7 @@ function display(){
  const count=Math.min(MAX_BATCH,queue.length-first);
  const batch=queue.slice(first,first+MAX_BATCH);
  const number=Math.floor(first/MAX_BATCH)+1;
- root.innerHTML=
+ root.innerHTML=ink+
  '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">QUICK PRINT · '+queue.length+' PHYSICAL CARDS</div></div><nav class="tt-nav"><a href="./cards.html">ALL CARDS</a><a href="./decks.html">DECK BUILDER</a><a href="./index.html">HOME</a></nav></div>'+
  '<main class="tt-shell tt-print-controls"><h1>Print in manageable batches</h1>'+
  '<p>Batch <strong>'+number+' of '+batchCount+'</strong> · cards '+(first+1)+'–'+(first+count)+' of '+queue.length+

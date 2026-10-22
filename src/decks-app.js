@@ -1,6 +1,7 @@
 import {PRESETS,SELECTABLE,selectionGroups,FIXED_CARDS,cardKey,selectableByKey,selectionForPreset,selectionSummary,physicalDeck} from "./decks.js";
 import {cardMarkup,esc} from "./tabletop-view.js";
 import {printUrl} from "./print-queue.js";
+const PDF_BASE="https://github.com/tpepels/rogue_cards/releases/download/print-ready/";
 const mount=document.querySelector("#deck-builder");
 const SAVE_KEY="rogue-cards-custom-paper-deck-v1";
 const ink='<svg class="tt-print-filter-defs" width="0" height="0" aria-hidden="true"><defs><filter id="tt-xerox-ink" x="-2%" y="-2%" width="104%" height="104%"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncG type="discrete" tableValues="0 .025 .10 .92 1 1"/><feFuncB type="discrete" tableValues="0 .025 .10 .92 1 1"/></feComponentTransfer></filter></defs></svg>';
@@ -63,7 +64,10 @@ function render(){
  '<section class="db-workbench" aria-label="Custom dungeon deck"><div class="db-workbench-heading"><div><h2>YOUR DUNGEON</h2><p>Choose a preset, then tick or untick any Room, Monster or Object. Your changes become a custom deck.</p></div><label class="db-which">DECK <select id="db-preset-select" aria-label="Recommended deck">'+PRESETS.map(p=>'<option value="'+p.id+'" '+(current===p.id?"selected":"")+'>'+esc(p.name)+'</option>').join("")+'<option value="custom" '+(current==="custom"?"selected":"")+'>Custom selection</option></select></label></div>'+
  '<div class="db-numbers"><div><b>'+report.counts.UPPER+' / '+report.counts.MIDDLE+' / '+report.counts.DEEP+'</b><span>ROOMS BY DEPTH</span></div><div><b>'+report.monsters.UPPER+' / '+report.monsters.MIDDLE+' / '+report.monsters.DEEP+'</b><span>MONSTER TYPES</span></div><div><b>'+report.objects+'</b><span>OBJECT TYPES</span></div><div><b>'+report.pacts+'</b><span>PACT ROOMS</span></div><div><b>'+report.copies+'</b><span>PHYSICAL CARDS</span></div></div>'+
  warnings+note+
- '<div class="db-actions"><button id="db-print" type="button" class="db-primary">FAST PRINT THIS DECK</button><button id="db-copy" type="button">COPY DECK LIST</button><span id="db-copy-status" aria-live="polite"></span></div>'+
+ '<div class="db-actions">'+(current==="custom"?
+ '<button id="db-print" type="button" class="db-primary">PRINT CUSTOM DECK IN BATCHES</button>':
+ '<a id="db-print" class="db-primary tt-pdf-link" href="'+PDF_BASE+'rogue-cards-'+current+'.pdf">DOWNLOAD THIS DECK · ONE PDF</a>')+
+ '<button id="db-copy" type="button">COPY DECK LIST</button><span id="db-copy-status" aria-live="polite"></span></div>'+
  '<div class="db-groups">'+selectionGroups.map(detail).join("")+'</div></section>'+
  '<section class="db-preview"><h2>A FEW CARDS FROM THIS DECK</h2><p>A representative preview. Printing includes <strong>every selected card</strong> and its intended copies, not just these examples. Every selected card has its own illustration, including all 54 expansion designs.</p><div class="tt-grid">'+snapshot().map(cardMarkup).join("")+'</div></section></main>'+
 
@@ -81,7 +85,7 @@ function render(){
   customize();render();window.scrollTo(0,scrollY);
  }));
  mount.querySelectorAll("details.db-group").forEach(d=>d.addEventListener("toggle",()=>{if(d.open)openGroups.add(d.dataset.group);else openGroups.delete(d.dataset.group)}));
- mount.querySelector("#db-print").addEventListener("click",()=>{window.location.href=printUrl(physicalDeck(selection))});
+ if(current==="custom")mount.querySelector("#db-print").addEventListener("click",()=>{window.location.href=printUrl(physicalDeck(selection))});
  mount.querySelector("#db-copy").addEventListener("click",async()=>{
   const names=SELECTABLE.filter(c=>selection.has(cardKey(c)));
   const text=["Rogue Cards deck - "+(PRESETS.find(p=>p.id===current)?.name||"Custom"),"8 Heroes, Vault and both Warden phases are always included.",

@@ -1382,3 +1382,10 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
  .tt-fast-print .tt-sheet{margin:0;background:white;break-after:page}
  .tt-fast-print .tt-sheet:last-child{break-after:auto}
 }
+
+/* Downloadable edition PDFs are print-once files; match the buttons visually. */
+.tt-pdf-link{display:inline-flex;align-items:center;justify-content:center;
+ border:2px solid #171510;padding:8px 11px;background:#171510;color:#fff9e9;
+ font:700 12px "Courier New",monospace;text-decoration:none;cursor:pointer}
+.tt-pdf-link:hover,.tt-pdf-link:focus-visible{background:#413629;color:#fff9e9}
+.db-actions a.db-primary{padding:11px 15px;background:#171510;color:#fff9e9}
