@@ -1,4 +1,5 @@
-import {CATALOGUE} from "./tabletop-data.js";
+import {FIXED_CARDS,SELECTABLE} from "./decks.js";
+const CATALOGUE=Object.freeze([...FIXED_CARDS,...SELECTABLE]);
 import {cardMarkup} from "./tabletop-view.js";
 import {emptyPlacements,normalizePlacements,placementCSS,PARTS,DEFAULT_LAYERS} from "./card-layouts.js";
 

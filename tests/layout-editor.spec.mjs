@@ -5,7 +5,7 @@ test("layout editor drags, resizes and exports real per-card millimetres",async(
  await page.goto("/layout-editor.html");
  const card=page.locator("#editor-card .tt-card");
  await expect(card).toHaveCount(1);
- await expect(page.locator("#card-picker option")).toHaveCount(139);
+ await expect(page.locator("#card-picker option")).toHaveCount(193);
  const rules=card.locator(".tt-slip--lead");
  await rules.click();
  await expect(page.locator("#selected-name")).toHaveText("UPPER RULES");
@@ -34,9 +34,9 @@ test("layout editor drags, resizes and exports real per-card millimetres",async(
  const name=await card.getAttribute("data-type")+":"+await card.getAttribute("data-id");
  expect(data.cards[name].rules.w).toBeGreaterThan(widthBefore);
  await page.reload();
- await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
+ await expect(page.locator("#draft-status")).toContainText("139 / 193 cards adjusted");
  await page.getByRole("button",{name:"RESTORE STARTING LAYOUT"}).click();
- await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
+ await expect(page.locator("#draft-status")).toContainText("139 / 193 cards adjusted");
 });
 test("layout editor imports a multi-card JSON and shows those placements",async({page})=>{
  await page.goto("/layout-editor.html");
@@ -49,7 +49,7 @@ test("layout editor imports a multi-card JSON and shows those placements",async(
   name:"rogue-cards-layouts.json",mimeType:"application/json",
   buffer:Buffer.from(JSON.stringify(importData))
  });
- await expect(page.locator("#draft-status")).toContainText("139 / 139 cards adjusted");
+ await expect(page.locator("#draft-status")).toContainText("139 / 193 cards adjusted");
  const actual=await page.locator("#editor-card .tt-title").evaluate(el=>getComputedStyle(el).left);
  expect(parseFloat(actual)).toBeGreaterThan(50);
  await page.locator("#family").selectOption("room");
