@@ -64,7 +64,7 @@ function render(){
  warnings+note+
  '<div class="db-actions"><button id="db-print" type="button" class="db-primary">PRINT THIS DECK</button><button id="db-copy" type="button">COPY DECK LIST</button><span id="db-copy-status" aria-live="polite"></span></div>'+
  '<div class="db-groups">'+selectionGroups.map(detail).join("")+'</div></section>'+
- '<section class="db-preview"><h2>A FEW CARDS FROM THIS DECK</h2><p>A representative preview. Printing includes <strong>every selected card</strong> and its intended copies, not just these examples. New ordinary cards are deliberately blank until their own illustrations have been generated.</p><div class="tt-grid">'+snapshot().map(cardMarkup).join("")+'</div></section></main>'+
+ '<section class="db-preview"><h2>A FEW CARDS FROM THIS DECK</h2><p>A representative preview. Printing includes <strong>every selected card</strong> and its intended copies, not just these examples. Every selected card has its own illustration, including all 54 expansion designs.</p><div class="tt-grid">'+snapshot().map(cardMarkup).join("")+'</div></section></main>'+
  '<div class="tt-print-only" aria-hidden="true">'+printSheets(physicalDeck(selection))+'</div>'+
  '<footer class="tt-footerbar"><a href="./index.html">CARD CATALOGUE</a> · <a href="./rules.html">THE RULEBOOK</a> · <a href="https://github.com/tpepels/rogue_cards">SOURCE</a></footer>';
  mount.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>selectPreset(b.dataset.preset)));

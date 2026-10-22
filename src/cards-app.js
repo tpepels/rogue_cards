@@ -7,7 +7,7 @@ const options=[
  ["all","All cards"],["hero","Heroes"],["room","Rooms"],["monster","Monsters"],
  ["TOOL","Tools"],["EQUIPMENT","Weapons & Armour"],["COMPANION","Companions"],
  ["RELIC","Relics"],["SCROLL","Scrolls"],["RING","Rings"],["WAND","Wands"],["POTION","Potions"],
- ["expansion","24 new cards"]
+ ["expansion","54 expansion cards"]
 ];
 let category="all",region="all",copies=false;
 const isCategory=c=>category==="all"||
@@ -24,7 +24,7 @@ function render(){
  '<nav class="tt-nav" aria-label="Main links"><a href="./index.html">HOME</a><a href="./rules.html">RULES & DECK RECIPES</a><a href="./decks.html">BUILD YOUR DECK</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
  '<main class="tt-shell"><section class="rc-intro"><h1>Every card, ready to print.</h1>'+
  '<p>All '+CATALOGUE.length+' printable designs, including '+ALL_ROOMS.length+' regional Rooms, '+ALL_OBJECTS.length+' Objects and all Heroes, Monsters and Warden phases. No card is hidden inside a deck preset.</p>'+
- '<p class="rc-subline">24 NEW ORDINARY DUNGEON CARDS · ORIGINAL UNUSUAL CARDS PRESERVED</p>'+
+ '<p class="rc-subline">54 EXPANSION CARDS · ALL WITH THEIR OWN ILLUSTRATIONS</p>'+
  '<div class="tt-links"><a href="./rules.html">RULES & THREE RECOMMENDED DECKS ↗</a><a href="./decks.html">ASSEMBLE A CUSTOM DECK ↗</a></div></section>'+
  '<div id="cards" class="tt-toolbar"><h2>ALL PRINTABLE CARDS <small class="rc-count">'+choices.length+' designs · '+printed.length+' sheets-ready cards</small></h2>'+
  '<div class="tt-toolbar-controls rc-controls">'+
@@ -33,7 +33,7 @@ function render(){
  '<button id="card-quantities" type="button" aria-pressed="'+copies+'">'+(copies?"FULL PRINT QUANTITIES":"ONE OF EACH")+'</button>'+
  '<button id="card-print" type="button">PRINT SHOWN CARDS</button>'+
  '<button id="card-print-all" type="button">PRINT ALL COPIES</button></div></div>'+
- '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm, edge-to-edge with no gaps. Cut around the outer block, then once vertically and once horizontally. PRINT SHOWN CARDS respects your filters; PRINT ALL COPIES prints the entire '+CATALOGUE.length+'-design collection at physical quantities. This is the complete card library, not a recommended deck. See the rules appendix for deck recipes. New cards without their own generated illustrations show blank paper (no borrowed artwork).</p>'+
+ '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm, edge-to-edge with no gaps. Cut around the outer block, then once vertically and once horizontally. PRINT SHOWN CARDS respects your filters; PRINT ALL COPIES prints the entire '+CATALOGUE.length+'-design collection at physical quantities. This is the complete card library, not a recommended deck. See the rules appendix for deck recipes. Every design uses its own illustration; no borrowed or placeholder artwork.</p>'+
  '<div class="tt-grid">'+choices.map(cardMarkup).join("")+'</div></main>'+
  '<footer class="tt-footerbar"><a href="./rules.html">THE RULES</a> · <a href="./decks.html">DECK BUILDER</a> · <a href="https://github.com/tpepels/rogue_cards">SOURCE</a></footer>'+
  '<div class="tt-print-only" aria-hidden="true">'+printSheets(printed)+'</div>';

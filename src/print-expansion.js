@@ -77,10 +77,9 @@ export const PRINT_ONLY_ROOMS=Object.freeze(R.map((row,i)=>{
 export const PRINT_ONLY_ITEMS=Object.freeze(O.map((row,i)=>Object.freeze({...item(...row),v2:{...item(...row).v2,number:155+i}})));
 export const PRINT_ONLY_CARDS=Object.freeze([...PRINT_ONLY_ROOMS,...PRINT_ONLY_ITEMS]);
 
-// Dedicated artwork for the 24 added Rooms and Items (numbers 140-163).
-// The new regional Monsters (164-175) and unusual Items (176-193) acquire
-// individual entries here only after their PNGs have been saved successfully.
-// Until then, their printable card faces deliberately show a blank image area.
+// All 54 expansion designs (140-193) have dedicated artwork.
+// Keep these assignments one-to-one: editorial-consistency.test.mjs
+// verifies every PNG is present, matches its card title, and prints.
 export const PRINT_ONLY_ART=Object.freeze({
  "room:ex-u-guard-cell":"140_empty_guard_cell.png",
  "room:ex-u-slick-passage":"141_slick_passage.png",

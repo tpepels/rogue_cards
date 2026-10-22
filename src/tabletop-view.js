@@ -180,9 +180,8 @@ export function printPlate(card){
  for(const char of key)hash=Math.imul(hash^char.charCodeAt(0),16777619)>>>0;
  return ["a","b","c","d"][hash%4];
 }
-// Print-only aliases are planning metadata, not permission to display reused art.
-// Only an illustration whose filename matches THIS card's title can be shown.
-// The generator writes that named PNG and changes PRINT_ONLY_ART when finished.
+// Print-only artwork is now complete for all 54 expansion designs.
+// Keep the title/filename guard to prevent accidentally showing another card's art.
 const artSlug=title=>String(title).normalize("NFKD").toLowerCase()
  .replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
 export const assetPath=card=>{

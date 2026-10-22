@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync,existsSync} from "node:fs";
 import {FIXED_CARDS,SELECTABLE,cardKey} from "../src/decks.js";
-import {cardMarkup,ruleMarkup} from "../src/tabletop-view.js";
+import {cardMarkup,ruleMarkup,assetPath} from "../src/tabletop-view.js";
 import {HEROES,MONSTERS,WARDEN} from "../src/tabletop-data.js";
 
 const rulebook=readFileSync(new URL("../rules.html",import.meta.url),"utf8");
@@ -42,6 +42,29 @@ test("every one of the 193 printable card designs has complete printed effects",
  }
  assert.deepEqual(failures,[]);
 });
+
+test("all 193 designs have distinct, matching, present illustrations",()=>{
+ const assigned=new Set();
+ const expectedSlug=title=>title.normalize("NFKD").toLowerCase()
+  .replace(/[\u0300-\u036f]/g,"")
+  .replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+ for(const card of cards){
+  const asset=assetPath(card);
+  assert.ok(asset,"Missing art assignment for "+cardKey(card));
+  const file=asset.split("/").at(-1);
+  assert.match(file,new RegExp("^\\d{3}_"+expectedSlug(card.title)+"\\.png$"),
+   "Wrong card illustration for "+cardKey(card));
+  assert.ok(existsSync(new URL("../"+asset.slice(2),import.meta.url)),
+   "Assigned art file does not exist: "+asset);
+  assert.ok(!assigned.has(asset),"Illustration reused across cards: "+asset);
+  assigned.add(asset);
+  const printed=cardMarkup(card);
+  assert.ok(printed.includes('src="'+asset+'"'),"Image absent from print markup: "+cardKey(card));
+  assert.ok(!printed.includes('aria-label="Illustration pending"'),"Unexpected empty art: "+cardKey(card));
+ }
+ assert.equal(assigned.size,193);
+});
+
 test("tutorial uses canonical stats and never teaches rolled DEF or obsolete choices",()=>{
  const warrior=HEROES.find(c=>c.id==="warrior");
  const rat=MONSTERS.find(c=>c.id==="rat");
