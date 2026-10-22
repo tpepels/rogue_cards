@@ -124,7 +124,7 @@ button,a{touch-action:manipulation}button:focus-visible,a:focus-visible{outline:
   <div><div class="tut-kicker">The physical game · a guided sample expedition</div>
    <h1>Your first trip into the dungeon</h1>
    <p>Follow the cards across the table, one decision at a time. Every illustrated card below is a real Rogue Cards card, pulled from the same source and artwork as the print kit. Example draws and die results are chosen to show how play works.</p>
-  </div><aside class="tut-meta">1–2 HEROES<br>9 ROOMS + THE VAULT<br>d20 TO FIGHT · d6 ON CARDS</aside>
+  </div><aside class="tut-meta">1–2 HEROES<br>SHORTENED EXAMPLE + VAULT<br>d20 TO FIGHT · d6 ON CARDS</aside>
  </section>
  <div class="tut-section-head"><h2>Follow a sample run</h2><span>SELECT A STEP TO CHANGE THE TABLE</span></div>
  <nav class="tut-steps" aria-label="Tutorial steps" id="tutorial-steps"></nav>
@@ -152,35 +152,40 @@ import {CATALOGUE, HEROES, ROOMS, MONSTERS, ITEMS, VAULT, WARDEN} from "./src/ta
 import {cardMarkup} from "./src/tabletop-view.js";
 const byCard=(type,id)=>CATALOGUE.find(c=>c.type===type&&c.id===id);
 const stageLabels=["Set up","First Room","Choose & roll","Meet a Monster","Fight","Move deeper","The Vault"];
+// Values come from the printable cards; sample dice are illustrative.
+const warrior=byCard("hero","warrior"),rat=byCard("monster","rat");
+const sword=byCard("item","sword"),warden=byCard("monster","warden");
+const swordBonus=2,warriorAtk=warrior.atk+swordBonus;
+const warriorAc=12+warrior.def,ratAc=12+rat.def;
 const samples=[
- {title:"Prepare the table",tag:"01 / SET UP",room:null,monster:null,progress:0,hp:20,
-  explain:"Choose a Hero. Our example is the <strong>Veteran Warrior</strong> (20 HP, +5 ATK, +3 DEF, +2 WIT). Take the printed starting Object, <strong>Notched Sword</strong>, then draw one random Object. This sample draw is <strong>Knotted Rope</strong>.",
-  action:"Shuffle <strong>UPPER, MIDDLE and DEEP Rooms</strong> into three separate face-down piles. Make three matching Monster piles. Shuffle the remaining Items and Potions into one <strong>Object deck</strong>. Set the Amulet Vault and both Warden phase cards aside. Set a dedicated d20 to 20 on the Hero. For two players, each chooses a Hero and does the same.",
-  example:"READY: Hero d20 = 20 HP. Starting Sword equipped. Random Object carried."},
- {title:"Reveal the first Room",tag:"02 / EXPLORE",room:"u-passage",monster:null,progress:1,hp:20,
-  explain:"Take one card from the <strong>UPPER Room pile</strong>. In this sample it is <strong>Dripping Passage</strong>. Read its entry line and the two printed options. The Room remains in the middle of the table while it is being resolved.",
-  action:"Do what the Room says on entry. Then choose <strong>one</strong> of its printed options as a party. Here the choices are <strong>LISTEN</strong> (roll d6) or <strong>BREAK IT</strong> (lose 2 HP and draw 1 Item). We choose LISTEN.",
-  example:"ROOM 1 OF 9 · UPPER<br>DRIPPING PASSAGE → LISTEN"},
- {title:"Follow the printed d6 range",tag:"03 / ROOM RESULT",room:"u-passage",monster:null,progress:1,hp:20,key:true,
-  explain:"The Dripping Passage card lists the result of LISTEN. We roll a <strong>5</strong>. Its printed <strong>5</strong> result says <strong>Draw 1 Item</strong>. There is no universal loot table: follow this particular card.",
-  action:"Draw the top card of the shared Object deck and keep it in your inventory. Our sample draw is <strong>Rusty Key</strong>. Finish any outstanding Room effects, then discard the Room unless a card explicitly says KEEP it. Once-per-Room abilities reset between Rooms.",
-  example:"<span class='tut-dice-label'>ROOM d6 = 5</span> → DRAW 1 ITEM<br>Example draw: RUSTY KEY"},
- {title:"A Room can bring a Monster",tag:"04 / ENCOUNTER",room:"u-nest",monster:"rat",progress:2,hp:20,key:true,
-  explain:"The next example Room is <strong>Rat Nest</strong>. Its entry text says <strong>Draw an UPPER Monster</strong>. Our sample draw is <strong>Giant Rat</strong> (6 HP, +2 ATK, +1 DEF). Place it by the Room with its own HP d20 at 6.",
-  action:"Choose a Room option: Rat Nest offers <strong>SOOTHE</strong> or <strong>FIGHT</strong>. We choose FIGHT. You can also consider the Monster's printed <strong>PARLEY</strong> option instead of fighting when permitted. With FIGHT, Rat Nest promises an Item <strong>after victory</strong>.",
-  example:"ROOM 2 OF 9 · UPPER<br>RAT NEST → DRAW UPPER MONSTER → FIGHT"},
- {title:"Take a combat turn",tag:"05 / OPPOSED ROLLS",room:"u-nest",monster:"rat",progress:2,hp:18,monsterHp:2,key:true,
-  explain:"The Warrior attacks with a fresh <strong>d20 + 5 ATK + 2 from Notched Sword</strong>. The Rat defends with a separate <strong>d20 + 1 DEF</strong>. A higher attacker total hits; ties defend. Roll <strong>d6 damage</strong> on a hit. A natural attack 1 misses; a natural 20 hits and adds d6 damage.",
-  action:"Sample: Warrior rolls <strong>12 + 7 = 19</strong>; Rat rolls <strong>9 + 1 = 10</strong>. Hit. Damage d6 is <strong>4</strong>: Rat HP 6 → 2. It survived the Hero turn, so roll its <strong>behaviour d6</strong>. A 3 gives Bite: ATTACK. Rat rolls 14 + 2 = 16 against Warrior's 10 + 3 = 13, then deals 2 damage: Warrior HP 20 → 18.",
-  example:"<span class='tut-dice-label'>HIT:</span> 12 + 5 + 2 = 19 &gt; 9 + 1 = 10<br>d6 DAMAGE = 4 → RAT 6 → 2 HP<br><span class='tut-dice-label'>RAT d6 = 3:</span> BITE → HERO 20 → 18 HP"},
- {title:"Win, collect, descend",tag:"06 / AFTER COMBAT",room:"u-nest",monster:null,progress:2,hp:18,key:true,torch:true,
-  explain:"On a later attack the Warrior hits again and rolls <strong>3 damage</strong>, taking the Rat from 2 to 0 HP. Remove the Rat's HP die and card. Because you picked Rat Nest's FIGHT option, now take its printed victory reward: <strong>draw 1 Item</strong>. Our sample reward is Pitch Torch.",
-  action:"You may also resolve <strong>EAT</strong> from a defeated Monster's printed remains once, if you want the risk. Finish the Room; discard it unless instructed otherwise. Move on to the next Room. This short tutorial shows 3 Rooms per depth. In Everything Goes, play <strong>12 UPPER, then 12 MIDDLE, then 12 DEEP non-Corridor Rooms</strong>.",
-  example:"RAT 2 → 0 HP · REMOVE MONSTER<br>RAT NEST FIGHT REWARD → DRAW 1 ITEM<br>3 UPPER → 3 MIDDLE → 3 DEEP"},
- {title:"Enter the Amulet Vault",tag:"07 / THE FINALE",room:"vault",monster:"warden",progress:10,hp:null,key:true,torch:true,final:true,
-  explain:"In this shortened tutorial, after nine regional Rooms, reveal <strong>The Amulet Vault</strong>. Roll its printed <strong>OMEN d6</strong> and choose <strong>FIGHT</strong> or a one-time <strong>SEAL</strong>. The Warden starts at 20 HP. At 10 HP or fewer, replace its Phase I card with <strong>Warden Unbound</strong> (Phase II), keeping the same HP counter.",
-  action:"To SEAL, discard <strong>3 MAGIC Items solo</strong> or <strong>6 with two Heroes</strong>, then follow the Vault's opposed WIT roll. A successful SEAL wins; a failed attempt starts the printed fight. Defeat Phase II to win by combat. If no Hero can act, the expedition is lost.",
-  example:"OMEN d6 → FIGHT OR SEAL<br>WARDEN: 20 HP → PHASE II AT 10 HP<br>DEFEAT OR SUCCESSFULLY SEAL TO WIN"}
+ {title:"Prepare the table",tag:"01 / SET UP",room:null,monster:null,progress:0,hp:warrior.hp,
+  explain:`Choose Veteran Warrior (HP ${warrior.hp}, ATK ${warrior.atk}, DEF ${warrior.def}, WIT ${warrior.wit}). His printed starting Item is <strong>${sword.title}</strong>, which adds +2 ATK while equipped. Draw one additional random Object. Our sample draw is <strong>Knotted Rope</strong>.`,
+  action:"Shuffle UPPER, MIDDLE and DEEP Rooms separately, plus their three Monster piles. Shuffle the remaining Items and Potions into a shared Object pile. Set the Amulet Vault and both Warden cards aside. Place a d20 beside each Hero to show remaining HP. Do not roll the HP counter.",
+  example:`HERO HP COUNTER: ${warrior.hp} · SWORD EQUIPPED · ROPE CARRIED`},
+ {title:"Reveal the first Room",tag:"02 / EXPLORE",room:"u-passage",monster:null,progress:1,hp:warrior.hp,
+  explain:"The first Room is Dripping Passage. Read its introductory text and the two printed Room choices. Do anything marked On entry before choosing.",
+  action:"The choices are <strong>LISTEN</strong> (roll d6) or <strong>PRY GRATE</strong> (lose 2 HP and draw 1 Item; Rusty Key reduces the damage). We choose LISTEN. There is no additional, unprinted 'BREAK IT' choice.",
+  example:"UPPER ROOM · DRIPPING PASSAGE → LISTEN"},
+ {title:"Follow the printed d6 range",tag:"03 / ROOM RESULT",room:"u-passage",monster:null,progress:1,hp:warrior.hp,key:true,
+  explain:"Roll a six-sided die (d6) for LISTEN. The result 5 is printed on the Room: <strong>Draw 1 Item</strong>. It is not an attack and uses no d20.",
+  action:"Draw one Object from the shared deck. In this sample it is Rusty Key. Finish the Room and discard it unless the card says KEEP. Once-per-Room abilities reset when you enter a new Room.",
+  example:"ROOM d6 = 5 → DRAW 1 ITEM (RUSTY KEY)"},
+ {title:"A Room can bring a Monster",tag:"04 / ENCOUNTER",room:"u-nest",monster:"rat",progress:2,hp:warrior.hp,key:true,
+  explain:`Rat Nest says <strong>On entry: Draw an UPPER Monster</strong>. This sample draws Giant Rat: HP ${rat.hp}, ATK ${rat.atk}, DEF ${rat.def}; its fixed AC is ${ratAc}. Put a separate HP counter beside it.`,
+  action:"Choose the Room option <strong>SOOTHE</strong> or <strong>DISTURB</strong>. We choose SOOTHE, roll 3 and read ‘The rats scatter.’ The separately drawn Monster is still active. Try its printed PARLEY (FEED: discard 1 Item) or fight. We choose to fight.",
+  example:"RAT NEST: SOOTHE d6 = 3 · ENTRY GIANT RAT → FIGHT"},
+ {title:"Take a combat turn",tag:"05 / FIXED AC",room:"u-nest",monster:"rat",progress:2,hp:warrior.hp-2,monsterHp:rat.hp-1,key:true,
+  explain:`An attack rolls <strong>one d20 + ATK</strong> versus the target's fixed <strong>AC = 12 + DEF</strong>. The defender does not roll. The Warrior has ATK ${warrior.atk} plus ${swordBonus} from the Sword, total ${warriorAtk}; the Rat's AC is ${ratAc}. Equal or higher hits, then roll d6 damage.`,
+  action:`Warrior attacks: d20 10 + ${warriorAtk} = ${(10+warriorAtk)}, hitting Rat AC ${ratAc}. Damage is 1: Rat HP ${rat.hp} → ${(rat.hp-1)}. Rat survives and its behaviour d6 is 3: BITE, an attack. Rat rolls 15 + ${rat.atk} = ${(15+rat.atk)} against Warrior AC ${warriorAc}; damage is 2, so Warrior HP ${warrior.hp} → ${(warrior.hp-2)}.`,
+  example:`HERO 10 + ${warriorAtk} = ${(10+warriorAtk)} vs AC ${ratAc} · RAT -1 HP<br>RAT BEHAVIOUR 3: 15 + ${rat.atk} = ${(15+rat.atk)} vs AC ${warriorAc} · HERO -2 HP`},
+ {title:"Win, recover, move on",tag:"06 / AFTER COMBAT",room:"u-nest",monster:null,progress:2,hp:warrior.hp,key:true,torch:false,
+  explain:`Next turn the Warrior attacks again: 12 + ${warriorAtk} = ${(12+warriorAtk)}, hitting the Rat for 2 damage. Its HP goes from ${(rat.hp-1)} to 0. The defeated Rat cannot respond. Its optional REMAINS offers EAT; its printed DEFEAT reward heals 2 HP, restoring Warrior HP ${(warrior.hp-2)} → ${warrior.hp}.`,
+  action:"Resolve up to one REMAINS choice, then the printed DEFEAT effect. There is no generic Item reward. SOOTHE did not promise a victory Item, so none is awarded. This seven-step tutorial fast-forwards past most Rooms to demonstrate the finale; it is not a separate nine-Room ruleset.",
+  example:`RAT ${(rat.hp-1)} → 0 · DEFEAT HEALS 2 · WARRIOR HP ${warrior.hp}`},
+ {title:"Enter the Amulet Vault",tag:"07 / THE FINALE",room:"vault",monster:"warden",progress:10,hp:null,key:true,torch:false,final:true,
+  explain:`After completing the proper number of Rooms in each depth, reach the Amulet Vault. Roll OMEN d6 and choose FIGHT or SEAL. Warden Phase I begins at <strong>${warden.hp} HP</strong>. When it reaches <strong>8 HP or fewer</strong>, switch to Phase II without resetting remaining HP.`,
+  action:"To SEAL, discard 3 MAGIC Items solo or 6 with two Heroes, then roll the Vault's opposed WIT test. Success claims the Amulet; failure forces a fight. Defeating the Warden also wins. You do not need to retrace your steps: at least one living Hero claiming the Amulet ends the game.",
+  example:`WARDEN ${warden.hp} HP · PHASE II AT 8 HP · CLAIM AMULET TO WIN`}
 ];
 let step=0;
 const stepsNode=document.getElementById("tutorial-steps");
