@@ -48,6 +48,20 @@ try{
   },{timeout:90000});
   const count=await page.locator(".tt-print-only .tt-card").count();
   if(count!==1)throw Error("Expected one source card for "+n+", got "+count);
+  // Compress *only* the illustration to print-quality JPEG before creating
+  // the PDF. Keep all rule text, labels and line work as true PDF vectors.
+  // Around 1000 px at 90 mm is ~280 dpi: no low-resolution card printing.
+  await page.evaluate(async()=>{
+   const img=document.querySelector(".tt-print-only .tt-art-image");
+   if(!img||!img.naturalWidth)throw Error("Illustration failed to decode");
+   const canvas=document.createElement("canvas");
+   const scale=Math.min(1,1000/img.naturalWidth);
+   canvas.width=Math.round(img.naturalWidth*scale);
+   canvas.height=Math.round(img.naturalHeight*scale);
+   canvas.getContext("2d",{alpha:false}).drawImage(img,0,0,canvas.width,canvas.height);
+   img.src=canvas.toDataURL("image/jpeg",0.90);
+   await img.decode();
+  });
   await page.pdf({path:filename,format:"A4",preferCSSPageSize:true,printBackground:true,displayHeaderFooter:false});
   if((i+1)%20===0||i===designs.length-1)console.log("Rendered",i+1,"/",designs.length,"vector cards");
  }
