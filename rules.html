@@ -50,6 +50,10 @@ strong{font-weight:900}
  /* Relaxed on-screen typography; print uses a slightly tighter but legible
     setting to keep the full explanation inside two A4 pages. */
  .sheet .mast{margin-bottom:3mm;padding-bottom:3mm}
+ /* Page one grew when the novice procedures were clarified: recover
+    blank space at the masthead/lede, not the legible body font size. */
+ .sheet:first-of-type .mast{margin-bottom:1.8mm;padding-bottom:2mm}
+ .sheet:first-of-type .lede{margin:2mm 0 2.7mm}
  .sheet section{margin-bottom:1.8mm}
  .sheet h2{font-size:15.5px;margin-bottom:1.5mm;padding-bottom:.8mm}
  .sheet p,.sheet li{font-size:12px;line-height:1.34;margin-bottom:1.45mm}
