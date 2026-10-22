@@ -52,6 +52,29 @@ test("one canonical gallery covers all families and prints real card sheets",asy
  }
  expect(errors).toEqual([]);
 });
+
+test("all 193 complete-edition card designs keep their printed instructions visible",async({page})=>{
+ test.setTimeout(180000);
+ await page.goto("/cards.html");
+ const gallery=page.locator(".tt-grid .tt-card");
+ await expect(gallery).toHaveCount(193);
+ const screenIssues=await gallery.evaluateAll(cards=>cards.flatMap(c=>
+  [...c.querySelectorAll(".tt-slip")].flatMap((note,i)=>{
+   const y=note.scrollHeight-note.clientHeight,x=note.scrollWidth-note.clientWidth;
+   return y>2||x>2?[{id:c.dataset.id,part:i,x,y}]:[];
+  })));
+ expect(screenIssues,"Clipped words in full 193-card catalogue").toEqual([]);
+ await page.emulateMedia({media:"print"});
+ const printed=page.locator(".tt-print-only .tt-card");
+ await expect(printed).toHaveCount(193);
+ const printIssues=await printed.evaluateAll(cards=>cards.flatMap(c=>
+  [...c.querySelectorAll(".tt-slip")].flatMap((note,i)=>{
+   const y=note.scrollHeight-note.clientHeight,x=note.scrollWidth-note.clientWidth;
+   return y>2||x>2?[{id:c.dataset.id,part:i,x,y}]:[];
+  })));
+ expect(printIssues,"Clipped words in 90 × 130 mm printed cards").toEqual([]);
+});
+
 test("core rules and two deck appendix pages print as four A4 sheets without clipped content",async({page})=>{
  await page.goto("/rules.html");
  await expect(page.getByRole("heading",{name:"ROGUE CARDS"})).toBeVisible();
