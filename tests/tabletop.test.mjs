@@ -5,7 +5,7 @@ import {HEROES,ROOMS,MONSTERS,ITEMS,POTIONS,OBJECTS,VAULT,WARDEN,WARDEN_FURY,PRI
 import {cardMarkup,printSheets,CARDS_PER_SHEET,CARD_ART,assetPath,composition,esc} from "../src/tabletop-view.js";
 const faces=range=>{const [a,b=a]=range.split("–").map(Number);assert.ok(a>=1&&b<=6&&Number.isInteger(a)&&Number.isInteger(b));return Array.from({length:b-a+1},(_,i)=>a+i)};
 const dice=table=>{assert.ok([3,4].includes(table.outcomes.length));const facesFound=table.outcomes.flatMap(r=>{assert.ok(r.effect);return faces(r.range)});assert.deepEqual(facesFound.sort(),[1,2,3,4,5,6])};
-test("exactly one complete canonical physical edition",()=>{
+test("the 139-card executable core has internally complete data",()=>{
  assert.equal(HEROES.length,8);assert.equal(ROOMS.length,64);assert.equal(MONSTERS.length,12);
  assert.equal(ITEMS.length,44);assert.equal(POTIONS.length,8);assert.equal(OBJECTS.length,52);
  assert.equal(CATALOGUE.length,8+64+1+12+2+52);

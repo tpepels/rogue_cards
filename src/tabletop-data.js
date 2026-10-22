@@ -1,4 +1,6 @@
-// Rogue Cards — the ONE canonical physical edition. No legacy card catalogue.
+// Engine-backed core subset (139 card designs). The full 193-card printable
+// catalogue, including the 54 expansion designs, is composed in decks.js.
+// Public gallery pages must import FIXED_CARDS + SELECTABLE from decks.js.
 import {HEROES} from "./heroes.js";
 import {V2_ROOMS as ROOMS,V2_REGIONS as roomRegions} from "./rooms.js";
 import {V2_ITEMS as ITEMS,V2_POTIONS as POTIONS,V2_OBJECTS as OBJECTS,V2_OBJECTS_BY_FAMILY as OBJECTS_BY_FAMILY} from "./objects.js";
