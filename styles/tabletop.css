@@ -1365,3 +1365,20 @@ body{margin:0}button,select{font:inherit}a{color:inherit}
 .tt-card .tt-mechanic--stat{font-weight:900}
 .tt-card .tt-mechanic--condition,
 .tt-card .tt-mechanic--keyword{font-weight:900}
+
+/* Lightweight print route: show only the current 16-card batch on screen.
+   All source gallery pages deliberately have no hidden print sheets. */
+.tt-fast-print .tt-print-only{display:block;margin:12px auto 35px;max-width:194mm}
+.tt-fast-print .tt-sheet{display:grid;grid-template-columns:repeat(2,90mm);grid-template-rows:repeat(2,130mm);
+ gap:0;justify-content:center;align-content:center;width:194mm;height:280mm;
+ margin:0 auto 14px;background:white}
+.tt-fast-print .tt-print-controls{max-width:1000px;margin:0 auto}
+.tt-fast-print .tt-print-controls p{line-height:1.5}
+.tt-fast-print .tt-print-controls button{border:2px solid #171510;padding:10px 14px;background:#fffdfa;
+ font:700 12px "Courier New",monospace;cursor:pointer}
+.tt-fast-print .tt-print-controls button:disabled{cursor:default;opacity:.5}
+@media print{
+ .tt-fast-print .tt-print-only{margin:0;max-width:none}
+ .tt-fast-print .tt-sheet{margin:0;background:white;break-after:page}
+ .tt-fast-print .tt-sheet:last-child{break-after:auto}
+}

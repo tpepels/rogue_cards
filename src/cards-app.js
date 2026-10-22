@@ -1,5 +1,6 @@
 import {FIXED_CARDS,SELECTABLE,ALL_ROOMS,ALL_MONSTERS,ALL_OBJECTS} from "./decks.js";
-import {cardMarkup,printSheets,esc} from "./tabletop-view.js";
+import {cardMarkup,esc} from "./tabletop-view.js";
+import {printUrl} from "./print-queue.js";
 const mount=document.getElementById("all-cards")||document.getElementById("tabletop-app");
 const home=mount?.id==="tabletop-app";
 const CATALOGUE=Object.freeze([...FIXED_CARDS,...SELECTABLE]);
@@ -33,18 +34,18 @@ function render(){
  '<label for="card-category">TYPE <select id="card-category" aria-label="Card category">'+options.map(([key,name])=>'<option value="'+key+'"'+(key===category?" selected":"")+'>'+name+'</option>').join("")+'</select></label>'+
  (regionsAvailable?'<label for="card-region">DEPTH <select id="card-region" aria-label="Dungeon depth">'+regions.map(key=>'<option value="'+key+'"'+(key===region?" selected":"")+'>'+key+'</option>').join("")+'</select></label>':"")+
  '<button id="card-quantities" type="button" aria-pressed="'+copies+'">'+(copies?"FULL PRINT QUANTITIES":"ONE OF EACH")+'</button>'+
- '<button id="card-print" type="button">PRINT SHOWN CARDS</button>'+
- '<button id="card-print-all" type="button">PRINT ALL COPIES</button></div></div>'+
- '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm. PRINT SHOWN CARDS respects your filters; PRINT ALL COPIES prints the entire '+CATALOGUE.length+'-design collection in its physical quantities, including duplicate copies. For one playable dungeon rather than the entire library, use BUILD YOUR DECK. Every design has its own illustration.</p>'+
+ '<button id="card-print" type="button">FAST PRINT SHOWN CARDS</button>'+
+ '<button id="card-print-all" type="button">FAST PRINT ALL COPIES</button></div></div>'+
+ '<p class="rc-note">A4 · 100% scale · background graphics ON · 4 cards per sheet at 90 × 130 mm. Print opens a separate, lightweight batch preview (16 cards at a time). FAST PRINT SHOWN CARDS respects your filters; FAST PRINT ALL COPIES prepares the entire '+CATALOGUE.length+'-design collection in its physical quantities, including duplicate copies. For one playable dungeon rather than the entire library, use BUILD YOUR DECK. Every design has its own illustration.</p>'+
  '<div class="tt-grid">'+choices.map(cardMarkup).join("")+'</div></main>'+
- '<footer class="tt-footerbar"><a href="./rules.html">THE RULES</a> · <a href="./decks.html">DECK BUILDER</a> · <a href="https://github.com/tpepels/rogue_cards">SOURCE</a></footer>'+
- '<div class="tt-print-only" aria-hidden="true">'+printSheets(printed)+'</div>';
+ '<footer class="tt-footerbar"><a href="./rules.html">THE RULES</a> · <a href="./decks.html">DECK BUILDER</a> · <a href="https://github.com/tpepels/rogue_cards">SOURCE</a></footer>';
  mount.querySelector("#card-category").addEventListener("change",e=>{category=e.target.value;region="all";render()});
  if(regionsAvailable)mount.querySelector("#card-region").addEventListener("change",e=>{region=e.target.value;render()});
  mount.querySelector("#card-quantities").addEventListener("click",()=>{copies=!copies;render()});
- mount.querySelector("#card-print").addEventListener("click",()=>window.print());
+ mount.querySelector("#card-print").addEventListener("click",()=>{window.location.href=printUrl(printed)});
  mount.querySelector("#card-print-all").addEventListener("click",()=>{
-  category="all";region="all";copies=true;render();window.print();
+  const all=CATALOGUE.flatMap(c=>Array.from({length:c.copies},()=>c));
+  window.location.href=printUrl(all);
  });
 }
 render();
