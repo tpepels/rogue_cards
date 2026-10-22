@@ -1,0 +1,66 @@
+name: Publish complete single-print PDFs
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-print-pdfs.yml"
+      - "scripts/build-print-pdfs.mjs"
+      - "scripts/compose-print-pdfs.py"
+      - "src/decks.js"
+      - "src/tabletop-data.js"
+      - "src/print-expansion.js"
+      - "src/monster-expansion.js"
+      - "src/item-expansion.js"
+      - "src/tabletop-view.js"
+      - "src/print-queue.js"
+      - "src/print-app.js"
+      - "print.html"
+      - "styles/**"
+      - "assets/illustrations/**"
+      - "data/card-placements.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: complete-print-pdfs
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF compositor and Chromium
+        run: |
+          npm install --no-audit --no-fund
+          python -m pip install --disable-pip-version-check pymupdf==1.26.5
+          npx playwright install --with-deps chromium
+      - name: Generate full physical edition and recommended deck PDFs
+        run: node scripts/build-print-pdfs.mjs dist/print-pdfs
+      - name: Upload full A4 print files for verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogue-cards-all-in-one-pdfs
+          path: dist/print-pdfs/
+          retention-days: 30
+      - name: Publish stable one-file downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view print-ready >/dev/null 2>&1; then
+            gh release create print-ready --title "Rogue Cards · Print-ready PDFs" \
+              --notes "Pre-rendered A4 PDFs. 90 × 130 mm cards, four per sheet; vector text and complete illustrations. Includes all physical copies and the recommended decks." \
+              --target "${GITHUB_SHA}" --latest=false
+          fi
+          gh release upload print-ready dist/print-pdfs/*.pdf dist/print-pdfs/manifest.json --clobber
+          gh release view print-ready --json assets --jq '.assets[].name'
