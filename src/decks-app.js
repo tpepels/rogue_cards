@@ -66,7 +66,7 @@ function render(){
  warnings+note+
  '<div class="db-actions">'+(current==="custom"?
  '<button id="db-print" type="button" class="db-primary">PRINT CUSTOM DECK IN BATCHES</button>':
- '<a id="db-print" class="db-primary tt-pdf-link" href="'+PDF_BASE+'rogue-cards-'+current+'.pdf">DOWNLOAD THIS DECK · ONE PDF</a>')+
+ '<a id="db-print" class="db-primary tt-pdf-link" href="'+PDF_BASE+'rogue-cards-'+(current==="chaos"?"all-copies":current)+'.pdf">DOWNLOAD THIS DECK · ONE PDF</a>')+
  '<button id="db-copy" type="button">COPY DECK LIST</button><span id="db-copy-status" aria-live="polite"></span></div>'+
  '<div class="db-groups">'+selectionGroups.map(detail).join("")+'</div></section>'+
  '<section class="db-preview"><h2>A FEW CARDS FROM THIS DECK</h2><p>A representative preview. Printing includes <strong>every selected card</strong> and its intended copies, not just these examples. Every selected card has its own illustration, including all 54 expansion designs.</p><div class="tt-grid">'+snapshot().map(cardMarkup).join("")+'</div></section></main>'+
