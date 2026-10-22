@@ -105,8 +105,8 @@ strong{font-weight:900}
 <p class="lede">You are adventurers exploring a strange dungeon. Every Room might contain a Monster, treasure, a trap or something much stranger. You cannot predict what comes next, but you can decide which risks to take and which Items to save.</p>
 <div class="cols"><div>
 <section><h2>1. Your quest</h2>
-<p>Your goal is to descend through the dungeon, reach the <strong>Amulet Vault</strong> and escape with the Amulet. You win when you claim the Amulet and at least one Hero survives. If everyone is defeated, the expedition ends in failure.</p>
-<p>In <strong>Everything Goes</strong>, resolve <strong>12 UPPER, 12 MIDDLE and 12 DEEP non-Corridor Rooms</strong> before reaching the Vault. Corridors add extra visits without counting toward the twelve. Trapdoors can shorten the route.</p></section>
+<p>Your goal is to descend through the dungeon, reach the <strong>Amulet Vault</strong> and claim the Amulet. There is no return journey. You win when you claim the Amulet and at least one Hero survives. If everyone is defeated, the expedition ends in failure.</p>
+<p>In <strong>Everything Goes</strong> and <strong>Balanced Crawl</strong>, complete <strong>12 non-Corridor Rooms per depth</strong> before the Vault; Corridors add visits but do not count. With <strong>Classic Crawl</strong> or <strong>Strange Paths</strong>, play through each selected depth's Room pile once before descending. A trapdoor may send you deeper early. Unvisited Rooms from a previous depth are left behind.</p></section>
 <section><h2>2. What you need</h2>
 <ul>
 <li>One Hero card per player (play alone or with two Heroes).</li>
@@ -124,7 +124,7 @@ strong{font-weight:900}
 <li><strong>DEF</strong> - Defence: how well the Hero avoids being hit.</li>
 <li><strong>WIT</strong> - Wits: how well the Hero handles tricks, negotiations, magic and other challenges.</li>
 </ul>
-<p>When you lose HP, lower your health die. Healing raises it again, but never above your starting HP. At <strong>0 HP</strong>, remove the die: that Hero cannot act unless another Hero heals them before the expedition moves on.</p></section>
+<p>When you lose HP, lower your health die. Healing raises it again, but never above your starting HP. At <strong>0 HP</strong>, that Hero is down and cannot act. A living ally can heal them before leaving the Room. If all Heroes are down, the expedition ends.</p></section>
 </div><div>
 <section><h2>4. Set up the dungeon</h2>
 <ol>
@@ -138,7 +138,7 @@ strong{font-weight:900}
 <p>Play through one Room at a time, working together if there are two Heroes. In Everything Goes, resolve 12 non-Corridor Rooms per depth. A Corridor does not count, but its non-Corridor destination does. Finish required detours before descending; do not add extra visits after the twelfth non-Corridor Room.</p>
 <ol>
 <li><strong>Reveal the Room.</strong> Read its introductory instruction first. If it tells you to draw a Monster or do something on entry, do so now.</li>
-<li><strong>Make the Room's choice.</strong> Most Rooms offer two printed options. Choose one you can perform, pay any cost, and follow its instructions. If the option asks for a die roll, use the result printed on that card.</li>
+<li><strong>Make the Room's choice.</strong> Choose an acting Hero, then one of the two printed options. That Hero pays costs, takes damage and receives healing unless a card says otherwise. Follow the printed dice results.</li>
 <li><strong>Resolve any Monster.</strong> Fight it or attempt the alternative on its card, such as <strong>PARLEY</strong> (talking or bargaining). Finish the encounter before leaving.</li>
 <li><strong>Leave the Room.</strong> Discard it unless it says <strong>KEEP</strong>. Reset abilities marked “once per Room.” Continue with the next Room.</li>
 </ol>
@@ -152,10 +152,10 @@ strong{font-weight:900}
 <div class="cols"><div>
 <section><h2>6. Making rolls</h2>
 <p>A <strong>d6</strong> has six sides; a <strong>d20</strong> has twenty. “2d6” means roll two six-sided dice and add their results. For a Room's d6, find the range on that Room and do what it says.</p>
-<p>Some challenges call for a <strong>WIT test</strong>: roll a d20, add your Hero's WIT and compare the total with the number on the card. In an <strong>opposed test</strong>, both sides roll a d20 and add the stated ability; the higher total wins.</p>
-<p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s and use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. Together they cancel. Bonuses such as <strong>+2 WIT</strong> add 2 to a WIT roll, not permanently to the Hero stat. A DEF bonus raises AC. If a card grants ADV on a DEF roll, the attacker gets DIS instead; DEF-roll DIS gives the attacker ADV.</p>
+<p>Some challenges call for a <strong>WIT test</strong>: roll a d20, add your Hero's WIT and compare the total with the number on the card. In an <strong>opposed test</strong>, both sides roll a d20 and add the stated ability; the higher total wins; <strong>ties fail for the acting Hero</strong>. Unlike opposed tests, attacks hit when they equal AC.</p>
+<p><strong>ADV</strong> means <strong>advantage</strong>: roll two d20s and use the higher result. <strong>DIS</strong> means <strong>disadvantage</strong>: roll two d20s and use the lower. Together they cancel. Bonuses such as <strong>+2 WIT</strong> add 2 to a WIT roll, not permanently to the Hero stat. A DEF bonus raises AC. DEF is not rolled to defend against attacks; it raises fixed AC.</p>
 <p>On a WIT test, a natural 1 fails and a natural 20 succeeds, even before bonuses.</p>
-<p class="wit-example"><strong>Example:</strong> A WIT 4 Hero rolls 12: 12 + 4 = 16, beating WIT 15.</p></section>
+<p class="wit-example"><strong>Example:</strong> WIT 4 Hero rolls 12 (total 16). The opposing d20 is 7 + WIT 6 = 13. The Hero wins; a tie would fail.</p></section>
 <section><h2>7. When a Monster appears</h2>
 <p><strong>Draw one Monster only when instructed, even with two Heroes.</strong> Mark its HP. Fight one Monster at a time; put additional drawn Monsters face up in a waiting line. You may try its printed <strong>PARLEY</strong> before fighting. A peaceful departure normally gives no combat reward.</p>
 <p><strong>1. Hero turn.</strong> Each living Hero takes one action per round, in either order: attack, use an Item or ability, try Elbereth, or pass. Printed triggered abilities cost no extra action unless stated.</p>
@@ -171,18 +171,18 @@ strong{font-weight:900}
 <div><strong>Warrior</strong> · ATK +6 with Sword · AC 15</div>
 <div><strong>Knight</strong> · ATK +4 · AC 17 with Shield</div>
 </div>
-<div class="step"><span class="label">1 · Warrior attacks</span><p>Roll <strong>13 + 6 = 19</strong>: hits AC 16. Damage: 2. <strong>Blood Rush</strong> costs 1 HP and adds 2 damage. Wisp: <strong>9 → 5 HP</strong>.</p></div>
-<div class="step response"><span class="label">Wisp responds · Flash (d6 = 6)</span><p>Attack with ADV: d20s 7 and 12; keep 12. <strong>12 + 4 = 16</strong> hits Warrior AC 15. Deal 3 damage. Next Hero attack has <strong>DIS</strong>.</p></div>
+<div class="step"><span class="label">1 · Warrior attacks</span><p>Roll <strong>13 + 6 = 19</strong>: hits AC 16. Damage: 2. <strong>Blood Rush</strong> costs 1 HP and adds 2 damage. Wisp: <strong>5 → 1 HP</strong>.</p></div>
+<div class="step response"><span class="label">Wisp responds · Flash (d6 = 6)</span><p>Attack with ADV: d20s 7 and 14; keep 14. <strong>14 + 2 = 16</strong> hits Warrior AC 15. Deal 3 damage. Next Hero attack has <strong>DIS</strong>.</p></div>
 <div class="step"><span class="label">2 · Knight attacks</span><p>DIS: d20s 18 and 10; keep 10. <strong>10 + 4 = 14</strong> misses Wisp AC 16.</p></div>
-<div class="step response"><span class="label">Wisp responds · Spark (d6 = 3)</span><p><strong>15 + 4 = 19</strong> hits Knight AC 17. Damage: 4. <strong>Intercept</strong> costs 1 HP and prevents 3 damage. Knight loses <strong>2 HP total</strong>.</p></div>
-<div class="step"><span class="label">3 · Next round: Warrior attacks</span><p><strong>12 + 6 = 18</strong> hits. Damage: 5. Wisp: <strong>5 → 0 HP</strong>. It cannot respond.</p></div>
+<div class="step response"><span class="label">Wisp responds · Spark (d6 = 3)</span><p><strong>15 + 2 = 17</strong> hits Knight AC 17. Damage: 4. <strong>Intercept</strong> costs 1 HP and prevents 3 damage. Knight loses <strong>2 HP total</strong>.</p></div>
+<div class="step"><span class="label">3 · Next round: Warrior attacks</span><p><strong>12 + 6 = 18</strong> hits. Damage: 5. Wisp: <strong>1 → 0 HP</strong>. It cannot respond.</p></div>
 </div>
 <p>After defeating a regional Monster, first resolve up to one printed <strong>REMAINS</strong> choice, such as SEARCH or EAT. Then resolve that Monster’s printed <strong>DEFEAT</strong> effect and any earned Room reward. Parley or escape does not trigger DEFEAT. Discard the Monster unless keeping its printed trophy; a trophy cannot also be searched or eaten.</p></section>
 </div><div>
 <section><h2>9. Items, danger and surprises</h2>
 <p>Each Hero may equip one <strong>Weapon, Armour, Ring and Companion</strong> and carry other Objects. Outside combat, Heroes may exchange and equip them, but healing always requires a card effect. Choose an acting Hero for each Room choice; that Hero pays costs, takes damage and receives healing unless stated otherwise. A living Hero may use healing on a downed ally before leaving.</p>
-<p><strong>Scrolls</strong> are discarded after use. A used <strong>Wand</strong> is turned sideways until recharged. To <strong>OVERCHARGE</strong>, discard an upright Wand and lose d6 HP to obtain the result described on it. <strong>Potions</strong> reveal their effect on first use; identical Potions share that discovery for the expedition.</p>
-<p><strong>WITH</strong> means carried; <strong>EQUIPPED</strong> means in its slot. To <strong>discard</strong>, put an Item on its discard pile, newest on top. Discarding a kept Room ends its effect unless it is a spent PACT. You cannot choose a cost you cannot pay; voluntary HP costs cannot reduce you to 0. Only a result labelled <strong>TRAP</strong> counts as a TRAP.</p>
+<p>Passive bonuses on equipped gear still apply when it is sideways; sideways only tracks its limited use. <strong>Scrolls</strong> are discarded after use. A used <strong>Wand</strong> is turned sideways until recharged. To <strong>OVERCHARGE</strong>, discard an upright Wand and lose d6 HP to obtain the result described on it. <strong>Potions</strong> reveal their effect on first use; identical Potions share that discovery for the expedition.</p>
+<p><strong>Tags</strong> such as MAGIC, FIRE, METAL and CURSED are printed properties, not actions. <strong>WITH</strong> means carried; <strong>EQUIPPED</strong> means in its slot. To <strong>discard</strong>, put an Item on its discard pile, newest on top. Discarding a kept Room ends its effect unless it is a spent PACT. You cannot choose a cost you cannot pay; voluntary HP costs cannot reduce you to 0. Only a result labelled <strong>TRAP</strong> counts as a TRAP.</p>
 <p>For a permitted <strong>REROLL</strong>, pay the printed cost (1, then 2, then 3 HP for escalating rerolls). Use the newest result unless the card says to choose. <strong>Use/resolve 5–6</strong> means apply that printed outcome without rolling. Results changed by ±1 stay within the die’s faces; a reversed d6 uses 1↔6, 2↔5, 3↔4.</p>
 <p>A <strong>TRAPDOOR</strong> can skip remaining Rooms or descend early. Resolve its landing immediately; skipped Rooms give no rewards. <strong>Next</strong> applies to the next matching roll or encounter; <strong>here/this Room</strong> effects end on leaving. Keep a card face up or turned sideways when it tracks an ongoing effect.</p>
 <p>If you become <strong>POISONED</strong>, your Hero's d20 rolls have disadvantage until the poison is removed or the Room ends.</p></section>
