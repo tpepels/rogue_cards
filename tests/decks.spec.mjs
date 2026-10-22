@@ -24,7 +24,8 @@ test("the fast print page includes genuine expansion art with legible notes",asy
  test.setTimeout(180000);
  await page.goto("/decks.html");
  await page.locator('[data-preset="classic"]').click();
- await page.getByRole("button",{name:"FAST PRINT THIS DECK"}).click();
+ await page.locator('input[data-card="room:ex-u-guard-cell"]').uncheck();
+ await page.getByRole("button",{name:"PRINT CUSTOM DECK IN BATCHES"}).click();
  await page.emulateMedia({media:"print"});
  await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(16);
  const measurements=await page.locator('.tt-print-only .tt-card').evaluateAll(cards=>cards.map(c=>{

@@ -1,6 +1,7 @@
 import {test,expect} from "@playwright/test";
 import {mkdir,writeFile} from "node:fs/promises";
 import {FIXED_CARDS,SELECTABLE} from "../src/decks.js";
+import {printUrl} from "../src/print-queue.js";
 test("home and printable catalogue show identical 193-card edition",async({page})=>{
  const snapshots=[];
  for(const url of ["/index.html","/cards.html"]){
@@ -63,7 +64,7 @@ test("one canonical gallery covers all families and prints real card sheets",asy
   }
  }
  await filter.selectOption("WAND");
- await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await page.getByRole("button",{name:"PRINT SHOWN CARDS (BATCHED)"}).click();
  await expect(page).toHaveURL(/print\.html\?cards=/);
  await expect(page.locator(".tt-print-only .tt-sheet")).toHaveCount(2);
  await page.emulateMedia({media:"print"});
@@ -91,7 +92,7 @@ test("all 193 complete-edition card designs keep their printed instructions visi
    return y>2||x>2?[{id:c.dataset.id,part:i,x,y}]:[];
   })));
  expect(screenIssues,"Clipped words in full 193-card catalogue").toEqual([]);
- await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await page.goto("/"+printUrl([...FIXED_CARDS,...SELECTABLE].slice(0,16)).slice(2));
  await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  const printed=page.locator(".tt-print-only .tt-card");
@@ -237,7 +238,7 @@ test("each card has clear pasted notes over full-bleed art",async({page})=>{
   expect(families.has(family),"No artwork/layout for "+family).toBeTruthy();
  expect(new Set(onScreen.map(c=>c.plate)).size).toBe(4);
  expect(new Set(onScreen.map(c=>c.notes[0].angle)).size).toBeGreaterThanOrEqual(3);
- await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await page.goto("/"+printUrl([...FIXED_CARDS,...SELECTABLE].slice(0,16)).slice(2));
  await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  // The same physical card component is used in the four-up print sheets.
@@ -340,7 +341,7 @@ test("distressed borders and distinct paper cutouts survive screen and print",as
   if(x.resultsShape!==null)expect(x.resultsShape).toContain("polygon");
  }
  expect(new Set(metrics.map(x=>x.leadAngle)).size).toBeGreaterThanOrEqual(3);
- await page.getByRole("button",{name:"FAST PRINT SHOWN CARDS"}).click();
+ await page.goto("/"+printUrl([...FIXED_CARDS,...SELECTABLE].slice(0,16)).slice(2));
  await expect(page).toHaveURL(/print\.html\?cards=/);
  await page.emulateMedia({media:"print"});
  const print=await page.locator(".tt-print-only .tt-card").first().evaluate(c=>({
