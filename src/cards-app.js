@@ -22,7 +22,7 @@ function render(){
  const regionsAvailable=["all","room","monster","expansion"].includes(category);
  mount.innerHTML=ink+
  '<div class="tt-sitehead"><div><div class="tt-brand">ROGUE CARDS</div><div class="tt-sub">COMPLETE PHYSICAL EDITION · '+CATALOGUE.length+' CARD DESIGNS</div></div>'+
- '<nav class="tt-nav" aria-label="Main links"><a href="./index.html">HOME</a><a href="./tutorial.html">LEARN TO PLAY</a><a href="./rules.html">READ / PRINT THE RULEBOOK</a><a href="./decks.html">BUILD YOUR DECK</a><a href="./cards.html">ALL CARDS</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
+ '<nav class="tt-nav" aria-label="Main links"><a href="./index.html">HOME</a><a href="./tutorial.html">LEARN TO PLAY</a><a href="./rules.html">RULES</a><a href="./decks.html">BUILD YOUR DECK</a><a href="./cards.html">ALL CARDS</a><a href="./layout-editor.html">LAYOUT EDITOR</a></nav></div>'+
  '<main class="tt-shell"><section class="rc-intro"><h1>'+(home?"Many dungeons. One rulebook.":"Every card, ready to print.")+'</h1>'+
  (home?'<p>Play solo or with two Heroes. Choose a Room, resolve its printed effects and fight Monsters with a d20 + ATK against their fixed AC (12 + DEF). Descend through three depths to claim the Amulet. No app is needed once the cards are printed.</p>':
  '<p>Browse and print the complete library of '+CATALOGUE.length+' card designs. Every printable Hero, Room, Monster, Item, Potion and Warden phase is included.</p>')+
