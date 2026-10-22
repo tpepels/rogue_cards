@@ -6,7 +6,8 @@ test("all available deck presets are selectable and print the right card copies"
  await page.goto("/decks.html");
  await expect(page.getByRole("heading",{name:"The dungeon is yours to build."})).toBeVisible();
  await expect(page.locator("[data-preset]")).toHaveCount(PRESETS.length);
- await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(physicalDeck(selectionForPreset("strange")).length);
+ await expect(page.locator("#db-preset-select")).toHaveValue("balanced");
+ await expect(page.locator(".tt-print-only .tt-card")).toHaveCount(physicalDeck(selectionForPreset("balanced")).length);
  for(const preset of PRESETS){
   await page.locator("[data-preset='"+preset.id+"']").click();
   await expect(page.locator("#db-preset-select")).toHaveValue(preset.id);
